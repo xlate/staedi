@@ -1,0 +1,543 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="yes"?>
+<schema xmlns="http://xlate.io/2015/EDISchema"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://xlate.io/2015/EDISchema ../../../../../target/maven-shared-archive-resources/2015/EDISchema.xsd">
+
+	<mainLoop>
+		<sequence>
+			<segment ref="ISA" minOccurs="1" />
+			<segment ref="TA1" maxOccurs="1" />
+			<loop ref="GROUP" maxOccurs="99999" />
+			<segment ref="IEA" minOccurs="1" />
+		</sequence>
+	</mainLoop>
+
+	<elementType name="I01" base="identifier" minLength="2"
+		maxLength="2">
+		<enumeration>
+			<value>00</value>
+			<value>01</value>
+			<value>02</value>
+			<value>03</value>
+			<value>04</value>
+			<value>05</value>
+			<value>06</value>
+		</enumeration>
+	</elementType>
+
+	<elementType name="I02" base="string" minLength="10" maxLength="10" />
+
+	<elementType name="I03" base="identifier" minLength="2" maxLength="2">
+		<enumeration>
+			<value>00</value>
+			<value>01</value>
+		</enumeration>
+	</elementType>
+
+	<elementType name="I04" base="string" minLength="10" maxLength="10" />
+
+	<elementType name="I05" base="identifier" minLength="2" maxLength="2">
+		<enumeration>
+			<value>01</value>
+			<value>02</value>
+			<value>03</value>
+			<value>04</value>
+			<value>07</value>
+			<value>08</value>
+			<value>09</value>
+			<value>10</value>
+			<value>11</value>
+			<value>12</value>
+			<value>13</value>
+			<value>14</value>
+			<value>15</value>
+			<value>16</value>
+			<value>17</value>
+			<value>18</value>
+			<value>19</value>
+			<value>20</value>
+			<value>21</value>
+			<value>22</value>
+			<value>23</value>
+			<value>24</value>
+			<value>25</value>
+			<value>26</value>
+			<value>27</value>
+			<value>28</value>
+			<value>29</value>
+			<value>30</value>
+			<value>31</value>
+			<value>32</value>
+			<value>33</value>
+			<value>34</value>
+			<value>35</value>
+			<value>36</value>
+			<value>37</value>
+			<value>38</value>
+			<value>AM</value>
+			<value>NR</value>
+			<value>SA</value>
+			<value>SN</value>
+			<value>ZZ</value>
+		</enumeration>
+	</elementType>
+
+	<elementType name="I06" base="string" minLength="15" maxLength="15" />
+
+	<elementType name="I07" base="string" minLength="15" maxLength="15" />
+
+	<elementType name="I08" base="date" minLength="6" maxLength="6" />
+
+	<elementType name="I09" base="time" minLength="4" maxLength="4" />
+
+	<elementType name="I11" base="identifier" minLength="5" maxLength="5">
+		<enumeration>
+			<value>00402</value>
+			<value>00403</value>
+			<value>00404</value>
+			<value>00405</value>
+			<value>00406</value>
+			<value>00500</value>
+			<value>00501</value>
+			<value>00502</value>
+			<value>00503</value>
+		</enumeration>
+	</elementType>
+
+	<elementType name="I12" base="numeric" minLength="9" maxLength="9" />
+
+	<elementType name="I13" base="identifier">
+		<enumeration>
+			<value>1</value>
+			<value>0</value>
+		</enumeration>
+	</elementType>
+
+	<elementType name="I14" base="identifier">
+		<enumeration>
+			<value>T</value>
+			<value>P</value>
+			<value>I</value>
+		</enumeration>
+	</elementType>
+
+	<elementType name="I15" base="string" />
+
+	<elementType name="I16" base="numeric" maxLength="5" />
+
+	<elementType name="I17" base="identifier">
+		<enumeration>
+			<value>A</value>
+			<value>E</value>
+			<value>R</value>
+		</enumeration>
+	</elementType>
+
+	<elementType name="I18" base="identifier">
+		<enumeration>
+			<value>000</value>
+			<value>001</value>
+			<value>002</value>
+			<value>003</value>
+			<value>004</value>
+			<value>005</value>
+			<value>006</value>
+			<value>007</value>
+			<value>008</value>
+			<value>009</value>
+			<value>010</value>
+			<value>011</value>
+			<value>012</value>
+			<value>013</value>
+			<value>014</value>
+			<value>015</value>
+			<value>016</value>
+			<value>017</value>
+			<value>018</value>
+			<value>019</value>
+			<value>020</value>
+			<value>021</value>
+			<value>022</value>
+			<value>023</value>
+			<value>024</value>
+			<value>025</value>
+			<value>026</value>
+			<value>027</value>
+			<value>028</value>
+			<value>029</value>
+			<value>030</value>
+			<value>031</value>
+			<value>032</value>
+		</enumeration>
+	</elementType>
+
+	<elementType name="I65" base="string" />
+
+	<elementType name="E28" number="28" base="numeric" maxLength="9" />
+	<elementType name="E96" number="96" base="numeric" maxLength="10" />
+	<elementType name="E97" number="97" base="numeric" maxLength="6" />
+	<elementType name="E124" number="124" base="string" minLength="2" maxLength="15" />
+	<elementType name="E142" number="142" base="string" minLength="2" maxLength="15" />
+	<elementType name="E143" number="143" base="string" minLength="3" maxLength="3" />
+	<elementType name="E329" number="329" base="string" minLength="4" maxLength="9" />
+	<elementType name="E337" number="337" base="time" minLength="4" maxLength="8" />
+	<elementType name="E373" number="373" base="date" minLength="8" maxLength="8" />
+	<elementType name="E455" number="455" base="string" maxLength="2" />
+
+	<elementType name="E479" number="479" base="identifier" minLength="2"
+		maxLength="2">
+		<enumeration>
+			<value>AA</value>
+			<value>AB</value>
+			<value>AC</value>
+			<value>AD</value>
+			<value>AE</value>
+			<value>AF</value>
+			<value>AG</value>
+			<value>AH</value>
+			<value>AI</value>
+			<value>AK</value>
+			<value>AL</value>
+			<value>AM</value>
+			<value>AN</value>
+			<value>AO</value>
+			<value>AP</value>
+			<value>AQ</value>
+			<value>AR</value>
+			<value>AS</value>
+			<value>AT</value>
+			<value>AU</value>
+			<value>AV</value>
+			<value>AW</value>
+			<value>AX</value>
+			<value>AY</value>
+			<value>AZ</value>
+			<value>BA</value>
+			<value>BB</value>
+			<value>BC</value>
+			<value>BD</value>
+			<value>BE</value>
+			<value>BF</value>
+			<value>BL</value>
+			<value>BS</value>
+			<value>CA</value>
+			<value>CB</value>
+			<value>CC</value>
+			<value>CD</value>
+			<value>CE</value>
+			<value>CF</value>
+			<value>CH</value>
+			<value>CI</value>
+			<value>CJ</value>
+			<value>CK</value>
+			<value>CL</value>
+			<value>CM</value>
+			<value>CN</value>
+			<value>CO</value>
+			<value>CP</value>
+			<value>CQ</value>
+			<value>CR</value>
+			<value>CS</value>
+			<value>CT</value>
+			<value>CU</value>
+			<value>CV</value>
+			<value>CW</value>
+			<value>D3</value>
+			<value>D4</value>
+			<value>D5</value>
+			<value>DA</value>
+			<value>DD</value>
+			<value>DF</value>
+			<value>DI</value>
+			<value>DM</value>
+			<value>DS</value>
+			<value>DX</value>
+			<value>EC</value>
+			<value>ED</value>
+			<value>EI</value>
+			<value>EN</value>
+			<value>EP</value>
+			<value>ER</value>
+			<value>ES</value>
+			<value>EV</value>
+			<value>EX</value>
+			<value>FA</value>
+			<value>FB</value>
+			<value>FC</value>
+			<value>FG</value>
+			<value>FR</value>
+			<value>FT</value>
+			<value>GC</value>
+			<value>GE</value>
+			<value>GF</value>
+			<value>GL</value>
+			<value>GP</value>
+			<value>GR</value>
+			<value>GT</value>
+			<value>HB</value>
+			<value>HC</value>
+			<value>HI</value>
+			<value>HN</value>
+			<value>HP</value>
+			<value>HR</value>
+			<value>HS</value>
+			<value>HU</value>
+			<value>HV</value>
+			<value>IA</value>
+			<value>IB</value>
+			<value>IC</value>
+			<value>ID</value>
+			<value>IE</value>
+			<value>IF</value>
+			<value>IG</value>
+			<value>IH</value>
+			<value>IJ</value>
+			<value>IM</value>
+			<value>IN</value>
+			<value>IO</value>
+			<value>IR</value>
+			<value>IS</value>
+			<value>JB</value>
+			<value>KM</value>
+			<value>LA</value>
+			<value>LB</value>
+			<value>LI</value>
+			<value>LN</value>
+			<value>LR</value>
+			<value>LS</value>
+			<value>LT</value>
+			<value>MA</value>
+			<value>MC</value>
+			<value>MD</value>
+			<value>ME</value>
+			<value>MF</value>
+			<value>MG</value>
+			<value>MH</value>
+			<value>MI</value>
+			<value>MJ</value>
+			<value>MK</value>
+			<value>MM</value>
+			<value>MN</value>
+			<value>MO</value>
+			<value>MP</value>
+			<value>MQ</value>
+			<value>MR</value>
+			<value>MS</value>
+			<value>MT</value>
+			<value>MV</value>
+			<value>MW</value>
+			<value>MX</value>
+			<value>MY</value>
+			<value>MZ</value>
+			<value>NC</value>
+			<value>NL</value>
+			<value>NP</value>
+			<value>NR</value>
+			<value>NT</value>
+			<value>OC</value>
+			<value>OG</value>
+			<value>OR</value>
+			<value>OW</value>
+			<value>PA</value>
+			<value>PB</value>
+			<value>PC</value>
+			<value>PD</value>
+			<value>PE</value>
+			<value>PF</value>
+			<value>PG</value>
+			<value>PH</value>
+			<value>PI</value>
+			<value>PJ</value>
+			<value>PK</value>
+			<value>PL</value>
+			<value>PN</value>
+			<value>PO</value>
+			<value>PQ</value>
+			<value>PR</value>
+			<value>PS</value>
+			<value>PT</value>
+			<value>PU</value>
+			<value>PV</value>
+			<value>PW</value>
+			<value>PY</value>
+			<value>QG</value>
+			<value>QM</value>
+			<value>QO</value>
+			<value>RA</value>
+			<value>RB</value>
+			<value>RC</value>
+			<value>RD</value>
+			<value>RE</value>
+			<value>RF</value>
+			<value>RG</value>
+			<value>RH</value>
+			<value>RI</value>
+			<value>RJ</value>
+			<value>RK</value>
+			<value>RL</value>
+			<value>RM</value>
+			<value>RN</value>
+			<value>RO</value>
+			<value>RP</value>
+			<value>RQ</value>
+			<value>RR</value>
+			<value>RS</value>
+			<value>RT</value>
+			<value>RU</value>
+			<value>RV</value>
+			<value>RW</value>
+			<value>RX</value>
+			<value>RY</value>
+			<value>RZ</value>
+			<value>SA</value>
+			<value>SB</value>
+			<value>SC</value>
+			<value>SD</value>
+			<value>SE</value>
+			<value>SH</value>
+			<value>SI</value>
+			<value>SJ</value>
+			<value>SL</value>
+			<value>SM</value>
+			<value>SN</value>
+			<value>SO</value>
+			<value>SP</value>
+			<value>SQ</value>
+			<value>SR</value>
+			<value>SS</value>
+			<value>ST</value>
+			<value>SU</value>
+			<value>SV</value>
+			<value>SW</value>
+			<value>TA</value>
+			<value>TB</value>
+			<value>TD</value>
+			<value>TE</value>
+			<value>TF</value>
+			<value>TI</value>
+			<value>TJ</value>
+			<value>TM</value>
+			<value>TN</value>
+			<value>TO</value>
+			<value>TP</value>
+			<value>TR</value>
+			<value>TS</value>
+			<value>TT</value>
+			<value>TU</value>
+			<value>TX</value>
+			<value>UA</value>
+			<value>UB</value>
+			<value>UC</value>
+			<value>UD</value>
+			<value>UI</value>
+			<value>UP</value>
+			<value>UW</value>
+			<value>VA</value>
+			<value>VB</value>
+			<value>VC</value>
+			<value>VD</value>
+			<value>VE</value>
+			<value>VH</value>
+			<value>VI</value>
+			<value>VS</value>
+			<value>WA</value>
+			<value>WB</value>
+			<value>WG</value>
+			<value>WI</value>
+			<value>WL</value>
+			<value>WR</value>
+			<value>WT</value>
+		</enumeration>
+	</elementType>
+
+	<elementType name="E480" number="480" base="string" maxLength="12" />
+	<elementType name="E1705" number="1705" base="string" maxLength="35" />
+
+	<segmentType name="ST">
+		<sequence>
+			<element ref="E143" minOccurs="1" />
+			<element ref="E329" minOccurs="1" />
+			<element ref="E1705" />
+		</sequence>
+	</segmentType>
+
+	<segmentType name="SE">
+		<sequence>
+			<element ref="E96" minOccurs="1" />
+			<element ref="E329" minOccurs="1" />
+		</sequence>
+	</segmentType>
+
+	<loopType name="TRANSACTION">
+		<sequence>
+			<segment ref="ST" minOccurs="1" />
+			<segment ref="SE" minOccurs="1" />
+		</sequence>
+	</loopType>
+
+	<segmentType name="GS">
+		<sequence>
+			<element ref="E479" minOccurs="1" />
+			<element ref="E142" minOccurs="1" />
+			<element ref="E124" minOccurs="1" />
+			<element ref="E373" minOccurs="1" />
+			<element ref="E337" minOccurs="1" />
+			<element ref="E28" minOccurs="1" />
+			<element ref="E455" minOccurs="1" />
+			<element ref="E480" minOccurs="1" />
+		</sequence>
+	</segmentType>
+
+	<segmentType name="GE">
+		<sequence>
+			<element ref="E28" minOccurs="1" />
+			<element ref="E97" minOccurs="1" />
+		</sequence>
+	</segmentType>
+
+	<loopType name="GROUP">
+		<sequence>
+			<segment ref="GS" />
+			<loop ref="TRANSACTION" maxOccurs="99999"/>
+			<segment ref="GE" minOccurs="1" />
+		</sequence>
+	</loopType>
+
+	<segmentType name="ISA">
+		<sequence>
+			<element ref="I01" minOccurs="1" />
+			<element ref="I02" minOccurs="1" />
+			<element ref="I03" minOccurs="1" />
+			<element ref="I04" minOccurs="1" />
+			<element ref="I05" minOccurs="1" />
+			<element ref="I06" minOccurs="1" />
+			<element ref="I05" minOccurs="1" />
+			<element ref="I07" minOccurs="1" />
+			<element ref="I08" minOccurs="1" />
+			<element ref="I09" minOccurs="1" />
+			<element ref="I65" minOccurs="1" />
+			<element ref="I11" minOccurs="1" />
+			<element ref="I12" minOccurs="1" />
+			<element ref="I13" minOccurs="1" />
+			<element ref="I14" minOccurs="1" />
+			<element ref="I15" minOccurs="1" />
+		</sequence>
+	</segmentType>
+
+	<segmentType name="TA1">
+		<sequence>
+			<element ref="I12" minOccurs="1" />
+			<element ref="I08" minOccurs="1" />
+			<element ref="I09" minOccurs="1" />
+			<element ref="I17" minOccurs="1" />
+			<element ref="I18" minOccurs="1" />
+		</sequence>
+	</segmentType>
+
+	<segmentType name="IEA">
+		<sequence>
+			<element ref="I16" minOccurs="1" />
+			<element ref="I12" minOccurs="1" />
+		</sequence>
+	</segmentType>
+</schema>
