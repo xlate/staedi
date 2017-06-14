@@ -1,0 +1,84 @@
+ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~
+GS*PI*ReceiverDept*SenderDept*20050812*195335*000005*X*005010X211~
+ST*275*1001~
+BGN*11*0001*20030429~
+NM1*PR*2*HEALTH CARE SERVICE CORPORATION*****PI*00121~
+PER*IC*MEDICAL REVIEW DEPARTMENT~
+NM1*85*2*DUKE UNIVERSITY MEDICAL CENTER*****FI*364015560~
+NM1*41*2* DUKE UNIVERSITY MEDICAL CENTER*****SV*00000000500~
+NM1*QC*1*STONE*ERIKA****HN*111223333A~
+REF*IK*1722634842~
+DTP*472*RD8*20030401-20030411~
+LX*01~
+STC*R3:Z0001-0~
+DTP*097*D8*20030429~
+CAT*UL*HL~
+EFI*09~
+BIN*2768*<levelone xmlns="urn:hl7-org:v3/cda" xmlns:v3dt="urn:hl7-org:v3/v3dt"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:hl7-org:v3/cda
+          levelone_1.0.attachments.xsd">
+     <clinical_document_header>
+          <id EX="a123" RT="2.16.840.1.113883.3.933"/>
+          <document_type_cd V="18594-2" DN="Psychiatric Rehabilitation Attachment"/>
+          <origination_dttm V="2003-08-12"/>
+          <provider>
+               <provider.type_cd V="PRF"/>
+               <person>
+                    <id EX="298379" RT="2.16.840.1.113883.3.933"/>
+                    <person_name>
+                         <nm>
+                             <v3dt:GIV V="John"/>
+                             <v3dt:MID V="E"/>
+                             <v3dt:FAM V="Smith"/>
+                             <v3dt:SFX V="MD"/>
+                         </nm>
+                         <person_name.type_cd V="L" S="2.16.840.1.113883.5.200"/>
+                    </person_name>
+               </person>
+          </provider>
+          <patient>
+               <patient.type_cd V="PATSBJ"/>
+               <person>
+                    <id EX="184569" RT="2.16.840.1.113883.3.933"/>
+                    <person_name>
+                         <nm>
+                             <v3dt:GIV V="Jon"/>
+                             <v3dt:FAM V="Jay"/>
+                             <v3dt:MID V="J"/>
+                         </nm>
+                         <person_name.type_cd V="L" S="2.16.840.1.113883.5.200"/>
+                    </person_name>
+               </person>
+          </patient>
+          <local_header descriptor="Att_ACN">
+               <local_attr name="attachment_control_number" value="XA728302"/>
+          </local_header>
+     </clinical_document_header>
+     <body>
+          <section>
+               <caption> <caption_cd V="18627-0" S="2.16.840.1.113883.6.1"/>
+                    DATE ONSET OR EXACERBATION OF PRIMARY DIAGNOSIS
+               </caption>
+               <paragraph>
+                    <content>26 March 2003
+                         <local_markup descriptor="dt_DT" ignore="all">2003-03-26</local_markup>
+                    </content>
+               </paragraph>
+          </section>
+          <section>
+               <caption><caption_cd V="19007-4" S="2.16.840.1.113883.6.1"/>
+                    PRIMARY DIAGNOSIS
+               </caption>
+               <paragraph>
+                    <content>bipolar affective disorder (296.4)
+                         <coded_entry>
+                             <coded_entry.value V="296.4" S="2.16.840.1.113883.6.2" SN="ICD-9-CM"/>
+                         </coded_entry>
+                    </content>
+               </paragraph>
+          </section>
+     </body>
+</levelone>~
+SE*16*1001~
+GE*1*000005~
+IEA*1*508121953~

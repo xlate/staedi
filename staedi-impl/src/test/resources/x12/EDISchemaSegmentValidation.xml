@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="yes"?>
+<schema xmlns="http://xlate.io/2015/EDISchema"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://xlate.io/2015/EDISchema ../../../../target/maven-shared-archive-resources/2015/EDISchema.xsd">
+
+	<mainLoop>
+		<sequence>
+			<segment ref="ISA" minOccurs="1" />
+			<loop ref="L0000" minOccurs="1" />
+			<segment ref="IEA" minOccurs="1" />
+		</sequence>
+	</mainLoop>
+
+	<elementType name="EI01" base="string" minLength="2" maxLength="2" />
+	<elementType name="EI02" base="string" minLength="10" maxLength="10" />
+	<elementType name="EI03" base="string" minLength="2" maxLength="2" />
+	<elementType name="EI04" base="string" minLength="10" maxLength="10" />
+	<elementType name="EI05" base="string" minLength="2" maxLength="2" />
+	<elementType name="EI06" base="string" minLength="15" maxLength="15" />
+	<elementType name="EI07" base="string" minLength="15" maxLength="15" />
+	<elementType name="EI08" base="date" minLength="6" maxLength="6" />
+	<elementType name="EI09" base="time" minLength="4" maxLength="4" />
+	<elementType name="EI65" base="string" />
+	<elementType name="EI11" base="string" minLength="5" maxLength="5" />
+	<elementType name="EI12" base="numeric" minLength="9" maxLength="9" />
+	<elementType name="EI13" base="string" />
+	<elementType name="EI14" base="string" />
+	<elementType name="EI15" base="string" />
+	<elementType name="EI16" base="numeric" maxLength="5" />
+	<elementType name="E999" base="string" />
+
+	<segmentType name="ISA">
+		<sequence>
+			<element ref="EI01" minOccurs="1" />
+			<element ref="EI02" minOccurs="1" />
+			<element ref="EI03" minOccurs="1" />
+			<element ref="EI04" minOccurs="1" />
+			<element ref="EI05" minOccurs="1" />
+			<element ref="EI06" minOccurs="1" />
+			<element ref="EI05" minOccurs="1" />
+			<element ref="EI07" minOccurs="1" />
+			<element ref="EI08" minOccurs="1" />
+			<element ref="EI09" minOccurs="1" />
+			<element ref="EI65" minOccurs="1" />
+			<element ref="EI11" minOccurs="1" />
+			<element ref="EI12" minOccurs="1" />
+			<element ref="EI13" minOccurs="1" />
+			<element ref="EI14" minOccurs="1" />
+			<element ref="EI15" minOccurs="1" />
+		</sequence>
+	</segmentType>
+
+	<segmentType name="S01">
+		<sequence>
+			<element ref="E999" minOccurs="1" />
+		</sequence>
+	</segmentType>
+
+	<segmentType name="S11">
+		<sequence>
+			<element ref="E999" minOccurs="1" />
+		</sequence>
+	</segmentType>
+
+	<segmentType name="S12">
+		<sequence>
+			<element ref="E999" minOccurs="1" />
+		</sequence>
+	</segmentType>
+
+	<segmentType name="S13">
+		<sequence>
+			<element ref="E999" minOccurs="1" />
+		</sequence>
+	</segmentType>
+
+	<segmentType name="S14">
+		<sequence>
+			<element ref="E999" minOccurs="1" />
+		</sequence>
+	</segmentType>
+
+	<segmentType name="S19">
+		<sequence>
+			<element ref="E999" minOccurs="1" />
+		</sequence>
+	</segmentType>
+
+	<segmentType name="S09">
+		<sequence>
+			<element ref="E999" minOccurs="1" />
+		</sequence>
+	</segmentType>
+
+	<segmentType name="S0A">
+		<sequence>
+			<element ref="E999" minOccurs="1" />
+		</sequence>
+	</segmentType>
+
+	<segmentType name="IEA">
+		<sequence>
+			<element ref="EI16" minOccurs="1" />
+			<element ref="EI12" minOccurs="1" />
+		</sequence>
+	</segmentType>
+
+	<loopType name="L0000">
+		<sequence>
+			<segment ref="S01" minOccurs="1" />
+			<segment ref="S0A" />
+			<loop ref="L0001" maxOccurs="2" />
+			<segment ref="S09" minOccurs="1" />
+		</sequence>
+	</loopType>
+
+	<loopType name="L0001">
+		<sequence>
+			<segment ref="S11" minOccurs="1" />
+			<segment ref="S12" minOccurs="1" />
+			<segment ref="S13" />
+			<segment ref="S14" />
+			<segment ref="S19" minOccurs="1" />
+		</sequence>
+	</loopType>
+</schema>

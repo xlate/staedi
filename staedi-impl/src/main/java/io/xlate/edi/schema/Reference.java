@@ -1,0 +1,152 @@
+package io.xlate.edi.schema;
+
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+
+class Reference implements EDIReference, Externalizable {
+
+	private static final long serialVersionUID = -3094187052069347512L;
+
+	private String refId;
+	private String refTag;
+	private transient EDIType referencedType;
+	private int minOccurs;
+	private int maxOccurs;
+	private transient Schema schema;
+
+	public Reference() {}
+
+	Reference(String refId, String refTag, int minOccurs, int maxOccurs) {
+		this.refId = refId;
+		this.refTag = refTag;
+		this.minOccurs = minOccurs;
+		this.maxOccurs = maxOccurs;
+	}
+
+	Reference(EDIType referencedType, int minOccurs, int maxOccurs) {
+		this.refId = referencedType.getId();
+		this.refTag = null;
+		this.referencedType = referencedType;
+		this.minOccurs = minOccurs;
+		this.maxOccurs = maxOccurs;
+	}
+
+	Reference(EDIReference other) {
+		this.referencedType = other.getReferencedType();
+
+		if (other instanceof Reference) {
+			this.refId = ((Reference) other).getRefId();
+		} else {
+			this.refId = referencedType.getId();
+		}
+
+		this.refTag = null;
+		this.minOccurs = other.getMinOccurs();
+		this.maxOccurs = other.getMaxOccurs();
+	}
+
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		Externalizer.writeUTF(refId, out);
+		Externalizer.writeUTF(refTag, out);
+		out.writeInt(minOccurs);
+		out.writeInt(maxOccurs);
+	}
+
+	@Override
+	public void readExternal(ObjectInput in) throws IOException {
+		refId = Externalizer.readUTF(in);
+		refTag = Externalizer.readUTF(in);
+		minOccurs = in.readInt();
+		maxOccurs = in.readInt();
+	}
+
+	@Override
+	public String toString() {
+		return "refId: "
+				+ refId
+				+ ", minOccurs: "
+				+ minOccurs
+				+ ", maxOccurs: "
+				+ maxOccurs;
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + maxOccurs;
+		result = prime * result + minOccurs;
+		result = prime * result + ((refId == null) ? 0 : refId.hashCode());
+		result =
+				prime
+						* result
+						+ ((referencedType == null)
+								? 0
+								: ((BasicType) referencedType).hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Reference other = (Reference) obj;
+		if (maxOccurs != other.maxOccurs)
+			return false;
+		if (minOccurs != other.minOccurs)
+			return false;
+		if (refId == null) {
+			if (other.refId != null)
+				return false;
+		} else if (!refId.equals(other.refId))
+			return false;
+		if (referencedType == null) {
+			if (other.referencedType != null)
+				return false;
+		} else if (!referencedType.equals(other.referencedType))
+			return false;
+		return true;
+	}
+
+	String getRefId() {
+		return refId;
+	}
+
+	String getRefTag() {
+		return refTag;
+	}
+
+	@Override
+	public EDIType getReferencedType() {
+		if (referencedType == null && schema != null) {
+			setReferencedType(schema.getType(refId));
+		}
+
+		return referencedType;
+	}
+
+	void setReferencedType(EDIType referencedType) {
+		this.referencedType = referencedType;
+	}
+
+	@Override
+	public int getMinOccurs() {
+		return minOccurs;
+	}
+
+	@Override
+	public int getMaxOccurs() {
+		return maxOccurs;
+	}
+
+	void setSchema(Schema schema) {
+		this.schema = schema;
+	}
+}

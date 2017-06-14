@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema xmlns="http://www.w3.org/2001/XMLSchema" targetNamespace="http://xlate.io/2015/EDISchema"
+	xmlns:tns="http://xlate.io/2015/EDISchema" elementFormDefault="qualified">
+
+	<element name="schema">
+		<complexType>
+			<sequence>
+				<element ref="tns:mainLoop" minOccurs="1" maxOccurs="1" />
+				<choice maxOccurs="unbounded">
+					<element ref="tns:elementType" maxOccurs="unbounded" />
+					<element ref="tns:compositeType" maxOccurs="unbounded" />
+					<element ref="tns:segmentType" maxOccurs="unbounded" />
+					<element ref="tns:loopType" maxOccurs="unbounded" />
+				</choice>
+			</sequence>
+		</complexType>
+	</element>
+
+	<element name="mainLoop" type="tns:mainLoopTypeType" />
+
+	<element name="elementType" type="tns:elementTypeType" />
+
+	<complexType name="elementTypeType">
+		<sequence>
+			<element ref="tns:description" minOccurs="0" maxOccurs="1" />
+			<element ref="tns:enumeration" minOccurs="0" />
+		</sequence>
+
+		<attribute name="name" type="tns:nameType" use="required" />
+		<attribute name="number" type="tns:elementTypeNumber" />
+		<attribute name="base" type="tns:elementTypeBase" use="required" />
+		<attribute name="minLength" type="unsignedInt" default="1" />
+		<attribute name="maxLength" type="unsignedInt" default="1" />
+		<attribute name="title" type="string" />
+	</complexType>
+
+	<simpleType name="elementTypeNumber">
+		<restriction base="unsignedInt">
+			<minExclusive value="1" />
+			<maxInclusive value="9999" />
+		</restriction>
+	</simpleType>
+
+	<simpleType name="elementTypeBase">
+		<restriction base="NCName">
+			<enumeration value="binary" />
+			<enumeration value="date" />
+			<enumeration value="decimal" />
+			<enumeration value="identifier" />
+			<enumeration value="numeric" />
+			<enumeration value="string" />
+			<enumeration value="time" />
+		</restriction>
+	</simpleType>
+
+	<element name="description" type="string" />
+	<element name="enumeration" type="tns:enumerationType" />
+
+	<complexType name="enumerationType">
+		<sequence>
+			<element ref="tns:value" maxOccurs="unbounded" />
+		</sequence>
+	</complexType>
+
+	<element name="value" type="tns:valueType" />
+
+	<simpleType name="valueType">
+		<restriction base="token">
+			<pattern value="[A-Z0-9]+" />
+		</restriction>
+	</simpleType>
+
+	<element name="compositeType" type="tns:compositeTypeType" />
+
+	<complexType name="compositeTypeType">
+		<complexContent>
+			<extension base="tns:complexTypeType">
+				<attribute name="name" type="tns:nameType" use="required" />
+				<attribute name="code" type="tns:compositeCodeType" />
+			</extension>
+		</complexContent>
+	</complexType>
+
+	<simpleType name="compositeCodeType">
+		<restriction base="string">
+			<pattern value="[A-Z0-9]{1,4}" />
+		</restriction>
+	</simpleType>
+
+	<element name="segmentType" type="tns:segmentTypeType" />
+
+	<complexType name="segmentTypeType">
+		<complexContent>
+			<extension base="tns:complexTypeType">
+				<attribute name="name" type="tns:segmentNameType" use="required" />
+			</extension>
+		</complexContent>
+	</complexType>
+
+	<simpleType name="segmentNameType">
+		<restriction base="tns:nameType">
+			<maxLength value="3" />
+		</restriction>
+	</simpleType>
+
+	<element name="loopType" type="tns:loopTypeType" />
+
+	<complexType name="loopTypeType">
+		<complexContent>
+			<extension base="tns:complexTypeType">
+				<attribute name="name" type="tns:nameType" use="required" />
+				<attribute name="code" type="tns:loopCodeType" />
+			</extension>
+		</complexContent>
+	</complexType>
+
+	<complexType name="mainLoopTypeType">
+		<complexContent>
+			<extension base="tns:complexTypeType" />
+		</complexContent>
+	</complexType>
+
+	<simpleType name="loopCodeType">
+		<restriction base="string">
+			<pattern value="[A-Z0-9]{1,4}" />
+		</restriction>
+	</simpleType>
+
+	<element name="sequence" type="tns:sequenceType" />
+
+	<complexType name="sequenceType">
+		<choice maxOccurs="unbounded">
+			<element ref="tns:element" />
+			<element ref="tns:composite" />
+			<element ref="tns:segment" />
+			<element ref="tns:loop" />
+		</choice>
+	</complexType>
+
+	<element name="element" type="tns:elementType" />
+
+	<complexType name="elementType">
+		<complexContent>
+			<extension base="tns:referenceType" />
+		</complexContent>
+	</complexType>
+
+	<element name="composite" type="tns:compositeType" />
+
+	<complexType name="compositeType">
+		<complexContent>
+			<extension base="tns:referenceType" />
+		</complexContent>
+	</complexType>
+
+	<element name="segment" type="tns:segmentType" />
+
+	<complexType name="segmentType">
+		<complexContent>
+			<extension base="tns:referenceType" />
+		</complexContent>
+	</complexType>
+
+	<element name="loop" type="tns:loopType" />
+
+	<complexType name="loopType">
+		<complexContent>
+			<extension base="tns:referenceType" />
+		</complexContent>
+	</complexType>
+
+	<element name="syntax" type="tns:syntaxType" />
+
+	<complexType name="syntaxType">
+		<sequence>
+			<element ref="tns:position" maxOccurs="unbounded" />
+		</sequence>
+		<attribute name="type" type="tns:syntaxTypeType" />
+	</complexType>
+
+	<simpleType name="syntaxTypeType">
+		<restriction base="NCName">
+			<enumeration value="paired" />
+			<enumeration value="required" />
+			<enumeration value="exclusion" />
+			<enumeration value="conditional" />
+			<enumeration value="list" />
+		</restriction>
+	</simpleType>
+
+	<element name="position" type="int" />
+
+	<complexType name="complexTypeType" abstract="true">
+		<sequence>
+			<element ref="tns:description" minOccurs="0" maxOccurs="1" />
+			<element ref="tns:sequence" />
+			<element ref="tns:syntax" minOccurs="0" maxOccurs="unbounded" />
+		</sequence>
+		<attribute name="title" type="string" />
+	</complexType>
+
+	<complexType name="referenceType" abstract="true">
+		<attribute name="ref" type="IDREF" />
+		<attribute name="minOccurs" type="unsignedInt" default="0" />
+		<attribute name="maxOccurs" type="unsignedInt" default="1" />
+	</complexType>
+
+	<simpleType name="nameType">
+		<restriction base="ID">
+			<pattern value="[A-Z][A-Z0-9]+" />
+		</restriction>
+	</simpleType>
+</schema>
