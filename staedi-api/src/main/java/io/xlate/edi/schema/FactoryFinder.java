@@ -15,7 +15,7 @@ import java.util.Properties;
  * </p>
  * 
  * <p>
- * This class is duplicated for each JAXP subpackage so keep it in sync. It is
+ * This class is duplicated for each StAEDI subpackage so keep it in sync. It is
  * package private for secure class loading.
  * </p>
  *
@@ -30,12 +30,12 @@ class FactoryFinder {
 	private static boolean debug = false;
 
 	/**
-	 * Cache for properties in java.home/lib/jaxp.properties
+	 * Cache for properties in java.home/lib/staedi.properties
 	 */
 	static Properties cacheProps = new Properties();
 
 	/**
-	 * Flag indicating if properties from java.home/lib/jaxp.properties have
+	 * Flag indicating if properties from java.home/lib/staedi.properties have
 	 * been cached.
 	 */
 	static boolean firstTime = true;
@@ -46,7 +46,7 @@ class FactoryFinder {
 	 */
 	static SecuritySupport security = new SecuritySupport();
 
-	// Define system property "jaxp.debug" to get output
+	// Define system property "staedi.debug" to get output
 	static {
 		// Use try/catch block to support applets, which throws
 		// SecurityException out of this code.
@@ -61,7 +61,7 @@ class FactoryFinder {
 
 	private static void dPrint(String msg) {
 		if (debug) {
-			System.err.println("JAXP: " + msg);
+			System.err.println("StAEDI: " + msg);
 		}
 	}
 

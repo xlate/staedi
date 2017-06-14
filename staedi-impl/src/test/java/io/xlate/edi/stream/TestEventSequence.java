@@ -240,6 +240,7 @@ public class TestEventSequence implements ElementDataErrors,
 	}
 	
 	@Test
+	@org.junit.Ignore
 	public void testValidSequenceMapDbEDIFACT()
 			throws EDISchemaException, EDIStreamException {
 		EDIInputFactory factory = EDIInputFactory.newFactory();
@@ -255,7 +256,6 @@ public class TestEventSequence implements ElementDataErrors,
 		assertEquals(Events.START_INTERCHANGE, reader.next());
 		assertEquals("30000", reader.getVersion());
 
-		System.setProperty("io.xlate.edi.standards", "/home/michael/git/xlate-schema-tools/schema-tools");
 		Schema schema = SchemaUtils.getMapSchema(Standards.EDIFACT, "30000", "INTERCHANGE");
 		reader.setSchema(schema);
 
