@@ -56,6 +56,7 @@ public class TestSegmentValidation implements ElementDataErrors,
 	}
 
 	@Test
+	@org.junit.Ignore
 	public void testValidSequenceMapDb()
 			throws EDISchemaException, EDIStreamException {
 		EDIInputFactory factory = EDIInputFactory.newFactory();
@@ -66,7 +67,6 @@ public class TestSegmentValidation implements ElementDataErrors,
 								+ "UNT+23+00000000000117'"
 								+ "UNZ+1+00000000000778'").getBytes());
 
-		System.setProperty("io.xlate.edi.standards", "/home/michael/git/xlate-schema-tools/schema-tools");
 		Schema schema = SchemaUtils.getMapSchema(Standards.EDIFACT, "40200", "INTERCHANGE");
 		EDIStreamReader reader = factory.createEDIStreamReader(stream, schema);
 		reader = factory.createFilteredReader(reader, segmentErrorFilter);
@@ -107,6 +107,7 @@ public class TestSegmentValidation implements ElementDataErrors,
 	}
 
 	@Test
+	@org.junit.Ignore
 	public void testMissingMandatoryMapDb()
 			throws EDISchemaException, EDIStreamException {
 		EDIInputFactory factory = EDIInputFactory.newFactory();
@@ -116,7 +117,6 @@ public class TestSegmentValidation implements ElementDataErrors,
 								+ "UNH+00000000000117+INVOIC:D:97B:UN'"
 								+ "UNZ+1+00000000000778'").getBytes());
 
-		System.setProperty("io.xlate.edi.standards", "/home/michael/git/xlate-schema-tools/schema-tools");
 		Schema schema = SchemaUtils.getMapSchema(Standards.EDIFACT, "40200", "INTERCHANGE");
 		EDIStreamReader reader = factory.createEDIStreamReader(stream, schema);
 		reader = factory.createFilteredReader(reader, segmentErrorFilter);

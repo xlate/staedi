@@ -48,7 +48,7 @@ public class EDISchemaException extends Exception {
 	}
 
 	/**
-	 * Construct an exception with the assocated message, exception and
+	 * Construct an exception with the associated message, exception and
 	 * location.
 	 *
 	 * @param th

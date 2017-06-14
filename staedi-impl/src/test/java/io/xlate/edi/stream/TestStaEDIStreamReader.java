@@ -319,7 +319,8 @@ public class TestStaEDIStreamReader implements TestConstants,
 	@Test
 	public void testSetSchema() throws EDIStreamException, EDISchemaException, IOException {
 		EDIInputFactory factory = EDIInputFactory.newFactory();
-		InputStream stream = SchemaUtils.getStream("x12/invalid997.edi");
+		InputStream stream = SchemaUtils.getStreams("x12/invalid997.edi")
+		        .nextElement().openStream();
 
 		SchemaFactory schemaFactory = SchemaFactory.newFactory();
 		Schema transaction = schemaFactory.createSchema(SchemaUtils.getURL("x12/EDISchema997.xml"));
@@ -386,7 +387,8 @@ public class TestStaEDIStreamReader implements TestConstants,
 	@Test
 	public void testAddSchema() throws EDIStreamException, EDISchemaException, IOException {
 		EDIInputFactory factory = EDIInputFactory.newFactory();
-		InputStream stream = SchemaUtils.getStream("x12/invalid997.edi");
+		InputStream stream = SchemaUtils.getStreams("x12/invalid997.edi")
+                .nextElement().openStream();
 
 		SchemaFactory schemaFactory = SchemaFactory.newFactory();
 		Schema transaction = schemaFactory.createSchema(SchemaUtils.getURL("x12/EDISchema997.xml"));
@@ -475,9 +477,10 @@ public class TestStaEDIStreamReader implements TestConstants,
 
 	@Test
 	public void testGetErrorType()
-			throws EDIStreamException, EDISchemaException {
+			throws EDIStreamException, EDISchemaException, IOException {
 		EDIInputFactory factory = EDIInputFactory.newFactory();
-		InputStream stream = SchemaUtils.getStream("x12/invalid997.edi");
+		InputStream stream = SchemaUtils.getStreams("x12/invalid997.edi")
+                .nextElement().openStream();
 
 		SchemaFactory schemaFactory = SchemaFactory.newFactory();
 		Schema schema = schemaFactory.createSchema(SchemaUtils.getURL("x12/EDISchema997.xml"));

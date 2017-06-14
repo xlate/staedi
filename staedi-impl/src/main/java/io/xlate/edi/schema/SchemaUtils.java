@@ -1,17 +1,17 @@
 package io.xlate.edi.schema;
 
-import io.xlate.edi.stream.EDIStreamConstants;
-
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Enumeration;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NavigableMap;
 import java.util.Properties;
 import java.util.TreeMap;
+
+import io.xlate.edi.stream.EDIStreamConstants;
 
 public class SchemaUtils {
 
@@ -19,25 +19,29 @@ public class SchemaUtils {
 	static NavigableMap<String, String> controlVersions = new TreeMap<>();
 	static NavigableMap<String, Schema> controlSchemas = new TreeMap<>();
 
-	static {
-		try {
-			controlIndex.load(getStream("staedi-control-index.properties"));
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
+    static {
+        try {
+            Enumeration<URL> resources = getStreams("staedi-control-index.properties");
 
-		for (Map.Entry<Object, Object> entry : controlIndex.entrySet()) {
-			final String entryKey = entry.getKey().toString();
-			final String entryValue = entry.getValue().toString();
+            while (resources.hasMoreElements()) {
+                controlIndex.load(resources.nextElement().openStream());
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
 
-			controlVersions.put(entryKey, entryValue);
-			controlSchemas.put(entryKey, null);
-		}
-	}
+        for (Map.Entry<Object, Object> entry : controlIndex.entrySet()) {
+            final String entryKey = entry.getKey().toString();
+            final String entryValue = entry.getValue().toString();
 
-	public static InputStream getStream(String resource) {
+            controlVersions.put(entryKey, entryValue);
+            controlSchemas.put(entryKey, null);
+        }
+    }
+
+	public static Enumeration<URL> getStreams(String resource) throws IOException {
 		ClassLoader loader = Thread.currentThread().getContextClassLoader();
-		return loader.getResourceAsStream(resource);
+		return loader.getResources(resource);
 	}
 
 	public static URL getURL(String resource) {

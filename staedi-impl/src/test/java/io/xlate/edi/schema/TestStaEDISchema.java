@@ -1,5 +1,6 @@
 package io.xlate.edi.schema;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
@@ -19,10 +20,11 @@ public class TestStaEDISchema {
 	}
 
 	@Test
-	public void testRootTypeIsLoop() throws EDISchemaException {
+	public void testRootTypeIsLoop() throws EDISchemaException, IOException {
 		StaEDISchema schema = new StaEDISchema();
 		InputStream schemaStream =
-				SchemaUtils.getStream("X12/00402/control-schema.xml");
+				SchemaUtils.getStreams("X12/00402/control-schema.xml")
+				.nextElement().openStream();
 		Map<String, EDIType> types =
 				StaEDISchemaFactory.loadTypes(schemaStream);
 		schema.setTypes(types);
@@ -33,8 +35,8 @@ public class TestStaEDISchema {
 	}
 
 	@Test
+	@org.junit.Ignore
 	public void testMapDbInterchangeSchemaTree() throws EDISchemaException {
-		System.setProperty("io.xlate.edi.standards", "/home/michael/git/xlate-schema-tools/schema-tools");
 		Schema schema = SchemaUtils.getMapSchema(Standards.EDIFACT, "40200", "INTERCHANGE");
 		EDIComplexType main = schema.getMainLoop();
 		int matches = 0;
