@@ -18,7 +18,7 @@
 	<parent>
 		<groupId>io.xlate</groupId>
 		<artifactId>staedi-parent</artifactId>
-		<version>0.0.1</version>
+		<version>0.0.2-SNAPSHOT</version>
 	</parent>
 	<artifactId>staedi-impl</artifactId>
 	<name>StAEDI Implementation (API)</name>
@@ -29,7 +29,7 @@
 		<url>https://github.com/xlate/staedi</url>
 		<connection>scm:git:https://github.com/xlate/staedi.git</connection>
 		<developerConnection>scm:git:ssh://git@github.com/xlate/staedi.git</developerConnection>
-		<tag>v0.0.1</tag>
+		<tag>HEAD</tag>
 	</scm>
 
 	<dependencies>
