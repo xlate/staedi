@@ -33,7 +33,6 @@ import io.xlate.edi.stream.internal.ProxyEventHandler;
 
 public class StaEDIStreamReader implements EDIStreamReader {
 
-	@SuppressWarnings("unused")
 	private final InputStream stream;
 	@SuppressWarnings("unused")
 	private final String encoding;
@@ -68,7 +67,7 @@ public class StaEDIStreamReader implements EDIStreamReader {
 		this.schema = schema;
 		this.properties = new HashMap<>(properties);
 		this.proxy = new ProxyEventHandler(location, this.schema);
-		this.lexer = new Lexer(stream, proxy, location);
+		this.lexer = new Lexer(this.stream, proxy, location);
 	}
 
 	private void ensureOpen() {

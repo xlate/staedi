@@ -181,7 +181,7 @@ public interface EDIStreamReader extends Closeable, EDIStreamConstants {
 	/**
 	 * Returns the current value of the parse event as a string. This returns
 	 * the string value of an ELEMENT_DATA event, and the string value of a
-	 * segment tag in a START_SEGMENT and END_SEGMENT event. During an
+	 * segment tag in a START_SEGMENT event. During an
 	 * ELEMENT_ERROR event, this contains the invalid element.
 	 *
 	 * @return the current text or null
