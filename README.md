@@ -15,7 +15,7 @@ StAEDI is licensed under [Apache License 2.0](http://www.apache.org/licenses/LIC
 <dependency>
 	<groupId>io.xlate</groupId>
 	<artifactId>staedi-impl</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.0.1</version>
 </dependency>
 ```
 
