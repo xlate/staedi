@@ -32,7 +32,7 @@ import org.junit.runners.MethodSorters;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @SuppressWarnings("static-method")
-public class TestStaEDIStreamWriter {
+public class StaEDIStreamWriterTest {
 
 	private void writeHeader(EDIStreamWriter writer) throws EDIStreamException {
 		//ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~

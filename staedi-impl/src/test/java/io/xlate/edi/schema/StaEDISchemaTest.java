@@ -26,7 +26,7 @@ import org.junit.Test;
 import io.xlate.edi.stream.EDIStreamConstants.Standards;
 
 @SuppressWarnings({ "static-method", "resource" })
-public class TestStaEDISchema {
+public class StaEDISchemaTest {
 
 	@Test(expected = NullPointerException.class)
 	public void testSetTypesNullTypes() throws EDISchemaException {

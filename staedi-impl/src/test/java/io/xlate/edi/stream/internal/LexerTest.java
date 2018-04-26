@@ -23,11 +23,11 @@ import java.util.Map;
 import org.junit.Assert;
 import org.junit.Test;
 
-import io.xlate.edi.stream.TestConstants;
+import io.xlate.edi.stream.ConstantsTest;
 
-public class TestLexer {
+public class LexerTest {
 
-	class TestLexerEventHandler implements EventHandler, TestConstants {
+	class TestLexerEventHandler implements EventHandler, ConstantsTest {
 		final Map<String, Object> content = new HashMap<>(2);
 
 		@Override
@@ -226,8 +226,8 @@ public class TestLexer {
 			if ("segmentBegin".equals(last)) {
 				String tag = (String) eventHandler.content.get("SEGMENT");
 
-				if (++s < TestConstants.simple997tags.length) {
-					Assert.assertEquals("Unexpected segment", TestConstants.simple997tags[s], tag);
+				if (++s < ConstantsTest.simple997tags.length) {
+					Assert.assertEquals("Unexpected segment", ConstantsTest.simple997tags[s], tag);
 				} else {
 					Assert.fail("Unexpected segment: " + tag);
 				}
@@ -258,8 +258,8 @@ public class TestLexer {
 			if ("segmentBegin".equals(last)) {
 				String tag = (String) eventHandler.content.get("SEGMENT");
 
-				if (++s < TestConstants.invoic_d97b_unatags.length) {
-					Assert.assertEquals("Unexpected segment", TestConstants.invoic_d97b_unatags[s], tag);
+				if (++s < ConstantsTest.invoic_d97b_unatags.length) {
+					Assert.assertEquals("Unexpected segment", ConstantsTest.invoic_d97b_unatags[s], tag);
 				} else {
 					Assert.fail("Unexpected segment: " + tag);
 				}
@@ -288,8 +288,8 @@ public class TestLexer {
 			if ("segmentBegin".equals(last)) {
 				String tag = (String) eventHandler.content.get("SEGMENT");
 
-				if (++s < TestConstants.invoic_d97btags.length) {
-					Assert.assertEquals("Unexpected segment", TestConstants.invoic_d97btags[s], tag);
+				if (++s < ConstantsTest.invoic_d97btags.length) {
+					Assert.assertEquals("Unexpected segment", ConstantsTest.invoic_d97btags[s], tag);
 				} else {
 					Assert.fail("Unexpected segment: " + tag);
 				}

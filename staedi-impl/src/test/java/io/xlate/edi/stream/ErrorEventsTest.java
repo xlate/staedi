@@ -28,7 +28,7 @@ import io.xlate.edi.stream.EDIStreamConstants.ElementDataErrors;
 import io.xlate.edi.stream.EDIStreamConstants.ElementOccurrenceErrors;
 import io.xlate.edi.stream.EDIStreamConstants.Events;
 
-public class TestErrorEvents {
+public class ErrorEventsTest {
 
 	EDIStreamFilter errorFilter = new EDIStreamFilter() {
 		@Override

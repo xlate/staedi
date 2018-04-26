@@ -35,7 +35,7 @@ import io.xlate.edi.stream.EDIStreamConstants.Events;
 import io.xlate.edi.stream.EDIStreamConstants.Standards;
 
 @SuppressWarnings("static-method")
-public class TestEventSequence implements ElementDataErrors,
+public class EventSequenceTest implements ElementDataErrors,
 		ElementOccurrenceErrors {
 
 	@Test

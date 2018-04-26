@@ -45,12 +45,12 @@ import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
 @SuppressWarnings( {"static-method", "resource", "unused"} )
-public class TestStaEDIStreamReader implements TestConstants,
+public class StaEDIStreamReaderTest implements ConstantsTest,
 		ElementDataErrors, ElementOccurrenceErrors {
 
 	private Set<Integer> possible = new HashSet<Integer>();
 
-	public TestStaEDIStreamReader() {
+	public StaEDIStreamReaderTest() {
 		possible.addAll(Arrays.asList(
 				Events.ELEMENT_DATA,
 				Events.END_COMPOSITE,

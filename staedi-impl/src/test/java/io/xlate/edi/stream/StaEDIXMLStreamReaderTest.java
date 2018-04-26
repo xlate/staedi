@@ -30,7 +30,7 @@ import javax.xml.transform.stream.StreamResult;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class TestStaEDIXMLStreamReader {
+public class StaEDIXMLStreamReaderTest {
 
 	static byte[] DUMMY_X12 =
 			("ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~"

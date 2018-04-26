@@ -25,7 +25,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 @SuppressWarnings("resource")
-public class TestStaEDIFilteredStreamReader implements TestConstants {
+public class StaEDIFilteredStreamReaderTest implements ConstantsTest {
 
 	@Test
 	/**

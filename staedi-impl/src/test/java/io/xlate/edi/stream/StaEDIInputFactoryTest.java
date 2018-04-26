@@ -25,7 +25,7 @@ import io.xlate.edi.schema.Schema;
 import io.xlate.edi.schema.SchemaFactory;
 
 @SuppressWarnings({ "static-method", "resource" })
-public class TestStaEDIInputFactory {
+public class StaEDIInputFactoryTest {
 
 	@Test
 	public void testNewFactory() {

@@ -19,7 +19,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 @SuppressWarnings("static-method")
-public class TestX12Dialect {
+public class X12DialectTest {
 
 	@Test
 	public void testX12Dialect() throws EDIException {

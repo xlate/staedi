@@ -26,7 +26,7 @@ import org.junit.Test;
 import io.xlate.edi.stream.EDIStreamConstants.Standards;
 
 @SuppressWarnings("static-method")
-public class TestStaEDISchemaFactory {
+public class StaEDISchemaFactoryTest {
 
 	@Test
 	public void testCreateSchemaByURL() throws EDISchemaException {

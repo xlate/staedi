@@ -35,7 +35,7 @@ import io.xlate.edi.stream.EDIStreamConstants.SegmentErrors;
 import io.xlate.edi.stream.EDIStreamConstants.Standards;
 
 @SuppressWarnings("resource")
-public class TestSegmentValidation implements ElementDataErrors,
+public class SegmentValidationTest implements ElementDataErrors,
 		ElementOccurrenceErrors {
 
 	EDIStreamFilter segmentErrorFilter = new EDIStreamFilter() {

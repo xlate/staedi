@@ -19,7 +19,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 @SuppressWarnings("static-method")
-public class TestEDIFACTDialect {
+public class EDIFACTDialectTest {
 
 	@Test
 	public void testEDIFACTADialect() throws EDIException {

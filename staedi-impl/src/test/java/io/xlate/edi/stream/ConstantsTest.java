@@ -16,7 +16,7 @@
 package io.xlate.edi.stream;
 
 
-public interface TestConstants {
+public interface ConstantsTest {
 
 	String[] simple997tags = {
 			"ISA",
