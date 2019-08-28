@@ -15,10 +15,6 @@
  ******************************************************************************/
 package io.xlate.edi.schema;
 
-import java.io.Externalizable;
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -26,7 +22,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-class StaEDISchema extends Schema implements Externalizable {
+class StaEDISchema extends Schema {
 
 	private static final long serialVersionUID = -1469959633026577070L;
 
@@ -38,38 +34,6 @@ class StaEDISchema extends Schema implements Externalizable {
 	private EDIComplexType mainLoop = null;
 
 	public StaEDISchema() {}
-
-	@SuppressWarnings("unchecked")
-	@Override
-	public void readExternal(ObjectInput in)
-			throws IOException, ClassNotFoundException {
-		if (in.readBoolean()) {
-			mainLoop = (EDIComplexType) in.readObject();
-		} else {
-			mainLoop = null;
-		}
-
-		types = (Map<String, EDIType>) in.readObject();
-
-		types.values().parallelStream()
-			.filter(type -> type instanceof EDIComplexType)
-			.map(type -> (EDIComplexType) type)
-			.forEach(type -> type.getReferences().stream()
-					.filter(ref -> ref instanceof Reference)
-					.forEach(ref -> ((Reference) ref).setSchema(proxy)));
-	}
-
-	@Override
-	public void writeExternal(ObjectOutput out) throws IOException {
-		if (mainLoop != null) {
-			out.writeBoolean(true);
-			out.writeObject(mainLoop);
-		} else {
-			out.writeBoolean(false);
-		}
-
-		out.writeObject(types);
-	}
 
 	@Override
 	public EDIComplexType getMainLoop() {

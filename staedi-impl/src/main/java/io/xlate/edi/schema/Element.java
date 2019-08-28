@@ -15,13 +15,10 @@
  ******************************************************************************/
 package io.xlate.edi.schema;
 
-import java.io.Serializable;
 import java.util.Collections;
 import java.util.Set;
 
-class Element extends BasicType implements EDISimpleType, Serializable {
-
-	private static final long serialVersionUID = 1678383730368794011L;
+class Element extends BasicType implements EDISimpleType {
 
 	private int base;
 	private int number;
@@ -79,44 +76,6 @@ class Element extends BasicType implements EDISimpleType, Serializable {
 		buffer.append(", values: ");
 		buffer.append(values);
 		return buffer.toString();
-	}
-
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + number;
-		result = prime * result + maxLength;
-		result = prime * result + minLength;
-		result = prime * result + ((values == null) ? 0 : values.hashCode());
-		return result;
-	}
-
-	@Override
-	public boolean equals(Object other) {
-		if (!super.equals(other)) {
-			return false;
-		}
-
-		Element otherType = (Element) other;
-
-		if (number != otherType.number) {
-			return false;
-		}
-		if (maxLength != otherType.maxLength) {
-			return false;
-		}
-		if (minLength != otherType.minLength) {
-			return false;
-		}
-		if (values == null) {
-			if (otherType.values != null) {
-				return false;
-			}
-		} else if (!values.equals(otherType.values)) {
-			return false;
-		}
-		return true;
 	}
 
 	@Override

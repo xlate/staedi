@@ -56,30 +56,4 @@ abstract class BasicType implements EDIType {
 	public int getTypeCode() {
 		return type;
 	}
-
-	@Override
-	public boolean equals(Object other) {
-		if (this == other) {
-			return true;
-		}
-
-		if (other == null) {
-			return false;
-		}
-
-		if (getClass() != other.getClass()) {
-			return false;
-		}
-
-		BasicType otherType = (BasicType) other;
-
-		if (this.type != otherType.type) {
-			return false;
-		}
-
-		return this.id.equals(otherType.id);
-	}
-
-	@Override
-	public abstract int hashCode();
 }

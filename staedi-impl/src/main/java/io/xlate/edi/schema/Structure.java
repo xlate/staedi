@@ -24,8 +24,6 @@ class Structure extends BasicType implements EDIComplexType {
 	private List<EDIReference> references;
 	private List<EDISyntaxRule> syntaxRules;
 
-	public Structure() {}
-
 	Structure(String id, int type, String code, List<Reference> references, List<SyntaxRestriction> syntaxRules) {
 		super(id, type);
 		this.code = code;
@@ -70,46 +68,6 @@ class Structure extends BasicType implements EDIComplexType {
 		}
 		buffer.append("\n]\n");
 		return buffer.toString();
-	}
-
-	@Override
-	public boolean equals(Object other) {
-		if (!super.equals(other)) {
-			return false;
-		}
-
-		Structure otherStructure = (Structure) other;
-
-		if (code == null) {
-			if (otherStructure.code != null) {
-				return false;
-			}
-		} else if (!code.equals(otherStructure.code)) {
-			return false;
-		}
-
-		if (references == null) {
-			if (otherStructure.references != null) {
-				return false;
-			}
-		} else if (!references.equals(otherStructure.references)) {
-			return false;
-		}
-
-		if (syntaxRules == null) {
-			if (otherStructure.syntaxRules != null) {
-				return false;
-			}
-		} else if (!syntaxRules.equals(otherStructure.syntaxRules)) {
-			return false;
-		}
-
-		return true;
-	}
-
-	@Override
-	public int hashCode() {
-		return id.hashCode();
 	}
 
 	@Override

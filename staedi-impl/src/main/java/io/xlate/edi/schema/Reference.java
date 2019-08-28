@@ -24,8 +24,6 @@ class Reference implements EDIReference {
 	private int maxOccurs;
 	private Schema schema;
 
-	public Reference() {}
-
 	Reference(String refId, String refTag, int minOccurs, int maxOccurs) {
 		this.refId = refId;
 		this.refTag = refTag;
@@ -63,50 +61,6 @@ class Reference implements EDIReference {
 				+ minOccurs
 				+ ", maxOccurs: "
 				+ maxOccurs;
-	}
-
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + maxOccurs;
-		result = prime * result + minOccurs;
-		result = prime * result + ((refId == null) ? 0 : refId.hashCode());
-		result =
-				prime
-						* result
-						+ ((referencedType == null)
-								? 0
-								: ((BasicType) referencedType).hashCode());
-		return result;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		Reference other = (Reference) obj;
-		if (maxOccurs != other.maxOccurs)
-			return false;
-		if (minOccurs != other.minOccurs)
-			return false;
-		if (refId == null) {
-			if (other.refId != null)
-				return false;
-		} else if (!refId.equals(other.refId)) {
-			return false;
-		}
-		if (referencedType == null) {
-			if (other.referencedType != null)
-				return false;
-		} else if (!referencedType.equals(other.referencedType)) {
-			return false;
-		}
-		return true;
 	}
 
 	String getRefId() {
