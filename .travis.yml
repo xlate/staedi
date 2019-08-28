@@ -4,7 +4,6 @@ dist: xenial
 
 jdk:
   - openjdk8
-  - oraclejdk8
   - openjdk10
   - openjdk11
 
