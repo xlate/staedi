@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2017 xlate.io LLC, http://www.xlate.io
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License.  You may obtain a copy
  * of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
@@ -15,6 +15,7 @@
  ******************************************************************************/
 package io.xlate.edi.stream;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 import java.io.ByteArrayInputStream;
@@ -62,7 +63,7 @@ public class EventSequenceTest implements ElementDataErrors,
 		@SuppressWarnings("resource")
 		EDIStreamReader reader = factory.createEDIStreamReader(stream);
 		assertEquals(Events.START_INTERCHANGE, reader.next());
-		reader.setSchema(loadSchema(reader.getStandard(), reader.getVersion()));
+		reader.setSchema(loadX12FuncAckSchema(reader.getStandard(), reader.getVersion()));
 		assertEquals(Events.START_SEGMENT, reader.next());
 		assertEquals("ISA", reader.getText());
 		while ((event = reader.next()) == Events.ELEMENT_DATA) {
@@ -191,7 +192,7 @@ public class EventSequenceTest implements ElementDataErrors,
 		@SuppressWarnings("resource")
 		EDIStreamReader reader = factory.createEDIStreamReader(stream);
 		assertEquals(Events.START_INTERCHANGE, reader.next());
-		reader.setSchema(loadSchema(reader.getStandard(), reader.getVersion()));
+		reader.setSchema(loadX12FuncAckSchema(reader.getStandard(), reader.getVersion()));
 		assertEquals(Events.START_SEGMENT, reader.next());
 		assertEquals("ISA", reader.getText());
 		while ((event = reader.next()) == Events.ELEMENT_DATA) {
@@ -253,10 +254,9 @@ public class EventSequenceTest implements ElementDataErrors,
 		assertEquals(Events.END_SEGMENT, reader.next()); // IEA
 		assertEquals(Events.END_INTERCHANGE, reader.next());
 	}
-	
+
 	@Test
-	@org.junit.Ignore
-	public void testValidSequenceMapDbEDIFACT()
+	public void testValidSequenceEDIFACT()
 			throws EDISchemaException, EDIStreamException {
 		EDIInputFactory factory = EDIInputFactory.newFactory();
 		InputStream stream =
@@ -269,9 +269,9 @@ public class EventSequenceTest implements ElementDataErrors,
 		@SuppressWarnings("resource")
 		EDIStreamReader reader = factory.createEDIStreamReader(stream);
 		assertEquals(Events.START_INTERCHANGE, reader.next());
-		assertEquals("30000", reader.getVersion());
+		assertArrayEquals(new String[] { "UNOA", "3" }, reader.getVersion());
 
-		Schema schema = SchemaUtils.getMapSchema(Standards.EDIFACT, "30000", "INTERCHANGE");
+		Schema schema = SchemaUtils.getControlSchema(Standards.EDIFACT, reader.getVersion());
 		reader.setSchema(schema);
 
 		assertEquals(Events.START_SEGMENT, reader.next());
@@ -367,7 +367,7 @@ public class EventSequenceTest implements ElementDataErrors,
 		@SuppressWarnings("resource")
 		EDIStreamReader reader = factory.createEDIStreamReader(stream);
 		assertEquals(Events.START_INTERCHANGE, reader.next());
-		reader.setSchema(loadSchema(reader.getStandard(), reader.getVersion()));
+		reader.setSchema(loadX12FuncAckSchema(reader.getStandard(), reader.getVersion()));
 		assertEquals(Events.START_SEGMENT, reader.nextTag());
 		assertEquals("ISA", reader.getText());
 		assertEquals(Events.START_SEGMENT, reader.nextTag());
@@ -455,7 +455,7 @@ public class EventSequenceTest implements ElementDataErrors,
 		assertEquals(Events.END_INTERCHANGE, reader.next());
 	}
 
-	private Schema loadSchema(String standard, String version)
+	private Schema loadX12FuncAckSchema(String standard, String[] version)
 			throws EDISchemaException {
 
 		Schema control = SchemaUtils.getControlSchema(standard, version);

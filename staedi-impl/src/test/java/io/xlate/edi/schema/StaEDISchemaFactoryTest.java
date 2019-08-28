@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2017 xlate.io LLC, http://www.xlate.io
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License.  You may obtain a copy
  * of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
@@ -16,6 +16,7 @@
 package io.xlate.edi.schema;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.InputStream;
@@ -50,15 +51,9 @@ public class StaEDISchemaFactoryTest {
 	}
 
 	@Test
-	public void testCreateMapDBFactory() {
-		SchemaFactory factory = SchemaFactory.newFactory(StaEDIMapSchemaFactory.ID, Thread.currentThread().getContextClassLoader());
-		assertTrue(factory instanceof StaEDIMapSchemaFactory);
-	}
-
-	@Test
-	@org.junit.Ignore
-	public void testCreateMapDBInterchangeSchema() throws EDISchemaException {
-		Schema schema = SchemaUtils.getMapSchema(Standards.EDIFACT, "40200", "INTERCHANGE");
+	public void testCreateEdifactInterchangeSchema() throws EDISchemaException {
+		Schema schema = SchemaUtils.getControlSchema(Standards.EDIFACT, new String[] { "UNOA", "4", "", "", "02" });
+		assertNotNull("schema was null", schema);
 		assertEquals("Incorrect root id",  StaEDISchema.MAIN, schema.getMainLoop().getId());
 	}
 

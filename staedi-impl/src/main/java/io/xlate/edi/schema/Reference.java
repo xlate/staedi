@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2017 xlate.io LLC, http://www.xlate.io
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License.  You may obtain a copy
  * of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
@@ -15,21 +15,14 @@
  ******************************************************************************/
 package io.xlate.edi.schema;
 
-import java.io.Externalizable;
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
-
-class Reference implements EDIReference, Externalizable {
-
-	private static final long serialVersionUID = -3094187052069347512L;
+class Reference implements EDIReference {
 
 	private String refId;
 	private String refTag;
-	private transient EDIType referencedType;
+	private EDIType referencedType;
 	private int minOccurs;
 	private int maxOccurs;
-	private transient Schema schema;
+	private Schema schema;
 
 	public Reference() {}
 
@@ -60,22 +53,6 @@ class Reference implements EDIReference, Externalizable {
 		this.refTag = null;
 		this.minOccurs = other.getMinOccurs();
 		this.maxOccurs = other.getMaxOccurs();
-	}
-
-	@Override
-	public void writeExternal(ObjectOutput out) throws IOException {
-		Externalizer.writeUTF(refId, out);
-		Externalizer.writeUTF(refTag, out);
-		out.writeInt(minOccurs);
-		out.writeInt(maxOccurs);
-	}
-
-	@Override
-	public void readExternal(ObjectInput in) throws IOException {
-		refId = Externalizer.readUTF(in);
-		refTag = Externalizer.readUTF(in);
-		minOccurs = in.readInt();
-		maxOccurs = in.readInt();
 	}
 
 	@Override
@@ -120,13 +97,15 @@ class Reference implements EDIReference, Externalizable {
 		if (refId == null) {
 			if (other.refId != null)
 				return false;
-		} else if (!refId.equals(other.refId))
+		} else if (!refId.equals(other.refId)) {
 			return false;
+		}
 		if (referencedType == null) {
 			if (other.referencedType != null)
 				return false;
-		} else if (!referencedType.equals(other.referencedType))
+		} else if (!referencedType.equals(other.referencedType)) {
 			return false;
+		}
 		return true;
 	}
 

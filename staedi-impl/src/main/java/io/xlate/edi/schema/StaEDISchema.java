@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2017 xlate.io LLC, http://www.xlate.io
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License.  You may obtain a copy
  * of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
@@ -32,7 +32,7 @@ class StaEDISchema extends Schema implements Externalizable {
 
 	static final String MAIN = "io.xlate.edi.schema.MAIN";
 
-	transient final SchemaProxy proxy = new SchemaProxy(this);
+	final transient SchemaProxy proxy = new SchemaProxy(this);
 
 	private Map<String, EDIType> types = Collections.emptyMap();
 	private EDIComplexType mainLoop = null;
@@ -124,8 +124,7 @@ class StaEDISchema extends Schema implements Externalizable {
 		}
 
 		EDIReference knownChild = null;
-		@SuppressWarnings("unchecked")
-		List<Reference> references = (List<Reference>) parent.getReferences();
+		List<EDIReference> references = parent.getReferences();
 
 		for (EDIReference reference : references) {
 			if (reference == child) {
@@ -165,11 +164,10 @@ class StaEDISchema extends Schema implements Externalizable {
 			EDIReference child) {
 
 		if (root != parent) {
-			@SuppressWarnings("unchecked")
-			List<Reference> references = (List<Reference>) root.getReferences();
+			List<EDIReference> references = root.getReferences();
 
 			for (int i = 0, m = references.size(); i < m; i++) {
-				Reference reference = references.get(i);
+				EDIReference reference = references.get(i);
 				EDIType type = reference.getReferencedType();
 
 				if (type.getTypeCode() != EDIType.TYPE_LOOP) {
@@ -180,11 +178,9 @@ class StaEDISchema extends Schema implements Externalizable {
 				EDIComplexType newParent;
 				newParent = attach(referenced, loop, parent, child);
 
-				if (newParent == null) {
-					continue;
+				if (newParent != null) {
+				    return replaceReference(root, references, reference, i, newParent);
 				}
-
-				return replaceReference(root, references, reference, i, newParent);
 			}
 		} else {
 			return addReference(referenced, root, parent, child);
@@ -195,7 +191,7 @@ class StaEDISchema extends Schema implements Externalizable {
 
 	private EDIComplexType replaceReference(
 			EDIComplexType loop,
-			List<Reference> references,
+			List<EDIReference> references,
 			EDIReference reference,
 			int i,
 			EDIComplexType newTarget) {
@@ -214,14 +210,12 @@ class StaEDISchema extends Schema implements Externalizable {
 		return newLoop;
 	}
 
-	@SuppressWarnings("unchecked")
-	static List<SyntaxRestriction> getSyntaxRules(EDIComplexType type) {
-		return (List<SyntaxRestriction>) type.getSyntaxRules();
+	static List<EDISyntaxRule> getSyntaxRules(EDIComplexType type) {
+		return type.getSyntaxRules();
 	}
 
-	@SuppressWarnings("unchecked")
-	static List<Reference> getReferences(EDIComplexType type) {
-		return (List<Reference>) type.getReferences();
+	static List<EDIReference> getReferences(EDIComplexType type) {
+		return type.getReferences();
 	}
 
 	private EDIComplexType addReference(
@@ -230,10 +224,10 @@ class StaEDISchema extends Schema implements Externalizable {
 			EDIComplexType parent,
 			EDIReference child) {
 
-		List<Reference> references = getReferences(root);
+		List<EDIReference> references = getReferences(root);
 		int index = 0;
 
-		for (Reference reference : references) {
+		for (EDIReference reference : references) {
 			if (reference == child) {
 				break;
 			}

@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2017 xlate.io LLC, http://www.xlate.io
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License.  You may obtain a copy
  * of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
@@ -87,7 +87,7 @@ public class StaEDIStreamReader implements EDIStreamReader {
 	}
 
 	@Override
-	public Object getProperty(String name) throws IllegalArgumentException {
+	public Object getProperty(String name) {
 		if (name == null) {
 			throw new IllegalArgumentException("Name must not be null");
 		}
@@ -95,7 +95,7 @@ public class StaEDIStreamReader implements EDIStreamReader {
 	}
 
 	@Override
-	public Map<String, Character> getDelimiters() throws IllegalStateException {
+	public Map<String, Character> getDelimiters() {
 		Dialect dialect = lexer.getDialect();
 
 		if (dialect == null) {
@@ -121,7 +121,7 @@ public class StaEDIStreamReader implements EDIStreamReader {
 	}
 
 	@Override
-	public int next() throws NoSuchElementException, EDIStreamException {
+	public int next() throws EDIStreamException {
 		ensureOpen();
 		ensureIncomplete();
 
@@ -147,7 +147,7 @@ public class StaEDIStreamReader implements EDIStreamReader {
 	}
 
 	@Override
-	public int nextTag() throws NoSuchElementException, EDIStreamException {
+	public int nextTag() throws EDIStreamException {
 		int event = 0;
 
 		do {
@@ -180,7 +180,7 @@ public class StaEDIStreamReader implements EDIStreamReader {
 	}
 
 	@Override
-	public String getStandard() throws IllegalStateException {
+	public String getStandard() {
 		if (getEventType() != Events.START_INTERCHANGE) {
 			throw new IllegalStateException("version not accessible");
 		}
@@ -189,7 +189,7 @@ public class StaEDIStreamReader implements EDIStreamReader {
 	}
 
 	@Override
-	public String getVersion() throws IllegalStateException {
+	public String[] getVersion() {
 		if (getEventType() != Events.START_INTERCHANGE) {
 			throw new IllegalStateException("version not accessible");
 		}
@@ -198,7 +198,7 @@ public class StaEDIStreamReader implements EDIStreamReader {
 	}
 
 	@Override
-	public void setSchema(Schema schema) throws IllegalStateException {
+	public void setSchema(Schema schema) {
 		if (getEventType() != Events.START_INTERCHANGE) {
 			throw new IllegalStateException(
 					"schema set after interchange start");
@@ -213,8 +213,7 @@ public class StaEDIStreamReader implements EDIStreamReader {
 	}
 
 	@Override
-	public void addSchema(Schema additionalSchema)
-			throws IllegalStateException, EDISchemaException {
+	public void addSchema(Schema additionalSchema) throws EDISchemaException {
 
 		if (this.schema == null) {
 			throw new IllegalStateException("previous schema not set");
@@ -228,13 +227,13 @@ public class StaEDIStreamReader implements EDIStreamReader {
 	}
 
 	@Override
-	public String getReferenceCode() throws IllegalStateException {
+	public String getReferenceCode() {
 		// FIXME: add state check
 		return proxy.getReferenceCode();
 	}
 
 	@Override
-	public int getErrorType() throws IllegalStateException {
+	public int getErrorType() {
 		switch (getEventType()) {
 		case Events.ELEMENT_DATA_ERROR:
 		case Events.ELEMENT_OCCURRENCE_ERROR:
@@ -261,7 +260,7 @@ public class StaEDIStreamReader implements EDIStreamReader {
 	}
 
 	@Override
-	public String getText() throws IllegalStateException {
+	public String getText() {
 		ensureOpen();
 		checkTextState();
 		final CharBuffer buffer = getBuffer();
@@ -270,7 +269,7 @@ public class StaEDIStreamReader implements EDIStreamReader {
 	}
 
 	@Override
-	public char[] getTextCharacters() throws IllegalStateException {
+	public char[] getTextCharacters() {
 		ensureOpen();
 		checkTextState();
 		final CharBuffer buffer = getBuffer();
@@ -283,7 +282,7 @@ public class StaEDIStreamReader implements EDIStreamReader {
 			int sourceStart,
 			char[] target,
 			int targetStart,
-			int length) throws IndexOutOfBoundsException, NullPointerException {
+			int length) {
 
 		ensureOpen();
 		checkTextState();
@@ -348,7 +347,7 @@ public class StaEDIStreamReader implements EDIStreamReader {
 
 	@Override
 	public void setBinaryDataLength(long length)
-			throws EDIStreamException, IllegalStateException {
+			throws EDIStreamException {
 		ensureOpen();
 
 		switch (getEventType()) {
@@ -364,7 +363,7 @@ public class StaEDIStreamReader implements EDIStreamReader {
 	}
 
 	@Override
-	public InputStream getBinaryData() throws IllegalStateException {
+	public InputStream getBinaryData() {
 		ensureOpen();
 
 		if (getEventType() != Events.ELEMENT_DATA_BINARY) {

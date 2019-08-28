@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2017 xlate.io LLC, http://www.xlate.io
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License.  You may obtain a copy
  * of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
@@ -31,7 +31,7 @@ public class EDIFACTDialect implements Dialect {
 	private char segmentDelimiter = '\'';
 
 	private String headerTag;
-	private String version;
+	private String[] version;
 	StringBuilder header;
 	private int index = -1;
 	private int unbStart = -1;
@@ -50,38 +50,39 @@ public class EDIFACTDialect implements Dialect {
 
 	boolean initialize(CharacterSet characters) {
 		final int length = header.length();
+		int versionStart = -1;
 
 		if (UNB.equals(headerTag)) {
 			if (length < 10) {
 				return false;
 			}
 
-			version = String.valueOf(header.charAt(9));
+			versionStart = 4;
 		} else {
 			if (length < 18) {
 				return false;
 			}
 
 			for (int i = 11; i < length; i++) {
-				if (header.charAt(i - 2) != 'U') {
-					continue;
-				}
-				if (header.charAt(i - 1) != 'N') {
-					continue;
-				}
-				if (header.charAt(i) != 'B') {
-					continue;
-				}
-				if (length < i + 7) {
-					return false;
-				}
-				version = String.valueOf(header.charAt(i + 7));
-				break;
+			    if (unbTag(header, i - 2)) {
+			        if (length < i + 7 || header.charAt(i + 1) != elementDelimiter) {
+			            return false;
+			        }
+			        versionStart = i + 2;
+			        break;
+			    }
 			}
 		}
 
-		//FIXME: need release
-		version = String.format("%s0000", version);
+		if (versionStart > -1) {
+		    StringBuilder versionBuilder = new StringBuilder();
+
+		    for (int i = versionStart; header.charAt(i) != elementDelimiter; i++) {
+		        versionBuilder.append(header.charAt(i));
+		    }
+
+	        version = versionBuilder.toString().split('\\' + String.valueOf(componentDelimiter));
+		}
 
 		characters.setClass(componentDelimiter, CharacterClass.COMPONENT_DELIMITER);
 		characters.setClass(elementDelimiter, CharacterClass.ELEMENT_DELIMITER);
@@ -94,6 +95,12 @@ public class EDIFACTDialect implements Dialect {
 		characters.setClass(segmentDelimiter, CharacterClass.SEGMENT_DELIMITER);
 
 		return (initialized = true);
+	}
+
+	private boolean unbTag(StringBuilder buffer, int position) {
+	    return (buffer.charAt(position) == 'U' &&
+	            buffer.charAt(position + 1) == 'N' &&
+                buffer.charAt(position + 2) == 'B');
 	}
 
 	@Override
@@ -112,7 +119,7 @@ public class EDIFACTDialect implements Dialect {
 	}
 
 	@Override
-	public String getVersion() {
+	public String[] getVersion() {
 		return version;
 	}
 

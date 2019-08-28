@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2017 xlate.io LLC, http://www.xlate.io
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License.  You may obtain a copy
  * of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
@@ -308,7 +308,7 @@ public class StaEDIStreamReaderTest implements ConstantsTest,
 						"x12/simple997.edi");
 		EDIStreamReader reader = factory.createEDIStreamReader(stream);
 
-		String version = null;
+		String version[] = null;
 		int events = 0;
 		int versionExceptions = 0;
 
@@ -325,7 +325,7 @@ public class StaEDIStreamReaderTest implements ConstantsTest,
 			events++;
 		}
 
-		Assert.assertEquals("Unexpected version", "00501", version);
+		Assert.assertArrayEquals("Unexpected version", new String[]{ "00501" }, version);
 		Assert.assertTrue(
 				"Unexpected number of exceptions",
 				events == versionExceptions + 1);
@@ -352,7 +352,7 @@ public class StaEDIStreamReaderTest implements ConstantsTest,
 
 			if (event == Events.START_INTERCHANGE) {
 				String standard = reader.getStandard();
-				String version = reader.getVersion();
+				String[] version = reader.getVersion();
 				Schema control = SchemaUtils.getControlSchema(standard, version);
 				EDIComplexType parent;
 				EDIReference child;
@@ -422,7 +422,7 @@ public class StaEDIStreamReaderTest implements ConstantsTest,
 			switch (event) {
 			case Events.START_INTERCHANGE: {
 				String standard = reader.getStandard();
-				String version = reader.getVersion();
+				String version[] = reader.getVersion();
 				Schema control = SchemaUtils.getControlSchema(standard, version);
 				IllegalStateException illegal = null;
 

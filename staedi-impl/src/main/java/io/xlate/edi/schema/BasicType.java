@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2017 xlate.io LLC, http://www.xlate.io
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License.  You may obtain a copy
  * of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
@@ -15,14 +15,8 @@
  ******************************************************************************/
 package io.xlate.edi.schema;
 
-import java.io.Externalizable;
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
+abstract class BasicType implements EDIType {
 
-abstract class BasicType implements EDIType, Externalizable {
-
-	private static final long serialVersionUID = 4040260273915437397L;
 	protected String id;
 	protected int type;
 
@@ -38,18 +32,6 @@ abstract class BasicType implements EDIType, Externalizable {
 		super();
 		this.id = other.getId();
 		this.type = other.getTypeCode();
-	}
-
-	@Override
-	public void writeExternal(ObjectOutput out) throws IOException {
-		Externalizer.writeUTF(id, out);
-		out.writeInt(type);
-	}
-
-	@Override
-	public void readExternal(ObjectInput in) throws IOException {
-		id = Externalizer.readUTF(in);
-		type = in.readInt();
 	}
 
 	@Override

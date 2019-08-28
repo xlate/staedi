@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2017 xlate.io LLC, http://www.xlate.io
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License.  You may obtain a copy
  * of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
@@ -15,14 +15,11 @@
  ******************************************************************************/
 package io.xlate.edi.schema;
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
+import java.io.Serializable;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Set;
 
-class Element extends BasicType implements EDISimpleType {
+class Element extends BasicType implements EDISimpleType, Serializable {
 
 	private static final long serialVersionUID = 1678383730368794011L;
 
@@ -45,35 +42,6 @@ class Element extends BasicType implements EDISimpleType {
 		this.minLength = minLength;
 		this.maxLength = maxLength;
 		this.values = Collections.unmodifiableSet(values);
-	}
-
-	@Override
-	public void writeExternal(ObjectOutput out) throws IOException {
-		super.writeExternal(out);
-		out.writeInt(base);
-		out.writeInt(number);
-		out.writeInt(minLength);
-		out.writeInt(maxLength);
-		out.writeInt(values.size());
-		for (String value : values) {
-			Externalizer.writeUTF(value, out);
-		}
-	}
-
-	@Override
-	public void readExternal(ObjectInput in) throws IOException {
-		super.readExternal(in);
-		base = in.readInt();
-		number = in.readInt();
-		minLength = in.readInt();
-		maxLength = in.readInt();
-
-		int valueCount = in.readInt();
-		values = new HashSet<>(valueCount);
-
-		for (int i = 0; i < valueCount; i++) {
-			values.add(Externalizer.readUTF(in));
-		}
 	}
 
 	@Override

@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2017 xlate.io LLC, http://www.xlate.io
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License.  You may obtain a copy
  * of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
@@ -34,7 +34,7 @@ public class X12Dialect implements Dialect {
 	private static final int[] X12_ISA_TOKENS = { 3, 6, 17, 20, 31, 34, 50, 53,
 			69, 76, 81, 83, 89, 99, 101, 103 };
 
-	private String version;
+	private String[] version;
 	char[] header;
 	private int index = -1;
 	private boolean initialized;
@@ -53,7 +53,7 @@ public class X12Dialect implements Dialect {
 	}
 
 	@Override
-	public String getVersion() {
+	public String[] getVersion() {
 		return version;
 	}
 
@@ -62,10 +62,8 @@ public class X12Dialect implements Dialect {
 		int e = 0;
 
 		for (int i = 0, m = X12_ISA_LENGTH; i < m; i++) {
-			if (ELEMENT == header[i]) {
-				if ((X12_ISA_TOKENS[e++]) != i) {
-					return false;
-				}
+			if (ELEMENT == header[i] && X12_ISA_TOKENS[e++] != i) {
+                return false;
 			}
 		}
 
@@ -77,9 +75,9 @@ public class X12Dialect implements Dialect {
 		characters.setClass(sd, CharacterClass.SEGMENT_DELIMITER);
 
 		try {
-			version = new String(header, 84, 5);
+			version = new String[] { new String(header, 84, 5) };
 
-			if (Integer.parseInt(version) >= 402) {
+			if (Integer.parseInt(version[0]) >= 402) {
 				characters.setClass(er, CharacterClass.ELEMENT_REPEATER);
 			}
 		} catch (@SuppressWarnings("unused") NumberFormatException nfe) {
@@ -126,12 +124,8 @@ public class X12Dialect implements Dialect {
 				ed = value;
 				characters.setClass(ed, CharacterClass.ELEMENT_DELIMITER);
 				break;
-			/*case X12_COMPONENT_OFFSET:
-				characters.setClass(value, CharacterClass.COMPONENT_DELIMITER);
-				break;
-			case X12_SEGMENT_OFFSET:
-				characters.setClass(value, CharacterClass.SEGMENT_DELIMITER);
-				break;*/
+			default:
+			    break;
 			}
 
 			header[index] = value;

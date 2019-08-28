@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2017 xlate.io LLC, http://www.xlate.io
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License.  You may obtain a copy
  * of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
@@ -15,20 +15,14 @@
  ******************************************************************************/
 package io.xlate.edi.schema;
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 class Structure extends BasicType implements EDIComplexType {
 
-	private static final long serialVersionUID = -5094166920882750162L;
-
 	private String code;
-	private List<Reference> references;
-	private List<SyntaxRestriction> syntaxRules;
+	private List<EDIReference> references;
+	private List<EDISyntaxRule> syntaxRules;
 
 	public Structure() {}
 
@@ -39,28 +33,11 @@ class Structure extends BasicType implements EDIComplexType {
 		this.syntaxRules = Collections.unmodifiableList(syntaxRules);
 	}
 
-	Structure(EDIComplexType other, List<Reference> references, List<SyntaxRestriction> syntaxRules) {
+	Structure(EDIComplexType other, List<EDIReference> references, List<EDISyntaxRule> syntaxRules) {
 		super(other);
 		this.code = other.getCode();
 		this.references = Collections.unmodifiableList(references);
 		this.syntaxRules = Collections.unmodifiableList(syntaxRules);
-	}
-
-	@Override
-	public void writeExternal(ObjectOutput out) throws IOException {
-		super.writeExternal(out);
-		Externalizer.writeUTF(code, out);
-		Externalizer.writeExternalizables(references, out);
-		Externalizer.writeExternalizables(syntaxRules, out);
-	}
-
-	@SuppressWarnings("unchecked")
-	@Override
-	public void readExternal(ObjectInput in) throws IOException {
-		super.readExternal(in);
-		code = Externalizer.readUTF(in);
-		references = Externalizer.readExternalizables(Reference.class, ArrayList.class, in);
-		syntaxRules = Externalizer.readExternalizables(SyntaxRestriction.class, ArrayList.class, in);
 	}
 
 	@Override
@@ -141,12 +118,12 @@ class Structure extends BasicType implements EDIComplexType {
 	}
 
 	@Override
-	public List<? extends EDIReference> getReferences() {
+	public List<EDIReference> getReferences() {
 		return references;
 	}
 
 	@Override
-	public List<? extends EDISyntaxRule> getSyntaxRules() {
+	public List<EDISyntaxRule> getSyntaxRules() {
 		return syntaxRules;
 	}
 }

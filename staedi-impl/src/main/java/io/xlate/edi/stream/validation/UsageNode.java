@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2017 xlate.io LLC, http://www.xlate.io
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License.  You may obtain a copy
  * of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
@@ -108,7 +108,7 @@ class UsageNode {
 		validator.validate(element, value, errors);
 	}
 
-	List<? extends EDISyntaxRule> getSyntaxRules() {
+	List<EDISyntaxRule> getSyntaxRules() {
 		EDIType referencedNode = link.getReferencedType();
 
 		if (referencedNode instanceof EDIComplexType) {
@@ -164,9 +164,7 @@ class UsageNode {
 	}
 
 	void resetChildren() {
-		for (UsageNode child : children) {
-			child.reset();
-		}
+	    children.forEach(UsageNode::reset);
 	}
 
 	private UsageNode getSibling(int index) {
@@ -184,16 +182,14 @@ class UsageNode {
 	}
 
 	public UsageNode getFirstChild() {
-		return (children.size() > 0) ? children.get(0) : null;
+		return (!children.isEmpty()) ? children.get(0) : null;
 	}
 
 	UsageNode getChildById(CharSequence id) {
-		for (UsageNode child : children) {
-			if (child.getId().contentEquals(id)) {
-				return child;
-			}
-		}
-		return null;
+	    return children.stream()
+	                   .filter(c -> c.getId().contentEquals(id))
+	                   .findFirst()
+	                   .orElse(null);
 	}
 
 	UsageNode getSiblingById(CharSequence id) {

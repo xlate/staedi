@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2017 xlate.io LLC, http://www.xlate.io
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License.  You may obtain a copy
  * of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
@@ -34,7 +34,7 @@ class NumericValidator extends ElementValidator {
 	@Override
 	void validate(EDISimpleType element, CharSequence value, List<Integer> errors) {
 		int length = validate(value);
-		super.validLength(element, Math.abs(length), errors);
+		validLength(element, Math.abs(length), errors);
 
 		if (length < 0) {
 			errors.add(INVALID_CHARACTER_DATA);
@@ -45,7 +45,7 @@ class NumericValidator extends ElementValidator {
 	void format(EDISimpleType element, CharSequence value, Appendable result)
 			throws EDIException {
 		int length = validate(value);
-		super.checkLength(element, Math.abs(length));
+		checkLength(element, Math.abs(length));
 
 		if (length < 0) {
 			// TODO: INVALID_CHARACTER_DATA
@@ -67,7 +67,6 @@ class NumericValidator extends ElementValidator {
 		}
 	}
 
-	@SuppressWarnings("static-method")
 	protected int validate(CharSequence value) {
 		int length = value.length();
 		boolean invalid = false;

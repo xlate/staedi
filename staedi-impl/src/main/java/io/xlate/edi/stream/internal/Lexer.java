@@ -1,15 +1,15 @@
 /*******************************************************************************
  * Copyright 2017 xlate.io LLC, http://www.xlate.io
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
- * use this file except in compliance with the License.  You may obtain a copy
- * of the License at
- * 
- *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
  * License for the specific language governing permissions and limitations under
  * the License.
  ******************************************************************************/
@@ -26,503 +26,492 @@ import io.xlate.edi.stream.Location;
 
 public class Lexer {
 
-	private enum Mode {
-		INTERCHANGE, SEGMENT, COMPOSITE
-	}
+    private enum Mode {
+        INTERCHANGE,
+        SEGMENT,
+        COMPOSITE
+    }
 
-	private final Deque<Mode> modes = new ArrayDeque<>();
-	private State state = State.INITIAL;
-	private State previous;
+    private final Deque<Mode> modes = new ArrayDeque<>();
+    private State state = State.INITIAL;
+    private State previous;
 
-	private interface Notifier {
-		void execute(State state, int start, int length);
-	}
+    private interface Notifier {
+        void execute(State state, int start, int length);
+    }
 
-	private Notifier isn = new InterchangeStartNotifier();
-	private Notifier ien = new InterchangeEndNotifier();
-	private Notifier ssn = new SegmentStartNotifier();
-	private Notifier sen = new SegmentEndNotifier();
-	private Notifier csn = new CompositeStartNotifier();
-	private Notifier cen = new CompositeEndNotifier();
-	private Notifier en = new ElementNotifier();
-	private Notifier bn = new BinaryDataNotifier();
+    private Notifier isn = new InterchangeStartNotifier();
+    private Notifier ien = new InterchangeEndNotifier();
+    private Notifier ssn = new SegmentStartNotifier();
+    private Notifier sen = new SegmentEndNotifier();
+    private Notifier csn = new CompositeStartNotifier();
+    private Notifier cen = new CompositeEndNotifier();
+    private Notifier en = new ElementNotifier();
+    private Notifier bn = new BinaryDataNotifier();
 
-	private final Deque<Notifier> events = new ArrayDeque<>(20);
-	private final Deque<State> stateQueue = new ArrayDeque<>(20);
-	private final Deque<Integer> startQueue = new ArrayDeque<>(20);
-	private final Deque<Integer> lengthQueue = new ArrayDeque<>(20);
+    private final Deque<Notifier> events = new ArrayDeque<>(20);
+    private final Deque<State> stateQueue = new ArrayDeque<>(20);
+    private final Deque<Integer> startQueue = new ArrayDeque<>(20);
+    private final Deque<Integer> lengthQueue = new ArrayDeque<>(20);
 
-	private final InputStream stream;
-	private final EventHandler handler;
-	private final InternalLocation location;
+    private final InputStream stream;
+    private final EventHandler handler;
+    private final InternalLocation location;
 
-	private CharacterSet characters = new CharacterSet();
-	private CharBuffer buffer = CharBuffer.allocate(4096);
-	private Dialect dialect;
+    private CharacterSet characters = new CharacterSet();
+    private CharBuffer buffer = CharBuffer.allocate(4096);
+    private Dialect dialect;
 
-	private long binaryRemain = -1;
-	private InputStream binaryStream = null;
+    private long binaryRemain = -1;
+    private InputStream binaryStream = null;
 
-	public Lexer(InputStream stream, EventHandler handler, InternalLocation location) {
-		if (stream.markSupported()) {
-			this.stream = stream;
-		} else {
-			this.stream = new BufferedInputStream(stream);
-		}
+    public Lexer(InputStream stream, EventHandler handler, InternalLocation location) {
+        if (stream.markSupported()) {
+            this.stream = stream;
+        } else {
+            this.stream = new BufferedInputStream(stream);
+        }
 
-		this.handler = handler;
-		this.location = location;
-	}
+        this.handler = handler;
+        this.location = location;
+    }
 
-	public boolean isInitialized() {
-		return state.isInitial() && modes.size() == 0;
-	}
+    public boolean isInitialized() {
+        return state.isInitial() && modes.isEmpty();
+    }
 
-	public Dialect getDialect() {
-		return dialect;
-	}
+    public Dialect getDialect() {
+        return dialect;
+    }
 
-	public void setBinaryLength(long binaryLength) {
-		this.binaryRemain = binaryLength;
+    public void setBinaryLength(long binaryLength) {
+        this.binaryRemain = binaryLength;
 
-		this.binaryStream = new InputStream() {
-			@Override
-			public int read() throws IOException {
-				if (binaryRemain-- < 1) {
-					state = State.ELEMENT_END_BINARY;
-					return -1;
-				}
+        this.binaryStream = new InputStream() {
+            @Override
+            public int read() throws IOException {
+                if (binaryRemain-- < 1) {
+                    state = State.ELEMENT_END_BINARY;
+                    return -1;
+                }
 
-				int input = stream.read();
+                int input = stream.read();
 
-				if (input != -1) {
-					location.incrementOffset();
-					return input;
-				}
-				state = State.ELEMENT_END_BINARY;
-				return -1;
-			}
-		};
+                if (input != -1) {
+                    location.incrementOffset();
+                    return input;
+                }
+                state = State.ELEMENT_END_BINARY;
+                return -1;
+            }
+        };
 
-		enqueue(bn, 0);
-		state = State.ELEMENT_DATA_BINARY;
-	}
+        enqueue(bn, 0);
+        state = State.ELEMENT_DATA_BINARY;
+    }
 
-	public void close() {}
+    public void close() {
+    }
 
-	public void parse() throws IOException, EDIException {
-		if (nextEvent()) {
-			return;
-		}
+    public void parse() throws IOException, EDIException {
+        if (nextEvent()) {
+            return;
+        }
 
-		CharacterClass clazz;
-		int input;
+        CharacterClass clazz;
+        int input;
 
-		while ((input = stream.read()) > -1) {
-			location.incrementOffset();
+        while ((input = stream.read()) > -1) {
+            location.incrementOffset();
 
-			clazz = characters.getClass(input);
-			previous = state;
+            clazz = characters.getClass(input);
+            previous = state;
 
-			switch (state = state.transition(clazz)) {
-			case INITIAL:
-			case TAG_SEARCH:
-			case HEADER_TAG_SEARCH:
-				break;
-			case TRAILER_TAG_I:
-			case TRAILER_TAG_E:
-			case TRAILER_TAG_A:
-			case TRAILER_TAG_U:
-			case TRAILER_TAG_N:
-			case TRAILER_TAG_Z:
-				buffer.put((char) input);
-				break;
-			/*case HEADER_TAG_A:
-			case HEADER_TAG_B:*/
-			case HEADER_TAG_I:
-			case HEADER_TAG_N:
-			case HEADER_TAG_S:
-			case HEADER_TAG_U:
-			case TAG_1:
-			case TAG_2:
-			case TAG_3:
-			case ELEMENT_DATA:
-			case ELEMENT_INVALID_DATA:
-			case TRAILER_ELEMENT_DATA:
-				buffer.put((char) input);
-				break;
-			case HEADER_TAG_1:
-			case HEADER_TAG_2:
-			case HEADER_TAG_3:
-				buffer.put((char) input);
-				dialect.appendHeader(characters, (char) input);
-				break;
-			case DATA_RELEASE:
-				// Skip this character - next character will be literal value
-				break;
-			case ELEMENT_DATA_BINARY:
-				/*
-				 * Not all of the binary data has been consumed. I.e. #next was
-				 * called before completion.
-				 */
-				if (--binaryRemain < 1) {
-					state = State.ELEMENT_END_BINARY;
-				}
+            switch (state = state.transition(clazz)) {
+            case INITIAL:
+            case TAG_SEARCH:
+            case HEADER_TAG_SEARCH:
+                break;
+            case TRAILER_TAG_I:
+            case TRAILER_TAG_E:
+            case TRAILER_TAG_A:
+            case TRAILER_TAG_U:
+            case TRAILER_TAG_N:
+            case TRAILER_TAG_Z:
+                buffer.put((char) input);
+                break;
+            /*case HEADER_TAG_A:
+            case HEADER_TAG_B:*/
+            case HEADER_TAG_I:
+            case HEADER_TAG_N:
+            case HEADER_TAG_S:
+            case HEADER_TAG_U:
+            case TAG_1:
+            case TAG_2:
+            case TAG_3:
+            case ELEMENT_DATA:
+            case ELEMENT_INVALID_DATA:
+            case TRAILER_ELEMENT_DATA:
+                buffer.put((char) input);
+                break;
+            case HEADER_TAG_1:
+            case HEADER_TAG_2:
+            case HEADER_TAG_3:
+                buffer.put((char) input);
+                dialect.appendHeader(characters, (char) input);
+                break;
+            case DATA_RELEASE:
+                // Skip this character - next character will be literal value
+                break;
+            case ELEMENT_DATA_BINARY:
+                /*
+                 * Not all of the binary data has been consumed. I.e. #next was
+                 * called before completion.
+                 */
+                if (--binaryRemain < 1) {
+                    state = State.ELEMENT_END_BINARY;
+                }
 
-				break;
-			case INTERCHANGE_CANDIDATE:
-				stream.mark(500);
-				buffer.put((char) input);
-				final char[] header = buffer.array();
-				final int length = buffer.position();
-				dialect = DialectFactory.getDialect(header, 0, length);
-				for (int i = 0; i < length; i++) {
-					dialect.appendHeader(characters, header[i]);
-				}
-				openInterchange();
-				openSegment();
-				break;
-			case HEADER_DATA:
-				dialect.appendHeader(characters, (char) input);
+                break;
+            case INTERCHANGE_CANDIDATE:
+                stream.mark(500);
+                buffer.put((char) input);
+                final char[] header = buffer.array();
+                final int length = buffer.position();
+                dialect = DialectFactory.getDialect(header, 0, length);
+                for (int i = 0; i < length; i++) {
+                    dialect.appendHeader(characters, header[i]);
+                }
+                openInterchange();
+                openSegment();
+                break;
+            case HEADER_DATA:
+                dialect.appendHeader(characters, (char) input);
 
-				if (characters.isDelimiter(input)) {
-					if (characters.getDelimiter(CharacterClass.SEGMENT_DELIMITER) == input) {
-						closeSegment();
-						state = State.HEADER_TAG_SEARCH;
-					}
-				} else if (!characters.isRelease(input) && dialect.getDecimalMark() != input) {
-					buffer.put((char) input);
-				}
+                if (characters.isDelimiter(input)) {
+                    if (characters.getDelimiter(CharacterClass.SEGMENT_DELIMITER) == input) {
+                        closeSegment();
+                        state = State.HEADER_TAG_SEARCH;
+                    }
+                } else if (!characters.isRelease(input) && dialect.getDecimalMark() != input) {
+                    buffer.put((char) input);
+                }
 
-				if (dialectConfirmed(State.TAG_SEARCH)) {
-					return;
-				}
-				break;
-			case HEADER_SEGMENT_BEGIN:
-				dialect.appendHeader(characters, (char) input);
-				openSegment();
-				if (dialectConfirmed(State.ELEMENT_END)) {
-					return;
-				}
-				break;
-			case HEADER_ELEMENT_END:
-				dialect.appendHeader(characters, (char) input);
-				handleElement();
-				if (dialectConfirmed(State.ELEMENT_END)) {
-					return;
-				}
-				break;
-			case HEADER_COMPONENT_END:
-				dialect.appendHeader(characters, (char) input);
-				handleComponent();
-				if (dialectConfirmed(State.COMPONENT_END)) {
-					return;
-				}
-				break;
-			case SEGMENT_BEGIN:
-			case TRAILER_BEGIN:
-				openSegment();
-				if (nextEvent()) {
-					return;
-				}
-				break;
-			case SEGMENT_END:
-				closeSegment();
-				if (nextEvent()) {
-					return;
-				}
-				break;
-			case COMPONENT_END:
-				handleComponent();
-				if (nextEvent()) {
-					return;
-				}
-				break;
-			case ELEMENT_END:
-			case TRAILER_ELEMENT_END:
-				handleElement();
-				if (nextEvent()) {
-					return;
-				}
-				break;
-			case ELEMENT_REPEAT:
-				handleElement();
-				if (nextEvent()) {
-					return;
-				}
-				break;
-			case INTERCHANGE_END:
-				closeInterchange();
-				if (nextEvent()) {
-					return;
-				}
+                if (dialectConfirmed(State.TAG_SEARCH)) {
+                    return;
+                }
+                break;
+            case HEADER_SEGMENT_BEGIN:
+                dialect.appendHeader(characters, (char) input);
+                openSegment();
+                if (dialectConfirmed(State.ELEMENT_END)) {
+                    return;
+                }
+                break;
+            case HEADER_ELEMENT_END:
+                dialect.appendHeader(characters, (char) input);
+                handleElement();
+                if (dialectConfirmed(State.ELEMENT_END)) {
+                    return;
+                }
+                break;
+            case HEADER_COMPONENT_END:
+                dialect.appendHeader(characters, (char) input);
+                handleComponent();
+                if (dialectConfirmed(State.COMPONENT_END)) {
+                    return;
+                }
+                break;
+            case SEGMENT_BEGIN:
+            case TRAILER_BEGIN:
+                openSegment();
+                if (nextEvent()) {
+                    return;
+                }
+                break;
+            case SEGMENT_END:
+                closeSegment();
+                if (nextEvent()) {
+                    return;
+                }
+                break;
+            case COMPONENT_END:
+                handleComponent();
+                if (nextEvent()) {
+                    return;
+                }
+                break;
+            case ELEMENT_END:
+            case TRAILER_ELEMENT_END:
+            case ELEMENT_REPEAT:
+                handleElement();
+                if (nextEvent()) {
+                    return;
+                }
+                break;
+            case INTERCHANGE_END:
+                closeInterchange();
+                if (nextEvent()) {
+                    return;
+                }
 
-				break;
-			default:
-				if (clazz.isValid()) {
-					StringBuilder message = new StringBuilder();
-					message.append(": ");
-					message.append(state);
-					message.append(" (previous: ");
-					message.append(previous);
-					message.append("); input: '");
-					message.append((char) input);
-					message.append('\'');
-					error(EDIException.INVALID_STATE, message);
-				} else {
-					error(EDIException.INVALID_CHARACTER);
-				}
-			}
-		}
-	}
+                break;
+            default:
+                if (clazz.isValid()) {
+                    StringBuilder message = new StringBuilder();
+                    message.append(": ");
+                    message.append(state);
+                    message.append(" (previous: ");
+                    message.append(previous);
+                    message.append("); input: '");
+                    message.append((char) input);
+                    message.append('\'');
+                    error(EDIException.INVALID_STATE, message);
+                } else {
+                    error(EDIException.INVALID_CHARACTER);
+                }
+            }
+        }
+    }
 
-	private boolean dialectConfirmed(State confirmed) throws IOException {
-		if (dialect.isConfirmed()) {
-			state = confirmed;
-			nextEvent();
-			return true;
-		} else if (dialect.isRejected()) {
-			stream.reset();
-			buffer.clear();
-			clearQueues();
-			state = State.INITIAL;
-		}
+    private boolean dialectConfirmed(State confirmed) throws IOException {
+        if (dialect.isConfirmed()) {
+            state = confirmed;
+            nextEvent();
+            return true;
+        } else if (dialect.isRejected()) {
+            stream.reset();
+            buffer.clear();
+            clearQueues();
+            state = State.INITIAL;
+        }
 
-		return false;
-	}
+        return false;
+    }
 
-	private void error(int code, CharSequence message) throws EDIException {
-		Location where = new ImmutableLocation(location);
-		throw new EDIException(code, message.toString(), where);
-	}
+    private void error(int code, CharSequence message) throws EDIException {
+        Location where = new ImmutableLocation(location);
+        throw new EDIException(code, message.toString(), where);
+    }
 
-	private void error(int code) throws EDIException {
-		Location where = new ImmutableLocation(location);
-		throw new EDIException(code, where);
-	}
+    private void error(int code) throws EDIException {
+        Location where = new ImmutableLocation(location);
+        throw new EDIException(code, where);
+    }
 
-	private class InterchangeStartNotifier implements Notifier {
-		@Override
-		@SuppressWarnings("hiding")
-		public void execute(State state, int start, int length) {
-			handler.interchangeBegin();
-		}
-	}
+    private class InterchangeStartNotifier implements Notifier {
+        @Override
+        public void execute(State state, int start, int length) {
+            handler.interchangeBegin();
+        }
+    }
 
-	private class InterchangeEndNotifier implements Notifier {
-		@Override
-		@SuppressWarnings("hiding")
-		public void execute(State state, int start, int length) {
-			handler.interchangeEnd();
-			dialect = null;
-			characters.reset();
-		}
-	}
+    private class InterchangeEndNotifier implements Notifier {
+        @Override
+        public void execute(State state, int start, int length) {
+            handler.interchangeEnd();
+            dialect = null;
+            characters.reset();
+        }
+    }
 
-	private class SegmentStartNotifier implements Notifier {
-		@Override
-		@SuppressWarnings("hiding")
-		public void execute(State state, int start, int length) {
-			location.incrementSegmentPosition();
-			handler.segmentBegin(buffer.array(), start, length);
-		}
-	}
+    private class SegmentStartNotifier implements Notifier {
+        @Override
+        public void execute(State state, int start, int length) {
+            location.incrementSegmentPosition();
+            handler.segmentBegin(buffer.array(), start, length);
+        }
+    }
 
-	private class SegmentEndNotifier implements Notifier {
-		@Override
-		@SuppressWarnings("hiding")
-		public void execute(State state, int start, int length) {
-			handler.segmentEnd();
-			location.clearSegmentLocations();
-		}
-	}
+    private class SegmentEndNotifier implements Notifier {
+        @Override
+        public void execute(State state, int start, int length) {
+            handler.segmentEnd();
+            location.clearSegmentLocations();
+        }
+    }
 
-	private class CompositeStartNotifier implements Notifier {
-		@Override
-		@SuppressWarnings("hiding")
-		public void execute(State state, int start, int length) {
-			if (location.isRepeated()) {
-			//	location.clearComponentPosition();
-				location.incrementElementOccurrence();
-			} else {
-				location.incrementElementPosition();
-			}
+    private class CompositeStartNotifier implements Notifier {
+        @Override
+        public void execute(State state, int start, int length) {
+            if (location.isRepeated()) {
+                // location.clearComponentPosition();
+                location.incrementElementOccurrence();
+            } else {
+                location.incrementElementPosition();
+            }
 
-			handler.compositeBegin(false);
-		}
-	}
+            handler.compositeBegin(false);
+        }
+    }
 
-	private class CompositeEndNotifier implements Notifier {
-		@Override
-		@SuppressWarnings("hiding")
-		public void execute(State state, int start, int length) {
-			handler.compositeEnd(false);
-			location.clearComponentPosition();
-		}
-	}
+    private class CompositeEndNotifier implements Notifier {
+        @Override
+        public void execute(State state, int start, int length) {
+            handler.compositeEnd(false);
+            location.clearComponentPosition();
+        }
+    }
 
-	private class BinaryDataNotifier implements Notifier {
-		@Override
-		@SuppressWarnings("hiding")
-		public void execute(State state, int start, int length) {
-			updateLocation(state, location);
-			handler.binaryData(binaryStream);
-		}
-	}
+    private class BinaryDataNotifier implements Notifier {
+        @Override
+        public void execute(State state, int start, int length) {
+            updateLocation(state, location);
+            handler.binaryData(binaryStream);
+        }
+    }
 
-	private class ElementNotifier implements Notifier {
-		@Override
-		@SuppressWarnings("hiding")
-		public void execute(State state, int start, int length) {
-			updateLocation(state, location);
-			handler.elementData(buffer.array(), start, length);
-		}
-	}
+    private class ElementNotifier implements Notifier {
+        @Override
+        public void execute(State state, int start, int length) {
+            updateLocation(state, location);
+            handler.elementData(buffer.array(), start, length);
+        }
+    }
 
-	private static void updateLocation(State state, InternalLocation location) {
-		if (state == State.ELEMENT_REPEAT) {
-			if (location.isRepeated()) {
-				location.incrementElementOccurrence();
-			} else {
-				location.setElementOccurrence(1);
-			}
-			location.setRepeated(true);
-		} else if (location.isRepeated()) {
-			if (state != State.COMPONENT_END) {
-				/*
-				 * Only increment the position if we have not yet started
-				 * the composite - i.e, only a single component is present.
-				 */
-				if (location.getComponentPosition() < 1) {
-					location.incrementElementOccurrence();
-				}
+    private static void updateLocation(State state, InternalLocation location) {
+        if (state == State.ELEMENT_REPEAT) {
+            if (location.isRepeated()) {
+                location.incrementElementOccurrence();
+            } else {
+                location.setElementOccurrence(1);
+            }
+            location.setRepeated(true);
+        } else if (location.isRepeated()) {
+            if (state != State.COMPONENT_END) {
+                /*
+                 * Only increment the position if we have not yet started
+                 * the composite - i.e, only a single component is present.
+                 */
+                if (location.getComponentPosition() < 1) {
+                    location.incrementElementOccurrence();
+                }
 
-				location.setRepeated(false);
-			}
-		} else {
-			location.setElementOccurrence(1);
-		}
+                location.setRepeated(false);
+            }
+        } else {
+            location.setElementOccurrence(1);
+        }
 
-		switch (state) {
-		case COMPONENT_END:
-		case HEADER_COMPONENT_END:
-			location.incrementComponentPosition();
-			break;
+        switch (state) {
+        case COMPONENT_END:
+        case HEADER_COMPONENT_END:
+            location.incrementComponentPosition();
+            break;
 
-		default:
-			if (location.getComponentPosition() > 0) {
-				location.incrementComponentPosition();
-			} else if (location.getElementOccurrence() == 1) {
-				location.incrementElementPosition();
-			}
-			break;
-		}
-	}
+        default:
+            if (location.getComponentPosition() > 0) {
+                location.incrementComponentPosition();
+            } else if (location.getElementOccurrence() == 1) {
+                location.incrementElementPosition();
+            }
+            break;
+        }
+    }
 
-	private boolean nextEvent() {
-		Notifier event = events.peek();
+    private boolean nextEvent() {
+        Notifier event = events.peek();
 
-		if (event != null) {
-			events.remove();
-			@SuppressWarnings("hiding")
-			State state = stateQueue.remove();
-			int start = startQueue.remove();
-			int length = lengthQueue.remove();
+        if (event != null) {
+            events.remove();
+            State nextState = stateQueue.remove();
+            int start = startQueue.remove();
+            int length = lengthQueue.remove();
 
-			event.execute(state, start, length);
-			return true;
-		}
+            event.execute(nextState, start, length);
+            return true;
+        }
 
-		buffer.clear();
-		return false;
-	}
+        buffer.clear();
+        return false;
+    }
 
-	private void enqueue(Notifier task, int position) {
-		int start;
-		int length;
+    private void enqueue(Notifier task, int position) {
+        int start;
+        int length;
 
-		if (startQueue.isEmpty()) {
-			start = 0;
-			length = position;
-		} else {
-			start = startQueue.peekLast() + lengthQueue.peekLast();
-			length = position > 0 ? position - start : 0;
-		}
+        if (startQueue.isEmpty()) {
+            start = 0;
+            length = position;
+        } else {
+            start = startQueue.peekLast() + lengthQueue.peekLast();
+            length = position > 0 ? position - start : 0;
+        }
 
-		events.add(task);
-		stateQueue.add(this.state);
-		startQueue.add(start);
-		lengthQueue.add(length);
-	}
+        events.add(task);
+        stateQueue.add(this.state);
+        startQueue.add(start);
+        lengthQueue.add(length);
+    }
 
-	private void clearQueues() {
-		events.clear();
-		stateQueue.clear();
-		startQueue.clear();
-		lengthQueue.clear();
-	}
+    private void clearQueues() {
+        events.clear();
+        stateQueue.clear();
+        startQueue.clear();
+        lengthQueue.clear();
+    }
 
-	private void openInterchange() {
-		modes.push(Mode.INTERCHANGE);
-		enqueue(isn, 0);
-	}
+    private void openInterchange() {
+        modes.push(Mode.INTERCHANGE);
+        enqueue(isn, 0);
+    }
 
-	private void closeInterchange() throws EDIException {
-		closeSegment();
-		if (modes.pop() != Mode.INTERCHANGE) {
-			error(EDIException.INVALID_STATE);
-		}
-		enqueue(ien, 0);
-	}
+    private void closeInterchange() throws EDIException {
+        closeSegment();
+        if (modes.pop() != Mode.INTERCHANGE) {
+            error(EDIException.INVALID_STATE);
+        }
+        enqueue(ien, 0);
+    }
 
-	private void openSegment() {
-		modes.push(Mode.SEGMENT);
-		enqueue(ssn, buffer.position());
-	}
+    private void openSegment() {
+        modes.push(Mode.SEGMENT);
+        enqueue(ssn, buffer.position());
+    }
 
-	private void closeSegment() throws EDIException {
-		handleElement();
-		if (modes.pop() != Mode.SEGMENT) {
-			error(EDIException.INVALID_STATE);
-		}
-		enqueue(sen, 0);
-	}
+    private void closeSegment() throws EDIException {
+        handleElement();
+        if (modes.pop() != Mode.SEGMENT) {
+            error(EDIException.INVALID_STATE);
+        }
+        enqueue(sen, 0);
+    }
 
-	private void handleElement() throws EDIException {
-		if (previous != State.ELEMENT_END_BINARY) {
-			addElementEvent();
-		}
+    private void handleElement() throws EDIException {
+        if (previous != State.ELEMENT_END_BINARY) {
+            addElementEvent();
+        }
 
-		if (inComposite()) {
-			closeComposite();
-		}
-	}
+        if (inComposite()) {
+            closeComposite();
+        }
+    }
 
-	private void openComposite() {
-		modes.push(Mode.COMPOSITE);
-		enqueue(csn, 0);
-	}
+    private void openComposite() {
+        modes.push(Mode.COMPOSITE);
+        enqueue(csn, 0);
+    }
 
-	private void handleComponent() {
-		if (!inComposite()) {
-			openComposite();
-		}
+    private void handleComponent() {
+        if (!inComposite()) {
+            openComposite();
+        }
 
-		addElementEvent();
-	}
+        addElementEvent();
+    }
 
-	private void addElementEvent() {
-		enqueue(en, buffer.position());
-	}
+    private void addElementEvent() {
+        enqueue(en, buffer.position());
+    }
 
-	private boolean inComposite() {
-		return modes.peek() == Mode.COMPOSITE;
-	}
+    private boolean inComposite() {
+        return modes.peek() == Mode.COMPOSITE;
+    }
 
-	private void closeComposite() throws EDIException {
-		if (modes.pop() != Mode.COMPOSITE) {
-			error(EDIException.INVALID_STATE);
-		}
-		enqueue(cen, 0);
-	}
+    private void closeComposite() throws EDIException {
+        if (modes.pop() != Mode.COMPOSITE) {
+            error(EDIException.INVALID_STATE);
+        }
+        enqueue(cen, 0);
+    }
 }

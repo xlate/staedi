@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2017 xlate.io LLC, http://www.xlate.io
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License.  You may obtain a copy
  * of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
@@ -153,7 +153,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter {
 	}
 
 	@Override
-	public Object getProperty(String name) throws IllegalArgumentException {
+	public Object getProperty(String name) {
 		if (name == null) {
 			throw new IllegalArgumentException("Name must not be null");
 		}
@@ -239,8 +239,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter {
 	}
 
 	@Override
-	public EDIStreamWriter startInterchange()
-			throws IllegalStateException, EDIStreamException {
+	public EDIStreamWriter startInterchange() throws EDIStreamException {
 		ensureLevel(LEVEL_INITIAL);
 		ensureState(State.INITIAL);
 		level = LEVEL_INTERCHANGE;
@@ -248,8 +247,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter {
 	}
 
 	@Override
-	public EDIStreamWriter endInterchange() throws IllegalStateException,
-			EDIStreamException {
+	public EDIStreamWriter endInterchange() throws EDIStreamException {
 
 		ensureLevel(LEVEL_INTERCHANGE);
 		level = LEVEL_INITIAL;
@@ -257,8 +255,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter {
 	}
 
 	@Override
-	public EDIStreamWriter writeStartSegment(String name) throws IllegalStateException,
-			EDIStreamException {
+	public EDIStreamWriter writeStartSegment(String name) throws EDIStreamException {
 
 		ensureLevel(LEVEL_INTERCHANGE);
 
@@ -289,8 +286,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter {
 	}
 
 	@Override
-	public EDIStreamWriter writeEndSegment() throws IllegalStateException,
-			EDIStreamException {
+	public EDIStreamWriter writeEndSegment() throws EDIStreamException {
 		ensureLevelAtLeast(LEVEL_SEGMENT);
 
 		if (state == State.ELEMENT_DATA_BINARY) {
@@ -306,8 +302,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter {
 	}
 
 	@Override
-	public EDIStreamWriter writeStartElement() throws IllegalStateException,
-			EDIStreamException {
+	public EDIStreamWriter writeStartElement() throws EDIStreamException {
 		ensureLevel(LEVEL_SEGMENT);
 		write(this.dataElementSeparator);
 		level = LEVEL_ELEMENT;
@@ -315,16 +310,14 @@ public class StaEDIStreamWriter implements EDIStreamWriter {
 	}
 
 	@Override
-	public EDIStreamWriter writeStartElementBinary()
-			throws IllegalStateException, EDIStreamException {
+	public EDIStreamWriter writeStartElementBinary() throws EDIStreamException {
 		writeStartElement();
 		state = State.ELEMENT_DATA_BINARY;
 		return this;
 	}
 
 	@Override
-	public EDIStreamWriter endElement() throws IllegalStateException,
-			EDIStreamException {
+	public EDIStreamWriter endElement() throws EDIStreamException {
 		ensureLevelAtLeast(LEVEL_ELEMENT);
 		level = LEVEL_SEGMENT;
 
@@ -336,8 +329,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter {
 	}
 
 	@Override
-	public EDIStreamWriter startComponent() throws IllegalStateException,
-			EDIStreamException {
+	public EDIStreamWriter startComponent() throws EDIStreamException {
 		ensureLevelBetween(LEVEL_ELEMENT, LEVEL_COMPOSITE);
 
 		if (state == State.ELEMENT_DATA_BINARY) {
@@ -353,16 +345,14 @@ public class StaEDIStreamWriter implements EDIStreamWriter {
 	}
 
 	@Override
-	public EDIStreamWriter endComponent() throws IllegalStateException,
-			EDIStreamException {
+	public EDIStreamWriter endComponent() throws EDIStreamException {
 		ensureLevel(LEVEL_COMPONENT);
 		level = LEVEL_COMPOSITE;
 		return this;
 	}
 
 	@Override
-	public EDIStreamWriter writeRepeatElement() throws IllegalStateException,
-			EDIStreamException {
+	public EDIStreamWriter writeRepeatElement() throws EDIStreamException {
 		ensureLevelAtLeast(LEVEL_SEGMENT);
 		write(this.repetitionSeparator);
 		level = LEVEL_ELEMENT;
@@ -370,8 +360,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter {
 	}
 
 	@Override
-	public EDIStreamWriter writeElement(CharSequence text)
-			throws IllegalStateException, EDIStreamException {
+	public EDIStreamWriter writeElement(CharSequence text) throws EDIStreamException {
 		writeStartElement();
 		writeElementData(text);
 		endElement();
@@ -379,8 +368,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter {
 	}
 
 	@Override
-	public EDIStreamWriter writeElement(char[] text, int start, int end)
-			throws IllegalStateException, EDIStreamException {
+	public EDIStreamWriter writeElement(char[] text, int start, int end) throws EDIStreamException {
 		writeStartElement();
 		writeElementData(text, start, end);
 		endElement();
@@ -388,8 +376,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter {
 	}
 
 	@Override
-	public EDIStreamWriter writeEmptyElement() throws IllegalStateException,
-			EDIStreamException {
+	public EDIStreamWriter writeEmptyElement() throws EDIStreamException {
 		writeStartElement();
 		endElement();
 		return this;
@@ -397,7 +384,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter {
 
 	@Override
 	public EDIStreamWriter writeComponent(CharSequence text)
-			throws IllegalStateException, EDIStreamException {
+			throws EDIStreamException {
 		startComponent();
 		writeElementData(text);
 		endComponent();
@@ -406,7 +393,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter {
 
 	@Override
 	public EDIStreamWriter writeComponent(char[] text, int start, int end)
-			throws IllegalStateException, EDIStreamException {
+			throws EDIStreamException {
 		startComponent();
 		writeElementData(text, start, end);
 		endComponent();
@@ -414,8 +401,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter {
 	}
 
 	@Override
-	public EDIStreamWriter writeEmptyComponent() throws IllegalStateException,
-			EDIStreamException {
+	public EDIStreamWriter writeEmptyComponent() throws EDIStreamException {
 		startComponent();
 		endComponent();
 		return this;
@@ -423,7 +409,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter {
 
 	@Override
 	public EDIStreamWriter writeElementData(CharSequence text)
-			throws IllegalStateException, EDIStreamException {
+			throws EDIStreamException {
 		ensureLevelAtLeast(LEVEL_ELEMENT);
 		for (int i = 0, m = text.length(); i < m; i++) {
 			char curr = text.charAt(i);
@@ -437,7 +423,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter {
 
 	@Override
 	public EDIStreamWriter writeElementData(char[] text, int start, int end)
-			throws IllegalStateException, EDIStreamException {
+			throws EDIStreamException {
 
 		ensureLevelAtLeast(LEVEL_ELEMENT);
 		ensureArgs(text.length, start, end);
@@ -455,7 +441,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter {
 
 	@Override
 	public EDIStreamWriter writeBinaryData(InputStream binaryStream)
-			throws IllegalStateException, EDIStreamException {
+			throws EDIStreamException {
 		ensureLevel(LEVEL_ELEMENT);
 		ensureState(State.ELEMENT_DATA_BINARY);
 		int input;
@@ -473,7 +459,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter {
 
 	@Override
 	public EDIStreamWriter writeBinaryData(byte[] binary, int start, int end)
-			throws IllegalStateException, EDIStreamException {
+			throws EDIStreamException {
 
 		ensureLevel(LEVEL_ELEMENT);
 		ensureState(State.ELEMENT_DATA_BINARY);
@@ -488,7 +474,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter {
 
 	@Override
 	public EDIStreamWriter writeBinaryData(ByteBuffer binary)
-			throws IllegalStateException, EDIStreamException {
+			throws EDIStreamException {
 
 		ensureLevel(LEVEL_ELEMENT);
 		ensureState(State.ELEMENT_DATA_BINARY);

@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2017 xlate.io LLC, http://www.xlate.io
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License.  You may obtain a copy
  * of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
@@ -15,6 +15,7 @@
  ******************************************************************************/
 package io.xlate.edi.stream;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -71,8 +72,7 @@ public class SegmentValidationTest implements ElementDataErrors,
 	}
 
 	@Test
-	@org.junit.Ignore
-	public void testValidSequenceMapDb()
+	public void testValidSequenceEdifact()
 			throws EDISchemaException, EDIStreamException {
 		EDIInputFactory factory = EDIInputFactory.newFactory();
 		InputStream stream =
@@ -82,8 +82,11 @@ public class SegmentValidationTest implements ElementDataErrors,
 								+ "UNT+23+00000000000117'"
 								+ "UNZ+1+00000000000778'").getBytes());
 
-		Schema schema = SchemaUtils.getMapSchema(Standards.EDIFACT, "40200", "INTERCHANGE");
-		EDIStreamReader reader = factory.createEDIStreamReader(stream, schema);
+		EDIStreamReader reader = factory.createEDIStreamReader(stream);
+		assertEquals(Events.START_INTERCHANGE, reader.next());
+        assertArrayEquals(new String[] { "UNOA", "1" }, reader.getVersion());
+        Schema schema = SchemaUtils.getControlSchema(Standards.EDIFACT, reader.getVersion());
+        reader.setSchema(schema);
 		reader = factory.createFilteredReader(reader, segmentErrorFilter);
 
 		assertTrue("Segment errors exist", !reader.hasNext());
@@ -122,8 +125,7 @@ public class SegmentValidationTest implements ElementDataErrors,
 	}
 
 	@Test
-	@org.junit.Ignore
-	public void testMissingMandatoryMapDb()
+	public void testMissingMandatoryEdifact()
 			throws EDISchemaException, EDIStreamException {
 		EDIInputFactory factory = EDIInputFactory.newFactory();
 		InputStream stream =
@@ -132,8 +134,11 @@ public class SegmentValidationTest implements ElementDataErrors,
 								+ "UNH+00000000000117+INVOIC:D:97B:UN'"
 								+ "UNZ+1+00000000000778'").getBytes());
 
-		Schema schema = SchemaUtils.getMapSchema(Standards.EDIFACT, "40200", "INTERCHANGE");
-		EDIStreamReader reader = factory.createEDIStreamReader(stream, schema);
+		EDIStreamReader reader = factory.createEDIStreamReader(stream);
+		assertEquals(Events.START_INTERCHANGE, reader.next());
+        assertArrayEquals(new String[] { "UNOA", "1" }, reader.getVersion());
+        Schema schema = SchemaUtils.getControlSchema(Standards.EDIFACT, reader.getVersion());
+        reader.setSchema(schema);
 		reader = factory.createFilteredReader(reader, segmentErrorFilter);
 
 		assertTrue("Segment errors do not exist", reader.hasNext());

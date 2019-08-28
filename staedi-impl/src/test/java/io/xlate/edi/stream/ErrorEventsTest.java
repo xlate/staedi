@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2017 xlate.io LLC, http://www.xlate.io
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License.  You may obtain a copy
  * of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
@@ -51,7 +51,7 @@ public class ErrorEventsTest {
 				getClass().getClassLoader().getResourceAsStream(
 						"x12/extraDelimiter997.edi");
 		SchemaFactory schemaFactory = SchemaFactory.newFactory();
-		Schema control = SchemaUtils.getControlSchema("X12", "00501");
+		Schema control = SchemaUtils.getControlSchema("X12", new String[] { "00501" });
 		Schema transaction = schemaFactory.createSchema(SchemaUtils.getURL("x12/EDISchema997.xml"));
 		EDIStreamReader reader = factory.createEDIStreamReader(stream, control);
 		String segment = null;
