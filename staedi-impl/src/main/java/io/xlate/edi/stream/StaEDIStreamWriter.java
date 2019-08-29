@@ -177,11 +177,10 @@ public class StaEDIStreamWriter implements EDIStreamWriter {
 
 		clazz = characters.getClass(output);
 
-		if (!clazz.isValid()) {
+		if (clazz == CharacterClass.INVALID) {
 			StringBuilder message = new StringBuilder();
-			message.append("Invalid character: '");
-			message.append((char) output);
-			message.append('\'');
+			message.append("Invalid character: 0x");
+			message.append(Integer.toHexString(output));
 			// FIXME
 			throw new EDIException(message.toString());
 		}
@@ -448,7 +447,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter {
 
 		try {
 			while ((input = binaryStream.read()) != -1) {
-				write(input);
+			    stream.write(input);
 			}
 		} catch (IOException e) {
 			throw new EDIStreamException(e);

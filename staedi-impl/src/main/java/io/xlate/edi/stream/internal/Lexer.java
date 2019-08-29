@@ -257,7 +257,7 @@ public class Lexer {
 
                 break;
             default:
-                if (clazz.isValid()) {
+                if (clazz != CharacterClass.INVALID) {
                     StringBuilder message = new StringBuilder();
                     message.append(": ");
                     message.append(state);

@@ -15,7 +15,7 @@
  ******************************************************************************/
 package io.xlate.edi.schema;
 
-public interface EDIType extends Comparable<EDIType> {
+public interface EDIType {
 
     public static final int TYPE_LOOP = 2;
     public static final int TYPE_SEGMENT = 3;
