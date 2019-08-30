@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2017 xlate.io LLC, http://www.xlate.io
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License.  You may obtain a copy
  * of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
@@ -24,6 +24,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import io.xlate.edi.stream.ConstantsTest;
+import io.xlate.edi.stream.EDIStreamValidationError;
 
 public class LexerTest {
 
@@ -82,12 +83,12 @@ public class LexerTest {
 		public void binaryData(InputStream binary) {}
 
 		@Override
-		public void segmentError(CharSequence token, int error) {}
+		public void segmentError(CharSequence token, EDIStreamValidationError error) {}
 
 		@Override
 		public void elementError(
 				int event,
-				int error,
+				EDIStreamValidationError error,
 				int elem,
 				int component,
 				int repetition) {}
@@ -137,12 +138,12 @@ public class LexerTest {
 		public void binaryData(InputStream binary) {}
 
 		@Override
-		public void segmentError(CharSequence token, int error) {}
+		public void segmentError(CharSequence token, EDIStreamValidationError error) {}
 
 		@Override
 		public void elementError(
 				int event,
-				int error,
+				EDIStreamValidationError error,
 				int elem,
 				int component,
 				int repetition) {}

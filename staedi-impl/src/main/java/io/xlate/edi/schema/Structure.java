@@ -24,7 +24,7 @@ class Structure extends BasicType implements EDIComplexType {
     private List<EDIReference> references;
     private List<EDISyntaxRule> syntaxRules;
 
-    Structure(String id, int type, String code, List<Reference> references, List<SyntaxRestriction> syntaxRules) {
+    Structure(String id, EDIType.Type type, String code, List<Reference> references, List<SyntaxRestriction> syntaxRules) {
         super(id, type);
         this.code = code;
         this.references = Collections.unmodifiableList(references);
@@ -44,14 +44,16 @@ class Structure extends BasicType implements EDIComplexType {
         buffer.append(super.id);
         buffer.append("\n, type: ");
         switch (super.type) {
-        case TYPE_COMPOSITE:
+        case COMPOSITE:
             buffer.append("composite");
             break;
-        case TYPE_LOOP:
+        case LOOP:
             buffer.append("loop");
             break;
-        case TYPE_SEGMENT:
+        case SEGMENT:
             buffer.append("segment");
+            break;
+        default:
             break;
         }
         buffer.append("\n, code: ");

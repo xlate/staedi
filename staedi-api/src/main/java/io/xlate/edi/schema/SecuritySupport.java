@@ -1,15 +1,15 @@
 /*******************************************************************************
  * Copyright 2017 xlate.io LLC, http://www.xlate.io
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
- * use this file except in compliance with the License.  You may obtain a copy
- * of the License at
- * 
- *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
  * License for the specific language governing permissions and limitations under
  * the License.
  ******************************************************************************/
@@ -27,135 +27,135 @@ import java.security.PrivilegedExceptionAction;
 
 class SecuritySupport {
 
-	ClassLoader getContextClassLoader() throws SecurityException {
-		return AccessController.doPrivileged(new GetContextClassLoader());
-	}
+    ClassLoader getContextClassLoader() {
+        return AccessController.doPrivileged(new GetContextClassLoader());
+    }
 
-	String getSystemProperty(final String name) {
-		return AccessController.doPrivileged(new GetSystemProperty(name));
-	}
+    String getSystemProperty(final String name) {
+        return AccessController.doPrivileged(new GetSystemProperty(name));
+    }
 
-	InputStream getInputStream(final File file) throws FileNotFoundException {
-		try {
-			return AccessController.doPrivileged(new GetInputStream(file));
-		} catch (PrivilegedActionException e) {
-			throw (FileNotFoundException) e.getException();
-		}
-	}
+    InputStream getInputStream(final File file) throws FileNotFoundException {
+        try {
+            return AccessController.doPrivileged(new GetInputStream(file));
+        } catch (PrivilegedActionException e) {
+            throw (FileNotFoundException) e.getException();
+        }
+    }
 
-	URL getResource(ClassLoader loader, String name) {
-		GetResource action = new GetResource(loader, name);
-		return AccessController.doPrivileged(action);
-	}
+    URL getResource(ClassLoader loader, String name) {
+        GetResource action = new GetResource(loader, name);
+        return AccessController.doPrivileged(action);
+    }
 
-	InputStream getResourceAsStream(ClassLoader loader, String name) {
-		GetResourceAsStream action = new GetResourceAsStream(loader, name);
-		return AccessController.doPrivileged(action);
-	}
+    InputStream getResourceAsStream(ClassLoader loader, String name) {
+        GetResourceAsStream action = new GetResourceAsStream(loader, name);
+        return AccessController.doPrivileged(action);
+    }
 
-	boolean doesFileExist(final File file) {
-		DoesFileExist action = new DoesFileExist(file);
-		return AccessController.doPrivileged(action).booleanValue();
-	}
+    boolean doesFileExist(final File file) {
+        DoesFileExist action = new DoesFileExist(file);
+        return AccessController.doPrivileged(action).booleanValue();
+    }
 
-	class GetContextClassLoader implements PrivilegedAction<ClassLoader> {
-		@Override
-		public ClassLoader run() {
-			final Thread currentThread = Thread.currentThread();
-			ClassLoader loader = currentThread.getContextClassLoader();
+    class GetContextClassLoader implements PrivilegedAction<ClassLoader> {
+        @Override
+        public ClassLoader run() {
+            final Thread currentThread = Thread.currentThread();
+            ClassLoader loader = currentThread.getContextClassLoader();
 
-			if (loader == null) {
-				loader = ClassLoader.getSystemClassLoader();
-			}
+            if (loader == null) {
+                loader = ClassLoader.getSystemClassLoader();
+            }
 
-			return loader;
-		}
-	}
+            return loader;
+        }
+    }
 
-	class GetSystemProperty implements PrivilegedAction<String> {
-		private final String name;
+    class GetSystemProperty implements PrivilegedAction<String> {
+        private final String name;
 
-		public GetSystemProperty(String name) {
-			this.name = name;
-		}
+        public GetSystemProperty(String name) {
+            this.name = name;
+        }
 
-		@Override
-		public String run() {
-			return System.getProperty(name);
-		}
-	}
+        @Override
+        public String run() {
+            return System.getProperty(name);
+        }
+    }
 
-	class GetInputStream implements PrivilegedExceptionAction<InputStream> {
-		private final File file;
+    class GetInputStream implements PrivilegedExceptionAction<InputStream> {
+        private final File file;
 
-		public GetInputStream(File file) {
-			this.file = file;
-		}
+        public GetInputStream(File file) {
+            this.file = file;
+        }
 
-		@Override
-		public InputStream run() throws FileNotFoundException {
-			return new FileInputStream(file);
-		}
-	}
+        @Override
+        public InputStream run() throws FileNotFoundException {
+            return new FileInputStream(file);
+        }
+    }
 
-	class GetResource implements PrivilegedAction<URL> {
-		final ClassLoader loader;
-		final String name;
+    class GetResource implements PrivilegedAction<URL> {
+        final ClassLoader loader;
+        final String name;
 
-		public GetResource(ClassLoader loader, String name) {
-			super();
-			this.loader = loader;
-			this.name = name;
-		}
+        public GetResource(ClassLoader loader, String name) {
+            super();
+            this.loader = loader;
+            this.name = name;
+        }
 
-		@Override
-		public URL run() {
-			final URL locator;
+        @Override
+        public URL run() {
+            final URL locator;
 
-			if (loader == null) {
-				locator = ClassLoader.getSystemResource(name);
-			} else {
-				locator = loader.getResource(name);
-			}
+            if (loader == null) {
+                locator = ClassLoader.getSystemResource(name);
+            } else {
+                locator = loader.getResource(name);
+            }
 
-			return locator;
-		}
-	}
+            return locator;
+        }
+    }
 
-	class GetResourceAsStream implements PrivilegedAction<InputStream> {
-		final ClassLoader loader;
-		final String name;
+    class GetResourceAsStream implements PrivilegedAction<InputStream> {
+        final ClassLoader loader;
+        final String name;
 
-		public GetResourceAsStream(ClassLoader loader, String name) {
-			super();
-			this.loader = loader;
-			this.name = name;
-		}
+        public GetResourceAsStream(ClassLoader loader, String name) {
+            super();
+            this.loader = loader;
+            this.name = name;
+        }
 
-		@Override
-		public InputStream run() {
-			final InputStream stream;
-			
-			if (loader == null) {
-				stream = ClassLoader.getSystemResourceAsStream(name);
-			} else {
-				stream = loader.getResourceAsStream(name);
-			}
-			
-			return stream;
-		}
-	}
-	
-	class DoesFileExist implements PrivilegedAction<Boolean> {
-		private final File file;
-		
-		public DoesFileExist(File file) {
-			this.file = file;
-		}
+        @Override
+        public InputStream run() {
+            final InputStream stream;
 
-		@Override
-		public Boolean run() {
-			return new Boolean(file.exists());
-		}
-	}
+            if (loader == null) {
+                stream = ClassLoader.getSystemResourceAsStream(name);
+            } else {
+                stream = loader.getResourceAsStream(name);
+            }
+
+            return stream;
+        }
+    }
+
+    class DoesFileExist implements PrivilegedAction<Boolean> {
+        private final File file;
+
+        public DoesFileExist(File file) {
+            this.file = file;
+        }
+
+        @Override
+        public Boolean run() {
+            return Boolean.valueOf(file.exists());
+        }
+    }
 }

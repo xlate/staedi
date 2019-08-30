@@ -15,11 +15,12 @@
  ******************************************************************************/
 package io.xlate.edi.stream.validation;
 
-import io.xlate.edi.schema.EDISimpleType;
-import io.xlate.edi.stream.internal.EDIException;
-
 import java.io.IOException;
 import java.util.List;
+
+import io.xlate.edi.schema.EDISimpleType;
+import io.xlate.edi.stream.EDIStreamValidationError;
+import io.xlate.edi.stream.internal.EDIException;
 
 class NumericValidator extends ElementValidator {
 
@@ -32,12 +33,12 @@ class NumericValidator extends ElementValidator {
 	}
 
 	@Override
-	void validate(EDISimpleType element, CharSequence value, List<Integer> errors) {
+	void validate(EDISimpleType element, CharSequence value, List<EDIStreamValidationError> errors) {
 		int length = validate(value);
 		validLength(element, Math.abs(length), errors);
 
 		if (length < 0) {
-			errors.add(INVALID_CHARACTER_DATA);
+			errors.add(EDIStreamValidationError.INVALID_CHARACTER_DATA);
 		}
 	}
 

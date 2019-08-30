@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2017 xlate.io LLC, http://www.xlate.io
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License.  You may obtain a copy
  * of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
@@ -25,8 +25,7 @@ import io.xlate.edi.schema.EDISchemaException;
 import io.xlate.edi.schema.EDISyntaxRule;
 import io.xlate.edi.schema.EDIType;
 import io.xlate.edi.schema.Schema;
-import io.xlate.edi.stream.EDIStreamConstants.ElementOccurrenceErrors;
-import io.xlate.edi.stream.EDIStreamConstants.SegmentErrors;
+import io.xlate.edi.stream.EDIStreamValidationError;
 import io.xlate.edi.stream.Location;
 import io.xlate.edi.stream.internal.EventHandler;
 import io.xlate.edi.stream.internal.InternalLocation;
@@ -43,7 +42,7 @@ public class Validator {
 	private UsageNode composite;
 
 	final private List<String> mandatory = new ArrayList<>();
-	final private List<Integer> elementErrors = new ArrayList<>(5);
+	final private List<EDIStreamValidationError> elementErrors = new ArrayList<>(5);
 
 	private int depth;
 
@@ -186,7 +185,7 @@ public class Validator {
 		scan:
 		while (current != null) {
 			switch (current.getNodeType()) {
-			case EDIType.TYPE_SEGMENT:
+			case SEGMENT:
 				if (!current.getId().contentEquals(tag)) {
 					/*
 					 * The schema segment does not match the segment tag found
@@ -212,7 +211,7 @@ public class Validator {
 						sibling.reset();
 					}
 
-					if (parent.getNodeType() == EDIType.TYPE_LOOP) {
+					if (parent.isNodeType(EDIType.Type.LOOP)) {
 						String loopId = parent.getCode();
 						handler.loopEnd(loopId);
 						handler.loopBegin(loopId);
@@ -227,12 +226,12 @@ public class Validator {
 					handleMissingMandatory(handler);
 					handler.segmentError(
 							current.getId(),
-							SegmentErrors.SEGMENT_EXCEEDS_MAXIMUM_USE);
+							EDIStreamValidationError.SEGMENT_EXCEEDS_MAXIMUM_USE);
 				}
 
 				correctSegment = segment = current;
 				break scan;
-			case EDIType.TYPE_LOOP:
+			case LOOP:
 				if (!current.getFirstChild().getId().contentEquals(tag)) {
 					break;
 				}
@@ -245,7 +244,7 @@ public class Validator {
 					handleMissingMandatory(handler);
 					handler.segmentError(
 							tag,
-							SegmentErrors.LOOP_OCCURS_OVER_MAXIMUM_TIMES);
+							EDIStreamValidationError.LOOP_OCCURS_OVER_MAXIMUM_TIMES);
 				}
 
 				correctSegment = segment = startLoop(current);
@@ -260,12 +259,14 @@ public class Validator {
 				 * requirement.
 				 */
 				switch (current.getNodeType()) {
-				case EDIType.TYPE_SEGMENT:
+				case SEGMENT:
 					mandatory.add(current.getId());
 					break;
-				case EDIType.TYPE_LOOP:
+				case LOOP:
 					mandatory.add(current.getFirstChild().getId());
 					break;
+                default:
+                    break;
 				}
 			}
 
@@ -291,14 +292,14 @@ public class Validator {
 						mandatory.clear();
 						handler.segmentError(
 								next.getId(),
-								SegmentErrors.SEGMENT_NOT_IN_PROPER_SEQUENCE);
+								EDIStreamValidationError.SEGMENT_NOT_IN_PROPER_SEQUENCE);
 
 						next.incrementUsage();
 
 						if (next.exceedsMaximumUsage()) {
 							handler.segmentError(
 									next.getId(),
-									SegmentErrors.SEGMENT_EXCEEDS_MAXIMUM_USE);
+									EDIStreamValidationError.SEGMENT_EXCEEDS_MAXIMUM_USE);
 						}
 
 						segment = next;
@@ -323,11 +324,11 @@ public class Validator {
 					if (schema.containsSegment(tag.toString())) {
 						handler.segmentError(
 								tag,
-								SegmentErrors.UNEXPECTED_SEGMENT);
+								EDIStreamValidationError.UNEXPECTED_SEGMENT);
 					} else {
 						handler.segmentError(
 								tag,
-								SegmentErrors.SEGMENT_NOT_IN_DEFINED_TRANSACTION_SET);
+								EDIStreamValidationError.SEGMENT_NOT_IN_DEFINED_TRANSACTION_SET);
 					}
 
 					break scan; // Wasn't found; cut our losses and go back.
@@ -340,12 +341,12 @@ public class Validator {
 
 	private void handleMissingMandatory(EventHandler handler) {
 		for (String id : mandatory) {
-			handler.segmentError(id, SegmentErrors.MANDATORY_SEGMENT_MISSING);
+			handler.segmentError(id, EDIStreamValidationError.MANDATORY_SEGMENT_MISSING);
 		}
 		mandatory.clear();
 	}
 
-	public List<Integer> getElementErrors() {
+	public List<EDIStreamValidationError> getElementErrors() {
 		return elementErrors;
 	}
 
@@ -361,14 +362,14 @@ public class Validator {
 		this.element = segment.getChild(elementPosition);
 
 		if (element == null) {
-			elementErrors.add(ElementOccurrenceErrors.TOO_MANY_DATA_ELEMENTS);
+			elementErrors.add(EDIStreamValidationError.TOO_MANY_DATA_ELEMENTS);
 			this.element = null;
 			return false;
-		} else if (!element.isNodeType(EDIType.TYPE_COMPOSITE)) {
+		} else if (!element.isNodeType(EDIType.Type.COMPOSITE)) {
 			this.element.incrementUsage();
 
 			if (this.element.exceedsMaximumUsage()) {
-				elementErrors.add(ElementOccurrenceErrors.TOO_MANY_REPETITIONS);
+				elementErrors.add(EDIStreamValidationError.TOO_MANY_REPETITIONS);
 				return false;
 			}
 
@@ -382,14 +383,14 @@ public class Validator {
 		this.element = null;
 
 		if (elementPosition >= segment.getChildren().size()) {
-			elementErrors.add(ElementOccurrenceErrors.TOO_MANY_DATA_ELEMENTS);
+			elementErrors.add(EDIStreamValidationError.TOO_MANY_DATA_ELEMENTS);
 			return false;
 		}
 
 		this.composite.incrementUsage();
 
 		if (this.composite.exceedsMaximumUsage()) {
-			elementErrors.add(ElementOccurrenceErrors.TOO_MANY_REPETITIONS);
+			elementErrors.add(EDIStreamValidationError.TOO_MANY_REPETITIONS);
 			return false;
 		}
 
@@ -419,7 +420,7 @@ public class Validator {
 				 * Only notify if this is not a composite - handled in
 				 * validCompositeOccurrences
 				 */
-				elementErrors.add(ElementOccurrenceErrors.TOO_MANY_DATA_ELEMENTS);
+				elementErrors.add(EDIStreamValidationError.TOO_MANY_DATA_ELEMENTS);
 				return false;
 			}
 
@@ -430,7 +431,7 @@ public class Validator {
 		}
 
 		this.element = segment.getChild(elementPosition);
-		boolean isComposite = element.isNodeType(EDIType.TYPE_COMPOSITE);
+		boolean isComposite = element.isNodeType(EDIType.Type.COMPOSITE);
 		boolean derivedComposite = false;
 
 		if (isComposite) {
@@ -448,7 +449,7 @@ public class Validator {
 				 * This element has components but is not defined as a composite
 				 * structure.
 				 */
-				elementErrors.add(ElementOccurrenceErrors.TOO_MANY_COMPONENTS);
+				elementErrors.add(EDIStreamValidationError.TOO_MANY_COMPONENTS);
 			} else {
 				if (componentIndex == 0) {
 					this.element.resetChildren();
@@ -459,7 +460,7 @@ public class Validator {
 						this.element = this.element.getChild(componentIndex);
 					}
 				} else {
-					elementErrors.add(ElementOccurrenceErrors.TOO_MANY_COMPONENTS);
+					elementErrors.add(EDIStreamValidationError.TOO_MANY_COMPONENTS);
 				}
 			}
 		}
@@ -473,14 +474,14 @@ public class Validator {
 				this.element.incrementUsage();
 
 				if (this.element.exceedsMaximumUsage()) {
-					elementErrors.add(ElementOccurrenceErrors.TOO_MANY_REPETITIONS);
+					elementErrors.add(EDIStreamValidationError.TOO_MANY_REPETITIONS);
 				}
 			}
 
 			this.element.validate(value, elementErrors);
 		} else {
 			if (!element.hasMinimumUsage()) {
-				elementErrors.add(ElementOccurrenceErrors.REQUIRED_DATA_ELEMENT_MISSING);
+				elementErrors.add(EDIStreamValidationError.REQUIRED_DATA_ELEMENT_MISSING);
 			}
 		}
 
@@ -523,7 +524,7 @@ public class Validator {
 		}
 
 		for (EDISyntaxRule rule : structure.getSyntaxRules()) {
-			final int ruleType = rule.getType();
+			final EDISyntaxRule.Type ruleType = rule.getType();
 			SyntaxValidator validator = SyntaxValidator.getInstance(ruleType);
 			validator.validate(rule, location, children, handler);
 		}

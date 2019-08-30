@@ -20,18 +20,18 @@ import java.util.Set;
 
 class Element extends BasicType implements EDISimpleType {
 
-    private int base;
+    private Base base;
     private int number;
     private int minLength;
     private int maxLength;
     private Set<String> values;
 
-    Element(String id, int base, int number, int minLength, int maxLength) {
+    Element(String id, Base base, int number, int minLength, int maxLength) {
         this(id, base, number, minLength, maxLength, Collections.emptySet());
     }
 
-    Element(String id, int base, int number, int minLength, int maxLength, Set<String> values) {
-        super(id, TYPE_ELEMENT);
+    Element(String id, Base base, int number, int minLength, int maxLength, Set<String> values) {
+        super(id, Type.ELEMENT);
         this.base = base;
         this.number = number;
         this.minLength = minLength;
@@ -46,22 +46,25 @@ class Element extends BasicType implements EDISimpleType {
         buffer.append(", type: element");
         buffer.append(", base: ");
         switch (base) {
-        case BASE_BINARY:
+        case BINARY:
             buffer.append("binary");
             break;
-        case BASE_DATE:
+        case DATE:
             buffer.append("date");
             break;
-        case BASE_DECIMAL:
+        case DECIMAL:
             buffer.append("decimal");
             break;
-        case BASE_IDENTIFIER:
+        case INTEGER:
+            buffer.append("integer");
+            break;
+        case IDENTIFIER:
             buffer.append("identifier");
             break;
-        case BASE_STRING:
+        case STRING:
             buffer.append("string");
             break;
-        case BASE_TIME:
+        case TIME:
             buffer.append("time");
             break;
         }
@@ -77,7 +80,7 @@ class Element extends BasicType implements EDISimpleType {
     }
 
     @Override
-    public int getBaseCode() {
+    public Base getBase() {
         return base;
     }
 

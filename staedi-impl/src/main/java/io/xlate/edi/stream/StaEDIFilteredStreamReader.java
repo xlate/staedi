@@ -129,7 +129,7 @@ class StaEDIFilteredStreamReader implements EDIStreamReader {
     }
 
     @Override
-    public int getErrorType() {
+    public EDIStreamValidationError getErrorType() {
         return delegate.getErrorType();
     }
 

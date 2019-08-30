@@ -29,15 +29,11 @@ import io.xlate.edi.schema.EDISchemaException;
 import io.xlate.edi.schema.Schema;
 import io.xlate.edi.schema.SchemaFactory;
 import io.xlate.edi.schema.SchemaUtils;
-import io.xlate.edi.stream.EDIStreamConstants.ElementDataErrors;
-import io.xlate.edi.stream.EDIStreamConstants.ElementOccurrenceErrors;
 import io.xlate.edi.stream.EDIStreamConstants.Events;
-import io.xlate.edi.stream.EDIStreamConstants.SegmentErrors;
 import io.xlate.edi.stream.EDIStreamConstants.Standards;
 
 @SuppressWarnings("resource")
-public class SegmentValidationTest implements ElementDataErrors,
-		ElementOccurrenceErrors {
+public class SegmentValidationTest {
 
 	EDIStreamFilter segmentErrorFilter = new EDIStreamFilter() {
 		@Override
@@ -115,10 +111,10 @@ public class SegmentValidationTest implements ElementDataErrors,
 
 		assertTrue("Segment errors do not exist", reader.hasNext());
 		reader.next();
-		assertEquals(SegmentErrors.MANDATORY_SEGMENT_MISSING, reader.getErrorType());
+		assertEquals(EDIStreamValidationError.MANDATORY_SEGMENT_MISSING, reader.getErrorType());
 		assertEquals("S12", reader.getText());
 		reader.next();
-		assertEquals(SegmentErrors.MANDATORY_SEGMENT_MISSING, reader.getErrorType());
+		assertEquals(EDIStreamValidationError.MANDATORY_SEGMENT_MISSING, reader.getErrorType());
 		assertEquals("S19", reader.getText());
 
 		assertTrue("Unexpected segment errors exist", !reader.hasNext());
@@ -143,7 +139,7 @@ public class SegmentValidationTest implements ElementDataErrors,
 
 		assertTrue("Segment errors do not exist", reader.hasNext());
 		reader.next();
-		assertEquals(SegmentErrors.MANDATORY_SEGMENT_MISSING, reader.getErrorType());
+		assertEquals(EDIStreamValidationError.MANDATORY_SEGMENT_MISSING, reader.getErrorType());
 		assertEquals("UNT", reader.getText());
 
 		assertTrue("Unexpected segment errors exist", !reader.hasNext());
@@ -174,7 +170,7 @@ public class SegmentValidationTest implements ElementDataErrors,
 
 		assertTrue("Segment errors do not exist", reader.hasNext());
 		reader.next();
-		assertEquals(SegmentErrors.UNEXPECTED_SEGMENT, reader.getErrorType());
+		assertEquals(EDIStreamValidationError.UNEXPECTED_SEGMENT, reader.getErrorType());
 		assertEquals("S0A", reader.getText());
 
 		assertTrue("Unexpected segment errors exist", !reader.hasNext());
@@ -208,16 +204,16 @@ public class SegmentValidationTest implements ElementDataErrors,
 
 		assertTrue("Segment errors do not exist", reader.hasNext());
 		reader.next();
-		assertEquals(SegmentErrors.SEGMENT_NOT_IN_PROPER_SEQUENCE, reader.getErrorType());
+		assertEquals(EDIStreamValidationError.SEGMENT_NOT_IN_PROPER_SEQUENCE, reader.getErrorType());
 		assertEquals("S13", reader.getText());
 		reader.next();
-		assertEquals(SegmentErrors.SEGMENT_NOT_IN_PROPER_SEQUENCE, reader.getErrorType());
+		assertEquals(EDIStreamValidationError.SEGMENT_NOT_IN_PROPER_SEQUENCE, reader.getErrorType());
 		assertEquals("S13", reader.getText());
 		reader.next();
-		assertEquals(SegmentErrors.SEGMENT_EXCEEDS_MAXIMUM_USE, reader.getErrorType());
+		assertEquals(EDIStreamValidationError.SEGMENT_EXCEEDS_MAXIMUM_USE, reader.getErrorType());
 		assertEquals("S13", reader.getText());
 		reader.next();
-		assertEquals(SegmentErrors.SEGMENT_EXCEEDS_MAXIMUM_USE, reader.getErrorType());
+		assertEquals(EDIStreamValidationError.SEGMENT_EXCEEDS_MAXIMUM_USE, reader.getErrorType());
 		assertEquals("S14", reader.getText());
 
 		assertTrue("Unexpected segment errors exist", !reader.hasNext());
@@ -248,7 +244,7 @@ public class SegmentValidationTest implements ElementDataErrors,
 
 		assertTrue("Segment errors do not exist", reader.hasNext());
 		reader.next();
-		assertEquals(SegmentErrors.SEGMENT_NOT_IN_DEFINED_TRANSACTION_SET, reader.getErrorType());
+		assertEquals(EDIStreamValidationError.SEGMENT_NOT_IN_DEFINED_TRANSACTION_SET, reader.getErrorType());
 		assertEquals("S0B", reader.getText());
 
 		assertTrue("Unexpected segment errors exist", !reader.hasNext());
@@ -281,7 +277,7 @@ public class SegmentValidationTest implements ElementDataErrors,
 
 		assertTrue("Segment errors do not exist", reader.hasNext());
 		reader.next();
-		assertEquals(SegmentErrors.LOOP_OCCURS_OVER_MAXIMUM_TIMES, reader.getErrorType());
+		assertEquals(EDIStreamValidationError.LOOP_OCCURS_OVER_MAXIMUM_TIMES, reader.getErrorType());
 		assertEquals("S11", reader.getText());
 
 		assertTrue("Unexpected segment errors exist", !reader.hasNext());
@@ -325,7 +321,7 @@ public class SegmentValidationTest implements ElementDataErrors,
 
 		assertTrue("Segment errors do not exist", reader.hasNext());
 		reader.next();
-		assertEquals(SegmentErrors.MANDATORY_SEGMENT_MISSING, reader.getErrorType());
+		assertEquals(EDIStreamValidationError.MANDATORY_SEGMENT_MISSING, reader.getErrorType());
 		assertEquals("S01", reader.getText());
 
 		assertTrue("Unexpected segment errors exist", !reader.hasNext());

@@ -1,15 +1,15 @@
 /*******************************************************************************
  * Copyright 2017 xlate.io LLC, http://www.xlate.io
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
- * use this file except in compliance with the License.  You may obtain a copy
- * of the License at
- * 
- *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
  * License for the specific language governing permissions and limitations under
  * the License.
  ******************************************************************************/
@@ -17,88 +17,93 @@ package io.xlate.edi.stream;
 
 public class EDIStreamException extends Exception {
 
-	private static final long serialVersionUID = -1232370584780899896L;
+    private static final long serialVersionUID = -1232370584780899896L;
 
-	protected Location location;
+    protected final transient Location location;
 
-	public EDIStreamException() {
-		super();
-	}
+    public EDIStreamException() {
+        super();
+        location = null;
+    }
 
-	/**
-	 * Construct an exception with the associated message.
-	 *
-	 * @param message
-	 *            the message to report
-	 */
-	public EDIStreamException(String message) {
-		super(message);
-	}
+    /**
+     * Construct an exception with the associated message.
+     *
+     * @param message
+     *            the message to report
+     */
+    public EDIStreamException(String message) {
+        super(message);
+        location = null;
+    }
 
-	/**
-	 * Construct an exception with the associated exception
-	 *
-	 * @param cause
-	 *            a nested exception
-	 */
-	public EDIStreamException(Throwable cause) {
-		super(cause);
-	}
+    /**
+     * Construct an exception with the associated exception
+     *
+     * @param cause
+     *            a nested exception
+     */
+    public EDIStreamException(Throwable cause) {
+        super(cause);
+        location = null;
+    }
 
-	/**
-	 * Construct an exception with the associated message and exception
-	 *
-	 * @param cause
-	 *            a nested exception
-	 * @param message
-	 *            the message to report
-	 */
-	public EDIStreamException(String message, Throwable cause) {
-		super(message, cause);
-	}
+    /**
+     * Construct an exception with the associated message and exception
+     *
+     * @param cause
+     *            a nested exception
+     * @param message
+     *            the message to report
+     */
+    public EDIStreamException(String message, Throwable cause) {
+        super(message, cause);
+        location = null;
+    }
 
-	private static String displayLocation(Location location) {
-		return location.getSegmentPosition() + " : " + location.getElementPosition();
-	}
+    private static String displayLocation(Location location) {
+        return location.getSegmentPosition() + " : " + location.getElementPosition();
+    }
 
-	/**
-	 * Construct an exception with the associated message, exception and
-	 * location.
-	 *
-	 * @param message
-	 *            the message to report
-	 * @param location
-	 *            the location of the error
-	 * @param cause
-	 *            a nested error / exception
-	 */
-	public EDIStreamException(String message, Location location, Throwable cause) {
-		super("EDIStreamException at [seg,ele]:[" + displayLocation(location) + "]\n" + "Message: "
-				+ message, cause);
-		this.location = location;
-	}
+    /**
+     * Construct an exception with the associated message, exception and
+     * location.
+     *
+     * @param message
+     *            the message to report
+     * @param location
+     *            the location of the error
+     * @param cause
+     *            a nested error / exception
+     */
+    public EDIStreamException(String message, Location location, Throwable cause) {
+        super("EDIStreamException at [seg,ele]:[" + displayLocation(location) + "]\n" + "Message: "
+                + message,
+              cause);
+        this.location = location;
+    }
 
-	/**
-	 * Construct an exception with the associated message, exception and
-	 * location.
-	 *
-	 * @param message
-	 *            the message to report
-	 * @param location
-	 *            the location of the error
-	 */
-	public EDIStreamException(String message, Location location) {
-		super("EDIStreamException at [seg,ele]:[" + displayLocation(location) + "]\n" + "Message: "
-				+ message);
-		this.location = location;
-	}
+    /**
+     * Construct an exception with the associated message, exception and
+     * location.
+     *
+     * @param message
+     *            the message to report
+     * @param location
+     *            the location of the error
+     */
+    public EDIStreamException(String message, Location location) {
+        super("EDIStreamException at [seg,ele]:[" + displayLocation(location) + "]\n" + "Message: "
+                + message);
+        this.location = location;
+    }
 
-	/**
-	 * Gets the location of the exception
-	 *
-	 * @return the location of the exception, may be null if none is available
-	 */
-	public Location getLocation() {
-		return location;
-	}
+    /**
+     * Gets the location of the exception
+     *
+     * @return the location of the exception, may be null if none is available
+     */
+    public Location getLocation() {
+        return location;
+    }
 }

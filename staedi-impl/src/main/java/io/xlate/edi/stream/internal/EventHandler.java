@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2017 xlate.io LLC, http://www.xlate.io
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License.  You may obtain a copy
  * of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
@@ -16,6 +16,8 @@
 package io.xlate.edi.stream.internal;
 
 import java.io.InputStream;
+
+import io.xlate.edi.stream.EDIStreamValidationError;
 
 public interface EventHandler {
 
@@ -39,7 +41,7 @@ public interface EventHandler {
 
 	void binaryData(InputStream binary);
 
-	void segmentError(CharSequence token, int error);
+	void segmentError(CharSequence token, EDIStreamValidationError error);
 
-	void elementError(int event, int error, int element, int component, int repetition);
+	void elementError(int event, EDIStreamValidationError error, int element, int component, int repetition);
 }

@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayDeque;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Deque;
 import java.util.NoSuchElementException;
@@ -353,7 +354,7 @@ public class StaEDIXMLStreamReader implements XMLStreamReader {
 	public String getText() {
 		if (isCharacters()) {
 			if (cdataBuilder.length() > 0) {
-				return cdata.toString();
+				return Arrays.toString(cdata);
 			}
 			return ediReader.getText();
 		}

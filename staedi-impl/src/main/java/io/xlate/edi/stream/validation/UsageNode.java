@@ -2,14 +2,14 @@
  * Copyright 2017 xlate.io LLC, http://www.xlate.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
- * use this file except in compliance with the License.  You may obtain a copy
- * of the License at
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
  * License for the specific language governing permissions and limitations under
  * the License.
  ******************************************************************************/
@@ -20,6 +20,7 @@ import io.xlate.edi.schema.EDIReference;
 import io.xlate.edi.schema.EDISimpleType;
 import io.xlate.edi.schema.EDISyntaxRule;
 import io.xlate.edi.schema.EDIType;
+import io.xlate.edi.stream.EDIStreamValidationError;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -27,172 +28,171 @@ import java.util.List;
 
 class UsageNode {
 
-	private final EDIReference link;
-	private final ElementValidator validator;
-	private final UsageNode parent;
-	private int siblingIndex;
-	private final List<UsageNode> children = new ArrayList<>();
-	private int usageCount;
+    private final EDIReference link;
+    private final ElementValidator validator;
+    private final UsageNode parent;
+    private int siblingIndex;
+    private final List<UsageNode> children = new ArrayList<>();
+    private int usageCount;
 
-	UsageNode(UsageNode parent, EDIReference link, int siblingIndex) {
-		if (link == null) {
-			throw new NullPointerException();
-		}
+    UsageNode(UsageNode parent, EDIReference link, int siblingIndex) {
+        if (link == null) {
+            throw new NullPointerException();
+        }
 
-		this.parent = parent;
-		this.link = link;
+        this.parent = parent;
+        this.link = link;
 
-		EDIType referencedType = link.getReferencedType();
+        EDIType referencedType = link.getReferencedType();
 
-		if (referencedType instanceof EDISimpleType) {
-			final EDISimpleType simple = (EDISimpleType) referencedType;
-			final int baseCode = simple.getBaseCode();
-			this.validator = ElementValidator.getInstance(baseCode);
-		} else {
-			this.validator = null;
-		}
+        if (referencedType instanceof EDISimpleType) {
+            final EDISimpleType simple = (EDISimpleType) referencedType;
+            this.validator = ElementValidator.getInstance(simple.getBase());
+        } else {
+            this.validator = null;
+        }
 
-		this.siblingIndex = siblingIndex;
-	}
+        this.siblingIndex = siblingIndex;
+    }
 
-	EDIReference getReference() {
-		return link;
-	}
+    EDIReference getReference() {
+        return link;
+    }
 
-	EDIType getReferencedType() {
-		return link.getReferencedType();
-	}
+    EDIType getReferencedType() {
+        return link.getReferencedType();
+    }
 
-	UsageNode getParent() {
-		return parent;
-	}
+    UsageNode getParent() {
+        return parent;
+    }
 
-	List<UsageNode> getChildren() {
-		return children;
-	}
+    List<UsageNode> getChildren() {
+        return children;
+    }
 
-	UsageNode getChild(int index) {
-		return (index < children.size()) ? children.get(index) : null;
-	}
+    UsageNode getChild(int index) {
+        return (index < children.size()) ? children.get(index) : null;
+    }
 
-	String getId() {
-		return link.getReferencedType().getId();
-	}
+    String getId() {
+        return link.getReferencedType().getId();
+    }
 
-	String getCode() {
-		EDIType referencedNode = link.getReferencedType();
+    String getCode() {
+        EDIType referencedNode = link.getReferencedType();
 
-		if (referencedNode instanceof EDIComplexType) {
-			return ((EDIComplexType) referencedNode).getCode();
-		}
+        if (referencedNode instanceof EDIComplexType) {
+            return ((EDIComplexType) referencedNode).getCode();
+        }
 
-		return null;
-	}
+        return null;
+    }
 
-	int getNumber() {
-		EDIType referencedNode = link.getReferencedType();
+    int getNumber() {
+        EDIType referencedNode = link.getReferencedType();
 
-		if (referencedNode instanceof EDISimpleType) {
-			return ((EDISimpleType) referencedNode).getNumber();
-		}
+        if (referencedNode instanceof EDISimpleType) {
+            return ((EDISimpleType) referencedNode).getNumber();
+        }
 
-		return -1;
-	}
+        return -1;
+    }
 
-	void validate(CharSequence value, List<Integer> errors) {
-		if (validator == null) {
-			throw new UnsupportedOperationException("simple type only");
-		}
+    void validate(CharSequence value, List<EDIStreamValidationError> errors) {
+        if (validator == null) {
+            throw new UnsupportedOperationException("simple type only");
+        }
 
-		final EDISimpleType element = (EDISimpleType) link.getReferencedType();
-		validator.validate(element, value, errors);
-	}
+        final EDISimpleType element = (EDISimpleType) link.getReferencedType();
+        validator.validate(element, value, errors);
+    }
 
-	List<EDISyntaxRule> getSyntaxRules() {
-		EDIType referencedNode = link.getReferencedType();
+    List<EDISyntaxRule> getSyntaxRules() {
+        EDIType referencedNode = link.getReferencedType();
 
-		if (referencedNode instanceof EDIComplexType) {
-			return ((EDIComplexType) referencedNode).getSyntaxRules();
-		}
+        if (referencedNode instanceof EDIComplexType) {
+            return ((EDIComplexType) referencedNode).getSyntaxRules();
+        }
 
-		return Collections.emptyList();
-	}
+        return Collections.emptyList();
+    }
 
-	int getIndex() {
-		return siblingIndex;
-	}
+    int getIndex() {
+        return siblingIndex;
+    }
 
-	void setIndex(int siblingIndex) {
-		this.siblingIndex = siblingIndex;
-	}
+    void setIndex(int siblingIndex) {
+        this.siblingIndex = siblingIndex;
+    }
 
-	void incrementUsage() {
-		usageCount++;
-	}
+    void incrementUsage() {
+        usageCount++;
+    }
 
-	boolean isUsed() {
-		return usageCount > 0;
-	}
+    boolean isUsed() {
+        return usageCount > 0;
+    }
 
-	boolean isFirstChild() {
-		return this == getFirstSibling();
-	}
+    boolean isFirstChild() {
+        return this == getFirstSibling();
+    }
 
-	boolean hasMinimumUsage() {
-		return usageCount >= link.getMinOccurs();
-	}
+    boolean hasMinimumUsage() {
+        return usageCount >= link.getMinOccurs();
+    }
 
-	boolean exceedsMaximumUsage() {
-		return usageCount > link.getMaxOccurs();
-	}
+    boolean exceedsMaximumUsage() {
+        return usageCount > link.getMaxOccurs();
+    }
 
-	int getUsageCount() {
-		return usageCount;
-	}
+    int getUsageCount() {
+        return usageCount;
+    }
 
-	boolean isNodeType(int type) {
-		return link.getReferencedType().getTypeCode() == type;
-	}
+    boolean isNodeType(EDIType.Type type) {
+        return link.getReferencedType().isType(type);
+    }
 
-	int getNodeType() {
-		return link.getReferencedType().getTypeCode();
-	}
+    EDIType.Type getNodeType() {
+        return link.getReferencedType().getType();
+    }
 
-	void reset() {
-		usageCount = 0;
-		resetChildren();
-	}
+    void reset() {
+        usageCount = 0;
+        resetChildren();
+    }
 
-	void resetChildren() {
-	    children.forEach(UsageNode::reset);
-	}
+    void resetChildren() {
+        children.forEach(UsageNode::reset);
+    }
 
-	private UsageNode getSibling(int index) {
-		return parent != null && parent.children.size() > index
-				? parent.children.get(index)
-				: null;
-	}
+    private UsageNode getSibling(int index) {
+        return parent != null && parent.children.size() > index
+                ? parent.children.get(index)
+                : null;
+    }
 
-	UsageNode getFirstSibling() {
-		return getSibling(0);
-	}
+    UsageNode getFirstSibling() {
+        return getSibling(0);
+    }
 
-	UsageNode getNextSibling() {
-		return getSibling(siblingIndex + 1);
-	}
+    UsageNode getNextSibling() {
+        return getSibling(siblingIndex + 1);
+    }
 
-	public UsageNode getFirstChild() {
-		return (!children.isEmpty()) ? children.get(0) : null;
-	}
+    public UsageNode getFirstChild() {
+        return (!children.isEmpty()) ? children.get(0) : null;
+    }
 
-	UsageNode getChildById(CharSequence id) {
-	    return children.stream()
-	                   .filter(c -> c.getId().contentEquals(id))
-	                   .findFirst()
-	                   .orElse(null);
-	}
+    UsageNode getChildById(CharSequence id) {
+        return children.stream()
+                       .filter(c -> c.getId().contentEquals(id))
+                       .findFirst()
+                       .orElse(null);
+    }
 
-	UsageNode getSiblingById(CharSequence id) {
-		return parent != null ? parent.getChildById(id) : null;
-	}
+    UsageNode getSiblingById(CharSequence id) {
+        return parent != null ? parent.getChildById(id) : null;
+    }
 }

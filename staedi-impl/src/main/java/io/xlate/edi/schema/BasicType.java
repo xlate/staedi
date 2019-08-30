@@ -18,9 +18,9 @@ package io.xlate.edi.schema;
 abstract class BasicType implements EDIType {
 
     protected String id;
-    protected int type;
+    protected Type type;
 
-    BasicType(String id, int type) {
+    BasicType(String id, Type type) {
         super();
         this.id = id;
         this.type = type;
@@ -29,7 +29,7 @@ abstract class BasicType implements EDIType {
     BasicType(EDIType other) {
         super();
         this.id = other.getId();
-        this.type = other.getTypeCode();
+        this.type = other.getType();
     }
 
     @Override
@@ -38,7 +38,7 @@ abstract class BasicType implements EDIType {
     }
 
     @Override
-    public int getTypeCode() {
+    public Type getType() {
         return type;
     }
 }

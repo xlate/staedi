@@ -17,13 +17,28 @@ package io.xlate.edi.schema;
 
 public interface EDIType {
 
-    public static final int TYPE_LOOP = 2;
-    public static final int TYPE_SEGMENT = 3;
-    public static final int TYPE_COMPOSITE = 4;
-    public static final int TYPE_ELEMENT = 5;
+    public enum Type {
+        LOOP(2),
+        SEGMENT(3),
+        COMPOSITE(4),
+        ELEMENT(5);
+
+        private int code;
+
+        private Type(int code) {
+            this.code = code;
+        }
+
+        public int getCode() {
+            return code;
+        }
+    }
 
     String getId();
 
-    int getTypeCode();
+    Type getType();
 
+    default boolean isType(Type type) {
+        return getType() == type;
+    }
 }

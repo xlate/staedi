@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2017 xlate.io LLC, http://www.xlate.io
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License.  You may obtain a copy
  * of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
@@ -25,12 +25,12 @@ public class EDIException extends EDIStreamException {
 
 	private static final long serialVersionUID = -2724168743697298348L;
 
-	static final Integer MISSING_HANDLER = 1;
-	static final Integer UNSUPPORTED_DIALECT = 2;
-	static final Integer INVALID_STATE = 3;
-	static final Integer INVALID_CHARACTER = 4;
+	public static final Integer MISSING_HANDLER = 1;
+	public static final Integer UNSUPPORTED_DIALECT = 2;
+	public static final Integer INVALID_STATE = 3;
+	public static final Integer INVALID_CHARACTER = 4;
 
-	private static Map<Integer, String> exceptionMessages =
+	private static final Map<Integer, String> exceptionMessages =
 			new HashMap<>();
 
 	static {
@@ -68,7 +68,7 @@ public class EDIException extends EDIStreamException {
 		super(message);
 	}
 
-	EDIException(Integer id) {
+	public EDIException(Integer id) {
 		super(exceptionMessages.get(id));
 	}
 
@@ -80,7 +80,7 @@ public class EDIException extends EDIStreamException {
 		super(exceptionMessages.get(id) + message, location);
 	}
 
-	EDIException(Integer id, String message) {
+	public EDIException(Integer id, String message) {
 		super(exceptionMessages.get(id) + message);
 	}
 

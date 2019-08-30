@@ -15,12 +15,13 @@
  ******************************************************************************/
 package io.xlate.edi.stream.validation;
 
-import io.xlate.edi.schema.EDISimpleType;
-import io.xlate.edi.stream.internal.EDIException;
-
 import java.io.IOException;
 import java.util.Calendar;
 import java.util.List;
+
+import io.xlate.edi.schema.EDISimpleType;
+import io.xlate.edi.stream.EDIStreamValidationError;
+import io.xlate.edi.stream.internal.EDIException;
 
 class DateValidator extends ElementValidator {
 
@@ -36,14 +37,12 @@ class DateValidator extends ElementValidator {
 	void validate(
 			EDISimpleType element,
 			CharSequence value,
-			List<Integer> errors) {
+			List<EDIStreamValidationError> errors) {
 
 		int length = value.length();
 
-		if (!validLength(element, length, errors) || length % 2 != 0) {
-			errors.add(INVALID_DATE);
-		} else if (!validValue(value)) {
-			errors.add(INVALID_DATE);
+		if (!validLength(element, length, errors) || length % 2 != 0 || !validValue(value)) {
+			errors.add(EDIStreamValidationError.INVALID_DATE);
 		}
 	}
 

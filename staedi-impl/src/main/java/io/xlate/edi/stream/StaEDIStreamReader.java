@@ -169,7 +169,6 @@ public class StaEDIStreamReader implements EDIStreamReader {
 
 	@Override
 	public void close() throws IOException {
-		lexer.close();
 		this.closed = true;
 	}
 
@@ -233,7 +232,7 @@ public class StaEDIStreamReader implements EDIStreamReader {
 	}
 
 	@Override
-	public int getErrorType() {
+	public EDIStreamValidationError getErrorType() {
 		switch (getEventType()) {
 		case Events.ELEMENT_DATA_ERROR:
 		case Events.ELEMENT_OCCURRENCE_ERROR:

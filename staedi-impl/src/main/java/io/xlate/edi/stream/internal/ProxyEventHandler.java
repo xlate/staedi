@@ -22,8 +22,8 @@ import java.util.List;
 
 import io.xlate.edi.schema.EDISchemaException;
 import io.xlate.edi.schema.Schema;
-import io.xlate.edi.stream.EDIStreamConstants.ElementOccurrenceErrors;
 import io.xlate.edi.stream.EDIStreamConstants.Events;
+import io.xlate.edi.stream.EDIStreamValidationError;
 import io.xlate.edi.stream.Location;
 import io.xlate.edi.stream.validation.Validator;
 
@@ -36,7 +36,7 @@ public class ProxyEventHandler implements EventHandler {
 	private CharArraySequence holder = new CharArraySequence();
 
 	private int[] events = new int[99];
-	private int[] errorTypes = new int[99];
+	private EDIStreamValidationError[] errorTypes = new EDIStreamValidationError[99];
 	private CharBuffer[] eventData = new CharBuffer[99];
 	private String[] referenceCodes = new String[99];
 	private Location[] locations = new Location[99];
@@ -95,7 +95,7 @@ public class ProxyEventHandler implements EventHandler {
 		return ++eventIndex < eventCount;
 	}
 
-	public int getErrorType() {
+	public EDIStreamValidationError getErrorType() {
 		return errorTypes[eventIndex];
 	}
 
@@ -122,22 +122,22 @@ public class ProxyEventHandler implements EventHandler {
 
 	@Override
 	public void interchangeBegin() {
-		enqueueEvent(Events.START_INTERCHANGE, -1, "", null);
+		enqueueEvent(Events.START_INTERCHANGE, EDIStreamValidationError.NONE, "", null);
 	}
 
 	@Override
 	public void interchangeEnd() {
-		enqueueEvent(Events.END_INTERCHANGE, -1, "", null);
+		enqueueEvent(Events.END_INTERCHANGE, EDIStreamValidationError.NONE, "", null);
 	}
 
 	@Override
 	public void loopBegin(CharSequence id) {
-		enqueueEvent(Events.START_LOOP, -1, id, null);
+		enqueueEvent(Events.START_LOOP, EDIStreamValidationError.NONE, id, null);
 	}
 
 	@Override
 	public void loopEnd(CharSequence id) {
-		enqueueEvent(Events.END_LOOP, -1, id, null);
+		enqueueEvent(Events.END_LOOP, EDIStreamValidationError.NONE, id, null);
 	}
 
 	@Override
@@ -149,7 +149,7 @@ public class ProxyEventHandler implements EventHandler {
 			validator.validateSegment(this, holder);
 		}
 
-		enqueueEvent(Events.START_SEGMENT, -1, text, start, length, null, null);
+		enqueueEvent(Events.START_SEGMENT, EDIStreamValidationError.NONE, text, start, length, null, null);
 	}
 
 	@Override
@@ -157,7 +157,7 @@ public class ProxyEventHandler implements EventHandler {
 		if (validator != null) {
 			validator.validateSyntax(this, location, false);
 		}
-		enqueueEvent(Events.END_SEGMENT, -1, "", null);
+		enqueueEvent(Events.END_SEGMENT, EDIStreamValidationError.NONE, "", null);
 	}
 
 	@Override
@@ -168,9 +168,9 @@ public class ProxyEventHandler implements EventHandler {
 			boolean invalid = !validator.validCompositeOccurrences(location);
 
 			if (invalid) {
-				List<Integer> errors = validator.getElementErrors();
+				List<EDIStreamValidationError> errors = validator.getElementErrors();
 
-				for (Integer error : errors) {
+				for (EDIStreamValidationError error : errors) {
 					enqueueEvent(Events.ELEMENT_OCCURRENCE_ERROR, error, "", null);
 				}
 			} else {
@@ -178,7 +178,7 @@ public class ProxyEventHandler implements EventHandler {
 			}
 		}
 
-		enqueueEvent(Events.START_COMPOSITE, -1, "", code);
+		enqueueEvent(Events.START_COMPOSITE, EDIStreamValidationError.NONE, "", code);
 	}
 
 	@Override
@@ -186,7 +186,7 @@ public class ProxyEventHandler implements EventHandler {
 		if (validator != null && !isNil) {
 			validator.validateSyntax(this, location, true);
 		}
-		enqueueEvent(Events.END_COMPOSITE, -1, "", null);
+		enqueueEvent(Events.END_COMPOSITE, EDIStreamValidationError.NONE, "", null);
 	}
 
 	@Override
@@ -211,19 +211,19 @@ public class ProxyEventHandler implements EventHandler {
 				 * Process element-level errors before possibly starting a
 				 * composite or reporting other data-related errors.
 				 */
-				List<Integer> errors = validator.getElementErrors();
-				Iterator<Integer> cursor = errors.iterator();
+				List<EDIStreamValidationError> errors = validator.getElementErrors();
+				Iterator<EDIStreamValidationError> cursor = errors.iterator();
 
 				if (derivedComposite) {
 					savedLocation = new ImmutableLocation(location);
 				}
 
 				while (cursor.hasNext()) {
-					int error = cursor.next();
+				    EDIStreamValidationError error = cursor.next();
 
 					switch (error) {
-					case ElementOccurrenceErrors.TOO_MANY_DATA_ELEMENTS:
-					case ElementOccurrenceErrors.TOO_MANY_REPETITIONS:
+					case TOO_MANY_DATA_ELEMENTS:
+					case TOO_MANY_REPETITIONS:
 						enqueueEvent(
 								Events.ELEMENT_OCCURRENCE_ERROR,
 								error,
@@ -247,12 +247,12 @@ public class ProxyEventHandler implements EventHandler {
 			}
 
 			if (!valid) {
-				List<Integer> errors = validator.getElementErrors();
+				List<EDIStreamValidationError> errors = validator.getElementErrors();
 				savedLocation = new ImmutableLocation(location);
 
-				for (Integer error : errors) {
+				for (EDIStreamValidationError error : errors) {
 					enqueueEvent(
-							getErrorEventType(error),
+							error.getCategory(),
 							error,
 							text,
 							start,
@@ -264,7 +264,7 @@ public class ProxyEventHandler implements EventHandler {
 		}
 
 		if (text != null && (!derivedComposite || length > 0) /* Not an inferred element */) {
-			enqueueEvent(Events.ELEMENT_DATA, -1, text, start, length, code, savedLocation);
+			enqueueEvent(Events.ELEMENT_DATA, EDIStreamValidationError.NONE, text, start, length, code, savedLocation);
 		}
 
 		if (derivedComposite && text != null /* Not an empty composite */) {
@@ -273,35 +273,21 @@ public class ProxyEventHandler implements EventHandler {
 		}
 	}
 
-	private int getErrorEventType(int error) {
-		switch (error) {
-		case ElementOccurrenceErrors.REQUIRED_DATA_ELEMENT_MISSING:
-		case ElementOccurrenceErrors.CONDITIONAL_REQUIRED_DATA_ELEMENT_MISSING:
-		case ElementOccurrenceErrors.TOO_MANY_DATA_ELEMENTS:
-		case ElementOccurrenceErrors.EXCLUSION_CONDITION_VIOLATED:
-		case ElementOccurrenceErrors.TOO_MANY_REPETITIONS:
-		case ElementOccurrenceErrors.TOO_MANY_COMPONENTS:
-			return Events.ELEMENT_OCCURRENCE_ERROR;
-		default:
-			return Events.ELEMENT_DATA_ERROR;
-		}
-	}
-
 	@Override
 	public void binaryData(InputStream binaryStream) {
-		enqueueEvent(Events.ELEMENT_DATA_BINARY, -1, "", null);
+		enqueueEvent(Events.ELEMENT_DATA_BINARY, EDIStreamValidationError.NONE, "", null);
 		setBinary(binaryStream);
 	}
 
 	@Override
-	public void segmentError(CharSequence token, int error) {
+	public void segmentError(CharSequence token, EDIStreamValidationError error) {
 		enqueueEvent(Events.SEGMENT_ERROR, error, token, null);
 	}
 
 	@Override
 	public void elementError(
 			final int event,
-			final int error,
+			final EDIStreamValidationError error,
 			final int element,
 			final int component,
 			final int repetition) {
@@ -316,7 +302,7 @@ public class ProxyEventHandler implements EventHandler {
 
 	private void enqueueEvent(
 			int event,
-			int error,
+			EDIStreamValidationError error,
 			char[] text,
 			int start,
 			int length,
@@ -326,8 +312,8 @@ public class ProxyEventHandler implements EventHandler {
 		if (eventCount > 0 && event == Events.ELEMENT_OCCURRENCE_ERROR) {
 			if (events[eventCount] == Events.START_COMPOSITE) {
 				switch (error) {
-				case ElementOccurrenceErrors.TOO_MANY_DATA_ELEMENTS:
-				case ElementOccurrenceErrors.TOO_MANY_REPETITIONS:
+				case TOO_MANY_DATA_ELEMENTS:
+				case TOO_MANY_REPETITIONS:
 					/*
 					 * We have an element-level error with a pending start
 					 * composite event. Move the element error before the start
@@ -372,7 +358,7 @@ public class ProxyEventHandler implements EventHandler {
 		eventCount++;
 	}
 
-	private void enqueueEvent(int event, int error, CharSequence text, String code) {
+	private void enqueueEvent(int event, EDIStreamValidationError error, CharSequence text, String code) {
 		events[eventCount] = event;
 		errorTypes[eventCount] = error;
 		eventData[eventCount] = put(eventData[eventCount], text);

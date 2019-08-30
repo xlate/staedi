@@ -2,14 +2,14 @@
  * Copyright 2017 xlate.io LLC, http://www.xlate.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
- * use this file except in compliance with the License.  You may obtain a copy
- * of the License at
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
  * License for the specific language governing permissions and limitations under
  * the License.
  ******************************************************************************/
@@ -22,247 +22,236 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-class StaEDISchema extends Schema {
+class StaEDISchema implements Schema {
 
-	private static final long serialVersionUID = -1469959633026577070L;
+    static final String MAIN = "io.xlate.edi.schema.MAIN";
 
-	static final String MAIN = "io.xlate.edi.schema.MAIN";
+    final SchemaProxy proxy = new SchemaProxy(this);
 
-	final transient SchemaProxy proxy = new SchemaProxy(this);
+    private Map<String, EDIType> types = Collections.emptyMap();
+    private EDIComplexType mainLoop = null;
 
-	private Map<String, EDIType> types = Collections.emptyMap();
-	private EDIComplexType mainLoop = null;
+    @Override
+    public EDIComplexType getMainLoop() {
+        return mainLoop;
+    }
 
-	public StaEDISchema() {}
+    void setTypes(Map<String, EDIType> types) throws EDISchemaException {
+        if (types == null) {
+            throw new NullPointerException("types cannot be null");
+        }
 
-	@Override
-	public EDIComplexType getMainLoop() {
-		return mainLoop;
-	}
+        this.types = Collections.unmodifiableMap(types);
 
-	void setTypes(Map<String, EDIType> types) throws EDISchemaException {
-		if (types == null) {
-			throw new NullPointerException("types cannot be null");
-		}
+        if (!types.containsKey(MAIN)) {
+            throw new EDISchemaException("main loop not in schema");
+        }
 
-		this.types = Collections.unmodifiableMap(types);
+        this.mainLoop = (EDIComplexType) types.get(MAIN);
+    }
 
-		if (!types.containsKey(MAIN)) {
-			throw new EDISchemaException("main loop not in schema");
-		}
+    @Override
+    public EDIType getType(String name) {
+        return types.get(name);
+    }
 
-		this.mainLoop = (EDIComplexType) types.get(MAIN);
-	}
+    @Override
+    public boolean containsSegment(String name) {
+        final EDIType type = types.get(name);
+        return type != null && type.isType(EDIType.Type.SEGMENT);
+    }
 
-	@Override
-	public EDIType getType(String name) {
-		return types.get(name);
-	}
+    @Override
+    public Iterator<EDIType> iterator() {
+        return types.values().iterator();
+    }
 
-	@Override
-	public boolean containsSegment(String name) {
-		final EDIType type = types.get(name);
-		return type != null && type.getTypeCode() == EDIType.TYPE_SEGMENT;
-	}
+    @Override
+    public Schema reference(Schema referenced,
+                            EDIComplexType parent,
+                            EDIReference child) throws EDISchemaException {
 
-	@Override
-	public Iterator<EDIType> iterator() {
-		return types.values().iterator();
-	}
+        if (parent == null || !parent.isType(EDIType.Type.LOOP)) {
+            throw new EDISchemaException("parent must be loop");
+        }
 
-	@Override
-	public Schema reference(
-			Schema referenced,
-			EDIComplexType parent,
-			EDIReference child) throws EDISchemaException {
+        final String parentId = parent.getId();
+        final EDIType knownParent = this.types.get(parentId);
 
-		if (parent == null || parent.getTypeCode() != EDIType.TYPE_LOOP) {
-			throw new EDISchemaException("parent must be loop");
-		}
+        if (knownParent != parent) {
+            throw new EDISchemaException("parent not in this schema");
+        }
 
-		final String parentId = parent.getId();
-		final EDIType knownParent = this.types.get(parentId);
+        EDIReference knownChild = null;
+        List<EDIReference> references = parent.getReferences();
 
-		if (knownParent != parent) {
-			throw new EDISchemaException("parent not in this schema");
-		}
+        for (EDIReference reference : references) {
+            if (reference == child) {
+                knownChild = reference;
+                break;
+            }
+        }
 
-		EDIReference knownChild = null;
-		List<EDIReference> references = parent.getReferences();
+        if (knownChild != child) {
+            throw new EDISchemaException("child is not referenced by parent");
+        }
 
-		for (EDIReference reference : references) {
-			if (reference == child) {
-				knownChild = reference;
-				break;
-			}
-		}
+        EDIComplexType main = referenced.getMainLoop();
 
-		if (knownChild != child) {
-			throw new EDISchemaException("child is not referenced by parent");
-		}
+        if (main == null || !main.isType(EDIType.Type.LOOP)) {
+            throw new EDISchemaException("referenced schema root must be loop");
+        }
 
-		EDIComplexType main = referenced.getMainLoop();
+        StaEDISchema merged = new StaEDISchema();
+        merged.types = new HashMap<>(this.types);
+        merged.mainLoop = merged.attach(main, this.mainLoop, parent, child);
 
-		if (main == null || main.getTypeCode() != EDIType.TYPE_LOOP) {
-			throw new EDISchemaException("referenced schema root must be loop");
-		}
+        if (referenced instanceof StaEDISchema) {
+            ((StaEDISchema) referenced).proxy.setSchema(merged);
+        }
 
-		StaEDISchema merged = new StaEDISchema();
-		merged.types = new HashMap<>(this.types);
-		merged.mainLoop = merged.attach(main, this.mainLoop, parent, child);
+        //TODO: Consider :: should we overwrite?
+        referenced.forEach(t -> merged.types.putIfAbsent(t.getId(), t));
 
-		if (referenced instanceof StaEDISchema) {
-			((StaEDISchema) referenced).proxy.setSchema(merged);
-		}
+        return merged;
+    }
 
-		//TODO: Consider :: should we overwrite?
-		referenced.forEach(t -> merged.types.putIfAbsent(t.getId(), t));
+    private EDIComplexType attach(
+                                  EDIComplexType referenced,
+                                  EDIComplexType root,
+                                  EDIComplexType parent,
+                                  EDIReference child) {
 
-		return merged;
-	}
+        if (root != parent) {
+            List<EDIReference> references = root.getReferences();
 
-	private EDIComplexType attach(
-			EDIComplexType referenced,
-			EDIComplexType root,
-			EDIComplexType parent,
-			EDIReference child) {
+            for (int i = 0, m = references.size(); i < m; i++) {
+                EDIReference reference = references.get(i);
+                EDIType type = reference.getReferencedType();
 
-		if (root != parent) {
-			List<EDIReference> references = root.getReferences();
+                if (!type.isType(EDIType.Type.LOOP)) {
+                    continue;
+                }
 
-			for (int i = 0, m = references.size(); i < m; i++) {
-				EDIReference reference = references.get(i);
-				EDIType type = reference.getReferencedType();
+                EDIComplexType loop = (EDIComplexType) type;
+                EDIComplexType newParent;
+                newParent = attach(referenced, loop, parent, child);
 
-				if (type.getTypeCode() != EDIType.TYPE_LOOP) {
-					continue;
-				}
+                if (newParent != null) {
+                    return replaceReference(root, references, reference, i, newParent);
+                }
+            }
+        } else {
+            return addReference(referenced, root, parent, child);
+        }
 
-				EDIComplexType loop = (EDIComplexType) type;
-				EDIComplexType newParent;
-				newParent = attach(referenced, loop, parent, child);
+        return null;
+    }
 
-				if (newParent != null) {
-				    return replaceReference(root, references, reference, i, newParent);
-				}
-			}
-		} else {
-			return addReference(referenced, root, parent, child);
-		}
+    private EDIComplexType replaceReference(
+                                            EDIComplexType loop,
+                                            List<EDIReference> references,
+                                            EDIReference reference,
+                                            int i,
+                                            EDIComplexType newTarget) {
 
-		return null;
-	}
+        references = new ArrayList<>(references);
+        int minLoopOccurs = reference.getMinOccurs();
+        int maxLoopOccurs = reference.getMaxOccurs();
 
-	private EDIComplexType replaceReference(
-			EDIComplexType loop,
-			List<EDIReference> references,
-			EDIReference reference,
-			int i,
-			EDIComplexType newTarget) {
+        final Reference newReference;
+        newReference = new Reference(newTarget, minLoopOccurs, maxLoopOccurs);
+        references.set(i, newReference);
 
-		references = new ArrayList<>(references);
-		int minLoopOccurs = reference.getMinOccurs();
-		int maxLoopOccurs = reference.getMaxOccurs();
+        final EDIComplexType newLoop;
+        newLoop = new Structure(loop, references, getSyntaxRules(loop));
+        types.put(newLoop.getId(), newLoop);
+        return newLoop;
+    }
 
-		final Reference newReference;
-		newReference = new Reference(newTarget, minLoopOccurs, maxLoopOccurs);
-		references.set(i, newReference);
+    static List<EDISyntaxRule> getSyntaxRules(EDIComplexType type) {
+        return type.getSyntaxRules();
+    }
 
-		final EDIComplexType newLoop;
-		newLoop = new Structure(loop, references, getSyntaxRules(loop));
-		types.put(newLoop.getId(), newLoop);
-		return newLoop;
-	}
+    static List<EDIReference> getReferences(EDIComplexType type) {
+        return type.getReferences();
+    }
 
-	static List<EDISyntaxRule> getSyntaxRules(EDIComplexType type) {
-		return type.getSyntaxRules();
-	}
+    private EDIComplexType addReference(
+                                        EDIComplexType referenced,
+                                        EDIComplexType root,
+                                        EDIComplexType parent,
+                                        EDIReference child) {
 
-	static List<EDIReference> getReferences(EDIComplexType type) {
-		return type.getReferences();
-	}
+        List<EDIReference> references = getReferences(root);
+        int index = 0;
 
-	private EDIComplexType addReference(
-			EDIComplexType referenced,
-			EDIComplexType root,
-			EDIComplexType parent,
-			EDIReference child) {
+        for (EDIReference reference : references) {
+            if (reference == child) {
+                break;
+            }
+            index++;
+        }
 
-		List<EDIReference> references = getReferences(root);
-		int index = 0;
+        EDIComplexType newParent;
 
-		for (EDIReference reference : references) {
-			if (reference == child) {
-				break;
-			}
-			index++;
-		}
+        references = new ArrayList<>(references);
 
-		EDIComplexType newParent;
+        for (EDIReference reference : referenced.getReferences()) {
+            Reference newRef = new Reference(reference);
+            newRef.setSchema(proxy);
+            references.add(index++, newRef);
+        }
 
-		references = new ArrayList<>(references);
+        newParent = new Structure(parent, references, getSyntaxRules(parent));
+        types.put(newParent.getId(), newParent);
+        return newParent;
+    }
 
-		for (EDIReference reference : referenced.getReferences()) {
-			Reference newRef = new Reference(reference);
-			newRef.setSchema(proxy);
-			references.add(index++, newRef);
-		}
+    static class SchemaProxy implements Schema {
+        private ThreadLocal<Schema> proxy = new ThreadLocal<>();
+        private ThreadLocal<Map<String, EDIType>> controlTypes;
 
-		newParent = new Structure(parent, references, getSyntaxRules(parent));
-		types.put(newParent.getId(), newParent);
-		return newParent;
-	}
+        public SchemaProxy(StaEDISchema schema) {
+            proxy.set(schema);
+            controlTypes = new ThreadLocal<>();
+            controlTypes.set(Collections.emptyMap());
+        }
 
-	static class SchemaProxy extends Schema {
-		private static final long serialVersionUID = 1L;
+        void setSchema(StaEDISchema schema) {
+            proxy.set(schema);
+        }
 
-		private ThreadLocal<Schema> proxy = new ThreadLocal<>();
-		private ThreadLocal<Map<String, EDIType>> controlTypes;
+        void setControlTypes(Map<String, EDIType> controlTypes) {
+            this.controlTypes.set(controlTypes);
+        }
 
-		public SchemaProxy(StaEDISchema schema) {
-			proxy.set(schema);
-			controlTypes = new ThreadLocal<>();
-			controlTypes.set(Collections.emptyMap());
-		}
+        @Override
+        public Iterator<EDIType> iterator() {
+            return proxy.get().iterator();
+        }
 
-		void setSchema(StaEDISchema schema) {
-			proxy.set(schema);
-		}
+        @Override
+        public EDIComplexType getMainLoop() {
+            return proxy.get().getMainLoop();
+        }
 
-		void setControlTypes(Map<String, EDIType> controlTypes) {
-			this.controlTypes.set(controlTypes);
-		}
+        @Override
+        public EDIType getType(String name) {
+            EDIType type = proxy.get().getType(name);
+            return type != null ? type : controlTypes.get().get(name);
+        }
 
-		@Override
-		public Iterator<EDIType> iterator() {
-			return proxy.get().iterator();
-		}
+        @Override
+        public boolean containsSegment(String name) {
+            return proxy.get().containsSegment(name);
+        }
 
-		@Override
-		public EDIComplexType getMainLoop() {
-			return proxy.get().getMainLoop();
-		}
-
-		@Override
-		public EDIType getType(String name) {
-			EDIType type = proxy.get().getType(name);
-			return type != null ?
-					type :
-					controlTypes.get().get(name);
-		}
-
-		@Override
-		public boolean containsSegment(String name) {
-			return proxy.get().containsSegment(name);
-		}
-
-		@Override
-		public Schema reference(
-				Schema referenced,
-				EDIComplexType parent,
-				EDIReference child) throws EDISchemaException {
-
-			return proxy.get().reference(referenced, parent, child);
-		}
-	}
+        @Override
+        public Schema reference(Schema referenced,
+                                EDIComplexType parent,
+                                EDIReference child) throws EDISchemaException {
+            return proxy.get().reference(referenced, parent, child);
+        }
+    }
 }

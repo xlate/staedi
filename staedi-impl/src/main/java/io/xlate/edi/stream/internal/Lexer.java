@@ -110,9 +110,6 @@ public class Lexer {
         state = State.ELEMENT_DATA_BINARY;
     }
 
-    public void close() {
-    }
-
     public void parse() throws IOException, EDIException {
         if (nextEvent()) {
             return;

@@ -40,7 +40,6 @@ public class StaEDISchemaTest {
         Map<String, EDIType> types = StaEDISchemaFactory.loadTypes(schemaStream);
         schema.setTypes(types);
 
-        Assert.assertEquals(EDIType.TYPE_LOOP,
-                            schema.getType(StaEDISchema.MAIN).getTypeCode());
+        Assert.assertEquals(EDIType.Type.LOOP, schema.getType(StaEDISchema.MAIN).getType());
     }
 }
