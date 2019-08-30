@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2017 xlate.io LLC, http://www.xlate.io
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License.  You may obtain a copy
  * of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
@@ -14,8 +14,6 @@
  * the License.
  ******************************************************************************/
 package io.xlate.edi.stream;
-
-import io.xlate.edi.stream.EDIStreamConstants.Events;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -41,7 +39,7 @@ public class StaEDIFilteredStreamReaderTest implements ConstantsTest {
 		EDIStreamFilter filter = new EDIStreamFilter() {
 			@Override
 			public boolean accept(EDIStreamReader reader) {
-				if (reader.getEventType() != Events.ELEMENT_DATA) {
+				if (reader.getEventType() != EDIStreamEvent.ELEMENT_DATA) {
 					return false;
 				}
 				Location location = reader.getLocation();
@@ -52,13 +50,13 @@ public class StaEDIFilteredStreamReaderTest implements ConstantsTest {
 		EDIStreamReader reader = factory.createEDIStreamReader(stream);
 		reader = factory.createFilteredReader(reader, filter);
 
-		int event;
+		EDIStreamEvent event;
 		int matches = 0;
 
 		while (reader.hasNext()) {
 			event = reader.next();
 
-			if (event != Events.ELEMENT_DATA) {
+			if (event != EDIStreamEvent.ELEMENT_DATA) {
 				Assert.fail("Unexpected event: " + event);
 			}
 
@@ -82,7 +80,7 @@ public class StaEDIFilteredStreamReaderTest implements ConstantsTest {
 		EDIStreamFilter filter = new EDIStreamFilter() {
 			@Override
 			public boolean accept(EDIStreamReader reader) {
-				if (reader.getEventType() != Events.START_SEGMENT) {
+				if (reader.getEventType() != EDIStreamEvent.START_SEGMENT) {
 					return false;
 				}
 				String tag = reader.getText();
@@ -92,7 +90,7 @@ public class StaEDIFilteredStreamReaderTest implements ConstantsTest {
 		EDIStreamReader reader = factory.createEDIStreamReader(stream);
 		reader = factory.createFilteredReader(reader, filter);
 
-		int event;
+		EDIStreamEvent event;
 		int matches = 0;
 		String tag = null;
 
@@ -103,7 +101,7 @@ public class StaEDIFilteredStreamReaderTest implements ConstantsTest {
 				break;
 			}
 
-			if (event != Events.START_SEGMENT) {
+			if (event != EDIStreamEvent.START_SEGMENT) {
 				Assert.fail("Unexpected event: " + event);
 			}
 
@@ -131,7 +129,7 @@ public class StaEDIFilteredStreamReaderTest implements ConstantsTest {
 		EDIStreamFilter filter = new EDIStreamFilter() {
 			@Override
 			public boolean accept(EDIStreamReader reader) {
-				if (reader.getEventType() != Events.ELEMENT_DATA) {
+				if (reader.getEventType() != EDIStreamEvent.ELEMENT_DATA) {
 					return false;
 				}
 				return reader.getTextLength() == 1;
@@ -140,13 +138,13 @@ public class StaEDIFilteredStreamReaderTest implements ConstantsTest {
 		EDIStreamReader reader = factory.createEDIStreamReader(stream);
 		reader = factory.createFilteredReader(reader, filter);
 
-		int event;
+		EDIStreamEvent event;
 		int matches = 0;
 
 		while (reader.hasNext()) {
 			event = reader.next();
 
-			if (event != Events.ELEMENT_DATA) {
+			if (event != EDIStreamEvent.ELEMENT_DATA) {
 				Assert.fail("Unexpected event: " + event);
 			}
 

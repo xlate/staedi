@@ -55,7 +55,7 @@ public interface EDIStreamReader extends Closeable, EDIStreamConstants {
      * @throws EDIStreamException
      *             if there is an error processing the underlying XML source
      */
-    int next() throws EDIStreamException;
+    EDIStreamEvent next() throws EDIStreamException;
 
     /**
      * Skips any ELEMENT_DATA, START_COMPOSITE, and END_COMPOSITE until a
@@ -69,7 +69,7 @@ public interface EDIStreamReader extends Closeable, EDIStreamConstants {
      *             if the current event is not following START_INTERCHANGE and
      *             preceding END_INTERCHANGE
      */
-    int nextTag() throws EDIStreamException;
+    EDIStreamEvent nextTag() throws EDIStreamException;
 
     /**
      * Returns true if there are more parsing events and false if there are no
@@ -99,7 +99,7 @@ public interface EDIStreamReader extends Closeable, EDIStreamConstants {
      * @return code that indicates the type of the event the cursor is pointing
      *         to
      */
-    int getEventType();
+    EDIStreamEvent getEventType();
 
     /**
      * Get the EDI standard name. Calls to this method are only valid when the

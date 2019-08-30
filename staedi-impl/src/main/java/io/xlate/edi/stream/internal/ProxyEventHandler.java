@@ -22,7 +22,7 @@ import java.util.List;
 
 import io.xlate.edi.schema.EDISchemaException;
 import io.xlate.edi.schema.Schema;
-import io.xlate.edi.stream.EDIStreamConstants.Events;
+import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamValidationError;
 import io.xlate.edi.stream.Location;
 import io.xlate.edi.stream.validation.Validator;
@@ -35,7 +35,7 @@ public class ProxyEventHandler implements EventHandler {
 	private InputStream binary;
 	private CharArraySequence holder = new CharArraySequence();
 
-	private int[] events = new int[99];
+	private EDIStreamEvent[] events = new EDIStreamEvent[99];
 	private EDIStreamValidationError[] errorTypes = new EDIStreamValidationError[99];
 	private CharBuffer[] eventData = new CharBuffer[99];
 	private String[] referenceCodes = new String[99];
@@ -69,11 +69,11 @@ public class ProxyEventHandler implements EventHandler {
 		eventIndex = 0;
 	}
 
-	public int getEvent() {
+	public EDIStreamEvent getEvent() {
 		if (hasEvents()) {
 			return events[eventIndex];
 		}
-		return 0;
+		return null;
 		//throw new NoSuchElementException();
 	}
 
@@ -122,22 +122,22 @@ public class ProxyEventHandler implements EventHandler {
 
 	@Override
 	public void interchangeBegin() {
-		enqueueEvent(Events.START_INTERCHANGE, EDIStreamValidationError.NONE, "", null);
+		enqueueEvent(EDIStreamEvent.START_INTERCHANGE, EDIStreamValidationError.NONE, "", null);
 	}
 
 	@Override
 	public void interchangeEnd() {
-		enqueueEvent(Events.END_INTERCHANGE, EDIStreamValidationError.NONE, "", null);
+		enqueueEvent(EDIStreamEvent.END_INTERCHANGE, EDIStreamValidationError.NONE, "", null);
 	}
 
 	@Override
 	public void loopBegin(CharSequence id) {
-		enqueueEvent(Events.START_LOOP, EDIStreamValidationError.NONE, id, null);
+		enqueueEvent(EDIStreamEvent.START_LOOP, EDIStreamValidationError.NONE, id, null);
 	}
 
 	@Override
 	public void loopEnd(CharSequence id) {
-		enqueueEvent(Events.END_LOOP, EDIStreamValidationError.NONE, id, null);
+		enqueueEvent(EDIStreamEvent.END_LOOP, EDIStreamValidationError.NONE, id, null);
 	}
 
 	@Override
@@ -149,7 +149,7 @@ public class ProxyEventHandler implements EventHandler {
 			validator.validateSegment(this, holder);
 		}
 
-		enqueueEvent(Events.START_SEGMENT, EDIStreamValidationError.NONE, text, start, length, null, null);
+		enqueueEvent(EDIStreamEvent.START_SEGMENT, EDIStreamValidationError.NONE, text, start, length, null, null);
 	}
 
 	@Override
@@ -157,7 +157,7 @@ public class ProxyEventHandler implements EventHandler {
 		if (validator != null) {
 			validator.validateSyntax(this, location, false);
 		}
-		enqueueEvent(Events.END_SEGMENT, EDIStreamValidationError.NONE, "", null);
+		enqueueEvent(EDIStreamEvent.END_SEGMENT, EDIStreamValidationError.NONE, "", null);
 	}
 
 	@Override
@@ -171,14 +171,14 @@ public class ProxyEventHandler implements EventHandler {
 				List<EDIStreamValidationError> errors = validator.getElementErrors();
 
 				for (EDIStreamValidationError error : errors) {
-					enqueueEvent(Events.ELEMENT_OCCURRENCE_ERROR, error, "", null);
+					enqueueEvent(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR, error, "", null);
 				}
 			} else {
 				code = validator.getCompositeReferenceCode();
 			}
 		}
 
-		enqueueEvent(Events.START_COMPOSITE, EDIStreamValidationError.NONE, "", code);
+		enqueueEvent(EDIStreamEvent.START_COMPOSITE, EDIStreamValidationError.NONE, "", code);
 	}
 
 	@Override
@@ -186,7 +186,7 @@ public class ProxyEventHandler implements EventHandler {
 		if (validator != null && !isNil) {
 			validator.validateSyntax(this, location, true);
 		}
-		enqueueEvent(Events.END_COMPOSITE, EDIStreamValidationError.NONE, "", null);
+		enqueueEvent(EDIStreamEvent.END_COMPOSITE, EDIStreamValidationError.NONE, "", null);
 	}
 
 	@Override
@@ -225,7 +225,7 @@ public class ProxyEventHandler implements EventHandler {
 					case TOO_MANY_DATA_ELEMENTS:
 					case TOO_MANY_REPETITIONS:
 						enqueueEvent(
-								Events.ELEMENT_OCCURRENCE_ERROR,
+								EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR,
 								error,
 								text,
 								start,
@@ -264,7 +264,7 @@ public class ProxyEventHandler implements EventHandler {
 		}
 
 		if (text != null && (!derivedComposite || length > 0) /* Not an inferred element */) {
-			enqueueEvent(Events.ELEMENT_DATA, EDIStreamValidationError.NONE, text, start, length, code, savedLocation);
+			enqueueEvent(EDIStreamEvent.ELEMENT_DATA, EDIStreamValidationError.NONE, text, start, length, code, savedLocation);
 		}
 
 		if (derivedComposite && text != null /* Not an empty composite */) {
@@ -275,18 +275,18 @@ public class ProxyEventHandler implements EventHandler {
 
 	@Override
 	public void binaryData(InputStream binaryStream) {
-		enqueueEvent(Events.ELEMENT_DATA_BINARY, EDIStreamValidationError.NONE, "", null);
+		enqueueEvent(EDIStreamEvent.ELEMENT_DATA_BINARY, EDIStreamValidationError.NONE, "", null);
 		setBinary(binaryStream);
 	}
 
 	@Override
 	public void segmentError(CharSequence token, EDIStreamValidationError error) {
-		enqueueEvent(Events.SEGMENT_ERROR, error, token, null);
+		enqueueEvent(EDIStreamEvent.SEGMENT_ERROR, error, token, null);
 	}
 
 	@Override
 	public void elementError(
-			final int event,
+			final EDIStreamEvent event,
 			final EDIStreamValidationError error,
 			final int element,
 			final int component,
@@ -301,7 +301,7 @@ public class ProxyEventHandler implements EventHandler {
 	}
 
 	private void enqueueEvent(
-			int event,
+			EDIStreamEvent event,
 			EDIStreamValidationError error,
 			char[] text,
 			int start,
@@ -309,8 +309,8 @@ public class ProxyEventHandler implements EventHandler {
 			String code,
 			Location savedLocation) {
 
-		if (eventCount > 0 && event == Events.ELEMENT_OCCURRENCE_ERROR) {
-			if (events[eventCount] == Events.START_COMPOSITE) {
+		if (eventCount > 0 && event == EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR) {
+			if (events[eventCount] == EDIStreamEvent.START_COMPOSITE) {
 				switch (error) {
 				case TOO_MANY_DATA_ELEMENTS:
 				case TOO_MANY_REPETITIONS:
@@ -358,7 +358,7 @@ public class ProxyEventHandler implements EventHandler {
 		eventCount++;
 	}
 
-	private void enqueueEvent(int event, EDIStreamValidationError error, CharSequence text, String code) {
+	private void enqueueEvent(EDIStreamEvent event, EDIStreamValidationError error, CharSequence text, String code) {
 		events[eventCount] = event;
 		errorTypes[eventCount] = error;
 		eventData[eventCount] = put(eventData[eventCount], text);

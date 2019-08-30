@@ -24,6 +24,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import io.xlate.edi.stream.ConstantsTest;
+import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamValidationError;
 
 public class LexerTest {
@@ -87,7 +88,7 @@ public class LexerTest {
 
 		@Override
 		public void elementError(
-				int event,
+				EDIStreamEvent event,
 				EDIStreamValidationError error,
 				int elem,
 				int component,
@@ -142,7 +143,7 @@ public class LexerTest {
 
 		@Override
 		public void elementError(
-				int event,
+				EDIStreamEvent event,
 				EDIStreamValidationError error,
 				int elem,
 				int component,

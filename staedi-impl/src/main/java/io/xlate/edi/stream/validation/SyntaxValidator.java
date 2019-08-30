@@ -16,7 +16,7 @@
 package io.xlate.edi.stream.validation;
 
 import io.xlate.edi.schema.EDISyntaxRule;
-import io.xlate.edi.stream.EDIStreamConstants.Events;
+import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamValidationError;
 import io.xlate.edi.stream.Location;
 import io.xlate.edi.stream.internal.EventHandler;
@@ -100,7 +100,7 @@ abstract class SyntaxValidator {
                         element = pos;
                     }
 
-                    handler.elementError(Events.ELEMENT_OCCURRENCE_ERROR,
+                    handler.elementError(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR,
                                          EDIStreamValidationError.CONDITIONAL_REQUIRED_DATA_ELEMENT_MISSING,
                                          element,
                                          component,
@@ -134,7 +134,7 @@ abstract class SyntaxValidator {
                         element = pos - 1;
                     }
 
-                    handler.elementError(Events.ELEMENT_OCCURRENCE_ERROR,
+                    handler.elementError(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR,
                                          EDIStreamValidationError.EXCLUSION_CONDITION_VIOLATED,
                                          element,
                                          component,

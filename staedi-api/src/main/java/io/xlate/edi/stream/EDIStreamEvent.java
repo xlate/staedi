@@ -1,0 +1,22 @@
+package io.xlate.edi.stream;
+
+public enum EDIStreamEvent {
+    ELEMENT_DATA,
+    ELEMENT_DATA_BINARY,
+
+    START_COMPOSITE,
+    END_COMPOSITE,
+
+    START_SEGMENT,
+    END_SEGMENT,
+
+    START_INTERCHANGE,
+    END_INTERCHANGE,
+
+    START_LOOP,
+    END_LOOP,
+
+    SEGMENT_ERROR,
+    ELEMENT_DATA_ERROR,
+    ELEMENT_OCCURRENCE_ERROR;
+}

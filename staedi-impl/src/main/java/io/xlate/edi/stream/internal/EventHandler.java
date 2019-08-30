@@ -17,6 +17,7 @@ package io.xlate.edi.stream.internal;
 
 import java.io.InputStream;
 
+import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamValidationError;
 
 public interface EventHandler {
@@ -43,5 +44,5 @@ public interface EventHandler {
 
 	void segmentError(CharSequence token, EDIStreamValidationError error);
 
-	void elementError(int event, EDIStreamValidationError error, int element, int component, int repetition);
+	void elementError(EDIStreamEvent event, EDIStreamValidationError error, int element, int component, int repetition);
 }

@@ -26,7 +26,7 @@ class StaEDIFilteredStreamReader implements EDIStreamReader {
 
     private final EDIStreamReader delegate;
     private final EDIStreamFilter filter;
-    private int peekEvent = -1;
+    private EDIStreamEvent peekEvent = null;
 
     public StaEDIFilteredStreamReader(
             EDIStreamReader delegate,
@@ -47,12 +47,12 @@ class StaEDIFilteredStreamReader implements EDIStreamReader {
     }
 
     @Override
-    public int next() throws EDIStreamException {
-        int event;
+    public EDIStreamEvent next() throws EDIStreamException {
+        EDIStreamEvent event;
 
-        if (peekEvent != -1) {
+        if (peekEvent != null) {
             event = peekEvent;
-            peekEvent = -1;
+            peekEvent = null;
             return event;
         }
 
@@ -64,13 +64,13 @@ class StaEDIFilteredStreamReader implements EDIStreamReader {
     }
 
     @Override
-    public int nextTag() throws EDIStreamException {
-        if (peekEvent == Events.START_SEGMENT) {
-            peekEvent = -1;
-            return Events.START_SEGMENT;
+    public EDIStreamEvent nextTag() throws EDIStreamException {
+        if (peekEvent == EDIStreamEvent.START_SEGMENT) {
+            peekEvent = null;
+            return EDIStreamEvent.START_SEGMENT;
         }
 
-        int event;
+        EDIStreamEvent event;
 
         do {
             event = delegate.nextTag();
@@ -82,7 +82,7 @@ class StaEDIFilteredStreamReader implements EDIStreamReader {
     @Override
     public boolean hasNext() throws EDIStreamException {
         while (delegate.hasNext()) {
-            int event = delegate.next();
+            EDIStreamEvent event = delegate.next();
 
             if (filter.accept(delegate)) {
                 peekEvent = event;
@@ -99,7 +99,7 @@ class StaEDIFilteredStreamReader implements EDIStreamReader {
     }
 
     @Override
-    public int getEventType() {
+    public EDIStreamEvent getEventType() {
         return delegate.getEventType();
     }
 

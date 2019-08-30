@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2017 xlate.io LLC, http://www.xlate.io
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License.  You may obtain a copy
  * of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
@@ -14,8 +14,6 @@
  * the License.
  ******************************************************************************/
 package io.xlate.edi.stream;
-
-import io.xlate.edi.stream.EDIStreamConstants.Events;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -432,7 +430,7 @@ public class StaEDIStreamWriterTest {
 		ByteArrayOutputStream result = new ByteArrayOutputStream(16384);
 		EDIStreamWriter writer = outputFactory.createEDIStreamWriter(result);
 
-		int event;
+		EDIStreamEvent event;
 		String tag = null;
 		boolean composite = false;
 
@@ -441,28 +439,28 @@ public class StaEDIStreamWriterTest {
 				event = reader.next();
 
 				switch (event) {
-				case Events.START_INTERCHANGE:
+				case START_INTERCHANGE:
 					writer.startInterchange();
 					break;
-				case Events.END_INTERCHANGE:
+				case END_INTERCHANGE:
 					writer.endInterchange();
 					break;
-				case Events.START_SEGMENT:
+				case START_SEGMENT:
 					tag = reader.getText();
 					writer.writeStartSegment(tag);
 					break;
-				case Events.END_SEGMENT:
+				case END_SEGMENT:
 					writer.writeEndSegment();
 					break;
-				case Events.START_COMPOSITE:
+				case START_COMPOSITE:
 					writer.writeStartElement();
 					composite = true;
 					break;
-				case Events.END_COMPOSITE:
+				case END_COMPOSITE:
 					writer.endElement();
 					composite = false;
 					break;
-				case Events.ELEMENT_DATA:
+				case ELEMENT_DATA:
 					String text = reader.getText();
 
 					if ("BIN".equals(tag)) {
@@ -485,11 +483,13 @@ public class StaEDIStreamWriterTest {
 						writer.endElement();
 					}
 					break;
-				case Events.ELEMENT_DATA_BINARY:
+				case ELEMENT_DATA_BINARY:
 					writer.writeStartElementBinary();
 					writer.writeBinaryData(reader.getBinaryData());
 					writer.endElement();
 					break;
+				default:
+				    break;
 				}
 			}
 		} finally {
@@ -530,7 +530,7 @@ public class StaEDIStreamWriterTest {
 		ByteArrayOutputStream result = new ByteArrayOutputStream(16384);
 		EDIStreamWriter writer = outputFactory.createEDIStreamWriter(result);
 
-		int event;
+		EDIStreamEvent event;
 		String tag = null;
 		boolean composite = false;
 
@@ -539,32 +539,32 @@ public class StaEDIStreamWriterTest {
 				event = reader.next();
 
 				switch (event) {
-				case Events.START_INTERCHANGE:
+				case START_INTERCHANGE:
 					for (Map.Entry<String, Character> delim : reader.getDelimiters().entrySet()) {
 						outputFactory.setProperty(delim.getKey(), delim.getValue());
 					}
 					writer = outputFactory.createEDIStreamWriter(result);
 					writer.startInterchange();
 					break;
-				case Events.END_INTERCHANGE:
+				case END_INTERCHANGE:
 					writer.endInterchange();
 					break;
-				case Events.START_SEGMENT:
+				case START_SEGMENT:
 					tag = reader.getText();
 					writer.writeStartSegment(tag);
 					break;
-				case Events.END_SEGMENT:
+				case END_SEGMENT:
 					writer.writeEndSegment();
 					break;
-				case Events.START_COMPOSITE:
+				case START_COMPOSITE:
 					writer.writeStartElement();
 					composite = true;
 					break;
-				case Events.END_COMPOSITE:
+				case END_COMPOSITE:
 					writer.endElement();
 					composite = false;
 					break;
-				case Events.ELEMENT_DATA:
+				case ELEMENT_DATA:
 					String text = reader.getText();
 
 					if ("UNA".equals(tag)) {
@@ -585,11 +585,13 @@ public class StaEDIStreamWriterTest {
 						writer.endElement();
 					}
 					break;
-				case Events.ELEMENT_DATA_BINARY:
+				case ELEMENT_DATA_BINARY:
 					writer.writeStartElementBinary();
 					writer.writeBinaryData(reader.getBinaryData());
 					writer.endElement();
 					break;
+				default:
+				    break;
 				}
 			}
 		} finally {
@@ -630,7 +632,7 @@ public class StaEDIStreamWriterTest {
 		ByteArrayOutputStream result = new ByteArrayOutputStream(16384);
 		EDIStreamWriter writer = outputFactory.createEDIStreamWriter(result);
 
-		int event;
+		EDIStreamEvent event;
 		String tag = null;
 		boolean composite = false;
 
@@ -639,28 +641,28 @@ public class StaEDIStreamWriterTest {
 				event = reader.next();
 
 				switch (event) {
-				case Events.START_INTERCHANGE:
+				case START_INTERCHANGE:
 					writer.startInterchange();
 					break;
-				case Events.END_INTERCHANGE:
+				case END_INTERCHANGE:
 					writer.endInterchange();
 					break;
-				case Events.START_SEGMENT:
+				case START_SEGMENT:
 					tag = reader.getText();
 					writer.writeStartSegment(tag);
 					break;
-				case Events.END_SEGMENT:
+				case END_SEGMENT:
 					writer.writeEndSegment();
 					break;
-				case Events.START_COMPOSITE:
+				case START_COMPOSITE:
 					writer.writeStartElement();
 					composite = true;
 					break;
-				case Events.END_COMPOSITE:
+				case END_COMPOSITE:
 					writer.endElement();
 					composite = false;
 					break;
-				case Events.ELEMENT_DATA:
+				case ELEMENT_DATA:
 					String text = reader.getText();
 
 					if (composite) {
@@ -677,11 +679,13 @@ public class StaEDIStreamWriterTest {
 						writer.endElement();
 					}
 					break;
-				case Events.ELEMENT_DATA_BINARY:
+				case ELEMENT_DATA_BINARY:
 					writer.writeStartElementBinary();
 					writer.writeBinaryData(reader.getBinaryData());
 					writer.endElement();
 					break;
+				default:
+				    break;
 				}
 			}
 		} finally {

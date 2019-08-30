@@ -29,7 +29,6 @@ import io.xlate.edi.schema.EDISchemaException;
 import io.xlate.edi.schema.Schema;
 import io.xlate.edi.schema.SchemaFactory;
 import io.xlate.edi.schema.SchemaUtils;
-import io.xlate.edi.stream.EDIStreamConstants.Events;
 import io.xlate.edi.stream.EDIStreamConstants.Standards;
 
 @SuppressWarnings("resource")
@@ -38,7 +37,7 @@ public class SegmentValidationTest {
 	EDIStreamFilter segmentErrorFilter = new EDIStreamFilter() {
 		@Override
 		public boolean accept(EDIStreamReader reader) {
-			return reader.getEventType() == Events.SEGMENT_ERROR;
+			return reader.getEventType() == EDIStreamEvent.SEGMENT_ERROR;
 		}
 	};
 
@@ -79,7 +78,7 @@ public class SegmentValidationTest {
 								+ "UNZ+1+00000000000778'").getBytes());
 
 		EDIStreamReader reader = factory.createEDIStreamReader(stream);
-		assertEquals(Events.START_INTERCHANGE, reader.next());
+		assertEquals(EDIStreamEvent.START_INTERCHANGE, reader.next());
         assertArrayEquals(new String[] { "UNOA", "1" }, reader.getVersion());
         Schema schema = SchemaUtils.getControlSchema(Standards.EDIFACT, reader.getVersion());
         reader.setSchema(schema);
@@ -131,7 +130,7 @@ public class SegmentValidationTest {
 								+ "UNZ+1+00000000000778'").getBytes());
 
 		EDIStreamReader reader = factory.createEDIStreamReader(stream);
-		assertEquals(Events.START_INTERCHANGE, reader.next());
+		assertEquals(EDIStreamEvent.START_INTERCHANGE, reader.next());
         assertArrayEquals(new String[] { "UNOA", "1" }, reader.getVersion());
         Schema schema = SchemaUtils.getControlSchema(Standards.EDIFACT, reader.getVersion());
         reader.setSchema(schema);

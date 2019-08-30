@@ -31,8 +31,6 @@ import javax.xml.stream.Location;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
-import io.xlate.edi.stream.EDIStreamConstants.Events;
-
 public class StaEDIXMLStreamReader implements XMLStreamReader {
 
 	private static final Location location = new DefaultLocation();
@@ -52,8 +50,8 @@ public class StaEDIXMLStreamReader implements XMLStreamReader {
 
 		this.ediReader = ediReader;
 
-		if (ediReader.getEventType() == Events.START_INTERCHANGE) {
-			enqueueEvent(Events.START_INTERCHANGE);
+		if (ediReader.getEventType() == EDIStreamEvent.START_INTERCHANGE) {
+			enqueueEvent(EDIStreamEvent.START_INTERCHANGE);
 		}
 	}
 
@@ -101,20 +99,20 @@ public class StaEDIXMLStreamReader implements XMLStreamReader {
 	}
 
 	@SuppressWarnings("resource")
-	private void enqueueEvent(int ediEvent) throws XMLStreamException {
+	private void enqueueEvent(EDIStreamEvent ediEvent) throws XMLStreamException {
 		final QName name;
 		cdataBuilder.setLength(0);
 		cdata = null;
 
 		switch(ediEvent) {
-		case Events.ELEMENT_DATA: {
+		case ELEMENT_DATA: {
 			name = deriveName(elementStack.getFirst(), null);
 			enqueueEvent(START_ELEMENT, name, false);
 			enqueueEvent(CHARACTERS, DUMMY_QNAME, false);
 			enqueueEvent(END_ELEMENT, name, false);
 			break;
 		}
-		case Events.ELEMENT_DATA_BINARY: {
+		case ELEMENT_DATA_BINARY: {
 			name = deriveName(elementStack.getFirst(), null);
 			enqueueEvent(START_ELEMENT, name, false);
 			enqueueEvent(CHARACTERS, DUMMY_QNAME, false);
@@ -142,32 +140,32 @@ public class StaEDIXMLStreamReader implements XMLStreamReader {
 			enqueueEvent(END_ELEMENT, name, false);
 			break;
 		}
-		case Events.START_INTERCHANGE: {
+		case START_INTERCHANGE: {
 			enqueueEvent(START_DOCUMENT, DUMMY_QNAME, false);
 			enqueueEvent(START_ELEMENT, INTERCHANGE, true);
 			break;
 		}
-		case Events.START_SEGMENT: {
+		case START_SEGMENT: {
 			enqueueEvent(START_ELEMENT, new QName(ediReader.getText()), true);
 			break;
 		}
-		case Events.START_LOOP: {
+		case START_LOOP: {
 			name = deriveName(elementStack.getFirst(), ediReader.getText());
 			enqueueEvent(START_ELEMENT, name, true);
 			break;
 		}
-		case Events.START_COMPOSITE: {
+		case START_COMPOSITE: {
 			name = deriveName(elementStack.getFirst(), null);
 			enqueueEvent(START_ELEMENT, name, true);
 			break;
 		}
-		case Events.END_INTERCHANGE:
+		case END_INTERCHANGE:
 			enqueueEvent(END_ELEMENT, elementStack.removeFirst(), false);
 			enqueueEvent(END_DOCUMENT, DUMMY_QNAME, false);
 			break;
-		case Events.END_LOOP:
-		case Events.END_SEGMENT:
-		case Events.END_COMPOSITE:
+		case END_LOOP:
+		case END_SEGMENT:
+		case END_COMPOSITE:
 			enqueueEvent(END_ELEMENT, elementStack.removeFirst(), false);
 			break;
 		default:
@@ -208,7 +206,7 @@ public class StaEDIXMLStreamReader implements XMLStreamReader {
 
 	@Override
 	public String getElementText() throws XMLStreamException {
-		if (ediReader.getEventType() != Events.ELEMENT_DATA) {
+		if (ediReader.getEventType() != EDIStreamEvent.ELEMENT_DATA) {
 			streamException("Element text only available for simple element");
 		}
 

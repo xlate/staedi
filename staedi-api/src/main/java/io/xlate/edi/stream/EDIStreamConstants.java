@@ -35,28 +35,4 @@ public interface EDIStreamConstants {
         public static final String REPETITION = "io.xlate.edi.stream.delim.repetition";
         public static final String RELEASE = "io.xlate.edi.stream.delim.release";
     }
-
-    public static class Events {
-        private Events() {
-        }
-
-        public static final int ELEMENT_DATA = 1;
-        public static final int ELEMENT_DATA_BINARY = 2;
-
-        public static final int START_COMPOSITE = 3;
-        public static final int END_COMPOSITE = 4;
-
-        public static final int START_SEGMENT = 5;
-        public static final int END_SEGMENT = 6;
-
-        public static final int START_INTERCHANGE = 7;
-        public static final int END_INTERCHANGE = 8;
-
-        public static final int START_LOOP = 9;
-        public static final int END_LOOP = 10;
-
-        public static final int SEGMENT_ERROR = 11;
-        public static final int ELEMENT_DATA_ERROR = 12;
-        public static final int ELEMENT_OCCURRENCE_ERROR = 13;
-    }
 }

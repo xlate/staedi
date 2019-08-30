@@ -40,22 +40,20 @@ import io.xlate.edi.schema.Schema;
 import io.xlate.edi.schema.SchemaFactory;
 import io.xlate.edi.schema.SchemaUtils;
 import io.xlate.edi.stream.EDIStreamConstants.Delimiters;
-import io.xlate.edi.stream.EDIStreamConstants.Events;
 
 @SuppressWarnings({ "static-method", "resource", "unused" })
 public class StaEDIStreamReaderTest implements ConstantsTest {
 
-    private Set<Integer> possible = new HashSet<Integer>();
+    private Set<EDIStreamEvent> possible = new HashSet<>();
 
     public StaEDIStreamReaderTest() {
-        possible.addAll(Arrays.asList(
-                                      Events.ELEMENT_DATA,
-                                      Events.END_COMPOSITE,
-                                      Events.END_INTERCHANGE,
-                                      Events.END_SEGMENT,
-                                      Events.START_COMPOSITE,
-                                      Events.START_INTERCHANGE,
-                                      Events.START_SEGMENT));
+        possible.addAll(Arrays.asList(EDIStreamEvent.ELEMENT_DATA,
+                                      EDIStreamEvent.END_COMPOSITE,
+                                      EDIStreamEvent.END_INTERCHANGE,
+                                      EDIStreamEvent.END_SEGMENT,
+                                      EDIStreamEvent.START_COMPOSITE,
+                                      EDIStreamEvent.START_INTERCHANGE,
+                                      EDIStreamEvent.START_SEGMENT));
     }
 
     @Test
@@ -89,7 +87,7 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
                 delimiterExceptions++;
             }
 
-            if (reader.next() == Events.START_INTERCHANGE) {
+            if (reader.next() == EDIStreamEvent.START_INTERCHANGE) {
                 delimiters = reader.getDelimiters();
             }
         }
@@ -121,7 +119,7 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
                 delimiterExceptions++;
             }
 
-            if (reader.next() == Events.START_INTERCHANGE) {
+            if (reader.next() == EDIStreamEvent.START_INTERCHANGE) {
                 delimiters = reader.getDelimiters();
             }
         }
@@ -153,7 +151,7 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
                 delimiterExceptions++;
             }
 
-            if (reader.next() == Events.START_INTERCHANGE) {
+            if (reader.next() == EDIStreamEvent.START_INTERCHANGE) {
                 delimiters = reader.getDelimiters();
             }
         }
@@ -169,16 +167,16 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
                                                                              "x12/simple997.edi");
         EDIStreamReader reader = factory.createEDIStreamReader(stream);
 
-        int event;
+        EDIStreamEvent event;
 
         do {
             try {
                 event = reader.next();
                 Assert.assertTrue("Unknown event", possible.contains(event));
             } catch (NoSuchElementException e) {
-                event = -1;
+                event = null;
             }
-        } while (event != -1);
+        } while (event != null);
     }
 
     @Test
@@ -189,7 +187,7 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
         EDIStreamReader reader = factory.createEDIStreamReader(stream);
 
         int s = 0;
-        int event;
+        EDIStreamEvent event;
         String tag = null;
 
         while (reader.hasNext()) {
@@ -199,7 +197,7 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
                 break;
             }
 
-            if (event != Events.START_SEGMENT) {
+            if (event != EDIStreamEvent.START_SEGMENT) {
                 Assert.fail("Unexpected event: " + event);
             }
 
@@ -219,7 +217,7 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
         EDIStreamReader reader = factory.createEDIStreamReader(stream);
         Assert.assertTrue("Does not have next after create", reader.hasNext());
 
-        int event;
+        EDIStreamEvent event;
 
         while (reader.hasNext()) {
             event = reader.next();
@@ -249,7 +247,7 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
                                                                              "x12/simple997.edi");
         EDIStreamReader reader = factory.createEDIStreamReader(stream);
 
-        int event;
+        EDIStreamEvent event;
 
         while (reader.hasNext()) {
             event = reader.next();
@@ -269,7 +267,7 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
         int standardExceptions = 0;
 
         while (reader.hasNext()) {
-            if (reader.next() == Events.START_INTERCHANGE) {
+            if (reader.next() == EDIStreamEvent.START_INTERCHANGE) {
                 standard = reader.getStandard();
             } else {
                 try {
@@ -299,7 +297,7 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
         int versionExceptions = 0;
 
         while (reader.hasNext()) {
-            if (reader.next() == Events.START_INTERCHANGE) {
+            if (reader.next() == EDIStreamEvent.START_INTERCHANGE) {
                 version = reader.getVersion();
             } else {
                 try {
@@ -327,7 +325,7 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
         Schema transaction = schemaFactory.createSchema(SchemaUtils.getURL("x12/EDISchema997.xml"));
         EDIStreamReader reader = factory.createEDIStreamReader(stream);
 
-        int event;
+        EDIStreamEvent event;
         int events = 0;
         int versionExceptions = 0;
         String segment = null;
@@ -336,7 +334,7 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
         while (reader.hasNext()) {
             event = reader.next();
 
-            if (event == Events.START_INTERCHANGE) {
+            if (event == EDIStreamEvent.START_INTERCHANGE) {
                 String standard = reader.getStandard();
                 String[] version = reader.getVersion();
                 Schema control = SchemaUtils.getControlSchema(standard, version);
@@ -347,9 +345,9 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
                 Schema schema = control.reference(transaction, parent, child);
                 reader.setSchema(schema);
             } else {
-                if (event == Events.START_SEGMENT) {
+                if (event == EDIStreamEvent.START_SEGMENT) {
                     segment = reader.getText();
-                } else if (event == Events.ELEMENT_DATA_ERROR) {
+                } else if (event == EDIStreamEvent.ELEMENT_DATA_ERROR) {
                     Location l = reader.getLocation();
                     String key = String.format(
                                                "%s%02d",
@@ -361,9 +359,9 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
                     }
 
                     errors.get(key).add(reader.getErrorType());
-                } else if (event == Events.ELEMENT_OCCURRENCE_ERROR) {
+                } else if (event == EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR) {
                     Assert.fail();
-                } else if (event == Events.SEGMENT_ERROR) {
+                } else if (event == EDIStreamEvent.SEGMENT_ERROR) {
                     Assert.fail();
                 }
 
@@ -394,7 +392,7 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
         Schema transaction = schemaFactory.createSchema(SchemaUtils.getURL("x12/EDISchema997.xml"));
         EDIStreamReader reader = factory.createEDIStreamReader(stream);
 
-        int event;
+        EDIStreamEvent event;
         int events = 0;
         int versionExceptions = 0;
         String segment = null;
@@ -405,7 +403,7 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
             events++;
 
             switch (event) {
-            case Events.START_INTERCHANGE: {
+            case START_INTERCHANGE: {
                 String standard = reader.getStandard();
                 String version[] = reader.getVersion();
                 Schema control = SchemaUtils.getControlSchema(standard, version);
@@ -421,7 +419,7 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
                 reader.setSchema(control);
                 continue;
             }
-            case Events.START_SEGMENT: {
+            case START_SEGMENT: {
                 segment = reader.getText();
                 IllegalStateException illegal = null;
 
@@ -434,13 +432,13 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
 
                 break;
             }
-            case Events.END_SEGMENT:
+            case END_SEGMENT:
                 if ("ST".equals(segment)) {
                     reader.addSchema(transaction);
                 }
 
                 break;
-            case Events.ELEMENT_DATA_ERROR:
+            case ELEMENT_DATA_ERROR:
                 Location l = reader.getLocation();
                 String key = String.format(
                                            "%s%02d",
@@ -453,9 +451,11 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
 
                 errors.get(key).add(reader.getErrorType());
                 break;
-            case Events.ELEMENT_OCCURRENCE_ERROR:
-            case Events.SEGMENT_ERROR:
+            case ELEMENT_OCCURRENCE_ERROR:
+            case SEGMENT_ERROR:
                 Assert.fail();
+                break;
+            default:
                 break;
             }
 
@@ -488,15 +488,15 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
 
         EDIStreamReader reader = factory.createEDIStreamReader(stream, schema);
 
-        int event;
+        EDIStreamEvent event;
         String segment = null;
         Map<String, Set<EDIStreamValidationError>> errors = new HashMap<>(2);
 
         while (reader.hasNext()) {
             event = reader.next();
-            if (event == Events.START_SEGMENT) {
+            if (event == EDIStreamEvent.START_SEGMENT) {
                 segment = reader.getText();
-            } else if (event == Events.ELEMENT_DATA_ERROR) {
+            } else if (event == EDIStreamEvent.ELEMENT_DATA_ERROR) {
                 Location l = reader.getLocation();
                 String key = String.format("%s%02d", segment, l.getElementPosition());
 
@@ -521,7 +521,7 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
         int s = 0;
 
         while (reader.hasNext()) {
-            if (Events.START_SEGMENT == reader.next()) {
+            if (EDIStreamEvent.START_SEGMENT == reader.next()) {
                 String tag = reader.getText();
                 Assert.assertEquals(
                                     "Unexpected segment",
@@ -540,7 +540,7 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
         int s = 0;
 
         while (reader.hasNext()) {
-            if (Events.START_SEGMENT == reader.next()) {
+            if (EDIStreamEvent.START_SEGMENT == reader.next()) {
                 char[] tag = reader.getTextCharacters();
                 int start = reader.getTextStart();
                 int length = reader.getTextLength();
@@ -563,7 +563,7 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
         char[] tag = new char[20];
 
         while (reader.hasNext()) {
-            if (Events.START_SEGMENT == reader.next()) {
+            if (EDIStreamEvent.START_SEGMENT == reader.next()) {
                 char[] expected = simple997tags[s++].toCharArray();
                 int start = reader.getTextStart();
                 int length = reader.getTextLength();
@@ -593,11 +593,11 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
 
         while (reader.hasNext()) {
             switch (reader.next()) {
-            case Events.START_SEGMENT:
+            case START_SEGMENT:
                 tag = reader.getText();
                 e = 0;
                 break;
-            case Events.ELEMENT_DATA:
+            case ELEMENT_DATA:
                 if ("ISA".equals(tag) && ++e == 13) {
                     start = reader.getTextStart();
                     length = reader.getTextLength();
@@ -629,11 +629,11 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
 
         while (reader.hasNext()) {
             switch (reader.next()) {
-            case Events.START_SEGMENT:
+            case START_SEGMENT:
                 tag = reader.getText();
                 e = 0;
                 break;
-            case Events.ELEMENT_DATA:
+            case ELEMENT_DATA:
                 if ("AK4".equals(tag) && ++e == 3) {
                     start = reader.getTextStart();
                     length = reader.getTextLength();
@@ -668,7 +668,7 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
 
         while (reader.hasNext()) {
             switch (reader.next()) {
-            case Events.START_SEGMENT:
+            case START_SEGMENT:
                 s += s == -1 ? 2 : 1;
                 Assert.assertEquals(s, reader.getLocation().getSegmentPosition());
                 Assert.assertEquals(-1, reader.getLocation().getElementPosition());
@@ -676,7 +676,7 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
                 Assert.assertEquals(-1, reader.getLocation().getElementOccurrence());
                 tag = reader.getText();
                 break;
-            case Events.ELEMENT_DATA:
+            case ELEMENT_DATA:
                 Location l = reader.getLocation();
                 if ("AK3".equals(tag)) {
                     if (l.getElementPosition() == 2) {
@@ -808,7 +808,7 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
 
         while (reader.hasNext()) {
             switch (reader.next()) {
-            case Events.START_SEGMENT: {
+            case START_SEGMENT: {
                 Location l = reader.getLocation();
                 s += s == -1 ? 2 : 1;
                 Assert.assertEquals(s, l.getSegmentPosition());
@@ -818,7 +818,7 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
                 tag = reader.getText();
                 break;
             }
-            case Events.ELEMENT_DATA: {
+            case ELEMENT_DATA: {
                 Location l = reader.getLocation();
 
                 if ("AK4".equals(tag) && l.getElementPosition() == 1) {
@@ -830,14 +830,16 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
 
                 break;
             }
-            case Events.START_COMPOSITE: {
+            case START_COMPOSITE: {
                 conditions++;
                 break;
             }
-            case Events.END_COMPOSITE: {
+            case END_COMPOSITE: {
                 conditions++;
                 break;
             }
+            default:
+                break;
             }
         }
 
@@ -851,7 +853,7 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
                                                                              "x12/sample275_with_HL7_invalid_BIN01.edi");
         EDIStreamReader reader = factory.createEDIStreamReader(stream);
 
-        int event;
+        EDIStreamEvent event;
         String tag = null;
 
         try {
@@ -871,7 +873,7 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
                     reader.setBinaryDataLength(binaryDataLength);
                     // Exception for invalid delimiter will occur next
                     event = reader.next();
-                    Assert.assertEquals(Events.ELEMENT_DATA_BINARY, event);
+                    Assert.assertEquals(EDIStreamEvent.ELEMENT_DATA_BINARY, event);
                 }
             }
         } finally {
@@ -889,7 +891,7 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
         InputStream stream = getClass().getClassLoader().getResourceAsStream("x12/sample275_with_HL7_valid_BIN01.edi");
         EDIStreamReader reader = factory.createEDIStreamReader(stream);
 
-        int event;
+        EDIStreamEvent event;
         String tag = null;
 
         try {
@@ -908,7 +910,7 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
                     Assert.assertEquals(2768, binaryDataLength);
                     reader.setBinaryDataLength(binaryDataLength);
                     event = reader.next();
-                    Assert.assertEquals(Events.ELEMENT_DATA_BINARY, event);
+                    Assert.assertEquals(EDIStreamEvent.ELEMENT_DATA_BINARY, event);
                     Document document;
                     try (InputStream binary = reader.getBinaryData()) {
                         DocumentBuilderFactory domFactory = DocumentBuilderFactory.newInstance();
@@ -918,7 +920,7 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
                     }
                     Assert.assertEquals("levelone", document.getDocumentElement().getNodeName());
                     event = reader.next();
-                    Assert.assertEquals(Events.END_SEGMENT, event);
+                    Assert.assertEquals(EDIStreamEvent.END_SEGMENT, event);
                 }
             }
         } finally {

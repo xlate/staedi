@@ -121,7 +121,7 @@ public class StaEDIStreamReader implements EDIStreamReader {
 	}
 
 	@Override
-	public int next() throws EDIStreamException {
+	public EDIStreamEvent next() throws EDIStreamException {
 		ensureOpen();
 		ensureIncomplete();
 
@@ -137,9 +137,9 @@ public class StaEDIStreamReader implements EDIStreamReader {
 			throw new EDIStreamException("Error parsing input", where, e);
 		}
 
-		final int event = proxy.getEvent();
+		final EDIStreamEvent event = proxy.getEvent();
 
-		if (event == Events.END_INTERCHANGE) {
+		if (event == EDIStreamEvent.END_INTERCHANGE) {
 			complete = true;
 		}
 
@@ -147,14 +147,14 @@ public class StaEDIStreamReader implements EDIStreamReader {
 	}
 
 	@Override
-	public int nextTag() throws EDIStreamException {
-		int event = 0;
+	public EDIStreamEvent nextTag() throws EDIStreamException {
+	    EDIStreamEvent event = null;
 
 		do {
 			event = next();
-		} while (!complete && event != Events.START_SEGMENT);
+		} while (!complete && event != EDIStreamEvent.START_SEGMENT);
 
-		if (event != Events.START_SEGMENT) {
+		if (event != EDIStreamEvent.START_SEGMENT) {
 			throw new NoSuchElementException("No additional tags in stream");
 		}
 
@@ -173,14 +173,14 @@ public class StaEDIStreamReader implements EDIStreamReader {
 	}
 
 	@Override
-	public int getEventType() {
+	public EDIStreamEvent getEventType() {
 		ensureOpen();
 		return proxy.getEvent();
 	}
 
 	@Override
 	public String getStandard() {
-		if (getEventType() != Events.START_INTERCHANGE) {
+		if (getEventType() != EDIStreamEvent.START_INTERCHANGE) {
 			throw new IllegalStateException("version not accessible");
 		}
 
@@ -189,7 +189,7 @@ public class StaEDIStreamReader implements EDIStreamReader {
 
 	@Override
 	public String[] getVersion() {
-		if (getEventType() != Events.START_INTERCHANGE) {
+		if (getEventType() != EDIStreamEvent.START_INTERCHANGE) {
 			throw new IllegalStateException("version not accessible");
 		}
 
@@ -198,7 +198,7 @@ public class StaEDIStreamReader implements EDIStreamReader {
 
 	@Override
 	public void setSchema(Schema schema) {
-		if (getEventType() != Events.START_INTERCHANGE) {
+		if (getEventType() != EDIStreamEvent.START_INTERCHANGE) {
 			throw new IllegalStateException(
 					"schema set after interchange start");
 		}
@@ -218,7 +218,7 @@ public class StaEDIStreamReader implements EDIStreamReader {
 			throw new IllegalStateException("previous schema not set");
 		}
 
-		if (getEventType() != Events.END_SEGMENT) {
+		if (getEventType() != EDIStreamEvent.END_SEGMENT) {
 			throw new IllegalStateException("schema added not at segment end");
 		}
 
@@ -234,9 +234,9 @@ public class StaEDIStreamReader implements EDIStreamReader {
 	@Override
 	public EDIStreamValidationError getErrorType() {
 		switch (getEventType()) {
-		case Events.ELEMENT_DATA_ERROR:
-		case Events.ELEMENT_OCCURRENCE_ERROR:
-		case Events.SEGMENT_ERROR:
+		case ELEMENT_DATA_ERROR:
+		case ELEMENT_OCCURRENCE_ERROR:
+		case SEGMENT_ERROR:
 			return proxy.getErrorType();
 		default:
 			throw new IllegalStateException("not a valid text state");
@@ -244,14 +244,14 @@ public class StaEDIStreamReader implements EDIStreamReader {
 	}
 
 	private void checkTextState() {
-		int event = getEventType();
+	    EDIStreamEvent event = getEventType();
 
 		switch (event) {
-		case Events.ELEMENT_DATA:
-		case Events.ELEMENT_DATA_ERROR:
-		case Events.START_LOOP:
-		case Events.START_SEGMENT:
-		case Events.SEGMENT_ERROR:
+		case ELEMENT_DATA:
+		case ELEMENT_DATA_ERROR:
+		case START_LOOP:
+		case START_SEGMENT:
+		case SEGMENT_ERROR:
 			break;
 		default:
 			throw new IllegalStateException("not a valid text state");
@@ -350,9 +350,9 @@ public class StaEDIStreamReader implements EDIStreamReader {
 		ensureOpen();
 
 		switch (getEventType()) {
-		case Events.START_SEGMENT:
-		case Events.ELEMENT_DATA:
-		case Events.END_COMPOSITE:
+		case START_SEGMENT:
+		case ELEMENT_DATA:
+		case END_COMPOSITE:
 			break;
 		default:
 			throw new IllegalStateException();
@@ -365,7 +365,7 @@ public class StaEDIStreamReader implements EDIStreamReader {
 	public InputStream getBinaryData() {
 		ensureOpen();
 
-		if (getEventType() != Events.ELEMENT_DATA_BINARY) {
+		if (getEventType() != EDIStreamEvent.ELEMENT_DATA_BINARY) {
 			throw new IllegalStateException();
 		}
 
