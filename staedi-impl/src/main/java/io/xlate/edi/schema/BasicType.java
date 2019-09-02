@@ -15,21 +15,18 @@
  ******************************************************************************/
 package io.xlate.edi.schema;
 
+import java.util.Objects;
+
 abstract class BasicType implements EDIType {
 
-    protected String id;
-    protected Type type;
+    private String id;
+    private Type type;
 
     BasicType(String id, Type type) {
-        super();
+        Objects.requireNonNull(id, "EDIType id must not be null");
+        Objects.requireNonNull(type, "EDIType type must not be null");
         this.id = id;
         this.type = type;
-    }
-
-    BasicType(EDIType other) {
-        super();
-        this.id = other.getId();
-        this.type = other.getType();
     }
 
     @Override

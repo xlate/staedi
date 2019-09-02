@@ -13,22 +13,23 @@
   License for the specific language governing permissions and limitations under
   the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	<parent>
-		<groupId>io.xlate</groupId>
-		<artifactId>staedi-parent</artifactId>
-		<version>0.0.2-SNAPSHOT</version>
-	</parent>
-	<artifactId>staedi-api</artifactId>
-	<name>StAEDI Application Program Interface (API)</name>
-	<description>Streaming API for EDI (for Java) / API Definition</description>
-	<url>https://github.com/xlate/staedi</url>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>io.xlate</groupId>
+    <artifactId>staedi-parent</artifactId>
+    <version>0.0.2-SNAPSHOT</version>
+  </parent>
+  <artifactId>staedi-api</artifactId>
+  <name>StAEDI Application Program Interface (API)</name>
+  <description>Streaming API for EDI (for Java) / API Definition</description>
+  <url>https://github.com/xlate/staedi</url>
 
-	<scm>
-		<url>https://github.com/xlate/staedi</url>
-		<connection>scm:git:https://github.com/xlate/staedi.git</connection>
-		<developerConnection>scm:git:ssh://git@github.com/xlate/staedi.git</developerConnection>
-		<tag>HEAD</tag>
-	</scm>
+  <scm>
+    <url>https://github.com/xlate/staedi</url>
+    <connection>scm:git:https://github.com/xlate/staedi.git</connection>
+    <developerConnection>scm:git:ssh://git@github.com/xlate/staedi.git</developerConnection>
+    <tag>HEAD</tag>
+  </scm>
 </project>

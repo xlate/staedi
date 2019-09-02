@@ -20,21 +20,11 @@ import java.util.List;
 public interface EDISyntaxRule {
 
     public enum Type {
-        PAIRED(1),
-        REQUIRED(2),
-        EXCLUSION(3),
-        CONDITIONAL(4),
-        LIST(5);
-
-        private int code;
-
-        private Type(int code) {
-            this.code = code;
-        }
-
-        public int getCode() {
-            return code;
-        }
+        PAIRED,
+        REQUIRED,
+        EXCLUSION,
+        CONDITIONAL,
+        LIST;
     }
 
     Type getType();

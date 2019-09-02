@@ -15,8 +15,10 @@
  ******************************************************************************/
 package io.xlate.edi.schema;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 class Structure extends BasicType implements EDIComplexType {
 
@@ -24,51 +26,41 @@ class Structure extends BasicType implements EDIComplexType {
     private List<EDIReference> references;
     private List<EDISyntaxRule> syntaxRules;
 
-    Structure(String id, EDIType.Type type, String code, List<Reference> references, List<SyntaxRestriction> syntaxRules) {
+    Structure(String id, EDIType.Type type, String code, List<EDIReference> references, List<EDISyntaxRule> syntaxRules) {
         super(id, type);
+        Objects.requireNonNull(code, "EDIComplexType code must not be null");
+        Objects.requireNonNull(references, "EDIComplexType references must not be null");
+        Objects.requireNonNull(syntaxRules, "EDIComplexType id must not be null");
         this.code = code;
-        this.references = Collections.unmodifiableList(references);
-        this.syntaxRules = Collections.unmodifiableList(syntaxRules);
+        this.references = Collections.unmodifiableList(new ArrayList<>(references));
+        this.syntaxRules = Collections.unmodifiableList(new ArrayList<>(syntaxRules));
     }
 
     Structure(EDIComplexType other, List<EDIReference> references, List<EDISyntaxRule> syntaxRules) {
-        super(other);
-        this.code = other.getCode();
-        this.references = Collections.unmodifiableList(references);
-        this.syntaxRules = Collections.unmodifiableList(syntaxRules);
+        this(other.getId(), other.getType(), other.getCode(), references, syntaxRules);
     }
 
     @Override
     public String toString() {
         StringBuilder buffer = new StringBuilder("id: ");
-        buffer.append(super.id);
-        buffer.append("\n, type: ");
-        switch (super.type) {
-        case COMPOSITE:
-            buffer.append("composite");
-            break;
-        case LOOP:
-            buffer.append("loop");
-            break;
-        case SEGMENT:
-            buffer.append("segment");
-            break;
-        default:
-            break;
-        }
-        buffer.append("\n, code: ");
+        buffer.append(getId());
+        buffer.append(", type: ");
+        buffer.append(getType());
+        buffer.append(", code: ");
         buffer.append(code);
-        buffer.append("\n, references: [");
+        buffer.append(", references: [");
         for (EDIReference reference : references) {
-            buffer.append("\n\t");
+            buffer.append('{');
             buffer.append(reference);
+            buffer.append('}');
         }
-        buffer.append("\n]\n, syntaxRestrictions: ");
+        buffer.append("], syntaxRestrictions: [");
         for (EDISyntaxRule rule : syntaxRules) {
-            buffer.append("\n\t");
+            buffer.append('{');
             buffer.append(rule);
+            buffer.append('}');
         }
-        buffer.append("\n]\n");
+        buffer.append(']');
         return buffer.toString();
     }
 

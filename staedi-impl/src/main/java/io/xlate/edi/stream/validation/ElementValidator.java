@@ -43,7 +43,7 @@ abstract class ElementValidator {
         }
     }
 
-    protected static boolean validLength(EDISimpleType element,
+    protected static boolean validateLength(EDISimpleType element,
                                          int length,
                                          List<EDIStreamValidationError> errors) {
 
@@ -58,10 +58,15 @@ abstract class ElementValidator {
         return true;
     }
 
-    protected static void checkLength(EDISimpleType element, int length) throws EDIException {
+    protected static void assertMinLength(EDISimpleType element, int length) throws EDIException {
+        if (length < element.getMinLength()) {
+            throw new EDIException(EDIException.DATA_ELEMENT_TOO_SHORT);
+        }
+    }
+
+    protected static void assertMaxLength(EDISimpleType element, int length) throws EDIException {
         if (length > element.getMaxLength()) {
-            // DATA_ELEMENT_TOO_LONG
-            throw new EDIException();
+            throw new EDIException(EDIException.DATA_ELEMENT_TOO_LONG);
         }
     }
 

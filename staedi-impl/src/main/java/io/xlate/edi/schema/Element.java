@@ -16,6 +16,7 @@
 package io.xlate.edi.schema;
 
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 class Element extends BasicType implements EDISimpleType {
@@ -36,38 +37,16 @@ class Element extends BasicType implements EDISimpleType {
         this.number = number;
         this.minLength = minLength;
         this.maxLength = maxLength;
-        this.values = Collections.unmodifiableSet(values);
+        this.values = Collections.unmodifiableSet(new LinkedHashSet<>(values));
     }
 
     @Override
     public String toString() {
         StringBuilder buffer = new StringBuilder("id: ");
-        buffer.append(super.id);
+        buffer.append(getId());
         buffer.append(", type: element");
         buffer.append(", base: ");
-        switch (base) {
-        case BINARY:
-            buffer.append("binary");
-            break;
-        case DATE:
-            buffer.append("date");
-            break;
-        case DECIMAL:
-            buffer.append("decimal");
-            break;
-        case INTEGER:
-            buffer.append("integer");
-            break;
-        case IDENTIFIER:
-            buffer.append("identifier");
-            break;
-        case STRING:
-            buffer.append("string");
-            break;
-        case TIME:
-            buffer.append("time");
-            break;
-        }
+        buffer.append(base);
         buffer.append(", number: ");
         buffer.append(number);
         buffer.append(", minLength: ");

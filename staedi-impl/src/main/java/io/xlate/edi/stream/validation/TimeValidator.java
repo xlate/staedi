@@ -39,7 +39,7 @@ class TimeValidator extends ElementValidator {
                   List<EDIStreamValidationError> errors) {
         final int length = value.length();
 
-        if (!validLength(element, length, errors) || !validValue(value)) {
+        if (!validateLength(element, length, errors) || !validValue(value)) {
             errors.add(EDIStreamValidationError.INVALID_TIME);
         }
     }
@@ -47,29 +47,24 @@ class TimeValidator extends ElementValidator {
     @Override
     void format(EDISimpleType element, CharSequence value, Appendable result) throws EDIException {
         int length = value.length();
-        checkLength(element, length);
+        assertMaxLength(element, length);
 
-        if (validValue(value)) {
-            try {
-                result.append(value);
-            } catch (IOException e) {
-                throw new EDIException(e);
-            }
+        if (!validValue(value)) {
+            throw new EDIException(EDIException.INVALID_TIME);
+        }
+
+        try {
+            result.append(value);
 
             for (int i = length, min = element.getMinLength(); i < min; i++) {
-                try {
-                    result.append('0');
-                } catch (IOException e) {
-                    throw new EDIException(e);
-                }
+                result.append('0');
             }
-        } else {
-            // TODO: INVALID_TIME
-            throw new EDIException();
+        } catch (IOException e) {
+            throw new EDIException(e);
         }
     }
 
-    private static boolean validValue(CharSequence value) {
+    static boolean validValue(CharSequence value) {
         final int length = value.length();
         int hr = 0;
         int mi = 0;
@@ -77,7 +72,7 @@ class TimeValidator extends ElementValidator {
         int ds = 0;
         int index = 0;
 
-        for (int i = length - length; i < length; i++) {
+        for (int i = 0; i < length; i++) {
             char current = value.charAt(i);
 
             switch (current) {

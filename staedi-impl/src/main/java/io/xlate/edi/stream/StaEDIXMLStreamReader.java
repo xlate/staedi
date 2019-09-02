@@ -155,7 +155,7 @@ public class StaEDIXMLStreamReader implements XMLStreamReader {
 			break;
 		}
 		case START_COMPOSITE: {
-			name = deriveName(elementStack.getFirst(), null);
+			name = deriveName(elementStack.getFirst(), ediReader.getReferenceCode());
 			enqueueEvent(START_ELEMENT, name, true);
 			break;
 		}
@@ -182,9 +182,7 @@ public class StaEDIXMLStreamReader implements XMLStreamReader {
 		if (eventQueue.isEmpty()) {
 			try {
 				enqueueEvent(ediReader.next());
-			} catch (NoSuchElementException e) {
-				throw new XMLStreamException(e);
-			} catch (EDIStreamException e) {
+			} catch (EDIStreamException| NoSuchElementException e) {
 				throw new XMLStreamException(e);
 			}
 		}

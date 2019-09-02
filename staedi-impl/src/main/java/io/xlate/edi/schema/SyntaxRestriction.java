@@ -17,6 +17,7 @@ package io.xlate.edi.schema;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 class SyntaxRestriction implements EDISyntaxRule {
 
@@ -24,7 +25,13 @@ class SyntaxRestriction implements EDISyntaxRule {
     private List<Integer> positions;
 
     SyntaxRestriction(EDISyntaxRule.Type type, List<Integer> positions) {
-        super();
+        Objects.requireNonNull(type, "syntax rule type must not be null");
+        Objects.requireNonNull(positions, "syntax rule positions must not be null");
+
+        if (positions.isEmpty()) {
+            throw new IllegalArgumentException("syntax rule positions must not be em");
+        }
+
         this.type = type;
         this.positions = new ArrayList<>(positions);
     }
@@ -32,23 +39,7 @@ class SyntaxRestriction implements EDISyntaxRule {
     @Override
     public String toString() {
         StringBuilder buffer = new StringBuilder("type: ");
-        switch (type) {
-        case CONDITIONAL:
-            buffer.append("conditional");
-            break;
-        case EXCLUSION:
-            buffer.append("exclusion");
-            break;
-        case LIST:
-            buffer.append("list");
-            break;
-        case PAIRED:
-            buffer.append("paired");
-            break;
-        case REQUIRED:
-            buffer.append("required");
-            break;
-        }
+        buffer.append(type.toString());
         buffer.append(", positions: ");
         buffer.append(positions);
         return buffer.toString();

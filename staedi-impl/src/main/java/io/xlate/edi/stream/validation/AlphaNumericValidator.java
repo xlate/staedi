@@ -41,7 +41,7 @@ class AlphaNumericValidator extends ElementValidator {
                   List<EDIStreamValidationError> errors) {
 
         int length = value.length();
-        validLength(element, length, errors);
+        validateLength(element, length, errors);
 
         Set<String> valueSet = element.getValueSet();
 
@@ -61,38 +61,32 @@ class AlphaNumericValidator extends ElementValidator {
 
     @Override
     void format(EDISimpleType element, CharSequence value, Appendable result) throws EDIException {
-
         int length = value.length();
-        checkLength(element, length);
+        assertMaxLength(element, length);
 
         Set<String> valueSet = element.getValueSet();
 
         if (!valueSet.isEmpty() && !valueSet.contains(value.toString())) {
-            // TODO: INVALID_CODE_VALUE
-            throw new EDIException();
+            throw new EDIException(EDIException.INVALID_CODE_VALUE);
         }
 
-        for (int i = 0; i < length; i++) {
-            char character = value.charAt(i);
+        try {
+            for (int i = 0; i < length; i++) {
+                char character = value.charAt(i);
 
-            if (!CharacterSet.isValid(character)) {
-                throw new EDIException(EDIException.INVALID_CHARACTER,
-                                       "Invalid character 0x" + String.format("%04X", character));
-            }
+                if (!CharacterSet.isValid(character)) {
+                    throw new EDIException(EDIException.INVALID_CHARACTER,
+                                           "Invalid character 0x" + String.format("%04X", (int) character));
+                }
 
-            try {
                 result.append(character);
-            } catch (IOException e) {
-                throw new EDIException(e);
             }
-        }
 
-        for (int i = length, min = element.getMinLength(); i < min; i++) {
-            try {
+            for (int i = length, min = element.getMinLength(); i < min; i++) {
                 result.append(' ');
-            } catch (IOException e) {
-                throw new EDIException(e);
             }
+        } catch (IOException e) {
+            throw new EDIException(e);
         }
     }
 }

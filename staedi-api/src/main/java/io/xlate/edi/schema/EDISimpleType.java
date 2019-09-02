@@ -39,4 +39,8 @@ public interface EDISimpleType extends EDIType {
 
     Set<String> getValueSet();
 
+    @Override
+    default Type getType() {
+        return EDIType.Type.ELEMENT;
+    }
 }

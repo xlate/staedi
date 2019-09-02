@@ -27,7 +27,7 @@ class DecimalValidator extends NumericValidator {
     }
 
     @Override
-    protected int validate(CharSequence value) {
+    int validate(CharSequence value) {
         int length = value.length();
 
         int dec = 0;

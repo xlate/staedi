@@ -36,40 +36,33 @@ public class StaEDISchemaFactory extends SchemaFactory {
 
     private static XMLInputFactory factory = XMLInputFactory.newFactory();
 
-    private static final String reserved = "io.xlate.";
+    private static final String RESERVED = "io.xlate.";
+    private static final String XMLNS = "http://xlate.io/2015/EDISchema";
 
-    private static final String xmlns = "http://xlate.io/2015/EDISchema";
+    private static final QName QN_SCHEMA = new QName(XMLNS, "schema");
 
-    private static final QName QN_SCHEMA = new QName(xmlns, "schema");
+    private static final QName QN_MAIN_LOOP = new QName(XMLNS, "mainLoop");
+    private static final QName QN_COMPOSITE_T = new QName(XMLNS, "compositeType");
+    private static final QName QN_ELEMENT_T = new QName(XMLNS, "elementType");
+    private static final QName QN_LOOP_T = new QName(XMLNS, "loopType");
+    private static final QName QN_SEGMENT_T = new QName(XMLNS, "segmentType");
 
-    private static final QName QN_MAIN_LOOP = new QName(
-                                                        xmlns,
-                                                        "mainLoop");
-    private static final QName QN_COMPOSITE_T = new QName(
-                                                          xmlns,
-                                                          "compositeType");
-    private static final QName QN_ELEMENT_T = new QName(xmlns, "elementType");
-    private static final QName QN_LOOP_T = new QName(xmlns, "loopType");
-    private static final QName QN_SEGMENT_T = new QName(xmlns, "segmentType");
+    private static final QName QN_SEQUENCE = new QName(XMLNS, "sequence");
 
-    private static final QName QN_SEQUENCE = new QName(xmlns, "sequence");
+    private static final QName QN_COMPOSITE = new QName(XMLNS, "composite");
+    private static final QName QN_ELEMENT = new QName(XMLNS, "element");
+    private static final QName QN_LOOP = new QName(XMLNS, "loop");
+    private static final QName QN_SEGMENT = new QName(XMLNS, "segment");
 
-    private static final QName QN_COMPOSITE = new QName(xmlns, "composite");
-    private static final QName QN_ELEMENT = new QName(xmlns, "element");
-    private static final QName QN_LOOP = new QName(xmlns, "loop");
-    private static final QName QN_SEGMENT = new QName(xmlns, "segment");
+    private static final QName QN_SYNTAX = new QName(XMLNS, "syntax");
+    private static final QName QN_POSITION = new QName(XMLNS, "position");
 
-    private static final QName QN_SYNTAX = new QName(xmlns, "syntax");
-    private static final QName QN_POSITION = new QName(xmlns, "position");
+    private static final QName QN_ENUMERATION = new QName(XMLNS, "enumeration");
+    private static final QName QN_VALUE = new QName(XMLNS, "value");
 
-    private static final QName QN_ENUMERATION = new QName(xmlns, "enumeration");
-    private static final QName QN_VALUE = new QName(xmlns, "value");
-
-    private static final String ID_INTERCHANGE = reserved
-            + "edi.schema.INTERCHANGE";
-    private static final String ID_GROUP = reserved + "edi.schema.GROUP";
-    private static final String ID_TRANSACTION = reserved
-            + "edi.schema.TRANSACTION";
+    private static final String ID_INTERCHANGE = RESERVED + "edi.schema.INTERCHANGE";
+    private static final String ID_GROUP = RESERVED + "edi.schema.GROUP";
+    private static final String ID_TRANSACTION = RESERVED + "edi.schema.TRANSACTION";
 
     private static final Map<QName, EDIType.Type> complex;
     private static final Set<QName> references;
@@ -77,13 +70,13 @@ public class StaEDISchemaFactory extends SchemaFactory {
     private static final Set<String> specialIdentifiers;
 
     static {
-        complex = new HashMap<>(3);
+        complex = new HashMap<>(4);
         complex.put(QN_COMPOSITE_T, EDIType.Type.COMPOSITE);
         complex.put(QN_LOOP_T, EDIType.Type.LOOP);
         complex.put(QN_MAIN_LOOP, EDIType.Type.LOOP);
         complex.put(QN_SEGMENT_T, EDIType.Type.SEGMENT);
 
-        references = new HashSet<>(3);
+        references = new HashSet<>(4);
         references.add(QN_COMPOSITE);
         references.add(QN_ELEMENT);
         references.add(QN_LOOP);
@@ -364,8 +357,8 @@ public class StaEDISchemaFactory extends SchemaFactory {
             code = name;
         }
 
-        final List<Reference> refs = new ArrayList<>(8);
-        final List<SyntaxRestriction> rules = new ArrayList<>(2);
+        final List<EDIReference> refs = new ArrayList<>(8);
+        final List<EDISyntaxRule> rules = new ArrayList<>(2);
         boolean sequence = false;
 
         scan: while (reader.hasNext()) {
@@ -413,9 +406,9 @@ public class StaEDISchemaFactory extends SchemaFactory {
         return new Structure(name, type, code, refs, rules);
     }
 
-    static void addReferences(XMLStreamReader reader, List<Reference> refs)
-                                                                            throws EDISchemaException,
-                                                                            XMLStreamException {
+    static void addReferences(XMLStreamReader reader, List<EDIReference> refs)
+                                                                               throws EDISchemaException,
+                                                                               XMLStreamException {
 
         while (reader.hasNext()) {
             switch (reader.next()) {
@@ -474,25 +467,20 @@ public class StaEDISchemaFactory extends SchemaFactory {
         }
     }
 
-    static void addSyntax(XMLStreamReader reader, List<SyntaxRestriction> rules) throws EDISchemaException,
-                                                                                 XMLStreamException {
+    static void addSyntax(XMLStreamReader reader, List<EDISyntaxRule> rules) throws EDISchemaException,
+                                                                             XMLStreamException {
 
         String type = reader.getAttributeValue(null, "type");
         EDISyntaxRule.Type typeInt;
 
-        if ("paired".equals(type)) {
-            typeInt = EDISyntaxRule.Type.PAIRED;
-        } else if ("required".equals(type)) {
-            typeInt = EDISyntaxRule.Type.REQUIRED;
-        } else if ("exclusion".equals(type)) {
-            typeInt = EDISyntaxRule.Type.EXCLUSION;
-        } else if ("conditional".equals(type)) {
-            typeInt = EDISyntaxRule.Type.CONDITIONAL;
-        } else if ("list".equals(type)) {
-            typeInt = EDISyntaxRule.Type.LIST;
-        } else {
+        try {
+            typeInt = EDISyntaxRule.Type.valueOf(type.toUpperCase());
+        } catch (NullPointerException e) {
+            String message = "Invalid syntax 'type': [null]";
+            throw new EDISchemaException(message, reader.getLocation(), e);
+        } catch (IllegalArgumentException e) {
             String message = "Invalid syntax 'type': [" + type + ']';
-            throw new EDISchemaException(message, reader.getLocation());
+            throw new EDISchemaException(message, reader.getLocation(), e);
         }
 
         SyntaxRestriction rule = new SyntaxRestriction(typeInt, buildSyntaxPositions(reader));
@@ -582,8 +570,7 @@ public class StaEDISchemaFactory extends SchemaFactory {
         try {
             minLength = min != null ? Integer.parseInt(min) : 1;
         } catch (@SuppressWarnings("unused") NumberFormatException e) {
-            throw new EDISchemaException("invalid minLength",
-                                         reader.getLocation());
+            throw new EDISchemaException("invalid minLength", reader.getLocation(), e);
         }
 
         final int maxLength;
@@ -591,8 +578,7 @@ public class StaEDISchemaFactory extends SchemaFactory {
         try {
             maxLength = max != null ? Integer.parseInt(max) : 1;
         } catch (@SuppressWarnings("unused") NumberFormatException e) {
-            throw new EDISchemaException("invalid maxLength",
-                                         reader.getLocation());
+            throw new EDISchemaException("invalid maxLength", reader.getLocation(), e);
         }
 
         final Element e;
@@ -611,9 +597,7 @@ public class StaEDISchemaFactory extends SchemaFactory {
                     } else if (element.equals(QN_VALUE)) {
                         values.add(reader.getElementText());
                     } else {
-                        throw new EDISchemaException(
-                                                     "unexpected element " + element,
-                                                     reader.getLocation());
+                        throw new EDISchemaException("unexpected element " + element, reader.getLocation());
                     }
 
                     break;
@@ -639,16 +623,14 @@ public class StaEDISchemaFactory extends SchemaFactory {
             String text = reader.getText().trim();
 
             if (text.length() > 0) {
-                throw new EDISchemaException("unexpected xml [" + text + "]",
-                                             reader.getLocation());
+                throw new EDISchemaException("unexpected XML [" + text + "]", reader.getLocation());
             }
             break;
         case XMLStreamConstants.COMMENT:
             // Ignore comments
             break;
         default:
-            throw new EDISchemaException("unexpected xml " + event,
-                                         reader.getLocation());
+            throw new EDISchemaException("unexpected XML event: " + event, reader.getLocation());
         }
     }
 
