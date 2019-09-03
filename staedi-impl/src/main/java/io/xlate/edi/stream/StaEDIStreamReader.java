@@ -48,13 +48,6 @@ public class StaEDIStreamReader implements EDIStreamReader {
 	public StaEDIStreamReader(
 			InputStream stream,
 			String encoding,
-			Map<String, Object> properties) {
-		this(stream, encoding, null, properties);
-	}
-
-	public StaEDIStreamReader(
-			InputStream stream,
-			String encoding,
 			Schema schema,
 			Map<String, Object> properties) {
 		if (stream instanceof BufferedInputStream) {

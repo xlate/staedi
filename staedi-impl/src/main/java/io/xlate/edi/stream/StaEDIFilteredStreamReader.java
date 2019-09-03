@@ -28,10 +28,7 @@ class StaEDIFilteredStreamReader implements EDIStreamReader {
     private final EDIStreamFilter filter;
     private EDIStreamEvent peekEvent = null;
 
-    public StaEDIFilteredStreamReader(
-            EDIStreamReader delegate,
-            EDIStreamFilter filter) {
-        super();
+    public StaEDIFilteredStreamReader(EDIStreamReader delegate, EDIStreamFilter filter) {
         this.delegate = delegate;
         this.filter = filter;
     }
@@ -144,13 +141,11 @@ class StaEDIFilteredStreamReader implements EDIStreamReader {
     }
 
     @Override
-    public int getTextCharacters(
-                                 int sourceStart,
+    public int getTextCharacters(int sourceStart,
                                  char[] target,
                                  int targetStart,
                                  int length) {
-        return delegate.getTextCharacters(
-                                          sourceStart,
+        return delegate.getTextCharacters(sourceStart,
                                           target,
                                           targetStart,
                                           length);

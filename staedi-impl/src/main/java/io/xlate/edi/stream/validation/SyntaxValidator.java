@@ -22,6 +22,7 @@ import io.xlate.edi.stream.Location;
 import io.xlate.edi.stream.internal.EventHandler;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 abstract class SyntaxValidator {
 
@@ -38,89 +39,78 @@ abstract class SyntaxValidator {
         case REQUIRED:
             return RequiredSyntaxValidator.getInstance();
         default:
-            throw new IllegalArgumentException(
-                                               "Unexpected syntax restriction type " + type + ".");
+            throw new IllegalArgumentException("Unexpected syntax restriction type " + type + ".");
         }
     }
 
-    protected class SyntaxStatus {
+    static class SyntaxStatus {
         protected int elementCount = 0;
         protected boolean anchorPresent = false;
     }
 
-    abstract void validate(EDISyntaxRule syntax,
-                           Location location,
-                           List<UsageNode> children,
-                           EventHandler handler);
+    static SyntaxStatus scanSyntax(EDISyntaxRule syntax, List<UsageNode> children) {
+        final SyntaxStatus status = new SyntaxStatus();
+        final AtomicBoolean anchorPosition = new AtomicBoolean(true);
 
-    protected SyntaxStatus scanSyntax(EDISyntaxRule syntax,
-                                      List<UsageNode> children) {
+        syntax.getPositions()
+              .stream()
+              .filter(position -> position < children.size() + 1)
+              .map(position -> children.get(position - 1))
+              .forEach(node -> {
+                  if (node.isUsed()) {
+                      status.elementCount++;
 
-        SyntaxStatus status = new SyntaxStatus();
-        boolean anchorPosition = true;
+                      if (anchorPosition.get()) {
+                          status.anchorPresent = true;
+                      }
+                  }
 
-        for (int pos : syntax.getPositions()) {
-            if (pos < children.size()) {
-                UsageNode node = children.get(pos - 1);
-
-                if (node.isUsed()) {
-                    status.elementCount++;
-
-                    if (anchorPosition) {
-                        status.anchorPresent = true;
-                    }
-                }
-
-                anchorPosition = false;
-            } else {
-                break;
-            }
-        }
+                  anchorPosition.set(false);
+              });
 
         return status;
     }
 
-    protected static void signalConditionError(EDISyntaxRule syntax,
-                                               Location location,
-                                               List<UsageNode> children,
-                                               EventHandler handler) {
+    static void signalConditionError(EDISyntaxRule syntax,
+                                     Location location,
+                                     List<UsageNode> children,
+                                     EventHandler handler) {
+        syntax.getPositions()
+              .stream()
+              .filter(position -> position < children.size() + 1)
+              .forEach(position -> {
+                  UsageNode node = children.get(position - 1);
 
-        for (int pos : syntax.getPositions()) {
-            if (pos < children.size()) {
-                UsageNode node = children.get(pos - 1);
+                  if (!node.isUsed()) {
+                      final int element;
+                      int component = location.getComponentPosition();
 
-                if (!node.isUsed()) {
-                    final int element;
-                    int component = location.getComponentPosition();
+                      if (component > -1) {
+                          element = location.getElementPosition();
+                          component = position;
+                      } else {
+                          element = position;
+                      }
 
-                    if (component > -1) {
-                        element = location.getElementPosition();
-                        component = pos;
-                    } else {
-                        element = pos;
-                    }
-
-                    handler.elementError(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR,
-                                         EDIStreamValidationError.CONDITIONAL_REQUIRED_DATA_ELEMENT_MISSING,
-                                         element,
-                                         component,
-                                         location.getElementOccurrence());
-                }
-            } else {
-                break;
-            }
-        }
+                      handler.elementError(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR,
+                                           EDIStreamValidationError.CONDITIONAL_REQUIRED_DATA_ELEMENT_MISSING,
+                                           element,
+                                           component,
+                                           location.getElementOccurrence());
+                  }
+              });
     }
 
-    protected static void signalExclusionError(EDISyntaxRule syntax,
-                                               Location location,
-                                               List<UsageNode> children,
-                                               EventHandler handler) {
+    static void signalExclusionError(EDISyntaxRule syntax,
+                                     Location location,
+                                     List<UsageNode> children,
+                                     EventHandler handler) {
 
         int tally = 0;
+        final int limit = children.size() + 1;
 
         for (int pos : syntax.getPositions()) {
-            if (pos < children.size()) {
+            if (pos < limit) {
                 UsageNode node = children.get(pos - 1);
 
                 if (node.isUsed() && ++tally > 1) {
@@ -145,4 +135,6 @@ abstract class SyntaxValidator {
             }
         }
     }
+
+    abstract void validate(EDISyntaxRule syntax, Location location, List<UsageNode> children, EventHandler handler);
 }

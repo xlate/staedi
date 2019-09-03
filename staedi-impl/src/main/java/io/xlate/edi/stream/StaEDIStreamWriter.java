@@ -60,10 +60,6 @@ public class StaEDIStreamWriter implements EDIStreamWriter {
     private final boolean prettyPrint;
     private final String lineSeparator;
 
-    public StaEDIStreamWriter(OutputStream stream, Map<String, Object> properties) {
-        this(stream, "US-ASCII", properties);
-    }
-
     public StaEDIStreamWriter(OutputStream stream, String encoding, Map<String, Object> properties) {
         this.stream = stream;
         this.encoding = encoding;

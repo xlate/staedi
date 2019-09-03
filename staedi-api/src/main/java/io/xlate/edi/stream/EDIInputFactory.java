@@ -34,23 +34,19 @@ public abstract class EDIInputFactory {
         return FactoryFinder.newInstance(factoryId, classLoader, false);
     }
 
-    public abstract EDIStreamReader createEDIStreamReader(InputStream stream)
-                                                                              throws EDIStreamException;
+    public abstract EDIStreamReader createEDIStreamReader(InputStream stream) throws EDIStreamException;
 
     public abstract EDIStreamReader createEDIStreamReader(InputStream stream,
                                                           String encoding) throws EDIStreamException;
 
-    public abstract EDIStreamReader createEDIStreamReader(InputStream stream,
-                                                          Schema schema) throws EDIStreamException;
+    public abstract EDIStreamReader createEDIStreamReader(InputStream stream, Schema schema) throws EDIStreamException;
 
     public abstract EDIStreamReader createEDIStreamReader(InputStream stream,
                                                           String encoding,
                                                           Schema schema) throws EDIStreamException;
 
-    public abstract EDIStreamReader createFilteredReader(
-                                                         EDIStreamReader reader,
-                                                         EDIStreamFilter filter)
-                                                                                 throws EDIStreamException;
+    public abstract EDIStreamReader createFilteredReader(EDIStreamReader reader,
+                                                         EDIStreamFilter filter) throws EDIStreamException;
 
     /**
      * Query the set of properties that this factory supports.
