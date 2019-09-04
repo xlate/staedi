@@ -13,12 +13,17 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  ******************************************************************************/
-package io.xlate.edi.schema;
+package io.xlate.edi.internal.schema;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+
+import io.xlate.edi.schema.EDIComplexType;
+import io.xlate.edi.schema.EDIReference;
+import io.xlate.edi.schema.EDISyntaxRule;
+import io.xlate.edi.schema.EDIType;
 
 class Structure extends BasicType implements EDIComplexType {
 

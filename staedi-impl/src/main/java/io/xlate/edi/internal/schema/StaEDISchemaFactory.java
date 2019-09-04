@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  ******************************************************************************/
-package io.xlate.edi.schema;
+package io.xlate.edi.internal.schema;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -31,6 +31,14 @@ import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
+
+import io.xlate.edi.schema.EDIReference;
+import io.xlate.edi.schema.EDISchemaException;
+import io.xlate.edi.schema.EDISimpleType;
+import io.xlate.edi.schema.EDISyntaxRule;
+import io.xlate.edi.schema.EDIType;
+import io.xlate.edi.schema.Schema;
+import io.xlate.edi.schema.SchemaFactory;
 
 public class StaEDISchemaFactory extends SchemaFactory {
 

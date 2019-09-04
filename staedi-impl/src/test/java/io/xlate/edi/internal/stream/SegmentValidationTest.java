@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  ******************************************************************************/
-package io.xlate.edi.stream;
+package io.xlate.edi.internal.stream;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -25,10 +25,16 @@ import java.net.URL;
 
 import org.junit.Test;
 
+import io.xlate.edi.internal.schema.SchemaUtils;
 import io.xlate.edi.schema.EDISchemaException;
 import io.xlate.edi.schema.Schema;
 import io.xlate.edi.schema.SchemaFactory;
-import io.xlate.edi.schema.SchemaUtils;
+import io.xlate.edi.stream.EDIInputFactory;
+import io.xlate.edi.stream.EDIStreamEvent;
+import io.xlate.edi.stream.EDIStreamException;
+import io.xlate.edi.stream.EDIStreamFilter;
+import io.xlate.edi.stream.EDIStreamReader;
+import io.xlate.edi.stream.EDIStreamValidationError;
 import io.xlate.edi.stream.EDIStreamConstants.Standards;
 
 @SuppressWarnings("resource")

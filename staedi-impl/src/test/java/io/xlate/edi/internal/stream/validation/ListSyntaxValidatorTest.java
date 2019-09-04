@@ -1,4 +1,4 @@
-package io.xlate.edi.stream.validation;
+package io.xlate.edi.internal.stream.validation;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -14,6 +14,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.stubbing.Answer;
 
+import io.xlate.edi.internal.stream.validation.ListSyntaxValidator;
+import io.xlate.edi.internal.stream.validation.SyntaxValidator;
+import io.xlate.edi.internal.stream.validation.UsageNode;
 import io.xlate.edi.schema.EDISyntaxRule.Type;
 import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamValidationError;

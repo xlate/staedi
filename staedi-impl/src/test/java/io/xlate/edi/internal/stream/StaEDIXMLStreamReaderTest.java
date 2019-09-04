@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  ******************************************************************************/
-package io.xlate.edi.stream;
+package io.xlate.edi.internal.stream;
 
 import static org.junit.Assert.fail;
 
@@ -32,6 +32,11 @@ import javax.xml.transform.stream.StreamResult;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
+
+import io.xlate.edi.internal.stream.StaEDIXMLStreamReader;
+import io.xlate.edi.stream.EDIInputFactory;
+import io.xlate.edi.stream.EDIStreamException;
+import io.xlate.edi.stream.EDIStreamReader;
 
 public class StaEDIXMLStreamReaderTest {
 

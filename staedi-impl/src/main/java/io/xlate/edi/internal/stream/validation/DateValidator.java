@@ -13,15 +13,15 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  ******************************************************************************/
-package io.xlate.edi.stream.validation;
+package io.xlate.edi.internal.stream.validation;
 
 import java.io.IOException;
 import java.util.Calendar;
 import java.util.List;
 
+import io.xlate.edi.internal.stream.internal.EDIException;
 import io.xlate.edi.schema.EDISimpleType;
 import io.xlate.edi.stream.EDIStreamValidationError;
-import io.xlate.edi.stream.internal.EDIException;
 
 class DateValidator extends ElementValidator {
 

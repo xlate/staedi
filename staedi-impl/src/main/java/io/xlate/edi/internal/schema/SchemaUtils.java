@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  ******************************************************************************/
-package io.xlate.edi.schema;
+package io.xlate.edi.internal.schema;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -22,6 +22,9 @@ import java.util.Enumeration;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import io.xlate.edi.schema.EDISchemaException;
+import io.xlate.edi.schema.Schema;
+import io.xlate.edi.schema.SchemaFactory;
 import io.xlate.edi.stream.EDIStreamConstants.Standards;
 
 import java.util.NavigableMap;

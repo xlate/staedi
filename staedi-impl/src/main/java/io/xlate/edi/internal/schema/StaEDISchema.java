@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  ******************************************************************************/
-package io.xlate.edi.schema;
+package io.xlate.edi.internal.schema;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -22,9 +22,16 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import io.xlate.edi.schema.EDIComplexType;
+import io.xlate.edi.schema.EDIReference;
+import io.xlate.edi.schema.EDISchemaException;
+import io.xlate.edi.schema.EDISyntaxRule;
+import io.xlate.edi.schema.EDIType;
+import io.xlate.edi.schema.Schema;
+
 class StaEDISchema implements Schema {
 
-    static final String MAIN = "io.xlate.edi.schema.MAIN";
+    static final String MAIN = "io.xlate.edi.internal.internal.schema.MAIN";
 
     final SchemaProxy proxy = new SchemaProxy(this);
 

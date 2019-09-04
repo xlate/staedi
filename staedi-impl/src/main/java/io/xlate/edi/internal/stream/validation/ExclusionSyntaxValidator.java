@@ -13,14 +13,14 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  ******************************************************************************/
-package io.xlate.edi.stream.validation;
+package io.xlate.edi.internal.stream.validation;
 
 import java.util.List;
 
+import io.xlate.edi.internal.stream.internal.EventHandler;
 import io.xlate.edi.schema.EDISyntaxRule;
 import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamValidationError;
-import io.xlate.edi.stream.internal.EventHandler;
 
 class ExclusionSyntaxValidator extends SyntaxValidator {
 

@@ -1,10 +1,13 @@
-package io.xlate.edi.schema;
+package io.xlate.edi.internal.schema;
 
 import static org.junit.Assert.*;
 
 import java.util.Arrays;
 
 import org.junit.Test;
+
+import io.xlate.edi.internal.schema.SyntaxRestriction;
+import io.xlate.edi.schema.EDISyntaxRule;
 
 public class SyntaxRestrictionTest {
 

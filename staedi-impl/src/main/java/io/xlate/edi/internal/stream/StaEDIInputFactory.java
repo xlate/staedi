@@ -13,9 +13,13 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  ******************************************************************************/
-package io.xlate.edi.stream;
+package io.xlate.edi.internal.stream;
 
 import io.xlate.edi.schema.Schema;
+import io.xlate.edi.stream.EDIInputFactory;
+import io.xlate.edi.stream.EDIStreamException;
+import io.xlate.edi.stream.EDIStreamFilter;
+import io.xlate.edi.stream.EDIStreamReader;
 
 import java.io.InputStream;
 import java.util.HashMap;

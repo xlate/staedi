@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  ******************************************************************************/
-package io.xlate.edi.stream;
+package io.xlate.edi.internal.stream;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -24,12 +24,17 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
+import io.xlate.edi.internal.stream.internal.Dialect;
+import io.xlate.edi.internal.stream.internal.InternalLocation;
+import io.xlate.edi.internal.stream.internal.Lexer;
+import io.xlate.edi.internal.stream.internal.ProxyEventHandler;
 import io.xlate.edi.schema.EDISchemaException;
 import io.xlate.edi.schema.Schema;
-import io.xlate.edi.stream.internal.Dialect;
-import io.xlate.edi.stream.internal.InternalLocation;
-import io.xlate.edi.stream.internal.Lexer;
-import io.xlate.edi.stream.internal.ProxyEventHandler;
+import io.xlate.edi.stream.EDIStreamEvent;
+import io.xlate.edi.stream.EDIStreamException;
+import io.xlate.edi.stream.EDIStreamReader;
+import io.xlate.edi.stream.EDIStreamValidationError;
+import io.xlate.edi.stream.Location;
 
 public class StaEDIStreamReader implements EDIStreamReader {
 

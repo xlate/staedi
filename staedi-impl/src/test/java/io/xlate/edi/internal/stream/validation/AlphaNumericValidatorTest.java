@@ -1,4 +1,4 @@
-package io.xlate.edi.stream.validation;
+package io.xlate.edi.internal.stream.validation;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -14,9 +14,11 @@ import java.util.List;
 
 import org.junit.Test;
 
+import io.xlate.edi.internal.stream.internal.EDIException;
+import io.xlate.edi.internal.stream.validation.AlphaNumericValidator;
+import io.xlate.edi.internal.stream.validation.ElementValidator;
 import io.xlate.edi.schema.EDISimpleType;
 import io.xlate.edi.stream.EDIStreamValidationError;
-import io.xlate.edi.stream.internal.EDIException;
 
 public class AlphaNumericValidatorTest {
 

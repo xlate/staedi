@@ -13,17 +13,23 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  ******************************************************************************/
-package io.xlate.edi.stream;
+package io.xlate.edi.internal.stream;
 
 import java.io.InputStream;
 
 import org.junit.Assert;
 import org.junit.Test;
 
+import io.xlate.edi.internal.schema.SchemaUtils;
 import io.xlate.edi.schema.EDISchemaException;
 import io.xlate.edi.schema.Schema;
 import io.xlate.edi.schema.SchemaFactory;
-import io.xlate.edi.schema.SchemaUtils;
+import io.xlate.edi.stream.EDIInputFactory;
+import io.xlate.edi.stream.EDIStreamEvent;
+import io.xlate.edi.stream.EDIStreamException;
+import io.xlate.edi.stream.EDIStreamFilter;
+import io.xlate.edi.stream.EDIStreamReader;
+import io.xlate.edi.stream.EDIStreamValidationError;
 
 public class ErrorEventsTest {
 

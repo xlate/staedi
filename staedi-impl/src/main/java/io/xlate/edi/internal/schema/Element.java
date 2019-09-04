@@ -13,11 +13,13 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  ******************************************************************************/
-package io.xlate.edi.schema;
+package io.xlate.edi.internal.schema;
 
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
+
+import io.xlate.edi.schema.EDISimpleType;
 
 class Element extends BasicType implements EDISimpleType {
 

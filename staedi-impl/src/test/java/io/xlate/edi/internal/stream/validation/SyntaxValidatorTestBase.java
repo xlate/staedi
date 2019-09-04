@@ -1,14 +1,15 @@
-package io.xlate.edi.stream.validation;
+package io.xlate.edi.internal.stream.validation;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import org.junit.Before;
 
+import io.xlate.edi.internal.stream.internal.EventHandler;
+import io.xlate.edi.internal.stream.validation.UsageNode;
 import io.xlate.edi.schema.EDIReference;
 import io.xlate.edi.schema.EDISyntaxRule;
 import io.xlate.edi.schema.EDIType;
-import io.xlate.edi.stream.internal.EventHandler;
 
 abstract class SyntaxValidatorTestBase {
 

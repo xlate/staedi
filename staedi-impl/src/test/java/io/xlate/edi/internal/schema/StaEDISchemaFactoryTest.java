@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  ******************************************************************************/
-package io.xlate.edi.schema;
+package io.xlate.edi.internal.schema;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -24,6 +24,12 @@ import java.net.URL;
 
 import org.junit.Test;
 
+import io.xlate.edi.internal.schema.SchemaUtils;
+import io.xlate.edi.internal.schema.StaEDISchema;
+import io.xlate.edi.internal.schema.StaEDISchemaFactory;
+import io.xlate.edi.schema.EDISchemaException;
+import io.xlate.edi.schema.Schema;
+import io.xlate.edi.schema.SchemaFactory;
 import io.xlate.edi.stream.EDIStreamConstants.Standards;
 
 @SuppressWarnings("static-method")

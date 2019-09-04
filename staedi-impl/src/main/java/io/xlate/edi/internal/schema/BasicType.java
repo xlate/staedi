@@ -13,9 +13,11 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  ******************************************************************************/
-package io.xlate.edi.schema;
+package io.xlate.edi.internal.schema;
 
 import java.util.Objects;
+
+import io.xlate.edi.schema.EDIType;
 
 abstract class BasicType implements EDIType {
 

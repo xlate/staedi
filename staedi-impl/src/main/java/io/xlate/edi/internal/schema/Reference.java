@@ -13,7 +13,11 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  ******************************************************************************/
-package io.xlate.edi.schema;
+package io.xlate.edi.internal.schema;
+
+import io.xlate.edi.schema.EDIReference;
+import io.xlate.edi.schema.EDIType;
+import io.xlate.edi.schema.Schema;
 
 class Reference implements EDIReference {
 

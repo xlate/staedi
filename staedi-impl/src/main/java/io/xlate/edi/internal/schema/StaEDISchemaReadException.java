@@ -1,4 +1,4 @@
-package io.xlate.edi.schema;
+package io.xlate.edi.internal.schema;
 
 import javax.xml.stream.Location;
 

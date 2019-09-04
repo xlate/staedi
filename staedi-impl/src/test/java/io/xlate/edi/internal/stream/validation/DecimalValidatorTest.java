@@ -1,8 +1,10 @@
-package io.xlate.edi.stream.validation;
+package io.xlate.edi.internal.stream.validation;
 
 import static org.junit.Assert.*;
 
 import org.junit.Test;
+
+import io.xlate.edi.internal.stream.validation.DecimalValidator;
 
 public class DecimalValidatorTest {
 

@@ -13,12 +13,18 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  ******************************************************************************/
-package io.xlate.edi.stream;
+package io.xlate.edi.internal.stream;
 
 import java.io.OutputStream;
 
 import org.junit.Assert;
 import org.junit.Test;
+
+import io.xlate.edi.internal.stream.StaEDIOutputFactory;
+import io.xlate.edi.stream.EDIOutputFactory;
+import io.xlate.edi.stream.EDIStreamConstants;
+import io.xlate.edi.stream.EDIStreamException;
+import io.xlate.edi.stream.EDIStreamWriter;
 
 @SuppressWarnings("static-method")
 public class StaEDIOutputFactoryTest {

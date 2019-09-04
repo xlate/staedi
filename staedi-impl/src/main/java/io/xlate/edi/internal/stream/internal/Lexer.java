@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  ******************************************************************************/
-package io.xlate.edi.stream.internal;
+package io.xlate.edi.internal.stream.internal;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;

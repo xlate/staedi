@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  ******************************************************************************/
-package io.xlate.edi.stream;
+package io.xlate.edi.internal.stream;
 
 import java.io.OutputStream;
 import java.util.HashMap;
@@ -21,9 +21,14 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import io.xlate.edi.stream.EDIOutputFactory;
+import io.xlate.edi.stream.EDIStreamConstants;
+import io.xlate.edi.stream.EDIStreamException;
+import io.xlate.edi.stream.EDIStreamWriter;
+
 public class StaEDIOutputFactory extends EDIOutputFactory {
 
-    public static final String PRETTY_PRINT = "io.xlate.edi.stream.prettyPrint";
+    public static final String PRETTY_PRINT = "io.xlate.edi.internal.internal.stream.prettyPrint";
     private static final String DEFAULT_ENCODING = "US-ASCII";
 
     private final Set<String> supportedCharsets;

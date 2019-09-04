@@ -13,12 +13,14 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  ******************************************************************************/
-package io.xlate.edi.stream.validation;
+package io.xlate.edi.internal.stream.validation;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
 
+import io.xlate.edi.internal.stream.internal.EventHandler;
+import io.xlate.edi.internal.stream.internal.InternalLocation;
 import io.xlate.edi.schema.EDIComplexType;
 import io.xlate.edi.schema.EDIReference;
 import io.xlate.edi.schema.EDISchemaException;
@@ -27,8 +29,6 @@ import io.xlate.edi.schema.EDIType;
 import io.xlate.edi.schema.Schema;
 import io.xlate.edi.stream.EDIStreamValidationError;
 import io.xlate.edi.stream.Location;
-import io.xlate.edi.stream.internal.EventHandler;
-import io.xlate.edi.stream.internal.InternalLocation;
 
 public class Validator {
 

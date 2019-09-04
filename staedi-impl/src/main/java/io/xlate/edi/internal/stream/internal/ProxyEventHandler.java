@@ -13,19 +13,19 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  ******************************************************************************/
-package io.xlate.edi.stream.internal;
+package io.xlate.edi.internal.stream.internal;
 
 import java.io.InputStream;
 import java.nio.CharBuffer;
 import java.util.Iterator;
 import java.util.List;
 
+import io.xlate.edi.internal.stream.validation.Validator;
 import io.xlate.edi.schema.EDISchemaException;
 import io.xlate.edi.schema.Schema;
 import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamValidationError;
 import io.xlate.edi.stream.Location;
-import io.xlate.edi.stream.validation.Validator;
 
 public class ProxyEventHandler implements EventHandler {
 

@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  ******************************************************************************/
-package io.xlate.edi.schema;
+package io.xlate.edi.internal.schema;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,6 +21,12 @@ import java.util.Map;
 
 import org.junit.Assert;
 import org.junit.Test;
+
+import io.xlate.edi.internal.schema.SchemaUtils;
+import io.xlate.edi.internal.schema.StaEDISchema;
+import io.xlate.edi.internal.schema.StaEDISchemaFactory;
+import io.xlate.edi.schema.EDISchemaException;
+import io.xlate.edi.schema.EDIType;
 
 @SuppressWarnings({ "resource" })
 public class StaEDISchemaTest {

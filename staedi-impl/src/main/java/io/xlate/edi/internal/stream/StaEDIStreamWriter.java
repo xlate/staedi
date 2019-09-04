@@ -13,16 +13,18 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  ******************************************************************************/
-package io.xlate.edi.stream;
+package io.xlate.edi.internal.stream;
 
+import io.xlate.edi.internal.stream.internal.CharacterClass;
+import io.xlate.edi.internal.stream.internal.CharacterSet;
+import io.xlate.edi.internal.stream.internal.Dialect;
+import io.xlate.edi.internal.stream.internal.DialectFactory;
+import io.xlate.edi.internal.stream.internal.EDIException;
+import io.xlate.edi.internal.stream.internal.EDIFACTDialect;
+import io.xlate.edi.internal.stream.internal.State;
+import io.xlate.edi.stream.EDIStreamException;
+import io.xlate.edi.stream.EDIStreamWriter;
 import io.xlate.edi.stream.EDIStreamConstants.Delimiters;
-import io.xlate.edi.stream.internal.CharacterClass;
-import io.xlate.edi.stream.internal.CharacterSet;
-import io.xlate.edi.stream.internal.Dialect;
-import io.xlate.edi.stream.internal.DialectFactory;
-import io.xlate.edi.stream.internal.EDIException;
-import io.xlate.edi.stream.internal.EDIFACTDialect;
-import io.xlate.edi.stream.internal.State;
 
 import java.io.IOException;
 import java.io.InputStream;

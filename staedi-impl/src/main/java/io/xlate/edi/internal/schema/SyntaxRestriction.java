@@ -13,11 +13,13 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  ******************************************************************************/
-package io.xlate.edi.schema;
+package io.xlate.edi.internal.schema;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+
+import io.xlate.edi.schema.EDISyntaxRule;
 
 class SyntaxRestriction implements EDISyntaxRule {
 

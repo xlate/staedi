@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  ******************************************************************************/
-package io.xlate.edi.stream;
+package io.xlate.edi.internal.stream;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,6 +21,13 @@ import java.util.NoSuchElementException;
 
 import org.junit.Assert;
 import org.junit.Test;
+
+import io.xlate.edi.stream.EDIInputFactory;
+import io.xlate.edi.stream.EDIStreamEvent;
+import io.xlate.edi.stream.EDIStreamException;
+import io.xlate.edi.stream.EDIStreamFilter;
+import io.xlate.edi.stream.EDIStreamReader;
+import io.xlate.edi.stream.Location;
 
 @SuppressWarnings("resource")
 public class StaEDIFilteredStreamReaderTest implements ConstantsTest {
