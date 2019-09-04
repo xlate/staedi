@@ -21,7 +21,7 @@ import java.net.URL;
 public abstract class SchemaFactory {
 
     static final String FACTORY_ID = "io.xlate.edi.schema.SchemaFactory";
-    static final String DEFAULT_IMPL = "io.xlate.edi.schema.StaEDISchemaFactory";
+    static final String DEFAULT_IMPL = "io.xlate.edi.internal.schema.StaEDISchemaFactory";
 
     /**
      * Create a new instance of the factory. This static method creates a new

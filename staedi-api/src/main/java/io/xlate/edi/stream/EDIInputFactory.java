@@ -22,7 +22,7 @@ import java.io.InputStream;
 public abstract class EDIInputFactory {
 
     static final String FACTORY_ID = "io.xlate.edi.stream.EDIInputFactory";
-    static final String DEFAULT_IMPL = "io.xlate.edi.stream.StaEDIInputFactory";
+    static final String DEFAULT_IMPL = "io.xlate.edi.internal.stream.StaEDIInputFactory";
 
     public static EDIInputFactory newFactory() throws EDIFactoryConfigurationError {
         return FactoryFinder.find(FACTORY_ID, DEFAULT_IMPL);

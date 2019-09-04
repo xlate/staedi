@@ -20,7 +20,7 @@ import java.io.OutputStream;
 public abstract class EDIOutputFactory {
 
     static final String FACTORY_ID = "io.xlate.edi.stream.EDIOutputFactory";
-    static final String DEFAULT_IMPL = "io.xlate.edi.stream.StaEDIOutputFactory";
+    static final String DEFAULT_IMPL = "io.xlate.edi.internal.stream.StaEDIOutputFactory";
 
     /**
      * Create a new instance of the factory. This static method creates a new
