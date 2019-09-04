@@ -1,48 +1,40 @@
 /*******************************************************************************
  * Copyright 2017 xlate.io LLC, http://www.xlate.io
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
- * use this file except in compliance with the License.  You may obtain a copy
- * of the License at
- * 
- *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
  * License for the specific language governing permissions and limitations under
  * the License.
  ******************************************************************************/
 package io.xlate.edi.stream.validation;
 
 import io.xlate.edi.schema.EDISyntaxRule;
-import io.xlate.edi.stream.Location;
 import io.xlate.edi.stream.internal.EventHandler;
-
-import java.util.List;
 
 class RequiredSyntaxValidator extends SyntaxValidator {
 
-	private static final RequiredSyntaxValidator singleton =
-			new RequiredSyntaxValidator();
+    private static final RequiredSyntaxValidator singleton = new RequiredSyntaxValidator();
 
-	private RequiredSyntaxValidator() {}
+    private RequiredSyntaxValidator() {
+    }
 
-	static RequiredSyntaxValidator getInstance() {
-		return singleton;
-	}
+    static RequiredSyntaxValidator getInstance() {
+        return singleton;
+    }
 
-	@Override
-	void validate(
-			EDISyntaxRule syntax,
-			Location location,
-			List<UsageNode> children,
-			EventHandler handler) {
+    @Override
+    void validate(EDISyntaxRule syntax, UsageNode structure, EventHandler handler) {
+        SyntaxStatus status = scanSyntax(syntax, structure.getChildren());
 
-		SyntaxStatus status = super.scanSyntax(syntax, children);
-
-		if (status.elementCount < 1) {
-			signalConditionError(syntax, location, children, handler);
-		}
-	}
+        if (status.elementCount < 1) {
+            signalConditionError(syntax, structure, handler);
+        }
+    }
 }

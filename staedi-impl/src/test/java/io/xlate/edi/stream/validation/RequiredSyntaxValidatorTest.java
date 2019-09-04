@@ -18,18 +18,18 @@ import io.xlate.edi.schema.EDISyntaxRule.Type;
 import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamValidationError;
 
-public class ConditionSyntaxValidatorTest extends SyntaxValidatorTestBase {
+public class RequiredSyntaxValidatorTest extends SyntaxValidatorTestBase {
 
-    ConditionSyntaxValidator validator;
+    RequiredSyntaxValidator validator;
 
     @Before
     public void setUp() {
-        validator = (ConditionSyntaxValidator) SyntaxValidator.getInstance(Type.CONDITIONAL);
+        validator = (RequiredSyntaxValidator) SyntaxValidator.getInstance(Type.REQUIRED);
         super.setUp();
     }
 
     @Test
-    public void testValidateConditionalAllUsed() {
+    public void testValidateRequiredAllUsed() {
         when(syntax.getPositions()).thenReturn(Arrays.asList(1, 3, 4));
         List<UsageNode> children = Arrays.asList(mockUsageNode(true, 1),
                                                  mockUsageNode(false, 2),
@@ -53,7 +53,31 @@ public class ConditionSyntaxValidatorTest extends SyntaxValidatorTestBase {
     }
 
     @Test
-    public void testValidateConditionalAnchorUnused() {
+    public void testValidateRequiredNoneUsed() {
+        when(syntax.getPositions()).thenReturn(Arrays.asList(1, 3, 4));
+        List<UsageNode> children = Arrays.asList(mockUsageNode(false, 1),
+                                                 mockUsageNode(false, 2),
+                                                 mockUsageNode(false, 3),
+                                                 mockUsageNode(false, 4));
+        when(structure.getChildren()).thenReturn(children);
+        final AtomicInteger count = new AtomicInteger(0);
+
+        doAnswer((Answer<Void>) invocation -> {
+            count.incrementAndGet();
+            return null;
+        }).when(handler)
+          .elementError(eq(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR),
+                        eq(EDIStreamValidationError.CONDITIONAL_REQUIRED_DATA_ELEMENT_MISSING),
+                        any(Integer.class),
+                        any(Integer.class),
+                        any(Integer.class));
+
+        validator.validate(syntax, structure, handler);
+        assertEquals(3, count.get());
+    }
+
+    @Test
+    public void testValidateRequiredAnchorUnused() {
         when(syntax.getPositions()).thenReturn(Arrays.asList(1, 3, 4));
         List<UsageNode> children = Arrays.asList(mockUsageNode(false, 1),
                                                  mockUsageNode(false, 2),
@@ -76,12 +100,12 @@ public class ConditionSyntaxValidatorTest extends SyntaxValidatorTestBase {
     }
 
     @Test
-    public void testValidateConditionalMissingRequired() {
+    public void testValidateRequiredNonmemberUsed() {
         when(syntax.getPositions()).thenReturn(Arrays.asList(1, 3, 4));
-        List<UsageNode> children = Arrays.asList(mockUsageNode(true, 1),
-                                                 mockUsageNode(false, 2),
+        List<UsageNode> children = Arrays.asList(mockUsageNode(false, 1),
+                                                 mockUsageNode(true, 2),
                                                  mockUsageNode(false, 3),
-                                                 mockUsageNode(true, 4));
+                                                 mockUsageNode(false, 4));
         when(structure.getChildren()).thenReturn(children);
         final AtomicInteger count = new AtomicInteger(0);
 
@@ -96,6 +120,6 @@ public class ConditionSyntaxValidatorTest extends SyntaxValidatorTestBase {
                         any(Integer.class));
 
         validator.validate(syntax, structure, handler);
-        assertEquals(1, count.get());
+        assertEquals(3, count.get());
     }
 }

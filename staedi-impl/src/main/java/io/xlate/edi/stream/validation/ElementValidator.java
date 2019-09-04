@@ -28,7 +28,7 @@ abstract class ElementValidator {
         case IDENTIFIER:
         case STRING:
             return AlphaNumericValidator.getInstance();
-        case INTEGER:
+        case NUMERIC:
             return NumericValidator.getInstance();
         case DECIMAL:
             return DecimalValidator.getInstance();

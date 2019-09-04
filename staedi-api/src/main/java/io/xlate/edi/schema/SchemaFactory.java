@@ -44,8 +44,7 @@ public abstract class SchemaFactory {
      * @throws EDISchemaFactoryConfigurationError
      *             if an instance of this factory cannot be loaded
      */
-    public static SchemaFactory newFactory()
-                                             throws EDISchemaFactoryConfigurationError {
+    public static SchemaFactory newFactory() throws EDISchemaFactoryConfigurationError {
         return FactoryFinder.find(FACTORY_ID, DEFAULT_IMPL);
     }
 
@@ -63,15 +62,12 @@ public abstract class SchemaFactory {
      */
     public static SchemaFactory newFactory(String factoryId,
                                            ClassLoader classLoader) throws EDISchemaFactoryConfigurationError {
-
         return FactoryFinder.newInstance(factoryId, classLoader, false);
     }
 
-    public abstract Schema createSchema(URL location)
-                                                      throws EDISchemaException;
+    public abstract Schema createSchema(URL location) throws EDISchemaException;
 
-    public abstract Schema createSchema(InputStream stream)
-                                                            throws EDISchemaException;
+    public abstract Schema createSchema(InputStream stream) throws EDISchemaException;
 
     /**
      * Query the set of properties that this factory supports.

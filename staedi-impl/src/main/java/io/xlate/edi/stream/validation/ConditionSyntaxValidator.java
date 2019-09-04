@@ -16,10 +16,7 @@
 package io.xlate.edi.stream.validation;
 
 import io.xlate.edi.schema.EDISyntaxRule;
-import io.xlate.edi.stream.Location;
 import io.xlate.edi.stream.internal.EventHandler;
-
-import java.util.List;
 
 class ConditionSyntaxValidator extends SyntaxValidator {
 
@@ -33,11 +30,11 @@ class ConditionSyntaxValidator extends SyntaxValidator {
     }
 
     @Override
-    void validate(EDISyntaxRule syntax, Location location, List<UsageNode> children, EventHandler handler) {
-        SyntaxStatus status = scanSyntax(syntax, children);
+    void validate(EDISyntaxRule syntax, UsageNode structure, EventHandler handler) {
+        SyntaxStatus status = scanSyntax(syntax, structure.getChildren());
 
         if (status.anchorPresent && status.elementCount < syntax.getPositions().size()) {
-            signalConditionError(syntax, location, children, handler);
+            signalConditionError(syntax, structure, handler);
         }
     }
 }

@@ -1,9 +1,9 @@
 package io.xlate.edi.stream.validation;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
@@ -14,43 +14,29 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.stubbing.Answer;
 
-import io.xlate.edi.schema.EDISyntaxRule;
+import io.xlate.edi.schema.EDISyntaxRule.Type;
 import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamValidationError;
-import io.xlate.edi.stream.Location;
-import io.xlate.edi.stream.internal.EventHandler;
 
-public class ExclusionSyntaxValidatorTest {
+public class ExclusionSyntaxValidatorTest extends SyntaxValidatorTestBase {
 
     ExclusionSyntaxValidator validator;
 
-    EDISyntaxRule syntax;
-    Location location;
-    EventHandler handler;
-    UsageNode used;
-    UsageNode unused;
-
     @Before
     public void setUp() {
-        validator = ExclusionSyntaxValidator.getInstance();
-
-        syntax = mock(EDISyntaxRule.class);
-        when(syntax.getType()).thenReturn(EDISyntaxRule.Type.EXCLUSION);
-
-        location = mock(Location.class);
-        handler = mock(EventHandler.class);
-
-        used = mock(UsageNode.class);
-        when(used.isUsed()).thenReturn(true);
-
-        unused = mock(UsageNode.class);
-        when(unused.isUsed()).thenReturn(false);
+        validator = (ExclusionSyntaxValidator) SyntaxValidator.getInstance(Type.EXCLUSION);
+        super.setUp();
     }
 
     @Test
     public void testValidateExclusionAllUsed() {
         when(syntax.getPositions()).thenReturn(Arrays.asList(1, 3, 4));
-        List<UsageNode> children = Arrays.asList(used, unused, used, used);
+        List<UsageNode> children = Arrays.asList(mockUsageNode(true, 1),
+                                                 mockUsageNode(false, 2),
+                                                 mockUsageNode(true, 3),
+                                                 mockUsageNode(true, 4));
+        when(structure.getChildren()).thenReturn(children);
+
         final AtomicInteger count = new AtomicInteger(0);
 
         doAnswer((Answer<Void>) invocation -> {
@@ -63,14 +49,17 @@ public class ExclusionSyntaxValidatorTest {
                         any(Integer.class),
                         any(Integer.class));
 
-        validator.validate(syntax, location, children, handler);
+        validator.validate(syntax, structure, handler);
         assertEquals(2, count.get());
     }
 
     @Test
     public void testValidateExclusionNonAnchorUsed() {
         when(syntax.getPositions()).thenReturn(Arrays.asList(1, 3, 4));
-        List<UsageNode> children = Arrays.asList(unused, unused, used);
+        List<UsageNode> children = Arrays.asList(mockUsageNode(false, 1),
+                                                 mockUsageNode(false, 2),
+                                                 mockUsageNode(true, 3));
+        when(structure.getChildren()).thenReturn(children);
         final AtomicInteger count = new AtomicInteger(0);
 
         doAnswer((Answer<Void>) invocation -> {
@@ -83,14 +72,18 @@ public class ExclusionSyntaxValidatorTest {
                         any(Integer.class),
                         any(Integer.class));
 
-        validator.validate(syntax, location, children, handler);
+        validator.validate(syntax, structure, handler);
         assertEquals(0, count.get());
     }
 
     @Test
     public void testValidateExclusionNoneUsed() {
         when(syntax.getPositions()).thenReturn(Arrays.asList(1, 3, 4));
-        List<UsageNode> children = Arrays.asList(unused, unused, unused, unused);
+        List<UsageNode> children = Arrays.asList(mockUsageNode(false, 1),
+                                                 mockUsageNode(false, 2),
+                                                 mockUsageNode(false, 3)/*,
+                                                                        mockUsageNode(false, 4)*/);
+        when(structure.getChildren()).thenReturn(children);
         final AtomicInteger count = new AtomicInteger(0);
 
         doAnswer((Answer<Void>) invocation -> {
@@ -103,7 +96,7 @@ public class ExclusionSyntaxValidatorTest {
                         any(Integer.class),
                         any(Integer.class));
 
-        validator.validate(syntax, location, children, handler);
+        validator.validate(syntax, structure, handler);
         assertEquals(0, count.get());
     }
 }

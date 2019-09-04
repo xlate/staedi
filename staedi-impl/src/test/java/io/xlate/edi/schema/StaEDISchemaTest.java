@@ -37,7 +37,7 @@ public class StaEDISchemaTest {
         InputStream schemaStream = SchemaUtils.getStreams("X12/v00402.xml")
                                               .nextElement()
                                               .openStream();
-        Map<String, EDIType> types = StaEDISchemaFactory.loadTypes(schemaStream);
+        Map<String, EDIType> types = new StaEDISchemaFactory().loadTypes(schemaStream);
         schema.setTypes(types);
 
         Assert.assertEquals(EDIType.Type.LOOP, schema.getType(StaEDISchema.MAIN).getType());

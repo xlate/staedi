@@ -21,7 +21,7 @@ public interface EDISimpleType extends EDIType {
 
     public enum Base {
         STRING,
-        INTEGER,
+        NUMERIC,
         DECIMAL,
         DATE,
         TIME,

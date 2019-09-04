@@ -2,14 +2,14 @@
  * Copyright 2017 xlate.io LLC, http://www.xlate.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
- * use this file except in compliance with the License.  You may obtain a copy
- * of the License at
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
  * License for the specific language governing permissions and limitations under
  * the License.
  ******************************************************************************/
@@ -32,567 +32,495 @@ import io.xlate.edi.stream.internal.InternalLocation;
 
 public class Validator {
 
-	private Schema schema;
-	private final UsageNode root;
+    private Schema schema;
+    private final UsageNode root;
 
-	private boolean segmentExpected;
-	private UsageNode segment;
-	private UsageNode correctSegment;
-	private UsageNode element;
-	private UsageNode composite;
+    private boolean segmentExpected;
+    private UsageNode segment;
+    private UsageNode correctSegment;
+    private UsageNode element;
+    private UsageNode composite;
 
-	final private List<String> mandatory = new ArrayList<>();
-	final private List<EDIStreamValidationError> elementErrors = new ArrayList<>(5);
+    final private List<String> mandatory = new ArrayList<>();
+    final private List<EDIStreamValidationError> elementErrors = new ArrayList<>(5);
 
-	private int depth;
+    private int depth;
 
-	public Validator(Schema schema) {
-		super();
+    public Validator(Schema schema) {
+        super();
 
-		this.schema = schema;
-		root = buildTree(schema.getMainLoop());
-		correctSegment = segment = root.getFirstChild();
+        this.schema = schema;
+        root = buildTree(schema.getMainLoop());
+        correctSegment = segment = root.getFirstChild();
 
-		depth = 1;
-	}
+        depth = 1;
+    }
 
-	public Schema addSchema(Schema addedSchema) throws EDISchemaException {
-		final UsageNode parent = correctSegment.getParent();
-		final UsageNode next = correctSegment.getNextSibling();
+    public Schema addSchema(Schema addedSchema) throws EDISchemaException {
+        final UsageNode parent = correctSegment.getParent();
+        final UsageNode next = correctSegment.getNextSibling();
 
-		final EDIComplexType parentType;
-		final EDIReference childType;
+        final EDIComplexType parentType;
+        final EDIReference childType;
 
-		parentType = (EDIComplexType) parent.getReferencedType();
+        parentType = (EDIComplexType) parent.getReferencedType();
 
-		if (next != null) {
-			childType = next.getReference();
-		} else {
-			childType = null;
-		}
+        if (next != null) {
+            childType = next.getReference();
+        } else {
+            childType = null;
+        }
 
-		this.schema = this.schema.reference(addedSchema, parentType, childType);
-		List<? extends EDIReference> refs = addedSchema.getMainLoop().getReferences();
-		ListIterator<UsageNode> siblings = parent.getChildren().listIterator();
-		int index = 0;
+        this.schema = this.schema.reference(addedSchema, parentType, childType);
+        List<? extends EDIReference> refs = addedSchema.getMainLoop().getReferences();
+        ListIterator<UsageNode> siblings = parent.getChildren().listIterator();
+        int index = 0;
 
-		while (siblings.hasNext()) {
-			index++;
+        while (siblings.hasNext()) {
+            index++;
 
-			if (siblings.next().equals(correctSegment)) {
-				for (EDIReference ref : refs) {
-					siblings.add(buildTree(parent, ref, index++));
-				}
+            if (siblings.next().equals(correctSegment)) {
+                for (EDIReference ref : refs) {
+                    siblings.add(buildTree(parent, ref, index++));
+                }
 
-				while (siblings.hasNext()) {
-					siblings.next().setIndex(index++);
-				}
-			}
-		}
+                while (siblings.hasNext()) {
+                    siblings.next().setIndex(index++);
+                }
+            }
+        }
 
-		//checkUsageTree(this.correctSegment);
-		return this.schema;
-	}
+        //checkUsageTree(this.correctSegment);
+        return this.schema;
+    }
 
-	public String getCompositeReferenceCode() {
-		return composite != null ? composite.getCode() : null;
-	}
+    public String getCompositeReferenceCode() {
+        return composite != null ? composite.getCode() : null;
+    }
 
-	public String getElementReferenceNumber() {
-		int number = (element != null) ? element.getNumber() : -1;
-		return (number > -1) ? String.valueOf(number) : null;
-	}
+    public String getElementReferenceNumber() {
+        int number = (element != null) ? element.getNumber() : -1;
+        return (number > -1) ? String.valueOf(number) : null;
+    }
 
-	private static EDIReference referenceOf(final EDIComplexType root) {
-		return new EDIReference() {
-			@Override
-			public EDIType getReferencedType() {
-				return root;
-			}
+    private static EDIReference referenceOf(final EDIComplexType root) {
+        return new EDIReference() {
+            @Override
+            public EDIType getReferencedType() {
+                return root;
+            }
 
-			@Override
-			public int getMinOccurs() {
-				return 1;
-			}
+            @Override
+            public int getMinOccurs() {
+                return 1;
+            }
 
-			@Override
-			public int getMaxOccurs() {
-				return 1;
-			}
-		};
-	}
+            @Override
+            public int getMaxOccurs() {
+                return 1;
+            }
+        };
+    }
 
-	private static UsageNode buildTree(final EDIComplexType root) {
-		return buildTree(null, referenceOf(root), -1);
-	}
+    private static UsageNode buildTree(final EDIComplexType root) {
+        return buildTree(null, referenceOf(root), -1);
+    }
 
-	private static UsageNode buildTree(UsageNode parent, EDIReference link, int index) {
+    private static UsageNode buildTree(UsageNode parent, EDIReference link, int index) {
 
-		EDIType referencedNode = link.getReferencedType();
+        EDIType referencedNode = link.getReferencedType();
 
-		UsageNode node = new UsageNode(parent, link, index);
+        UsageNode node = new UsageNode(parent, link, index);
 
-		if (!(referencedNode instanceof EDIComplexType)) {
-			return node;
-		}
+        if (!(referencedNode instanceof EDIComplexType)) {
+            return node;
+        }
 
-		EDIComplexType structure = (EDIComplexType) referencedNode;
+        EDIComplexType structure = (EDIComplexType) referencedNode;
 
-		List<? extends EDIReference> children = structure.getReferences();
-		List<UsageNode> childUsages = node.getChildren();
+        List<? extends EDIReference> children = structure.getReferences();
+        List<UsageNode> childUsages = node.getChildren();
 
-		int childIndex = -1;
+        int childIndex = -1;
 
-		for (EDIReference child : children) {
-			childUsages.add(buildTree(node, child, ++childIndex));
-		}
+        for (EDIReference child : children) {
+            childUsages.add(buildTree(node, child, ++childIndex));
+        }
 
-		return node;
-	}
+        return node;
+    }
 
-	private UsageNode startLoop(UsageNode loop) {
+    private UsageNode startLoop(UsageNode loop) {
 
-		loop.incrementUsage();
-		loop.resetChildren();
+        loop.incrementUsage();
+        loop.resetChildren();
 
-		UsageNode startSegment = loop.getFirstChild();
+        UsageNode startSegment = loop.getFirstChild();
 
-		startSegment.reset();
-		startSegment.incrementUsage();
+        startSegment.reset();
+        startSegment.incrementUsage();
 
-		depth++;
+        depth++;
 
-		return startSegment;
-	}
+        return startSegment;
+    }
 
-	private void completeLoops(EventHandler handler, int d, UsageNode node) {
-		while (this.depth < d--) {
-			node = node.getParent();
-			handler.loopEnd(node.getCode());
-		}
-	}
+    private void completeLoops(EventHandler handler, int d, UsageNode node) {
+        while (this.depth < d--) {
+            node = node.getParent();
+            handler.loopEnd(node.getCode());
+        }
+    }
 
-	public void validateSegment(EventHandler handler, CharSequence tag) {
-		segmentExpected = true;
+    public void validateSegment(EventHandler handler, CharSequence tag) {
+        segmentExpected = true;
 
-		final int startDepth = this.depth;
-		final UsageNode startNode = correctSegment;
+        final int startDepth = this.depth;
+        final UsageNode startNode = correctSegment;
 
-		UsageNode current = startNode;
-		//checkUsageTree(startNode);
-		mandatory.clear();
+        UsageNode current = startNode;
+        //checkUsageTree(startNode);
+        mandatory.clear();
 
-		scan:
-		while (current != null) {
-			switch (current.getNodeType()) {
-			case SEGMENT:
-				if (!current.getId().contentEquals(tag)) {
-					/*
-					 * The schema segment does not match the segment tag found
-					 * in the stream.
-					 */
-					break;
-				}
+        scan: while (current != null) {
+            switch (current.getNodeType()) {
+            case SEGMENT:
+                if (!current.getId().contentEquals(tag)) {
+                    /*
+                     * The schema segment does not match the segment tag found
+                     * in the stream.
+                     */
+                    break;
+                }
 
-				if (current.isUsed() && current.isFirstChild()) {
-					/*
-					 * The current segment is the first segment in the loop and
-					 * the loop has previous occurrences. Scan all segments in
-					 * the loop to determine if any segments in the previous
-					 * occurrence did not meet the minimum usage requirements.
-					 */
-					UsageNode parent = current.getParent();
+                if (current.isUsed() && current.isFirstChild()) {
+                    /*
+                     * The current segment is the first segment in the loop and
+                     * the loop has previous occurrences. Scan all segments in
+                     * the loop to determine if any segments in the previous
+                     * occurrence did not meet the minimum usage requirements.
+                     */
+                    UsageNode parent = current.getParent();
 
-					for (UsageNode sibling : parent.getChildren()) {
-						if (!sibling.hasMinimumUsage()) {
-							mandatory.add(sibling.getId());
-						}
+                    for (UsageNode sibling : parent.getChildren()) {
+                        if (!sibling.hasMinimumUsage()) {
+                            mandatory.add(sibling.getId());
+                        }
 
-						sibling.reset();
-					}
+                        sibling.reset();
+                    }
 
-					if (parent.isNodeType(EDIType.Type.LOOP)) {
-						String loopId = parent.getCode();
-						handler.loopEnd(loopId);
-						handler.loopBegin(loopId);
-					}
-				}
+                    if (parent.isNodeType(EDIType.Type.LOOP)) {
+                        String loopId = parent.getCode();
+                        handler.loopEnd(loopId);
+                        handler.loopBegin(loopId);
+                    }
+                }
 
-				completeLoops(handler, startDepth, startNode);
-				current.incrementUsage();
-				current.resetChildren();
+                completeLoops(handler, startDepth, startNode);
+                current.incrementUsage();
+                current.resetChildren();
 
-				if (current.exceedsMaximumUsage()) {
-					handleMissingMandatory(handler);
-					handler.segmentError(
-							current.getId(),
-							EDIStreamValidationError.SEGMENT_EXCEEDS_MAXIMUM_USE);
-				}
+                if (current.exceedsMaximumUsage()) {
+                    handleMissingMandatory(handler);
+                    handler.segmentError(
+                                         current.getId(),
+                                         EDIStreamValidationError.SEGMENT_EXCEEDS_MAXIMUM_USE);
+                }
 
-				correctSegment = segment = current;
-				break scan;
-			case LOOP:
-				if (!current.getFirstChild().getId().contentEquals(tag)) {
-					break;
-				}
+                correctSegment = segment = current;
+                break scan;
+            case LOOP:
+                if (!current.getFirstChild().getId().contentEquals(tag)) {
+                    break;
+                }
 
-				completeLoops(handler, startDepth, startNode);
-				handler.loopBegin(current.getCode());
-				current.incrementUsage();
+                completeLoops(handler, startDepth, startNode);
+                handler.loopBegin(current.getCode());
+                current.incrementUsage();
 
-				if (current.exceedsMaximumUsage()) {
-					handleMissingMandatory(handler);
-					handler.segmentError(
-							tag,
-							EDIStreamValidationError.LOOP_OCCURS_OVER_MAXIMUM_TIMES);
-				}
+                if (current.exceedsMaximumUsage()) {
+                    handleMissingMandatory(handler);
+                    handler.segmentError(
+                                         tag,
+                                         EDIStreamValidationError.LOOP_OCCURS_OVER_MAXIMUM_TIMES);
+                }
 
-				correctSegment = segment = startLoop(current);
-				break scan;
-			default:
-				break;
-			}
+                correctSegment = segment = startLoop(current);
+                break scan;
+            default:
+                break;
+            }
 
-			if (!current.hasMinimumUsage()) {
-				/*
-				 * The schema segment has not met it's minimum usage
-				 * requirement.
-				 */
-				switch (current.getNodeType()) {
-				case SEGMENT:
-					mandatory.add(current.getId());
-					break;
-				case LOOP:
-					mandatory.add(current.getFirstChild().getId());
-					break;
+            if (!current.hasMinimumUsage()) {
+                /*
+                 * The schema segment has not met it's minimum usage
+                 * requirement.
+                 */
+                switch (current.getNodeType()) {
+                case SEGMENT:
+                    mandatory.add(current.getId());
+                    break;
+                case LOOP:
+                    mandatory.add(current.getFirstChild().getId());
+                    break;
                 default:
                     break;
-				}
-			}
+                }
+            }
 
-			UsageNode next = current.getNextSibling();
+            UsageNode next = current.getNextSibling();
 
-			if (next != null) {
-				current = next;
-				continue scan;
-			}
+            if (next != null) {
+                current = next;
+                continue scan;
+            }
 
-			if (this.depth == startDepth && current != startNode) {
-				/*
-				 * End of the loop; try to see if we can find the segment among
-				 * the siblings of the last good segment. If the last good
-				 * segment was the final segment of the loop, do not search
-				 * here. Rather, go up a level and continue searching from
-				 * there.
-				 */
-				next = current.getSiblingById(tag);
+            if (this.depth == startDepth && current != startNode) {
+                /*
+                 * End of the loop; try to see if we can find the segment among
+                 * the siblings of the last good segment. If the last good
+                 * segment was the final segment of the loop, do not search
+                 * here. Rather, go up a level and continue searching from
+                 * there.
+                 */
+                next = current.getSiblingById(tag);
 
-				if (next != null) {
-					if (!next.isFirstChild()) {
-						mandatory.clear();
-						handler.segmentError(
-								next.getId(),
-								EDIStreamValidationError.SEGMENT_NOT_IN_PROPER_SEQUENCE);
+                if (next != null) {
+                    if (!next.isFirstChild()) {
+                        mandatory.clear();
+                        handler.segmentError(next.getId(),
+                                             EDIStreamValidationError.SEGMENT_NOT_IN_PROPER_SEQUENCE);
 
-						next.incrementUsage();
+                        next.incrementUsage();
 
-						if (next.exceedsMaximumUsage()) {
-							handler.segmentError(
-									next.getId(),
-									EDIStreamValidationError.SEGMENT_EXCEEDS_MAXIMUM_USE);
-						}
+                        if (next.exceedsMaximumUsage()) {
+                            handler.segmentError(next.getId(),
+                                                 EDIStreamValidationError.SEGMENT_EXCEEDS_MAXIMUM_USE);
+                        }
 
-						segment = next;
-						break scan;
-					}
-				}
-			}
+                        segment = next;
+                        break scan;
+                    }
+                }
+            }
 
-			if (this.depth > 1) {
-				current = current.getParent();
-				this.depth--;
-			} else {
-				current = this.root.getFirstChild();
+            if (this.depth > 1) {
+                current = current.getParent();
+                this.depth--;
+            } else {
+                current = this.root.getFirstChild();
 
-				if (!current.getId().contentEquals(tag)) {
-					// Unexpected segment... must reset our position!
-					segmentExpected = false;
-					this.depth = startDepth;
+                if (!current.getId().contentEquals(tag)) {
+                    // Unexpected segment... must reset our position!
+                    segmentExpected = false;
+                    this.depth = startDepth;
 
-					mandatory.clear();
+                    mandatory.clear();
 
-					if (schema.containsSegment(tag.toString())) {
-						handler.segmentError(
-								tag,
-								EDIStreamValidationError.UNEXPECTED_SEGMENT);
-					} else {
-						handler.segmentError(
-								tag,
-								EDIStreamValidationError.SEGMENT_NOT_IN_DEFINED_TRANSACTION_SET);
-					}
+                    if (schema.containsSegment(tag.toString())) {
+                        handler.segmentError(tag,
+                                             EDIStreamValidationError.UNEXPECTED_SEGMENT);
+                    } else {
+                        handler.segmentError(tag,
+                                             EDIStreamValidationError.SEGMENT_NOT_IN_DEFINED_TRANSACTION_SET);
+                    }
 
-					break scan; // Wasn't found; cut our losses and go back.
-				}
-			}
-		}
+                    break scan; // Wasn't found; cut our losses and go back.
+                }
+            }
+        }
 
-		handleMissingMandatory(handler);
-	}
+        handleMissingMandatory(handler);
+    }
 
-	private void handleMissingMandatory(EventHandler handler) {
-		for (String id : mandatory) {
-			handler.segmentError(id, EDIStreamValidationError.MANDATORY_SEGMENT_MISSING);
-		}
-		mandatory.clear();
-	}
+    private void handleMissingMandatory(EventHandler handler) {
+        for (String id : mandatory) {
+            handler.segmentError(id, EDIStreamValidationError.MANDATORY_SEGMENT_MISSING);
+        }
+        mandatory.clear();
+    }
 
-	public List<EDIStreamValidationError> getElementErrors() {
-		return elementErrors;
-	}
+    public List<EDIStreamValidationError> getElementErrors() {
+        return elementErrors;
+    }
 
-	public boolean validCompositeOccurrences(Location position) {
-		if (!segmentExpected) {
-			return true;
-		}
+    public boolean validCompositeOccurrences(Location position) {
+        if (!segmentExpected) {
+            return true;
+        }
 
-		int elementPosition = position.getElementPosition() - 1;
-		int componentIndex = position.getComponentPosition() - 1;
-		elementErrors.clear();
-		this.composite = null;
-		this.element = segment.getChild(elementPosition);
+        int elementPosition = position.getElementPosition() - 1;
+        int componentIndex = position.getComponentPosition() - 1;
+        elementErrors.clear();
+        this.composite = null;
+        this.element = segment.getChild(elementPosition);
 
-		if (element == null) {
-			elementErrors.add(EDIStreamValidationError.TOO_MANY_DATA_ELEMENTS);
-			this.element = null;
-			return false;
-		} else if (!element.isNodeType(EDIType.Type.COMPOSITE)) {
-			this.element.incrementUsage();
+        if (element == null) {
+            elementErrors.add(EDIStreamValidationError.TOO_MANY_DATA_ELEMENTS);
+            this.element = null;
+            return false;
+        } else if (!element.isNodeType(EDIType.Type.COMPOSITE)) {
+            this.element.incrementUsage();
 
-			if (this.element.exceedsMaximumUsage()) {
-				elementErrors.add(EDIStreamValidationError.TOO_MANY_REPETITIONS);
-				return false;
-			}
+            if (this.element.exceedsMaximumUsage()) {
+                elementErrors.add(EDIStreamValidationError.TOO_MANY_REPETITIONS);
+                return false;
+            }
 
-			// There are too many components - validate in element validation
-			return true;
-		} else if (componentIndex > -1) {
-			throw new IllegalStateException("Invalid position w/in composite");
-		}
+            // There are too many components - validate in element validation
+            return true;
+        } else if (componentIndex > -1) {
+            throw new IllegalStateException("Invalid position w/in composite");
+        }
 
-		this.composite = this.element;
-		this.element = null;
+        this.composite = this.element;
+        this.element = null;
 
-		if (elementPosition >= segment.getChildren().size()) {
-			elementErrors.add(EDIStreamValidationError.TOO_MANY_DATA_ELEMENTS);
-			return false;
-		}
+        if (elementPosition >= segment.getChildren().size()) {
+            elementErrors.add(EDIStreamValidationError.TOO_MANY_DATA_ELEMENTS);
+            return false;
+        }
 
-		this.composite.incrementUsage();
+        this.composite.incrementUsage();
 
-		if (this.composite.exceedsMaximumUsage()) {
-			elementErrors.add(EDIStreamValidationError.TOO_MANY_REPETITIONS);
-			return false;
-		}
+        if (this.composite.exceedsMaximumUsage()) {
+            elementErrors.add(EDIStreamValidationError.TOO_MANY_REPETITIONS);
+            return false;
+        }
 
-		return true;
-	}
+        return true;
+    }
 
-	public boolean isComposite() {
-		return composite != null;
-	}
+    public boolean isComposite() {
+        return composite != null;
+    }
 
-	public boolean validateElement(InternalLocation position, CharSequence value) {
-		if (!segmentExpected) {
-			return true;
-		}
+    public boolean validateElement(InternalLocation position, CharSequence value) {
+        if (!segmentExpected) {
+            return true;
+        }
 
-		boolean valueReceived = value != null && value.length() > 0;
-		elementErrors.clear();
-		this.composite = null;
-		this.element = null;
+        boolean valueReceived = value != null && value.length() > 0;
+        elementErrors.clear();
+        this.composite = null;
+        this.element = null;
 
-		int elementPosition = position.getElementPosition() - 1;
-		int componentIndex = position.getComponentPosition() - 1;
+        int elementPosition = position.getElementPosition() - 1;
+        int componentIndex = position.getComponentPosition() - 1;
 
-		if (elementPosition >= segment.getChildren().size()) {
-			if (componentIndex < 0) {
-				/*
-				 * Only notify if this is not a composite - handled in
-				 * validCompositeOccurrences
-				 */
-				elementErrors.add(EDIStreamValidationError.TOO_MANY_DATA_ELEMENTS);
-				return false;
-			}
+        if (elementPosition >= segment.getChildren().size()) {
+            if (componentIndex < 0) {
+                /*
+                 * Only notify if this is not a composite - handled in
+                 * validCompositeOccurrences
+                 */
+                elementErrors.add(EDIStreamValidationError.TOO_MANY_DATA_ELEMENTS);
+                return false;
+            }
 
-			/*
-			 * Undefined element - unable to report errors.
-			 */
-			return true;
-		}
+            /*
+             * Undefined element - unable to report errors.
+             */
+            return true;
+        }
 
-		this.element = segment.getChild(elementPosition);
-		boolean isComposite = element.isNodeType(EDIType.Type.COMPOSITE);
-		boolean derivedComposite = false;
+        this.element = segment.getChild(elementPosition);
+        boolean isComposite = element.isNodeType(EDIType.Type.COMPOSITE);
+        boolean derivedComposite = false;
 
-		if (isComposite) {
-			this.composite = this.element;
+        if (isComposite) {
+            this.composite = this.element;
 
-			if (componentIndex < 0) {
-				derivedComposite = true;
-				componentIndex = 0;
-			}
-		}
+            if (componentIndex < 0) {
+                derivedComposite = true;
+                componentIndex = 0;
+            }
+        }
 
-		if (componentIndex > -1) {
-			if (!isComposite) {
-				/*
-				 * This element has components but is not defined as a composite
-				 * structure.
-				 */
-				elementErrors.add(EDIStreamValidationError.TOO_MANY_COMPONENTS);
-			} else {
-				if (componentIndex == 0) {
-					this.element.resetChildren();
-				}
+        if (componentIndex > -1) {
+            if (!isComposite) {
+                /*
+                 * This element has components but is not defined as a composite
+                 * structure.
+                 */
+                elementErrors.add(EDIStreamValidationError.TOO_MANY_COMPONENTS);
+            } else {
+                if (componentIndex == 0) {
+                    this.element.resetChildren();
+                }
 
-				if (componentIndex < element.getChildren().size()) {
-					if (valueReceived || !derivedComposite) {
-						this.element = this.element.getChild(componentIndex);
-					}
-				} else {
-					elementErrors.add(EDIStreamValidationError.TOO_MANY_COMPONENTS);
-				}
-			}
-		}
+                if (componentIndex < element.getChildren().size()) {
+                    if (valueReceived || !derivedComposite) {
+                        this.element = this.element.getChild(componentIndex);
+                    }
+                } else {
+                    elementErrors.add(EDIStreamValidationError.TOO_MANY_COMPONENTS);
+                }
+            }
+        }
 
-		if (!elementErrors.isEmpty()) {
-			return false;
-		}
+        if (!elementErrors.isEmpty()) {
+            return false;
+        }
 
-		if (valueReceived) {
-			if (!isComposite) {
-				this.element.incrementUsage();
+        if (valueReceived) {
+            if (!isComposite) {
+                this.element.incrementUsage();
 
-				if (this.element.exceedsMaximumUsage()) {
-					elementErrors.add(EDIStreamValidationError.TOO_MANY_REPETITIONS);
-				}
-			}
+                if (this.element.exceedsMaximumUsage()) {
+                    elementErrors.add(EDIStreamValidationError.TOO_MANY_REPETITIONS);
+                }
+            }
 
-			this.element.validate(value, elementErrors);
-		} else {
-			if (!element.hasMinimumUsage()) {
-				elementErrors.add(EDIStreamValidationError.REQUIRED_DATA_ELEMENT_MISSING);
-			}
-		}
+            this.element.validate(value, elementErrors);
+        } else {
+            if (!element.hasMinimumUsage()) {
+                elementErrors.add(EDIStreamValidationError.REQUIRED_DATA_ELEMENT_MISSING);
+            }
+        }
 
-		return elementErrors.isEmpty();
-	}
+        return elementErrors.isEmpty();
+    }
 
-	public void validateSyntax(EventHandler handler, final InternalLocation location, final boolean isComposite) {
-		if (isComposite && composite == null) {
-			// End composite but element is not composite in schema
-			return;
-		}
+    public void validateSyntax(EventHandler handler, final InternalLocation location, final boolean isComposite) {
+        if (isComposite && composite == null) {
+            // End composite but element is not composite in schema
+            return;
+        }
 
-		final UsageNode structure = isComposite ? composite : segment;
+        final UsageNode structure = isComposite ? composite : segment;
 
-		final int index;
+        final int index;
 
-		if (isComposite) {
-			int componentPosition = location.getComponentPosition();
+        if (isComposite) {
+            int componentPosition = location.getComponentPosition();
 
-			if (componentPosition < 1) {
-				index = 1;
-			} else {
-				index = componentPosition;
-			}
-		} else {
-			index = location.getElementPosition();
-		}
+            if (componentPosition < 1) {
+                index = 1;
+            } else {
+                index = componentPosition;
+            }
+        } else {
+            index = location.getElementPosition();
+        }
 
-		final List<UsageNode> children = structure.getChildren();
-		//final ReadAheadLocation proxy = new ReadAheadLocation(location, isComposite);
+        final List<UsageNode> children = structure.getChildren();
 
-		for (int i = index, max = children.size(); i < max; i++) {
-			if (isComposite) {
-				location.incrementComponentPosition();
-			} else {
-				location.incrementElementPosition();
-			}
-			//proxy.increment();
-			handler.elementData(null, 0, 0);
-		}
+        for (int i = index, max = children.size(); i < max; i++) {
+            if (isComposite) {
+                location.incrementComponentPosition();
+            } else {
+                location.incrementElementPosition();
+            }
 
-		for (EDISyntaxRule rule : structure.getSyntaxRules()) {
-			final EDISyntaxRule.Type ruleType = rule.getType();
-			SyntaxValidator validator = SyntaxValidator.getInstance(ruleType);
-			validator.validate(rule, location, children, handler);
-		}
-	}
+            handler.elementData(null, 0, 0);
+        }
 
-	/*static class ReadAheadLocation implements MutableLocation {
-		final InternalLocation target;
-		final boolean isComposite;
-		int elementPosition;
-		int componentPosition;
-
-		ReadAheadLocation(InternalLocation target, boolean isComposite) {
-			this.target = target;
-			this.isComposite = isComposite;
-			this.elementPosition = target.getElementPosition();
-			this.componentPosition = target.getComponentPosition();
-
-			if (isComposite && this.componentPosition < 1) {
-				this.componentPosition = 1;
-			}
-		}
-
-		void increment() {
-			if (isComposite) {
-				componentPosition++;
-			} else {
-				elementPosition++;
-			}
-		}
-
-		@Override
-		public int getLineNumber() {
-			return target.getLineNumber();
-		}
-
-		@Override
-		public int getColumnNumber() {
-			return target.getColumnNumber();
-		}
-
-		@Override
-		public int getCharacterOffset() {
-			return target.getCharacterOffset();
-		}
-
-		@Override
-		public int getSegmentPosition() {
-			return target.getSegmentPosition();
-		}
-
-		@Override
-		public int getElementPosition() {
-			return elementPosition;
-		}
-
-		@Override
-		public int getComponentPosition() {
-			return componentPosition;
-		}
-
-		@Override
-		public void setComponentPosition(int componentPosition) {
-				// Ignore
-		}
-
-		@Override
-		public int getElementOccurrence() {
-			return target.getElementOccurrence();
-		}
-	}*/
+        for (EDISyntaxRule rule : structure.getSyntaxRules()) {
+            final EDISyntaxRule.Type ruleType = rule.getType();
+            SyntaxValidator validator = SyntaxValidator.getInstance(ruleType);
+            validator.validate(rule, structure, handler);
+        }
+    }
 }

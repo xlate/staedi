@@ -18,20 +18,10 @@ package io.xlate.edi.schema;
 public interface EDIType {
 
     public enum Type {
-        LOOP(2),
-        SEGMENT(3),
-        COMPOSITE(4),
-        ELEMENT(5);
-
-        private int code;
-
-        private Type(int code) {
-            this.code = code;
-        }
-
-        public int getCode() {
-            return code;
-        }
+        LOOP,
+        SEGMENT,
+        COMPOSITE,
+        ELEMENT;
     }
 
     String getId();

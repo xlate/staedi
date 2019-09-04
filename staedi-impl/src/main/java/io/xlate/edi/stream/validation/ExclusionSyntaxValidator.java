@@ -15,11 +15,12 @@
  ******************************************************************************/
 package io.xlate.edi.stream.validation;
 
-import io.xlate.edi.schema.EDISyntaxRule;
-import io.xlate.edi.stream.Location;
-import io.xlate.edi.stream.internal.EventHandler;
-
 import java.util.List;
+
+import io.xlate.edi.schema.EDISyntaxRule;
+import io.xlate.edi.stream.EDIStreamEvent;
+import io.xlate.edi.stream.EDIStreamValidationError;
+import io.xlate.edi.stream.internal.EventHandler;
 
 class ExclusionSyntaxValidator extends SyntaxValidator {
 
@@ -32,12 +33,31 @@ class ExclusionSyntaxValidator extends SyntaxValidator {
         return singleton;
     }
 
+    static void signalExclusionError(EDISyntaxRule syntax, UsageNode structure, EventHandler handler) {
+        final List<UsageNode> children = structure.getChildren();
+        final int limit = children.size() + 1;
+        int tally = 0;
+
+        for (int position : syntax.getPositions()) {
+            if (position < limit && children.get(position - 1).isUsed() && ++tally > 1) {
+                final int element = getElementPosition(structure, position);
+                final int component = getComponentPosition(structure, position);
+
+                handler.elementError(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR,
+                                     EDIStreamValidationError.EXCLUSION_CONDITION_VIOLATED,
+                                     element,
+                                     component,
+                                     -1);
+            }
+        }
+    }
+
     @Override
-    void validate(EDISyntaxRule syntax, Location location, List<UsageNode> children, EventHandler handler) {
-        SyntaxStatus status = scanSyntax(syntax, children);
+    void validate(EDISyntaxRule syntax, UsageNode structure, EventHandler handler) {
+        SyntaxStatus status = scanSyntax(syntax, structure.getChildren());
 
         if (status.elementCount > 1) {
-            signalExclusionError(syntax, location, children, handler);
+            signalExclusionError(syntax, structure, handler);
         }
     }
 }

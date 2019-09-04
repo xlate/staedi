@@ -15,14 +15,14 @@
  ******************************************************************************/
 package io.xlate.edi.stream.validation;
 
-import io.xlate.edi.schema.EDISyntaxRule;
-import io.xlate.edi.stream.EDIStreamEvent;
-import io.xlate.edi.stream.EDIStreamValidationError;
-import io.xlate.edi.stream.Location;
-import io.xlate.edi.stream.internal.EventHandler;
-
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import io.xlate.edi.schema.EDISyntaxRule;
+import io.xlate.edi.schema.EDIType;
+import io.xlate.edi.stream.EDIStreamEvent;
+import io.xlate.edi.stream.EDIStreamValidationError;
+import io.xlate.edi.stream.internal.EventHandler;
 
 abstract class SyntaxValidator {
 
@@ -71,70 +71,47 @@ abstract class SyntaxValidator {
         return status;
     }
 
-    static void signalConditionError(EDISyntaxRule syntax,
-                                     Location location,
-                                     List<UsageNode> children,
-                                     EventHandler handler) {
-        syntax.getPositions()
-              .stream()
-              .filter(position -> position < children.size() + 1)
-              .forEach(position -> {
-                  UsageNode node = children.get(position - 1);
-
-                  if (!node.isUsed()) {
-                      final int element;
-                      int component = location.getComponentPosition();
-
-                      if (component > -1) {
-                          element = location.getElementPosition();
-                          component = position;
-                      } else {
-                          element = position;
-                      }
-
-                      handler.elementError(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR,
-                                           EDIStreamValidationError.CONDITIONAL_REQUIRED_DATA_ELEMENT_MISSING,
-                                           element,
-                                           component,
-                                           location.getElementOccurrence());
-                  }
-              });
-    }
-
-    static void signalExclusionError(EDISyntaxRule syntax,
-                                     Location location,
-                                     List<UsageNode> children,
-                                     EventHandler handler) {
-
-        int tally = 0;
+    static void signalConditionError(EDISyntaxRule syntax, UsageNode structure, EventHandler handler) {
+        final List<UsageNode> children = structure.getChildren();
         final int limit = children.size() + 1;
 
-        for (int pos : syntax.getPositions()) {
-            if (pos < limit) {
-                UsageNode node = children.get(pos - 1);
+        for (int position : syntax.getPositions()) {
+            final boolean used;
 
-                if (node.isUsed() && ++tally > 1) {
-                    final int element;
-                    int component = location.getComponentPosition();
-
-                    if (component > -1) {
-                        element = location.getElementPosition();
-                        component = pos - 1;
-                    } else {
-                        element = pos - 1;
-                    }
-
-                    handler.elementError(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR,
-                                         EDIStreamValidationError.EXCLUSION_CONDITION_VIOLATED,
-                                         element,
-                                         component,
-                                         location.getElementOccurrence());
-                }
+            if (position < limit) {
+                used = children.get(position - 1).isUsed();
             } else {
-                break;
+                used = false;
+            }
+
+            if (!used) {
+                final int element = getElementPosition(structure, position);
+                final int component = getComponentPosition(structure, position);
+
+                handler.elementError(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR,
+                                     EDIStreamValidationError.CONDITIONAL_REQUIRED_DATA_ELEMENT_MISSING,
+                                     element,
+                                     component,
+                                     -1);
             }
         }
     }
 
-    abstract void validate(EDISyntaxRule syntax, Location location, List<UsageNode> children, EventHandler handler);
+    static int getComponentPosition(UsageNode structure, int position) {
+        if (structure.getReferencedType().isType(EDIType.Type.COMPOSITE)) {
+            return position;
+        }
+
+        return -1;
+    }
+
+    static int getElementPosition(UsageNode structure, int position) {
+        if (structure.getReferencedType().isType(EDIType.Type.COMPOSITE)) {
+            return structure.getParent().getIndex() + 1;
+        }
+
+        return position;
+    }
+
+    abstract void validate(EDISyntaxRule syntax, UsageNode structure, EventHandler handler);
 }
