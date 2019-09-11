@@ -28,7 +28,6 @@ import io.xlate.edi.internal.schema.StaEDISchemaFactory;
 import io.xlate.edi.schema.EDISchemaException;
 import io.xlate.edi.schema.EDIType;
 
-@SuppressWarnings({ "resource" })
 public class StaEDISchemaTest {
 
     @Test(expected = NullPointerException.class)
@@ -38,7 +37,7 @@ public class StaEDISchemaTest {
     }
 
     @Test
-    public void testRootTypeIsLoop() throws EDISchemaException, IOException {
+    public void testRootTypeIsInterchange() throws EDISchemaException, IOException {
         StaEDISchema schema = new StaEDISchema();
         InputStream schemaStream = SchemaUtils.getStreams("X12/v00402.xml")
                                               .nextElement()
@@ -46,6 +45,6 @@ public class StaEDISchemaTest {
         Map<String, EDIType> types = new StaEDISchemaFactory().loadTypes(schemaStream);
         schema.setTypes(types);
 
-        Assert.assertEquals(EDIType.Type.LOOP, schema.getType(StaEDISchema.MAIN).getType());
+        Assert.assertEquals(EDIType.Type.INTERCHANGE, schema.getType(StaEDISchema.INTERCHANGE).getType());
     }
 }

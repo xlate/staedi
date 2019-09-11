@@ -151,6 +151,8 @@ public class StaEDIXMLStreamReader implements XMLStreamReader {
             enqueueEvent(START_ELEMENT, new QName(ediReader.getText()), true);
             break;
 
+        case START_GROUP:
+        case START_TRANSACTION:
         case START_LOOP:
             name = deriveName(elementStack.getFirst(), ediReader.getText());
             enqueueEvent(START_ELEMENT, name, true);
@@ -166,11 +168,16 @@ public class StaEDIXMLStreamReader implements XMLStreamReader {
             enqueueEvent(END_DOCUMENT, DUMMY_QNAME, false);
             break;
 
+        case END_GROUP:
+        case END_TRANSACTION:
         case END_LOOP:
         case END_SEGMENT:
         case END_COMPOSITE:
             enqueueEvent(END_ELEMENT, elementStack.removeFirst(), false);
             break;
+
+        case SEGMENT_ERROR:
+            throw new XMLStreamException(String.format("Segment %s has error %s", ediReader.getText(), ediReader.getErrorType()));
 
         default:
             throw new IllegalStateException("Unknown state: " + ediEvent);
@@ -248,7 +255,13 @@ public class StaEDIXMLStreamReader implements XMLStreamReader {
 
     @Override
     public int nextTag() throws XMLStreamException {
-        throw new UnsupportedOperationException();
+        int eventType;
+
+        do {
+            eventType = next();
+        } while (eventType != START_ELEMENT && eventType != END_ELEMENT);
+
+        return eventType;
     }
 
     @Override
@@ -392,8 +405,7 @@ public class StaEDIXMLStreamReader implements XMLStreamReader {
     }
 
     @Override
-    public int getTextCharacters(
-                                 int sourceStart,
+    public int getTextCharacters(int sourceStart,
                                  char[] target,
                                  int targetStart,
                                  int length) throws XMLStreamException {

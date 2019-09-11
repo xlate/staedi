@@ -25,19 +25,16 @@ import java.net.URL;
 import org.junit.Test;
 
 import io.xlate.edi.internal.schema.SchemaUtils;
-import io.xlate.edi.schema.EDIComplexType;
-import io.xlate.edi.schema.EDIReference;
 import io.xlate.edi.schema.EDISchemaException;
 import io.xlate.edi.schema.Schema;
 import io.xlate.edi.schema.SchemaFactory;
 import io.xlate.edi.stream.EDIInputFactory;
+import io.xlate.edi.stream.EDIStreamConstants.Standards;
 import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamException;
 import io.xlate.edi.stream.EDIStreamReader;
 import io.xlate.edi.stream.EDIStreamValidationError;
-import io.xlate.edi.stream.EDIStreamConstants.Standards;
 
-@SuppressWarnings("static-method")
 public class EventSequenceTest {
 
     @Test
@@ -45,7 +42,8 @@ public class EventSequenceTest {
                                            EDIStreamException,
                                            IllegalStateException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
-        InputStream stream = new ByteArrayInputStream(("ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~"
+        InputStream stream = new ByteArrayInputStream((""
+                + "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~"
                 + "GS*FA*ReceiverDept*SenderDept*20050812*195335*000005*X*005010X230~"
                 + "ST*997*0001*005010X230~"
                 + "AK1*HC*000001~"
@@ -63,7 +61,8 @@ public class EventSequenceTest {
         @SuppressWarnings("resource")
         EDIStreamReader reader = factory.createEDIStreamReader(stream);
         assertEquals(EDIStreamEvent.START_INTERCHANGE, reader.next());
-        reader.setSchema(loadX12FuncAckSchema(reader.getStandard(), reader.getVersion()));
+        reader.setControlSchema(SchemaUtils.getControlSchema(reader.getStandard(), reader.getVersion()));
+
         assertEquals(EDIStreamEvent.START_SEGMENT, reader.next());
         assertEquals("ISA", reader.getText());
         while ((event = reader.next()) == EDIStreamEvent.ELEMENT_DATA) {
@@ -71,7 +70,7 @@ public class EventSequenceTest {
         }
         assertEquals(EDIStreamEvent.END_SEGMENT, event);
 
-        assertEquals(EDIStreamEvent.START_LOOP, reader.next());
+        assertEquals(EDIStreamEvent.START_GROUP, reader.next());
         assertEquals("GROUP", reader.getText());
 
         assertEquals(EDIStreamEvent.START_SEGMENT, reader.next());
@@ -81,15 +80,16 @@ public class EventSequenceTest {
         }
         assertEquals(EDIStreamEvent.END_SEGMENT, event);
 
-        assertEquals(EDIStreamEvent.START_LOOP, reader.next());
-        assertEquals("TRANSACTION", reader.getText());
-
         assertEquals(EDIStreamEvent.START_SEGMENT, reader.next());
         assertEquals("ST", reader.getText());
         while ((event = reader.next()) == EDIStreamEvent.ELEMENT_DATA) {
             continue;
         }
         assertEquals(EDIStreamEvent.END_SEGMENT, event);
+
+        assertEquals(EDIStreamEvent.START_TRANSACTION, reader.next());
+        assertEquals("TRANSACTION", reader.getText());
+        reader.setTransactionSchema(loadX12FuncAckSchema());
 
         assertEquals(EDIStreamEvent.START_SEGMENT, reader.next());
         assertEquals("AK1", reader.getText());
@@ -148,13 +148,14 @@ public class EventSequenceTest {
         }
         assertEquals(EDIStreamEvent.END_SEGMENT, event);
 
+        assertEquals(EDIStreamEvent.END_TRANSACTION, reader.next());
+
         assertEquals(EDIStreamEvent.START_SEGMENT, reader.next());
         assertEquals("SE", reader.getText());
         while ((event = reader.next()) == EDIStreamEvent.ELEMENT_DATA) {
             continue;
         }
         assertEquals(EDIStreamEvent.END_SEGMENT, event);
-        assertEquals(EDIStreamEvent.END_LOOP, reader.next()); // 0001
 
         assertEquals(EDIStreamEvent.START_SEGMENT, reader.next());
         assertEquals("GE", reader.getText());
@@ -162,7 +163,7 @@ public class EventSequenceTest {
             continue;
         }
         assertEquals(EDIStreamEvent.END_SEGMENT, event);
-        assertEquals(EDIStreamEvent.END_LOOP, reader.next()); // 0000
+        assertEquals(EDIStreamEvent.END_GROUP, reader.next()); // 0000
 
         assertEquals(EDIStreamEvent.START_SEGMENT, reader.next());
         assertEquals("IEA", reader.getText());
@@ -177,7 +178,8 @@ public class EventSequenceTest {
                                          EDIStreamException,
                                          IllegalStateException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
-        InputStream stream = new ByteArrayInputStream(("ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~"
+        InputStream stream = new ByteArrayInputStream((""
+                + "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~"
                 + "GS*FA*ReceiverDept*SenderDept*20050812*195335*000005*X*005010X230~"
                 + "ST*997*0001*005010X230~"
                 + "AK1*HC*000001~"
@@ -190,7 +192,8 @@ public class EventSequenceTest {
         @SuppressWarnings("resource")
         EDIStreamReader reader = factory.createEDIStreamReader(stream);
         assertEquals(EDIStreamEvent.START_INTERCHANGE, reader.next());
-        reader.setSchema(loadX12FuncAckSchema(reader.getStandard(), reader.getVersion()));
+        reader.setControlSchema(SchemaUtils.getControlSchema(reader.getStandard(), reader.getVersion()));
+
         assertEquals(EDIStreamEvent.START_SEGMENT, reader.next());
         assertEquals("ISA", reader.getText());
         while ((event = reader.next()) == EDIStreamEvent.ELEMENT_DATA) {
@@ -198,7 +201,7 @@ public class EventSequenceTest {
         }
         assertEquals(EDIStreamEvent.END_SEGMENT, event);
 
-        assertEquals(EDIStreamEvent.START_LOOP, reader.next());
+        assertEquals(EDIStreamEvent.START_GROUP, reader.next());
         assertEquals("GROUP", reader.getText());
 
         assertEquals(EDIStreamEvent.START_SEGMENT, reader.next());
@@ -208,15 +211,16 @@ public class EventSequenceTest {
         }
         assertEquals(EDIStreamEvent.END_SEGMENT, event);
 
-        assertEquals(EDIStreamEvent.START_LOOP, reader.next());
-        assertEquals("TRANSACTION", reader.getText());
-
         assertEquals(EDIStreamEvent.START_SEGMENT, reader.next());
         assertEquals("ST", reader.getText());
         while ((event = reader.next()) == EDIStreamEvent.ELEMENT_DATA) {
             continue;
         }
         assertEquals(EDIStreamEvent.END_SEGMENT, event);
+
+        assertEquals(EDIStreamEvent.START_TRANSACTION, reader.next());
+        assertEquals("TRANSACTION", reader.getText());
+        reader.setTransactionSchema(loadX12FuncAckSchema());
 
         assertEquals(EDIStreamEvent.START_SEGMENT, reader.next());
         assertEquals("AK1", reader.getText());
@@ -229,13 +233,14 @@ public class EventSequenceTest {
         assertEquals(EDIStreamEvent.SEGMENT_ERROR, reader.next());
         assertEquals("AK9", reader.getText());
 
+        assertEquals(EDIStreamEvent.END_TRANSACTION, reader.next());
+
         assertEquals(EDIStreamEvent.START_SEGMENT, reader.next());
         assertEquals("SE", reader.getText());
         while ((event = reader.next()) == EDIStreamEvent.ELEMENT_DATA) {
             continue;
         }
         assertEquals(EDIStreamEvent.END_SEGMENT, event);
-        assertEquals(EDIStreamEvent.END_LOOP, reader.next()); // 0001
 
         assertEquals(EDIStreamEvent.START_SEGMENT, reader.next());
         assertEquals("GE", reader.getText());
@@ -243,7 +248,7 @@ public class EventSequenceTest {
             continue;
         }
         assertEquals(EDIStreamEvent.END_SEGMENT, event);
-        assertEquals(EDIStreamEvent.END_LOOP, reader.next()); // 0000
+        assertEquals(EDIStreamEvent.END_GROUP, reader.next()); // GROUP
 
         assertEquals(EDIStreamEvent.START_SEGMENT, reader.next());
         assertEquals("IEA", reader.getText());
@@ -254,22 +259,21 @@ public class EventSequenceTest {
     }
 
     @Test
-    public void testValidSequenceEDIFACT()
-                                           throws EDISchemaException,
-                                           EDIStreamException {
+    public void testValidSequenceEDIFACT() throws EDISchemaException, EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
-        InputStream stream = new ByteArrayInputStream(("UNB+UNOA:3+005435656:1+006415160:1+060515:1434+00000000000778'"
+        InputStream stream = new ByteArrayInputStream((""
+                + "UNB+UNOA:3+005435656:1+006415160:1+060515:1434+00000000000778'"
                 + "UNH+00000000000117+INVOIC:D:97B:UN'"
+                + "BLA+UNVALIDATED'"
                 + "UNT+2+00000000000117'"
                 + "UNZ+1+00000000000778'").getBytes());
 
-        @SuppressWarnings("resource")
         EDIStreamReader reader = factory.createEDIStreamReader(stream);
         assertEquals(EDIStreamEvent.START_INTERCHANGE, reader.next());
         assertArrayEquals(new String[] { "UNOA", "3" }, reader.getVersion());
 
         Schema schema = SchemaUtils.getControlSchema(Standards.EDIFACT, reader.getVersion());
-        reader.setSchema(schema);
+        reader.setControlSchema(schema);
 
         assertEquals(EDIStreamEvent.START_SEGMENT, reader.next());
         assertEquals("UNB", reader.getText());
@@ -306,9 +310,6 @@ public class EventSequenceTest {
         assertEquals("00000000000778", reader.getText());
         assertEquals(EDIStreamEvent.END_SEGMENT, reader.next());
 
-        assertEquals(EDIStreamEvent.START_LOOP, reader.next());
-        assertEquals("TRANSACTION", reader.getText());
-
         assertEquals(EDIStreamEvent.START_SEGMENT, reader.next());
         assertEquals("UNH", reader.getText());
         assertEquals(EDIStreamEvent.ELEMENT_DATA, reader.next());
@@ -326,6 +327,17 @@ public class EventSequenceTest {
         assertEquals(EDIStreamEvent.END_COMPOSITE, reader.next());
         assertEquals(EDIStreamEvent.END_SEGMENT, reader.next());
 
+        assertEquals(EDIStreamEvent.START_TRANSACTION, reader.next());
+        assertEquals("TRANSACTION", reader.getText());
+
+        assertEquals(EDIStreamEvent.START_SEGMENT, reader.next());
+        assertEquals("BLA", reader.getText());
+        assertEquals(EDIStreamEvent.ELEMENT_DATA, reader.next());
+        assertEquals("UNVALIDATED", reader.getText());
+        assertEquals(EDIStreamEvent.END_SEGMENT, reader.next());
+
+        assertEquals(EDIStreamEvent.END_TRANSACTION, reader.next());
+
         assertEquals(EDIStreamEvent.START_SEGMENT, reader.next());
         assertEquals("UNT", reader.getText());
         assertEquals(EDIStreamEvent.ELEMENT_DATA, reader.next());
@@ -333,7 +345,6 @@ public class EventSequenceTest {
         assertEquals(EDIStreamEvent.ELEMENT_DATA, reader.next());
         assertEquals("00000000000117", reader.getText());
         assertEquals(EDIStreamEvent.END_SEGMENT, reader.next());
-        assertEquals(EDIStreamEvent.END_LOOP, reader.next()); //TRANSACTION
 
         assertEquals(EDIStreamEvent.START_SEGMENT, reader.next());
         assertEquals("UNZ", reader.getText());
@@ -346,28 +357,28 @@ public class EventSequenceTest {
     }
 
     @Test
-    public void testElementErrorSequence()
-                                           throws EDISchemaException,
-                                           EDIStreamException,
-                                           IllegalStateException {
+    public void testElementErrorSequence() throws EDISchemaException, EDIStreamException, IllegalStateException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
-        InputStream stream = new ByteArrayInputStream(
-                                                      ("ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~"
-                                                              + "GS*FA*ReceiverDept*SenderDept*BAD_DATE*295335*000005*X*005010X230~"
-                                                              + "ST*997*0001~"
-                                                              + "AK1*<NOT_IN_CODESET>*000001~"
-                                                              + "AK9*R*1*1*0~"
-                                                              + "AK9*~"
-                                                              + "SE*8*0001~"
-                                                              + "GE*1*<TOO_LONG_AND_NOT_NUMERIC>^0001^AGAIN!*:~"
-                                                              + "IEA*1*508121953~").getBytes());
+        InputStream stream = new ByteArrayInputStream((""
+                + "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~"
+                + "GS*FA*ReceiverDept*SenderDept*BAD_DATE*295335*000005*X*005010X230~"
+                + "ST*997*0001~"
+                + "AK1*<NOT_IN_CODESET>*000001~"
+                + "AK9*R*1*1*0~"
+                + "AK9*~"
+                + "SE*8*0001~"
+                + "GE*1*<TOO_LONG_AND_NOT_NUMERIC>^0001^AGAIN!*:~"
+                + "IEA*1*508121953~").getBytes());
 
         @SuppressWarnings("resource")
         EDIStreamReader reader = factory.createEDIStreamReader(stream);
         assertEquals(EDIStreamEvent.START_INTERCHANGE, reader.next());
-        reader.setSchema(loadX12FuncAckSchema(reader.getStandard(), reader.getVersion()));
+        reader.setControlSchema(SchemaUtils.getControlSchema(reader.getStandard(), reader.getVersion()));
+
         assertEquals(EDIStreamEvent.START_SEGMENT, reader.nextTag());
         assertEquals("ISA", reader.getText());
+        assertEquals(EDIStreamEvent.START_GROUP, reader.nextTag());
+        assertEquals("GROUP", reader.getText());
         assertEquals(EDIStreamEvent.START_SEGMENT, reader.nextTag());
         assertEquals("GS", reader.getText());
         assertEquals(EDIStreamEvent.ELEMENT_DATA, reader.next()); // GS01
@@ -390,6 +401,9 @@ public class EventSequenceTest {
         assertEquals(EDIStreamEvent.START_SEGMENT, reader.nextTag());
         assertEquals("ST", reader.getText());
 
+        assertEquals(EDIStreamEvent.START_TRANSACTION, reader.nextTag());
+        reader.setTransactionSchema(loadX12FuncAckSchema());
+
         assertEquals(EDIStreamEvent.START_SEGMENT, reader.nextTag());
         assertEquals("AK1", reader.getText());
         // AK01 <NOT_IN_CODESET>
@@ -406,6 +420,8 @@ public class EventSequenceTest {
 
         assertEquals(EDIStreamEvent.START_SEGMENT, reader.nextTag());
         assertEquals("AK9", reader.getText());
+
+        //assertEquals(EDIStreamEvent.END_TRANSACTION, reader.nextTag());
 
         assertEquals(EDIStreamEvent.START_SEGMENT, reader.nextTag());
         assertEquals("SE", reader.getText());
@@ -445,6 +461,8 @@ public class EventSequenceTest {
         assertEquals(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR, reader.next());
         assertEquals(EDIStreamValidationError.TOO_MANY_DATA_ELEMENTS, reader.getErrorType());
 
+        //assertEquals(EDIStreamEvent.END_GROUP, reader.nextTag());
+
         assertEquals(EDIStreamEvent.START_SEGMENT, reader.nextTag());
         assertEquals("IEA", reader.getText());
         assertEquals(EDIStreamEvent.ELEMENT_DATA, reader.next()); // IEA01
@@ -453,23 +471,10 @@ public class EventSequenceTest {
         assertEquals(EDIStreamEvent.END_INTERCHANGE, reader.next());
     }
 
-    private Schema loadX12FuncAckSchema(String standard, String[] version)
-                                                                           throws EDISchemaException {
-
-        Schema control = SchemaUtils.getControlSchema(standard, version);
-
+    private Schema loadX12FuncAckSchema() throws EDISchemaException {
         SchemaFactory schemaFactory = SchemaFactory.newFactory();
-        URL schemaLocation;
-        Schema schema;
-        EDIComplexType parent;
-        EDIReference child;
+        URL schemaLocation = SchemaUtils.getURL("x12/EDISchema997.xml");
 
-        schemaLocation = SchemaUtils.getURL("x12/EDISchema997.xml");
-        Schema transaction = schemaFactory.createSchema(schemaLocation);
-        parent = (EDIComplexType) control.getType("TRANSACTION");
-        child = parent.getReferences().get(1); // SE
-        schema = control.reference(transaction, parent, child);
-
-        return schema;
+        return schemaFactory.createSchema(schemaLocation);
     }
 }

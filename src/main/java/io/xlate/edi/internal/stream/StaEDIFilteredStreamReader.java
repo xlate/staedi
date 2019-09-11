@@ -15,7 +15,10 @@
  ******************************************************************************/
 package io.xlate.edi.internal.stream;
 
-import io.xlate.edi.schema.EDISchemaException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Map;
+
 import io.xlate.edi.schema.Schema;
 import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamException;
@@ -23,10 +26,6 @@ import io.xlate.edi.stream.EDIStreamFilter;
 import io.xlate.edi.stream.EDIStreamReader;
 import io.xlate.edi.stream.EDIStreamValidationError;
 import io.xlate.edi.stream.Location;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Map;
 
 class StaEDIFilteredStreamReader implements EDIStreamReader {
 
@@ -117,13 +116,13 @@ class StaEDIFilteredStreamReader implements EDIStreamReader {
     }
 
     @Override
-    public void setSchema(Schema schema) {
-        delegate.setSchema(schema);
+    public void setControlSchema(Schema schema) {
+        delegate.setControlSchema(schema);
     }
 
     @Override
-    public void addSchema(Schema schema) throws EDISchemaException {
-        delegate.addSchema(schema);
+    public void setTransactionSchema(Schema schema) {
+        delegate.setTransactionSchema(schema);
     }
 
     @Override

@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<schema xmlns="http://xlate.io/2015/EDISchema">
-    <mainLoop>
-        <sequence>
-            <segment ref="UNB" minOccurs="1" maxOccurs="1"/>
-            <loop ref="TRANSACTION"/>
-            <segment ref="UNZ" minOccurs="1" maxOccurs="1"/>
-        </sequence>
-    </mainLoop>
+<schema xmlns="http://xlate.io/EDISchema/v2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://xlate.io/EDISchema/v2 ../schema/EDISchema-v2.xsd">
+<interchange header="UNB" trailer="UNZ">
+    <sequence>
+      <group header="UNG" trailer="UNE">
+        <transaction header="UNH" trailer="UNT" />
+      </group>
+      <transaction header="UNH" trailer="UNT" />
+    </sequence>
+  </interchange>
     <elementType name="DE.0001" number="1" base="identifier" minLength="4" maxLength="4">
         <enumeration>
             <value>UNOA</value>
@@ -1651,10 +1652,4 @@
             <element ref="DE.0571" minOccurs="0" maxOccurs="1"/>
         </sequence>
     </segmentType>
-    <loopType name="TRANSACTION">
-        <sequence>
-            <segment ref="UNH" minOccurs="1" maxOccurs="1"/>
-            <segment ref="UNT" minOccurs="1" maxOccurs="1"/>
-        </sequence>
-    </loopType>
 </schema>

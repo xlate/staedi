@@ -21,6 +21,8 @@ import java.io.InputStream;
 
 public abstract class EDIInputFactory {
 
+    public static final String EDI_VALIDATE_CONTROL_STRUCTURE = "io.xlate.edi.stream.EDI_VALIDATE_CONTROL_STRUCTURE";
+
     static final String FACTORY_ID = "io.xlate.edi.stream.EDIInputFactory";
     static final String DEFAULT_IMPL = "io.xlate.edi.internal.stream.StaEDIInputFactory";
 

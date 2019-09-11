@@ -37,7 +37,10 @@ public class StaEDIInputFactory extends EDIInputFactory {
 
     public StaEDIInputFactory() {
         properties = new HashMap<>();
+
         supportedProperties = new HashSet<>();
+        supportedProperties.add(EDI_VALIDATE_CONTROL_STRUCTURE);
+
         supportedCharsets = new HashSet<>();
         supportedCharsets.add(DEFAULT_ENCODING);
     }

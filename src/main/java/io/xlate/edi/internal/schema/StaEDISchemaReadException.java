@@ -2,7 +2,7 @@ package io.xlate.edi.internal.schema;
 
 import javax.xml.stream.Location;
 
-public class StaEDISchemaReadException extends RuntimeException {
+class StaEDISchemaReadException extends RuntimeException {
 
     private static final long serialVersionUID = -5555580673080112522L;
     protected final transient Location location;

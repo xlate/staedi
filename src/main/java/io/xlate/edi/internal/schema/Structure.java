@@ -54,17 +54,9 @@ class Structure extends BasicType implements EDIComplexType {
         buffer.append(", code: ");
         buffer.append(code);
         buffer.append(", references: [");
-        for (EDIReference reference : references) {
-            buffer.append('{');
-            buffer.append(reference);
-            buffer.append('}');
-        }
+        references.forEach(r -> buffer.append('{').append(r).append('}'));
         buffer.append("], syntaxRestrictions: [");
-        for (EDISyntaxRule rule : syntaxRules) {
-            buffer.append('{');
-            buffer.append(rule);
-            buffer.append('}');
-        }
+        syntaxRules.forEach(r -> buffer.append('{').append(r).append('}'));
         buffer.append(']');
         return buffer.toString();
     }

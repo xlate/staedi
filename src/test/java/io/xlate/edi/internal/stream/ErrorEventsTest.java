@@ -57,20 +57,12 @@ public class ErrorEventsTest {
         Schema control = SchemaUtils.getControlSchema("X12", new String[] { "00501" });
         Schema transaction = schemaFactory.createSchema(SchemaUtils.getURL("x12/EDISchema997.xml"));
         EDIStreamReader reader = factory.createEDIStreamReader(stream, control);
-        String segment = null;
 
         prescan: while (reader.hasNext()) {
             switch (reader.next()) {
-            case START_SEGMENT: {
-                segment = reader.getText();
-                break;
-            }
-            case END_SEGMENT:
-                if ("ST".equals(segment)) {
-                    reader.addSchema(transaction);
-                    break prescan;
-                }
-                break;
+            case START_TRANSACTION:
+                reader.setTransactionSchema(transaction);
+                break prescan;
             default:
                 break;
             }

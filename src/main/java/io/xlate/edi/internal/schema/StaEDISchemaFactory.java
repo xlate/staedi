@@ -19,14 +19,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.xml.namespace.QName;
+import javax.xml.stream.Location;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
@@ -44,56 +47,43 @@ public class StaEDISchemaFactory extends SchemaFactory {
 
     private static XMLInputFactory factory = XMLInputFactory.newFactory();
 
-    private static final String RESERVED = "io.xlate.";
-    private static final String XMLNS = "http://xlate.io/2015/EDISchema";
+    private static final String XMLNS = "http://xlate.io/EDISchema/v2";
 
-    private static final QName QN_SCHEMA = new QName(XMLNS, "schema");
+    static final QName QN_SCHEMA = new QName(XMLNS, "schema");
+    static final QName QN_DESCRIPTION = new QName(XMLNS, "description");
+    static final QName QN_INTERCHANGE = new QName(XMLNS, "interchange");
+    static final QName QN_GROUP = new QName(XMLNS, "group");
+    static final QName QN_TRANSACTION = new QName(XMLNS, "transaction");
+    static final QName QN_LOOP = new QName(XMLNS, "loop");
+    static final QName QN_SEGMENT = new QName(XMLNS, "segment");
+    static final QName QN_COMPOSITE = new QName(XMLNS, "composite");
+    static final QName QN_ELEMENT = new QName(XMLNS, "element");
+    static final QName QN_SYNTAX = new QName(XMLNS, "syntax");
+    static final QName QN_POSITION = new QName(XMLNS, "position");
+    static final QName QN_SEQUENCE = new QName(XMLNS, "sequence");
+    static final QName QN_ENUMERATION = new QName(XMLNS, "enumeration");
+    static final QName QN_VALUE = new QName(XMLNS, "value");
 
-    private static final QName QN_MAIN_LOOP = new QName(XMLNS, "mainLoop");
     private static final QName QN_COMPOSITE_T = new QName(XMLNS, "compositeType");
     private static final QName QN_ELEMENT_T = new QName(XMLNS, "elementType");
-    private static final QName QN_LOOP_T = new QName(XMLNS, "loopType");
     private static final QName QN_SEGMENT_T = new QName(XMLNS, "segmentType");
-
-    private static final QName QN_SEQUENCE = new QName(XMLNS, "sequence");
-
-    private static final QName QN_COMPOSITE = new QName(XMLNS, "composite");
-    private static final QName QN_ELEMENT = new QName(XMLNS, "element");
-    private static final QName QN_LOOP = new QName(XMLNS, "loop");
-    private static final QName QN_SEGMENT = new QName(XMLNS, "segment");
-
-    private static final QName QN_SYNTAX = new QName(XMLNS, "syntax");
-    private static final QName QN_POSITION = new QName(XMLNS, "position");
-
-    private static final QName QN_ENUMERATION = new QName(XMLNS, "enumeration");
-    private static final QName QN_VALUE = new QName(XMLNS, "value");
-
-    private static final String ID_INTERCHANGE = RESERVED + "edi.schema.INTERCHANGE";
-    private static final String ID_GROUP = RESERVED + "edi.schema.GROUP";
-    private static final String ID_TRANSACTION = RESERVED + "edi.schema.TRANSACTION";
 
     private static final Map<QName, EDIType.Type> complex;
     private static final Set<QName> references;
 
-    private static final Set<String> specialIdentifiers;
-
     static {
         complex = new HashMap<>(4);
-        complex.put(QN_COMPOSITE_T, EDIType.Type.COMPOSITE);
-        complex.put(QN_LOOP_T, EDIType.Type.LOOP);
-        complex.put(QN_MAIN_LOOP, EDIType.Type.LOOP);
+        complex.put(QN_INTERCHANGE, EDIType.Type.INTERCHANGE);
+        complex.put(QN_GROUP, EDIType.Type.GROUP);
+        complex.put(QN_TRANSACTION, EDIType.Type.TRANSACTION);
+        complex.put(QN_LOOP, EDIType.Type.LOOP);
         complex.put(QN_SEGMENT_T, EDIType.Type.SEGMENT);
+        complex.put(QN_COMPOSITE_T, EDIType.Type.COMPOSITE);
 
         references = new HashSet<>(4);
+        references.add(QN_SEGMENT);
         references.add(QN_COMPOSITE);
         references.add(QN_ELEMENT);
-        references.add(QN_LOOP);
-        references.add(QN_SEGMENT);
-
-        specialIdentifiers = new HashSet<>(3);
-        specialIdentifiers.add(ID_INTERCHANGE);
-        specialIdentifiers.add(ID_GROUP);
-        specialIdentifiers.add(ID_TRANSACTION);
     }
 
     private final Map<String, Object> properties;
@@ -107,12 +97,17 @@ public class StaEDISchemaFactory extends SchemaFactory {
     @Override
     public Schema createSchema(InputStream stream) throws EDISchemaException {
         StaEDISchema schema = new StaEDISchema();
+
         try {
             Map<String, EDIType> types = loadTypes(stream);
             validateReferences(types);
             schema.setTypes(types);
         } catch (StaEDISchemaReadException e) {
-            throw new EDISchemaException(e.getMessage(), e.getLocation(), e);
+            Location location = e.getLocation();
+            if (location != null) {
+                throw new EDISchemaException(e.getMessage(), location, e);
+            }
+            throw new EDISchemaException(e.getMessage(), e);
         }
 
         return schema;
@@ -148,6 +143,10 @@ public class StaEDISchemaFactory extends SchemaFactory {
         throw new IllegalArgumentException("Unsupported property: " + name);
     }
 
+    static void unexpectedElement(QName element, XMLStreamReader reader) {
+        schemaException("Unexpected XML element [" + element.toString() + ']', reader);
+    }
+
     static void schemaException(String message, XMLStreamReader reader, Throwable cause) {
         throw new StaEDISchemaReadException(message, reader.getLocation(), cause);
     }
@@ -162,28 +161,19 @@ public class StaEDISchemaFactory extends SchemaFactory {
 
     Map<String, EDIType> loadTypes(InputStream stream) throws EDISchemaException {
         Map<String, EDIType> types = new HashMap<>(100);
-        boolean schemaEnd = false;
 
         try {
             XMLStreamReader reader = factory.createXMLStreamReader(stream);
 
-            while (reader.hasNext() && !schemaEnd) {
-                switch (reader.next()) {
-                case XMLStreamConstants.START_ELEMENT:
-                    startElement(types, reader);
-                    break;
-
-                case XMLStreamConstants.END_ELEMENT:
-                    if (reader.getName().equals(QN_SCHEMA)) {
-                        schemaEnd = true;
-                    }
-                    break;
-
-                default:
-                    checkEvent(reader);
-                    break;
-                }
+            if (isInterchangeSchema(reader)) {
+                readInterchange(reader, types);
+            } else {
+                readTransaction(reader, types);
             }
+
+            readTypeDefinitions(reader, types);
+            reader.next();
+            requireEvent(XMLStreamConstants.END_DOCUMENT, reader);
         } catch (XMLStreamException e) {
             throw new EDISchemaException(e);
         }
@@ -191,35 +181,242 @@ public class StaEDISchemaFactory extends SchemaFactory {
         return types;
     }
 
-    void startElement(Map<String, EDIType> types, XMLStreamReader reader) throws EDISchemaException, XMLStreamException {
-        QName element = reader.getName();
+    boolean isInterchangeSchema(XMLStreamReader reader) throws XMLStreamException {
+        QName element;
 
-        if (element.equals(QN_SCHEMA)) {
-            return;
+        requireEvent(XMLStreamConstants.START_DOCUMENT, reader);
+        reader.nextTag();
+        element = reader.getName();
+
+        if (!QN_SCHEMA.equals(element)) {
+            unexpectedElement(element, reader);
         }
 
-        if (element.equals(QN_MAIN_LOOP)) {
-            if (types.containsKey(StaEDISchema.MAIN)) {
-                schemaException("Multiple mainLoop elements", reader);
-            }
+        reader.nextTag();
+        element = reader.getName();
 
-            types.put(StaEDISchema.MAIN, buildComplexType(reader, element));
+        if (!QN_INTERCHANGE.equals(element) && !QN_TRANSACTION.equals(element)) {
+            unexpectedElement(element, reader);
+        }
+
+        return QN_INTERCHANGE.equals(element);
+    }
+
+    String readDescription(XMLStreamReader reader) throws XMLStreamException {
+        QName element;
+
+        reader.nextTag();
+        element = reader.getName();
+        String description = null;
+
+        if (QN_DESCRIPTION.equals(element)) {
+            description = reader.getElementText();
+            reader.nextTag();
+        }
+
+        return description;
+    }
+
+    void readInterchange(XMLStreamReader reader, Map<String, EDIType> types) throws XMLStreamException {
+        QName element;
+
+        Reference headerRef = createControlReference(reader, "header");
+        Reference trailerRef = createControlReference(reader, "trailer");
+
+        readDescription(reader);
+
+        element = reader.getName();
+
+        if (!QN_SEQUENCE.equals(element)) {
+            unexpectedElement(element, reader);
+        }
+
+        reader.nextTag();
+        element = reader.getName();
+
+        List<EDIReference> refs = new ArrayList<>(3);
+        refs.add(headerRef);
+
+        while (QN_SEGMENT.equals(element)) {
+            refs.add(createReference(reader, types));
+            reader.nextTag(); // Advance to end element
+            reader.nextTag(); // Advance to next start element
+            element = reader.getName();
+        }
+
+        if (QN_GROUP.equals(element)) {
+            refs.add(readGroup(reader, types));
+            reader.nextTag(); // Advance to end element
+            reader.nextTag(); // Advance to next start element
+            element = reader.getName();
+        }
+
+        if (QN_TRANSACTION.equals(element)) {
+            refs.add(readTransactionControl(reader, types));
+            reader.nextTag(); // Advance to end element
+            reader.nextTag(); // Advance to next start element
+        }
+
+        refs.add(trailerRef);
+
+        Structure interchange = new Structure(QN_INTERCHANGE.toString(),
+                                              EDIType.Type.INTERCHANGE,
+                                              "INTERCHANGE",
+                                              refs,
+                                              Collections.emptyList());
+
+        types.put(interchange.getId(), interchange);
+    }
+
+    Reference readGroup(XMLStreamReader reader, Map<String, EDIType> types) throws XMLStreamException {
+        QName element;
+
+        int minOccurs = 0;
+        int maxOccurs = 99999;
+
+        String use = reader.getAttributeValue(null, "use");
+        if (use != null) {
+            switch (use) {
+            case "required":
+                minOccurs = 1;
+                break;
+            case "optional":
+                minOccurs = 0;
+                break;
+            case "prohibited":
+                maxOccurs = 0;
+                break;
+            default:
+                schemaException("Invalid value for 'use': " + use, reader);
+            }
+        }
+
+        Reference headerRef = createControlReference(reader, "header");
+        Reference trailerRef = createControlReference(reader, "trailer");
+
+        readDescription(reader);
+        element = reader.getName();
+
+        if (!QN_TRANSACTION.equals(element)) {
+            unexpectedElement(element, reader);
+        }
+
+        List<EDIReference> refs = new ArrayList<>(3);
+        refs.add(headerRef);
+        refs.add(readTransactionControl(reader, types));
+        refs.add(trailerRef);
+
+        Structure group = new Structure(QN_GROUP.toString(),
+                                        EDIType.Type.GROUP,
+                                        EDIType.Type.GROUP.toString(),
+                                        refs,
+                                        Collections.emptyList());
+
+        types.put(group.getId(), group);
+
+        Reference groupRef = new Reference(group.getId(), "group", minOccurs, maxOccurs);
+        groupRef.setReferencedType(group);
+        return groupRef;
+    }
+
+    Reference readTransactionControl(XMLStreamReader reader, Map<String, EDIType> types) throws XMLStreamException {
+        int minOccurs = 0;
+        int maxOccurs = 99999;
+
+        String use = reader.getAttributeValue(null, "use");
+        if (use != null) {
+            switch (use) {
+            case "required":
+                minOccurs = 1;
+                break;
+            case "optional":
+                minOccurs = 0;
+                break;
+            case "prohibited":
+                maxOccurs = 0;
+                break;
+            default:
+                schemaException("Invalid value for 'use': " + use, reader);
+            }
+        }
+
+        Reference headerRef = createControlReference(reader, "header");
+        Reference trailerRef = createControlReference(reader, "trailer");
+
+        readDescription(reader);
+
+        List<EDIReference> refs = new ArrayList<>(3);
+        refs.add(headerRef);
+        refs.add(trailerRef);
+
+        Structure transaction = new Structure(QN_TRANSACTION.toString(),
+                                              EDIType.Type.TRANSACTION,
+                                              EDIType.Type.TRANSACTION.toString(),
+                                              refs,
+                                              Collections.emptyList());
+
+        types.put(transaction.getId(), transaction);
+
+        Reference txRef = new Reference(transaction.getId(), "transaction", minOccurs, maxOccurs);
+        txRef.setReferencedType(transaction);
+
+        return txRef;
+    }
+
+    Reference createControlReference(XMLStreamReader reader, String attributeName) {
+        String refId = reader.getAttributeValue(null, attributeName);
+
+        if (refId == null) {
+            schemaException("Missing required attribute [" + attributeName + ']', reader);
+        }
+
+        return new Reference(refId, "segment", 1, 1);
+    }
+
+    void readTransaction(XMLStreamReader reader, Map<String, EDIType> types) throws XMLStreamException {
+        QName element = reader.getName();
+        types.put(QN_TRANSACTION.toString(), buildComplexType(reader, element, types));
+    }
+
+    void readTypeDefinitions(XMLStreamReader reader, Map<String, EDIType> types) throws XMLStreamException {
+        boolean schemaEnd = false;
+
+        while (reader.hasNext() && !schemaEnd) {
+            switch (reader.next()) {
+            case XMLStreamConstants.START_ELEMENT:
+                startElement(types, reader);
+                break;
+
+            case XMLStreamConstants.END_ELEMENT:
+                if (reader.getName().equals(QN_SCHEMA)) {
+                    schemaEnd = true;
+                }
+                break;
+
+            default:
+                checkEvent(reader);
+                break;
+            }
+        }
+
+    }
+
+    void startElement(Map<String, EDIType> types, XMLStreamReader reader) throws XMLStreamException {
+        QName element = reader.getName();
+        String name = reader.getAttributeValue(null, "name");
+
+        if (complex.containsKey(element)) {
+            nameCheck(name, types, reader);
+            types.put(name, buildComplexType(reader, element, types));
+        } else if (QN_ELEMENT_T.equals(element)) {
+            nameCheck(name, types, reader);
+            types.put(name, buildSimpleType(reader));
         } else {
-            String name = reader.getAttributeValue(null, "name");
-
-            if (complex.containsKey(element)) {
-                nameCheck(name, types, reader);
-                types.put(name, buildComplexType(reader, element));
-            } else if (QN_ELEMENT_T.equals(element)) {
-                nameCheck(name, types, reader);
-                types.put(name, buildSimpleType(reader));
-            } else {
-                schemaException("unknown element " + element, reader);
-            }
+            schemaException("Unexpected element: " + element, reader);
         }
     }
 
-    void nameCheck(String name, Map<String, EDIType> types, XMLStreamReader reader) throws EDISchemaException {
+    void nameCheck(String name, Map<String, EDIType> types, XMLStreamReader reader) {
         if (name == null) {
             schemaException("missing type name", reader);
         }
@@ -244,13 +441,8 @@ public class StaEDISchemaFactory extends SchemaFactory {
 
             if (target == null) {
                 StringBuilder excp = new StringBuilder();
-                if (StaEDISchema.MAIN.equals(struct.getId())) {
-                    excp.append(QN_MAIN_LOOP.getLocalPart());
-                } else {
-                    excp.append("Type ");
-                    excp.append(struct.getId());
-                }
-
+                excp.append("Type ");
+                excp.append(struct.getId());
                 excp.append(" references undeclared ");
                 excp.append(impl.getRefTag());
                 excp.append(" with ref='");
@@ -274,64 +466,25 @@ public class StaEDISchemaFactory extends SchemaFactory {
             }
 
             switch (struct.getType()) {
-            case LOOP: {
-                if (refType != EDIType.Type.SEGMENT
-                        && refType != EDIType.Type.LOOP) {
-                    StringBuilder excp = new StringBuilder();
-                    if (StaEDISchema.MAIN.equals(struct.getId())) {
-                        excp.append(QN_MAIN_LOOP.getLocalPart());
-                    } else {
-                        excp.append("Loop ");
-                        excp.append(struct.getId());
-                    }
-                    excp.append(" attempts to reference type with id = ");
-                    excp.append(impl.getRefId());
-                    excp.append(". Loops may only reference loop or segment types");
-                    schemaException(excp.toString());
-                }
-
-                /*if (refType == EDIType.TYPE_LOOP) {
-                    if (ref.getMinOccurs() > 0) {
-                        StringBuilder excp = new StringBuilder();
-                        excp.append("Reference to loop ");
-                        excp.append(impl.getRefId());
-                        excp.append(" must not specify minOccurs");
-                        throw new EDISchemaException(excp.toString());
-                    }
-                }*/
-
-                ((Reference) ref).setReferencedType(target);
+            case INTERCHANGE:
+                // Transactions may be located directly within the interchange in EDIFACT.
+                setReference(struct, (Reference) ref, target, EDIType.Type.GROUP, EDIType.Type.TRANSACTION, EDIType.Type.SEGMENT);
                 break;
-            }
-            case SEGMENT: {
-                if (refType != EDIType.Type.ELEMENT && refType != EDIType.Type.COMPOSITE) {
-                    StringBuilder excp = new StringBuilder();
-                    excp.append("Segment ");
-                    excp.append(struct.getId());
-                    excp.append(" attempts to reference type with id = ");
-                    excp.append(impl.getRefId());
-                    excp.append(". Segments may only reference element or composite types");
-                    schemaException(excp.toString());
-                }
-
-                ((Reference) ref).setReferencedType(target);
+            case GROUP:
+                setReference(struct, (Reference) ref, target, EDIType.Type.TRANSACTION, EDIType.Type.SEGMENT);
                 break;
-            }
-            case COMPOSITE: {
-                if (refType != EDIType.Type.ELEMENT) {
-                    StringBuilder excp = new StringBuilder();
-                    excp.append("Composite ");
-                    excp.append(struct.getId());
-                    excp.append(" attempts to reference type with id = ");
-                    excp.append(impl.getRefId());
-                    excp.append(". Composite may only reference element types");
-                    schemaException(excp.toString());
-                }
-
-                ((Reference) ref).setReferencedType(target);
+            case TRANSACTION:
+                setReference(struct, (Reference) ref, target, EDIType.Type.LOOP, EDIType.Type.SEGMENT);
                 break;
-            }
-
+            case LOOP:
+                setReference(struct, (Reference) ref, target, EDIType.Type.LOOP, EDIType.Type.SEGMENT);
+                break;
+            case SEGMENT:
+                setReference(struct, (Reference) ref, target, EDIType.Type.COMPOSITE, EDIType.Type.ELEMENT);
+                break;
+            case COMPOSITE:
+                setReference(struct, (Reference) ref, target, EDIType.Type.ELEMENT);
+                break;
             default:
                 break;
             }
@@ -345,13 +498,35 @@ public class StaEDISchemaFactory extends SchemaFactory {
         throw new IllegalArgumentException("Unexpected element: " + tag);
     }
 
-    Structure buildComplexType(XMLStreamReader reader, QName complexType) throws EDISchemaException,
-                                                                          XMLStreamException {
+    void setReference(Structure struct, Reference reference, EDIType target, EDIType.Type... allowedTargets) {
+        boolean isAllowed = Arrays.stream(allowedTargets).anyMatch(target.getType()::equals);
+
+        if (isAllowed) {
+            reference.setReferencedType(target);
+        } else {
+            StringBuilder excp = new StringBuilder();
+            excp.append("Structure ");
+            excp.append(struct.getId());
+            excp.append(" attempts to reference type with id = ");
+            excp.append(reference.getRefId());
+            excp.append(". Allowed types: " + Arrays.stream(allowedTargets)
+                                                    .map(Object::toString)
+                                                    .collect(Collectors.joining(", ")));
+            schemaException(excp.toString());
+        }
+    }
+
+    Structure buildComplexType(XMLStreamReader reader,
+                               QName complexType,
+                               Map<String, EDIType> types) throws XMLStreamException {
         final EDIType.Type type = complex.get(complexType);
         final String name;
+        String code = reader.getAttributeValue(null, "code");
 
-        if (complexType.equals(QN_MAIN_LOOP)) {
-            name = StaEDISchema.MAIN;
+        if (QN_TRANSACTION.equals(complexType)) {
+            name = QN_TRANSACTION.toString();
+        } else if (QN_LOOP.equals(complexType)) {
+            name = code;
         } else {
             name = reader.getAttributeValue(null, "name");
 
@@ -359,8 +534,6 @@ public class StaEDISchemaFactory extends SchemaFactory {
                 schemaException("Invalid segment name [" + name + ']', reader);
             }
         }
-
-        String code = reader.getAttributeValue(null, "code");
 
         if (code == null) {
             code = name;
@@ -380,7 +553,7 @@ public class StaEDISchemaFactory extends SchemaFactory {
                         schemaException("multiple sequence elements", reader);
                     }
                     sequence = true;
-                    addReferences(reader, refs);
+                    addReferences(reader, types, refs);
                     continue;
                 }
 
@@ -395,7 +568,7 @@ public class StaEDISchemaFactory extends SchemaFactory {
                     }
                 }
 
-                schemaException("unexpected element " + element, reader);
+                schemaException("Unexpected element " + element, reader);
                 break;
 
             case XMLStreamConstants.END_ELEMENT:
@@ -413,53 +586,20 @@ public class StaEDISchemaFactory extends SchemaFactory {
         return new Structure(name, type, code, refs, rules);
     }
 
-    void addReferences(XMLStreamReader reader, List<EDIReference> refs) throws EDISchemaException,
-                                                                        XMLStreamException {
-
+    void addReferences(XMLStreamReader reader,
+                       Map<String, EDIType> types,
+                       List<EDIReference> refs) throws XMLStreamException {
         while (reader.hasNext()) {
             switch (reader.next()) {
             case XMLStreamConstants.START_ELEMENT:
-                QName element = reader.getName();
-
-                if (!references.contains(element)) {
-                    schemaException("unexpected element " + element, reader);
-                }
-
-                String refTag = element.getLocalPart();
-
-                String refId = reader.getAttributeValue(null, "ref");
-                String min = reader.getAttributeValue(null, "minOccurs");
-                String max = reader.getAttributeValue(null, "maxOccurs");
-
-                int minValue = -1;
-
-                try {
-                    minValue = min != null ? Integer.parseInt(min) : 0;
-                } catch (@SuppressWarnings("unused") NumberFormatException e) {
-                    schemaException("invalid minOccurs", reader);
-                }
-
-                int maxValue = -1;
-
-                try {
-                    maxValue = max != null ? Integer.parseInt(max) : 1;
-                } catch (@SuppressWarnings("unused") NumberFormatException e) {
-                    schemaException("invalid maxOccurs", reader);
-                }
-
-                Reference ref = new Reference(refId, refTag, minValue, maxValue);
-
-                refs.add(ref);
-
+                refs.add(createReference(reader, types));
                 break;
 
             case XMLStreamConstants.END_ELEMENT:
                 if (reader.getName().equals(QN_SEQUENCE)) {
                     return;
                 }
-                if (reader.getName().equals(QN_MAIN_LOOP)) {
-                    return;
-                }
+
                 break;
             default:
                 checkEvent(reader);
@@ -468,8 +608,39 @@ public class StaEDISchemaFactory extends SchemaFactory {
         }
     }
 
-    void addSyntax(XMLStreamReader reader, List<EDISyntaxRule> rules) throws XMLStreamException {
+    Reference createReference(XMLStreamReader reader, Map<String, EDIType> types) throws XMLStreamException {
+        QName element = reader.getName();
+        String refId = null;
 
+        if (references.contains(element)) {
+            refId = reader.getAttributeValue(null, "ref");
+        } else if (QN_LOOP.equals(element)) {
+            refId = reader.getAttributeValue(null, "code");
+            //TODO: ensure not null
+        } else {
+            unexpectedElement(element, reader);
+        }
+
+        String refTag = element.getLocalPart();
+        int minOccurs = getIntegerAttribute(reader, "minOccurs", 0);
+        int maxOccurs = getIntegerAttribute(reader, "maxOccurs", 1);
+
+        Reference ref;
+
+        if (QN_LOOP.equals(element)) {
+            Structure loop = buildComplexType(reader, element, types);
+            String loopRefId = QN_LOOP.toString() + '.' + refId;
+            types.put(loopRefId, loop);
+            ref = new Reference(loopRefId, refTag, minOccurs, maxOccurs);
+            ref.setReferencedType(loop);
+        } else {
+            ref = new Reference(refId, refTag, minOccurs, maxOccurs);
+        }
+
+        return ref;
+    }
+
+    void addSyntax(XMLStreamReader reader, List<EDISyntaxRule> rules) throws XMLStreamException {
         String type = reader.getAttributeValue(null, "type");
         EDISyntaxRule.Type typeInt = null;
 
@@ -525,14 +696,6 @@ public class StaEDISchemaFactory extends SchemaFactory {
 
     Element buildSimpleType(XMLStreamReader reader) throws XMLStreamException {
         String name = reader.getAttributeValue(null, "name");
-        String nbr = reader.getAttributeValue(null, "number");
-        int number = -1;
-
-        try {
-            number = nbr != null ? Integer.parseInt(nbr) : -1;
-        } catch (NumberFormatException e) {
-            schemaException("invalid number", reader, e);
-        }
 
         String base = reader.getAttributeValue(null, "base");
         EDISimpleType.Base intBase = null;
@@ -543,23 +706,9 @@ public class StaEDISchemaFactory extends SchemaFactory {
             schemaException("Invalid element 'type': [" + base + ']', reader, e);
         }
 
-        String min = reader.getAttributeValue(null, "minLength");
-        int minLength = -1;
-
-        try {
-            minLength = min != null ? Integer.parseInt(min) : 1;
-        } catch (NumberFormatException e) {
-            schemaException("invalid minLength", reader, e);
-        }
-
-        String max = reader.getAttributeValue(null, "maxLength");
-        int maxLength = -1;
-
-        try {
-            maxLength = max != null ? Integer.parseInt(max) : 1;
-        } catch (NumberFormatException e) {
-            schemaException("invalid maxLength", reader, e);
-        }
+        int number = getIntegerAttribute(reader, "number", -1);
+        int minLength = getIntegerAttribute(reader, "minLength", 1);
+        int maxLength = getIntegerAttribute(reader, "maxLength", 1);
 
         final Set<String> values;
 
@@ -602,8 +751,33 @@ public class StaEDISchemaFactory extends SchemaFactory {
         return values;
     }
 
-    void checkEvent(XMLStreamReader reader) {
-        int event = reader.getEventType();
+    int getIntegerAttribute(XMLStreamReader reader, String attrName, int defaultValue) {
+        String attr = reader.getAttributeValue(null, attrName);
+
+        try {
+            return attr != null ? Integer.parseInt(attr) : defaultValue;
+        } catch (NumberFormatException e) {
+            schemaException("Invalid " + attrName, reader, e);
+        }
+
+        // Impossible
+        return -1;
+    }
+
+    void requireEvent(int eventId, XMLStreamReader reader) throws XMLStreamException {
+        Integer event = reader.getEventType();
+
+        if (event != eventId) {
+            schemaException("Unexpected XML event [" + event + ']', reader);
+        }
+    }
+
+    void checkEvent(XMLStreamReader reader, int... expected) {
+        Integer event = reader.getEventType();
+
+        if (Arrays.stream(expected).anyMatch(event::equals)) {
+            return;
+        }
 
         switch (event) {
         case XMLStreamConstants.CHARACTERS:
@@ -611,14 +785,14 @@ public class StaEDISchemaFactory extends SchemaFactory {
             String text = reader.getText().trim();
 
             if (text.length() > 0) {
-                schemaException("unexpected XML [" + text + "]", reader);
+                schemaException("Unexpected XML [" + text + "]", reader);
             }
             break;
         case XMLStreamConstants.COMMENT:
             // Ignore comments
             break;
         default:
-            schemaException("unexpected XML event: " + event, reader);
+            schemaException("Unexpected XML event [" + event + ']', reader);
         }
     }
 }

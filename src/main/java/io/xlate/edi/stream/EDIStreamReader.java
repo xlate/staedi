@@ -15,14 +15,13 @@
  ******************************************************************************/
 package io.xlate.edi.stream;
 
-import io.xlate.edi.schema.EDISchemaException;
-import io.xlate.edi.schema.Schema;
-
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 import java.util.NoSuchElementException;
+
+import io.xlate.edi.schema.Schema;
 
 public interface EDIStreamReader extends Closeable, EDIStreamConstants {
 
@@ -123,7 +122,11 @@ public interface EDIStreamReader extends Closeable, EDIStreamConstants {
     String[] getVersion();
 
     /**
-     * Sets the schema to be used for validation of within this stream reader.
+     * <p>
+     * Sets the schema to be used for validation of the control structure for
+     * this stream reader. This schema will be used to validate interchange,
+     * group, and transaction/message envelopes.
+     * <p>
      * Calls to this method are only valid when the current event type is
      * START_INTERCHANGE.
      *
@@ -131,24 +134,23 @@ public interface EDIStreamReader extends Closeable, EDIStreamConstants {
      * @throws IllegalStateException
      *             when the current event type is not START_INTERCHANGE
      */
-    void setSchema(Schema schema);
+    void setControlSchema(Schema schema);
 
     /**
-     * Add an additional schema to be used for validation of within this stream
-     * reader. The root contents of the added schema will be added as the
-     * immediate next siblings of the current segment in the stream.
-     *
+     * <p>
+     * Sets the schema to be used for validation of the business transaction for
+     * this stream reader. This schema will be used to validate only the
+     * contents of a transaction/message, <em>not including</em> the begin/end control
+     * structures.
+     * <p>
      * Calls to this method are only valid when the current event type is
-     * END_SEGMENT and a schema was previously set on this reader.
+     * START_TRANSACTION.
      *
      * @param schema
      * @throws IllegalStateException
-     *             when the current event type is not START_INTERCHANGE
-     * @throws EDISchemaException
-     *             when an error occurs adding the schema to the currently set
-     *             schema
+     *             when the current event type is not START_TRANSACTION
      */
-    void addSchema(Schema schema) throws EDISchemaException;
+    void setTransactionSchema(Schema schema);
 
     /**
      * Return the reference code for the current element if a schema has been

@@ -13,6 +13,12 @@ public enum EDIStreamEvent {
     START_INTERCHANGE,
     END_INTERCHANGE,
 
+    START_GROUP,
+    END_GROUP,
+
+    START_TRANSACTION,
+    END_TRANSACTION,
+
     START_LOOP,
     END_LOOP,
 

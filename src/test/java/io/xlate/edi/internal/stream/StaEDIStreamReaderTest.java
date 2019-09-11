@@ -47,19 +47,25 @@ import io.xlate.edi.stream.EDIStreamValidationError;
 import io.xlate.edi.stream.Location;
 import io.xlate.edi.stream.EDIStreamConstants.Delimiters;
 
-@SuppressWarnings({ "static-method", "resource", "unused" })
+@SuppressWarnings({ "unused" })
 public class StaEDIStreamReaderTest implements ConstantsTest {
 
     private Set<EDIStreamEvent> possible = new HashSet<>();
 
     public StaEDIStreamReaderTest() {
         possible.addAll(Arrays.asList(EDIStreamEvent.ELEMENT_DATA,
-                                      EDIStreamEvent.END_COMPOSITE,
-                                      EDIStreamEvent.END_INTERCHANGE,
-                                      EDIStreamEvent.END_SEGMENT,
-                                      EDIStreamEvent.START_COMPOSITE,
                                       EDIStreamEvent.START_INTERCHANGE,
-                                      EDIStreamEvent.START_SEGMENT));
+                                      EDIStreamEvent.START_GROUP,
+                                      EDIStreamEvent.START_TRANSACTION,
+                                      EDIStreamEvent.START_LOOP,
+                                      EDIStreamEvent.START_SEGMENT,
+                                      EDIStreamEvent.START_COMPOSITE,
+                                      EDIStreamEvent.END_INTERCHANGE,
+                                      EDIStreamEvent.END_GROUP,
+                                      EDIStreamEvent.END_TRANSACTION,
+                                      EDIStreamEvent.END_LOOP,
+                                      EDIStreamEvent.END_SEGMENT,
+                                      EDIStreamEvent.END_COMPOSITE));
     }
 
     @Test
@@ -169,8 +175,7 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
     @Test
     public void testNext() throws EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
-        InputStream stream = getClass().getClassLoader().getResourceAsStream(
-                                                                             "x12/simple997.edi");
+        InputStream stream = getClass().getClassLoader().getResourceAsStream("x12/simple997.edi");
         EDIStreamReader reader = factory.createEDIStreamReader(stream);
 
         EDIStreamEvent event;
@@ -178,7 +183,7 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
         do {
             try {
                 event = reader.next();
-                Assert.assertTrue("Unknown event", possible.contains(event));
+                Assert.assertTrue("Unknown event " + event, possible.contains(event));
             } catch (NoSuchElementException e) {
                 event = null;
             }
@@ -188,8 +193,8 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
     @Test
     public void testNextTag() throws EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
-        InputStream stream = getClass().getClassLoader().getResourceAsStream(
-                                                                             "x12/simple997.edi");
+        factory.setProperty(EDIInputFactory.EDI_VALIDATE_CONTROL_STRUCTURE, "false");
+        InputStream stream = getClass().getClassLoader().getResourceAsStream("x12/simple997.edi");
         EDIStreamReader reader = factory.createEDIStreamReader(stream);
 
         int s = 0;
@@ -249,8 +254,7 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
     @Test
     public void testGetEventType() throws EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
-        InputStream stream = getClass().getClassLoader().getResourceAsStream(
-                                                                             "x12/simple997.edi");
+        InputStream stream = getClass().getClassLoader().getResourceAsStream("x12/simple997.edi");
         EDIStreamReader reader = factory.createEDIStreamReader(stream);
 
         EDIStreamEvent event;
@@ -264,8 +268,7 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
     @Test
     public void testGetStandard() throws EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
-        InputStream stream = getClass().getClassLoader().getResourceAsStream(
-                                                                             "x12/simple997.edi");
+        InputStream stream = getClass().getClassLoader().getResourceAsStream("x12/simple997.edi");
         EDIStreamReader reader = factory.createEDIStreamReader(stream);
 
         String standard = null;
@@ -316,9 +319,7 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
         }
 
         Assert.assertArrayEquals("Unexpected version", new String[] { "00501" }, version);
-        Assert.assertTrue(
-                          "Unexpected number of exceptions",
-                          events == versionExceptions + 1);
+        Assert.assertTrue("Unexpected number of exceptions", events == versionExceptions + 1);
     }
 
     @Test
@@ -344,14 +345,11 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
                 String standard = reader.getStandard();
                 String[] version = reader.getVersion();
                 Schema control = SchemaUtils.getControlSchema(standard, version);
-                EDIComplexType parent;
-                EDIReference child;
-                parent = (EDIComplexType) control.getType("TRANSACTION");
-                child = parent.getReferences().get(1); // SE
-                Schema schema = control.reference(transaction, parent, child);
-                reader.setSchema(schema);
+                reader.setControlSchema(control);
             } else {
-                if (event == EDIStreamEvent.START_SEGMENT) {
+                if (event == EDIStreamEvent.START_TRANSACTION) {
+                    reader.setTransactionSchema(transaction);
+                } else if (event == EDIStreamEvent.START_SEGMENT) {
                     segment = reader.getText();
                 } else if (event == EDIStreamEvent.ELEMENT_DATA_ERROR) {
                     Location l = reader.getLocation();
@@ -366,9 +364,9 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
 
                     errors.get(key).add(reader.getErrorType());
                 } else if (event == EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR) {
-                    Assert.fail();
+                    Assert.fail("Unexpected error: " + event + " => " + reader.getErrorType() + ", " + reader.getText());
                 } else if (event == EDIStreamEvent.SEGMENT_ERROR) {
-                    Assert.fail();
+                    Assert.fail("Unexpected error: " + event + " => " + reader.getErrorType() + ", " + reader.getText());
                 }
 
                 try {
@@ -380,9 +378,7 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
             events++;
         }
 
-        Assert.assertTrue(
-                          "Unexpected number of exceptions",
-                          events == versionExceptions + 1);
+        Assert.assertEquals("Unexpected number of exceptions", events, versionExceptions + 1);
         Assert.assertTrue(errors.get("AK402").contains(EDIStreamValidationError.DATA_ELEMENT_TOO_LONG));
         Assert.assertTrue(errors.get("AK402").contains(EDIStreamValidationError.INVALID_CHARACTER_DATA));
 
@@ -391,6 +387,7 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
     @Test
     public void testAddSchema() throws EDIStreamException, EDISchemaException, IOException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
+        factory.setProperty(EDIInputFactory.EDI_VALIDATE_CONTROL_STRUCTURE, "false");
         InputStream stream = SchemaUtils.getStreams("x12/invalid997.edi")
                                         .nextElement().openStream();
 
@@ -416,13 +413,13 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
                 IllegalStateException illegal = null;
 
                 try {
-                    reader.addSchema(control);
+                    reader.setTransactionSchema(control);
                 } catch (IllegalStateException e) {
                     illegal = e;
                 }
                 Assert.assertNotNull(illegal);
 
-                reader.setSchema(control);
+                reader.setControlSchema(control);
                 continue;
             }
             case START_SEGMENT: {
@@ -430,7 +427,7 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
                 IllegalStateException illegal = null;
 
                 try {
-                    reader.addSchema(transaction);
+                    reader.setTransactionSchema(transaction);
                 } catch (IllegalStateException e) {
                     illegal = e;
                 }
@@ -440,17 +437,23 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
             }
             case END_SEGMENT:
                 if ("ST".equals(segment)) {
-                    reader.addSchema(transaction);
+                    IllegalStateException illegal = null;
+
+                    try {
+                        reader.setTransactionSchema(transaction);
+                    } catch (IllegalStateException e) {
+                        illegal = e;
+                    }
+                    Assert.assertNotNull(illegal);
                 }
 
                 break;
+            case START_TRANSACTION:
+                reader.setTransactionSchema(transaction);
+                break;
             case ELEMENT_DATA_ERROR:
                 Location l = reader.getLocation();
-                String key = String.format(
-                                           "%s%02d",
-                                           segment,
-                                           l.getElementPosition());
-
+                String key = String.format("%s%02d", segment, l.getElementPosition());
                 if (!errors.containsKey(key)) {
                     errors.put(key, new HashSet<>(2));
                 }
@@ -459,7 +462,7 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
                 break;
             case ELEMENT_OCCURRENCE_ERROR:
             case SEGMENT_ERROR:
-                Assert.fail();
+                Assert.fail("Unexpected error: " + event + " => " + reader.getErrorType() + ", " + reader.getText());
                 break;
             default:
                 break;
@@ -472,12 +475,9 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
             }
         }
 
-        Assert.assertTrue(
-                          "Unexpected number of exceptions",
-                          events == versionExceptions + 1);
+        Assert.assertTrue("Unexpected number of exceptions", events == versionExceptions + 1);
         Assert.assertTrue(errors.get("AK402").contains(EDIStreamValidationError.DATA_ELEMENT_TOO_LONG));
         Assert.assertTrue(errors.get("AK402").contains(EDIStreamValidationError.INVALID_CHARACTER_DATA));
-
     }
 
     @Test

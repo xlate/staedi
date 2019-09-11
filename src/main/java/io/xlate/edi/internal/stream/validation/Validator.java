@@ -17,13 +17,11 @@ package io.xlate.edi.internal.stream.validation;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.ListIterator;
 
 import io.xlate.edi.internal.stream.internal.EventHandler;
 import io.xlate.edi.internal.stream.internal.InternalLocation;
 import io.xlate.edi.schema.EDIComplexType;
 import io.xlate.edi.schema.EDIReference;
-import io.xlate.edi.schema.EDISchemaException;
 import io.xlate.edi.schema.EDISyntaxRule;
 import io.xlate.edi.schema.EDIType;
 import io.xlate.edi.schema.Schema;
@@ -32,6 +30,7 @@ import io.xlate.edi.stream.Location;
 
 public class Validator {
 
+    private Schema containerSchema;
     private Schema schema;
     private final UsageNode root;
 
@@ -41,57 +40,21 @@ public class Validator {
     private UsageNode element;
     private UsageNode composite;
 
-    final private List<String> mandatory = new ArrayList<>();
-    final private List<EDIStreamValidationError> elementErrors = new ArrayList<>(5);
+    private final List<String> mandatory = new ArrayList<>();
+    private final List<EDIStreamValidationError> elementErrors = new ArrayList<>(5);
 
-    private int depth;
+    private int depth = 1;
+    private boolean complete = false;
 
-    public Validator(Schema schema) {
-        super();
-
+    public Validator(Schema schema, Schema containerSchema) {
         this.schema = schema;
+        this.containerSchema = containerSchema;
         root = buildTree(schema.getMainLoop());
         correctSegment = segment = root.getFirstChild();
-
-        depth = 1;
     }
 
-    public Schema addSchema(Schema addedSchema) throws EDISchemaException {
-        final UsageNode parent = correctSegment.getParent();
-        final UsageNode next = correctSegment.getNextSibling();
-
-        final EDIComplexType parentType;
-        final EDIReference childType;
-
-        parentType = (EDIComplexType) parent.getReferencedType();
-
-        if (next != null) {
-            childType = next.getReference();
-        } else {
-            childType = null;
-        }
-
-        this.schema = this.schema.reference(addedSchema, parentType, childType);
-        List<? extends EDIReference> refs = addedSchema.getMainLoop().getReferences();
-        ListIterator<UsageNode> siblings = parent.getChildren().listIterator();
-        int index = 0;
-
-        while (siblings.hasNext()) {
-            index++;
-
-            if (siblings.next().equals(correctSegment)) {
-                for (EDIReference ref : refs) {
-                    siblings.add(buildTree(parent, ref, index++));
-                }
-
-                while (siblings.hasNext()) {
-                    siblings.next().setIndex(index++);
-                }
-            }
-        }
-
-        //checkUsageTree(this.correctSegment);
-        return this.schema;
+    public boolean isComplete() {
+        return complete;
     }
 
     public String getCompositeReferenceCode() {
@@ -181,6 +144,7 @@ public class Validator {
         UsageNode current = startNode;
         //checkUsageTree(startNode);
         mandatory.clear();
+        complete = false;
 
         scan: while (current != null) {
             switch (current.getNodeType()) {
@@ -230,6 +194,8 @@ public class Validator {
 
                 correctSegment = segment = current;
                 break scan;
+            case GROUP:
+            case TRANSACTION:
             case LOOP:
                 if (!current.getFirstChild().getId().contentEquals(tag)) {
                     break;
@@ -241,8 +207,7 @@ public class Validator {
 
                 if (current.exceedsMaximumUsage()) {
                     handleMissingMandatory(handler);
-                    handler.segmentError(
-                                         tag,
+                    handler.segmentError(tag,
                                          EDIStreamValidationError.LOOP_OCCURS_OVER_MAXIMUM_TIMES);
                 }
 
@@ -261,6 +226,8 @@ public class Validator {
                 case SEGMENT:
                     mandatory.add(current.getId());
                     break;
+                case GROUP:
+                case TRANSACTION:
                 case LOOP:
                     mandatory.add(current.getFirstChild().getId());
                     break;
@@ -286,22 +253,20 @@ public class Validator {
                  */
                 next = current.getSiblingById(tag);
 
-                if (next != null) {
-                    if (!next.isFirstChild()) {
-                        mandatory.clear();
+                if (next != null && !next.isFirstChild()) {
+                    mandatory.clear();
+                    handler.segmentError(next.getId(),
+                                         EDIStreamValidationError.SEGMENT_NOT_IN_PROPER_SEQUENCE);
+
+                    next.incrementUsage();
+
+                    if (next.exceedsMaximumUsage()) {
                         handler.segmentError(next.getId(),
-                                             EDIStreamValidationError.SEGMENT_NOT_IN_PROPER_SEQUENCE);
-
-                        next.incrementUsage();
-
-                        if (next.exceedsMaximumUsage()) {
-                            handler.segmentError(next.getId(),
-                                                 EDIStreamValidationError.SEGMENT_EXCEEDS_MAXIMUM_USE);
-                        }
-
-                        segment = next;
-                        break scan;
+                                             EDIStreamValidationError.SEGMENT_EXCEEDS_MAXIMUM_USE);
                     }
+
+                    segment = next;
+                    break scan;
                 }
             }
 
@@ -312,18 +277,25 @@ public class Validator {
                 current = this.root.getFirstChild();
 
                 if (!current.getId().contentEquals(tag)) {
-                    // Unexpected segment... must reset our position!
-                    segmentExpected = false;
-                    this.depth = startDepth;
-
-                    mandatory.clear();
-
-                    if (schema.containsSegment(tag.toString())) {
-                        handler.segmentError(tag,
-                                             EDIStreamValidationError.UNEXPECTED_SEGMENT);
+                    if (containerSchema != null && containerSchema.containsSegment(tag.toString())) {
+                        // The segment is defined in the containing schema. Handle missing mandatory
+                        // segments and complete any open loops.
+                        handleMissingMandatory(handler);
+                        completeLoops(handler, startDepth, startNode);
+                        complete = true;
                     } else {
-                        handler.segmentError(tag,
-                                             EDIStreamValidationError.SEGMENT_NOT_IN_DEFINED_TRANSACTION_SET);
+                        // Unexpected segment... must reset our position!
+                        segmentExpected = false;
+                        this.depth = startDepth;
+                        mandatory.clear();
+
+                        if (schema.containsSegment(tag.toString())) {
+                            handler.segmentError(tag,
+                                                 EDIStreamValidationError.UNEXPECTED_SEGMENT);
+                        } else {
+                            handler.segmentError(tag,
+                                                 EDIStreamValidationError.SEGMENT_NOT_IN_DEFINED_TRANSACTION_SET);
+                        }
                     }
 
                     break scan; // Wasn't found; cut our losses and go back.

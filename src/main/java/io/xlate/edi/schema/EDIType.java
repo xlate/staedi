@@ -18,6 +18,9 @@ package io.xlate.edi.schema;
 public interface EDIType {
 
     public enum Type {
+        INTERCHANGE,
+        GROUP,
+        TRANSACTION,
         LOOP,
         SEGMENT,
         COMPOSITE,
