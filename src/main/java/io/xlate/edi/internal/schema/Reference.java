@@ -35,28 +35,6 @@ class Reference implements EDIReference {
         this.maxOccurs = maxOccurs;
     }
 
-    Reference(EDIType referencedType, int minOccurs, int maxOccurs) {
-        this.refId = referencedType.getId();
-        this.refTag = null;
-        this.referencedType = referencedType;
-        this.minOccurs = minOccurs;
-        this.maxOccurs = maxOccurs;
-    }
-
-    Reference(EDIReference other) {
-        this.referencedType = other.getReferencedType();
-
-        if (other instanceof Reference) {
-            this.refId = ((Reference) other).getRefId();
-        } else {
-            this.refId = referencedType.getId();
-        }
-
-        this.refTag = null;
-        this.minOccurs = other.getMinOccurs();
-        this.maxOccurs = other.getMaxOccurs();
-    }
-
     @Override
     public String toString() {
         return "refId: "

@@ -431,21 +431,24 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
                 } catch (IllegalStateException e) {
                     illegal = e;
                 }
-                Assert.assertNotNull(illegal);
+                if ("ST".equals(segment)) {
+                    Assert.assertNull(illegal);
+                } else {
+                    Assert.assertNotNull(illegal);
+                }
 
                 break;
             }
             case END_SEGMENT:
-                if ("ST".equals(segment)) {
-                    IllegalStateException illegal = null;
+                segment = reader.getText();
+                IllegalStateException illegal = null;
 
-                    try {
-                        reader.setTransactionSchema(transaction);
-                    } catch (IllegalStateException e) {
-                        illegal = e;
-                    }
-                    Assert.assertNotNull(illegal);
+                try {
+                    reader.setTransactionSchema(transaction);
+                } catch (IllegalStateException e) {
+                    illegal = e;
                 }
+                Assert.assertNotNull(illegal);
 
                 break;
             case START_TRANSACTION:

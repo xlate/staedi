@@ -380,8 +380,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter {
     }
 
     @Override
-    public EDIStreamWriter writeComponent(CharSequence text)
-                                                             throws EDIStreamException {
+    public EDIStreamWriter writeComponent(CharSequence text) throws EDIStreamException {
         startComponent();
         writeElementData(text);
         endComponent();
@@ -389,8 +388,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter {
     }
 
     @Override
-    public EDIStreamWriter writeComponent(char[] text, int start, int end)
-                                                                           throws EDIStreamException {
+    public EDIStreamWriter writeComponent(char[] text, int start, int end) throws EDIStreamException {
         startComponent();
         writeElementData(text, start, end);
         endComponent();
@@ -405,8 +403,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter {
     }
 
     @Override
-    public EDIStreamWriter writeElementData(CharSequence text)
-                                                               throws EDIStreamException {
+    public EDIStreamWriter writeElementData(CharSequence text) throws EDIStreamException {
         ensureLevelAtLeast(LEVEL_ELEMENT);
         for (int i = 0, m = text.length(); i < m; i++) {
             char curr = text.charAt(i);
@@ -419,9 +416,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter {
     }
 
     @Override
-    public EDIStreamWriter writeElementData(char[] text, int start, int end)
-                                                                             throws EDIStreamException {
-
+    public EDIStreamWriter writeElementData(char[] text, int start, int end) throws EDIStreamException {
         ensureLevelAtLeast(LEVEL_ELEMENT);
         ensureArgs(text.length, start, end);
 
@@ -437,8 +432,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter {
     }
 
     @Override
-    public EDIStreamWriter writeBinaryData(InputStream binaryStream)
-                                                                     throws EDIStreamException {
+    public EDIStreamWriter writeBinaryData(InputStream binaryStream) throws EDIStreamException {
         ensureLevel(LEVEL_ELEMENT);
         ensureState(State.ELEMENT_DATA_BINARY);
         int input;
@@ -455,9 +449,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter {
     }
 
     @Override
-    public EDIStreamWriter writeBinaryData(byte[] binary, int start, int end)
-                                                                              throws EDIStreamException {
-
+    public EDIStreamWriter writeBinaryData(byte[] binary, int start, int end) throws EDIStreamException {
         ensureLevel(LEVEL_ELEMENT);
         ensureState(State.ELEMENT_DATA_BINARY);
         ensureArgs(binary.length, start, end);
@@ -470,9 +462,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter {
     }
 
     @Override
-    public EDIStreamWriter writeBinaryData(ByteBuffer binary)
-                                                              throws EDIStreamException {
-
+    public EDIStreamWriter writeBinaryData(ByteBuffer binary) throws EDIStreamException {
         ensureLevel(LEVEL_ELEMENT);
         ensureState(State.ELEMENT_DATA_BINARY);
 

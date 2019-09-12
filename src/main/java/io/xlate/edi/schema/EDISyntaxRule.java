@@ -20,10 +20,35 @@ import java.util.List;
 public interface EDISyntaxRule {
 
     public enum Type {
+        /**
+         * X12: N/A
+         * EDIFACT: (D1) One and only one
+         */
+        SINGLE,
+        /**
+         * X12: Type P
+         * EDIFACT: (D2) All or none
+         */
         PAIRED,
+        /**
+         * X12: Type R
+         * EDIFACT: (D3) One or more
+         */
         REQUIRED,
+        /**
+         * X12: Type E
+         * EDIFACT: (D4) One or none
+         */
         EXCLUSION,
+        /**
+         * X12: Type C
+         * EDIFACT: (D5) If first, then all
+         */
         CONDITIONAL,
+        /**
+         * X12: Type L
+         * EDIFACT: (D6) If first, then at least one more
+         */
         LIST;
     }
 

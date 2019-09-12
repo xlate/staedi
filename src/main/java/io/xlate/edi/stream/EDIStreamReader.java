@@ -143,12 +143,12 @@ public interface EDIStreamReader extends Closeable, EDIStreamConstants {
      * contents of a transaction/message, <em>not including</em> the begin/end control
      * structures.
      * <p>
-     * Calls to this method are only valid when the current event type is
-     * START_TRANSACTION.
+     * Calls to this method are only valid after a START_TRANSACTION event and
+     * before the end of the segment representing the beginning of the transaction.
      *
      * @param schema
      * @throws IllegalStateException
-     *             when the current event type is not START_TRANSACTION
+     *             when the reader is not positioned on the start transaction segment
      */
     void setTransactionSchema(Schema schema);
 

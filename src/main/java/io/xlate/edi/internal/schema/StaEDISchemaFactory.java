@@ -48,6 +48,8 @@ public class StaEDISchemaFactory extends SchemaFactory {
     private static XMLInputFactory factory = XMLInputFactory.newFactory();
 
     private static final String XMLNS = "http://xlate.io/EDISchema/v2";
+    private static final String REFERR_UNDECLARED = "Type %s references undeclared %s with ref='%s'";
+    private static final String REFERR_ILLEGAL = "Type '%s' must not be referenced as '%s' in definition of type '%s'";
 
     static final QName QN_SCHEMA = new QName(XMLNS, "schema");
     static final QName QN_DESCRIPTION = new QName(XMLNS, "description");
@@ -440,29 +442,13 @@ public class StaEDISchemaFactory extends SchemaFactory {
             EDIType target = types.get(impl.getRefId());
 
             if (target == null) {
-                StringBuilder excp = new StringBuilder();
-                excp.append("Type ");
-                excp.append(struct.getId());
-                excp.append(" references undeclared ");
-                excp.append(impl.getRefTag());
-                excp.append(" with ref='");
-                excp.append(impl.getRefId());
-                excp.append('\'');
-                schemaException(excp.toString());
+                schemaException(String.format(REFERR_UNDECLARED, struct.getId(), impl.getRefTag(), impl.getRefId()));
             }
 
             final EDIType.Type refType = target.getType();
 
             if (refType != refTypeId(impl.getRefTag())) {
-                StringBuilder excp = new StringBuilder();
-                excp.append("Type '");
-                excp.append(impl.getRefId());
-                excp.append("' must not be referenced as \'");
-                excp.append(impl.getRefTag());
-                excp.append("\' in definition of type '");
-                excp.append(struct.getId());
-                excp.append('\'');
-                schemaException(excp.toString());
+                schemaException(String.format(REFERR_ILLEGAL, impl.getRefId(), impl.getRefTag(), struct.getId()));
             }
 
             switch (struct.getType()) {

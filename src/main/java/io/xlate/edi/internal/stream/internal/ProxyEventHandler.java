@@ -36,8 +36,8 @@ public class ProxyEventHandler implements EventHandler {
 
     private Validator transactionValidator;
 
+    private boolean transactionSchemaAllowed = false;
     private boolean transaction = false;
-    private boolean transactionNofified = false;
 
     private InputStream binary;
     private CharArraySequence segmentHolder = new CharArraySequence();
@@ -63,6 +63,10 @@ public class ProxyEventHandler implements EventHandler {
 
         this.controlSchema = controlSchema;
         controlValidator = controlSchema != null ? new Validator(controlSchema, null) : null;
+    }
+
+    public boolean isTransactionSchemaAllowed() {
+        return transactionSchemaAllowed;
     }
 
     public void setTransactionSchema(Schema transactionSchema) {
@@ -136,7 +140,8 @@ public class ProxyEventHandler implements EventHandler {
     public void loopBegin(CharSequence id) {
         if (EDIType.Type.TRANSACTION.toString().equals(id)) {
             transaction = true;
-            transactionNofified = false;
+            transactionSchemaAllowed = true;
+            enqueueEvent(EDIStreamEvent.START_TRANSACTION, EDIStreamValidationError.NONE, id, null);
         } else if (EDIType.Type.GROUP.toString().equals(id)) {
             enqueueEvent(EDIStreamEvent.START_GROUP, EDIStreamValidationError.NONE, id, null);
         } else {
@@ -147,9 +152,8 @@ public class ProxyEventHandler implements EventHandler {
     @Override
     public void loopEnd(CharSequence id) {
         if (EDIType.Type.TRANSACTION.toString().equals(id)) {
-            if (transaction) {
-                transaction = false;
-            }
+            transaction = false;
+            enqueueEvent(EDIStreamEvent.END_TRANSACTION, EDIStreamValidationError.NONE, id, null);
         } else if (EDIType.Type.GROUP.toString().equals(id)) {
             enqueueEvent(EDIStreamEvent.END_GROUP, EDIStreamValidationError.NONE, id, null);
         } else {
@@ -171,7 +175,6 @@ public class ProxyEventHandler implements EventHandler {
 
         if (exitTransaction(segmentHolder)) {
             transaction = false;
-            enqueueEvent(EDIStreamEvent.END_TRANSACTION, EDIStreamValidationError.NONE, "TRANSACTION", null);
             validator().validateSegment(this, segmentHolder);
         }
 
@@ -179,7 +182,7 @@ public class ProxyEventHandler implements EventHandler {
     }
 
     boolean exitTransaction(CharSequence tag) {
-        if (transaction && transactionNofified && controlSchema != null && controlSchema.containsSegment(tag.toString())) {
+        if (transaction && !transactionSchemaAllowed && controlSchema != null && controlSchema.containsSegment(tag.toString())) {
             return true;
         }
         return false;
@@ -192,11 +195,7 @@ public class ProxyEventHandler implements EventHandler {
         }
 
         enqueueEvent(EDIStreamEvent.END_SEGMENT, EDIStreamValidationError.NONE, segmentHolder, null, null);
-
-        if (transaction && !transactionNofified) {
-            enqueueEvent(EDIStreamEvent.START_TRANSACTION, EDIStreamValidationError.NONE, "TRANSACTION", null);
-            transactionNofified = true;
-        }
+        transactionSchemaAllowed = false;
     }
 
     @Override
@@ -337,7 +336,8 @@ public class ProxyEventHandler implements EventHandler {
     }
 
     private Validator validator() {
-        return transaction ? transactionValidator : controlValidator;
+        // Do not use the transactionValidator in the period where is may be set/mutated by the user
+        return transaction && !transactionSchemaAllowed ? transactionValidator : controlValidator;
     }
 
     private void enqueueEvent(EDIStreamEvent event,
@@ -469,10 +469,7 @@ public class ProxyEventHandler implements EventHandler {
             }
             return ((start == 0) && (end == length))
                     ? this
-                    : new String(
-                                 text,
-                                 this.start + start,
-                                 end - start);
+                    : new String(text, this.start + start, end - start);
         }
 
         @Override

@@ -55,10 +55,6 @@ class UsageNode {
         this.siblingIndex = siblingIndex;
     }
 
-    EDIReference getReference() {
-        return link;
-    }
-
     EDIType getReferencedType() {
         return link.getReferencedType();
     }

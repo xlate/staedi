@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<schema xmlns="http://xlate.io/EDISchema/v2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://xlate.io/EDISchema/v2 ../schema/EDISchema-v2.xsd">
-  <interchange header="UNB" trailer="UNZ">
-    <sequence>
-      <group header="UNG" trailer="UNE">
-        <transaction header="UNH" trailer="UNT" />
-      </group>
-      <transaction header="UNH" trailer="UNT" />
-    </sequence>
-  </interchange>
-    <elementType name="DE.0001" number="1" base="identifier" minLength="4" maxLength="4">
+<schema xmlns="http://xlate.io/EDISchema/v2">
+    <interchange header="UNB" trailer="UNZ">
+        <sequence>
+            <group header="UNG" trailer="UNE">
+                <transaction header="UNH" trailer="UNT"/>
+            </group>
+            <transaction header="UNH" trailer="UNT"/>
+        </sequence>
+    </interchange>
+    <elementType name="DE0001" number="1" base="identifier" minLength="4" maxLength="4">
         <enumeration>
             <value>UNOA</value>
             <value>UNOB</value>
@@ -18,9 +18,9 @@
             <value>UNOF</value>
         </enumeration>
     </elementType>
-    <elementType name="DE.0002" number="2" base="decimal" minLength="1" maxLength="1"/>
-    <elementType name="DE.0004" number="4" base="string" minLength="0" maxLength="35"/>
-    <elementType name="DE.0007" number="7" base="identifier" minLength="0" maxLength="4">
+    <elementType name="DE0002" number="2" base="decimal" minLength="1" maxLength="1"/>
+    <elementType name="DE0004" number="4" base="string" minLength="0" maxLength="35"/>
+    <elementType name="DE0007" number="7" base="identifier" minLength="0" maxLength="4">
         <enumeration>
             <value>1</value>
             <value>4</value>
@@ -71,9 +71,9 @@
             <value>ZZZ</value>
         </enumeration>
     </elementType>
-    <elementType name="DE.0008" number="8" base="string" minLength="0" maxLength="14"/>
-    <elementType name="DE.0010" number="10" base="string" minLength="0" maxLength="35"/>
-    <elementType name="DE.0013" number="13" base="identifier" minLength="3" maxLength="3">
+    <elementType name="DE0008" number="8" base="string" minLength="0" maxLength="14"/>
+    <elementType name="DE0010" number="10" base="string" minLength="0" maxLength="35"/>
+    <elementType name="DE0013" number="13" base="identifier" minLength="3" maxLength="3">
         <enumeration>
             <value>UCD</value>
             <value>UCF</value>
@@ -90,32 +90,32 @@
             <value>UNZ</value>
         </enumeration>
     </elementType>
-    <elementType name="DE.0014" number="14" base="string" minLength="0" maxLength="14"/>
-    <elementType name="DE.0017" number="17" base="decimal" minLength="6" maxLength="6"/>
-    <elementType name="DE.0019" number="19" base="decimal" minLength="4" maxLength="4"/>
-    <elementType name="DE.0020" number="20" base="string" minLength="0" maxLength="14"/>
-    <elementType name="DE.0022" number="22" base="string" minLength="0" maxLength="14"/>
-    <elementType name="DE.0025" number="25" base="identifier" minLength="2" maxLength="2">
+    <elementType name="DE0014" number="14" base="string" minLength="0" maxLength="14"/>
+    <elementType name="DE0017" number="17" base="decimal" minLength="6" maxLength="6"/>
+    <elementType name="DE0019" number="19" base="decimal" minLength="4" maxLength="4"/>
+    <elementType name="DE0020" number="20" base="string" minLength="0" maxLength="14"/>
+    <elementType name="DE0022" number="22" base="string" minLength="0" maxLength="14"/>
+    <elementType name="DE0025" number="25" base="identifier" minLength="2" maxLength="2">
         <enumeration>
             <value>AA</value>
             <value>BB</value>
         </enumeration>
     </elementType>
-    <elementType name="DE.0026" number="26" base="string" minLength="0" maxLength="14"/>
-    <elementType name="DE.0029" number="29" base="identifier" minLength="1" maxLength="1">
+    <elementType name="DE0026" number="26" base="string" minLength="0" maxLength="14"/>
+    <elementType name="DE0029" number="29" base="identifier" minLength="1" maxLength="1">
         <enumeration>
             <value>A</value>
         </enumeration>
     </elementType>
-    <elementType name="DE.0031" number="31" base="decimal" minLength="1" maxLength="1"/>
-    <elementType name="DE.0032" number="32" base="string" minLength="0" maxLength="35"/>
-    <elementType name="DE.0035" number="35" base="decimal" minLength="1" maxLength="1"/>
-    <elementType name="DE.0036" number="36" base="decimal" minLength="0" maxLength="6"/>
-    <elementType name="DE.0038" number="38" base="string" minLength="0" maxLength="6"/>
-    <elementType name="DE.0040" number="40" base="string" minLength="0" maxLength="35"/>
-    <elementType name="DE.0044" number="44" base="string" minLength="0" maxLength="35"/>
-    <elementType name="DE.0048" number="48" base="string" minLength="0" maxLength="14"/>
-    <elementType name="DE.0051" number="51" base="identifier" minLength="0" maxLength="2">
+    <elementType name="DE0031" number="31" base="decimal" minLength="1" maxLength="1"/>
+    <elementType name="DE0032" number="32" base="string" minLength="0" maxLength="35"/>
+    <elementType name="DE0035" number="35" base="decimal" minLength="1" maxLength="1"/>
+    <elementType name="DE0036" number="36" base="decimal" minLength="0" maxLength="6"/>
+    <elementType name="DE0038" number="38" base="string" minLength="0" maxLength="6"/>
+    <elementType name="DE0040" number="40" base="string" minLength="0" maxLength="35"/>
+    <elementType name="DE0044" number="44" base="string" minLength="0" maxLength="35"/>
+    <elementType name="DE0048" number="48" base="string" minLength="0" maxLength="14"/>
+    <elementType name="DE0051" number="51" base="identifier" minLength="0" maxLength="2">
         <enumeration>
             <value>AA</value>
             <value>AB</value>
@@ -145,7 +145,7 @@
             <value>UN</value>
         </enumeration>
     </elementType>
-    <elementType name="DE.0052" number="52" base="identifier" minLength="0" maxLength="3">
+    <elementType name="DE0052" number="52" base="identifier" minLength="0" maxLength="3">
         <enumeration>
             <value>1</value>
             <value>2</value>
@@ -156,7 +156,7 @@
             <value>90</value>
         </enumeration>
     </elementType>
-    <elementType name="DE.0054" number="54" base="identifier" minLength="0" maxLength="3">
+    <elementType name="DE0054" number="54" base="identifier" minLength="0" maxLength="3">
         <enumeration>
             <value>1</value>
             <value>2</value>
@@ -196,6 +196,11 @@
             <value>15B</value>
             <value>16A</value>
             <value>16B</value>
+            <value>17A</value>
+            <value>17B</value>
+            <value>18A</value>
+            <value>18B</value>
+            <value>19A</value>
             <value>902</value>
             <value>911</value>
             <value>912</value>
@@ -216,11 +221,11 @@
             <value>99B</value>
         </enumeration>
     </elementType>
-    <elementType name="DE.0057" number="57" base="string" minLength="0" maxLength="6"/>
-    <elementType name="DE.0058" number="58" base="string" minLength="0" maxLength="14"/>
-    <elementType name="DE.0060" number="60" base="decimal" minLength="0" maxLength="6"/>
-    <elementType name="DE.0062" number="62" base="string" minLength="0" maxLength="14"/>
-    <elementType name="DE.0065" number="65" base="identifier" minLength="0" maxLength="6">
+    <elementType name="DE0057" number="57" base="string" minLength="0" maxLength="6"/>
+    <elementType name="DE0058" number="58" base="string" minLength="0" maxLength="14"/>
+    <elementType name="DE0060" number="60" base="decimal" minLength="0" maxLength="6"/>
+    <elementType name="DE0062" number="62" base="string" minLength="0" maxLength="14"/>
+    <elementType name="DE0065" number="65" base="identifier" minLength="0" maxLength="6">
         <enumeration>
             <value>APERAK</value>
             <value>AUTHOR</value>
@@ -420,31 +425,31 @@
             <value>WKGRRE</value>
         </enumeration>
     </elementType>
-    <elementType name="DE.0068" number="68" base="string" minLength="0" maxLength="35"/>
-    <elementType name="DE.0070" number="70" base="decimal" minLength="0" maxLength="2"/>
-    <elementType name="DE.0073" number="73" base="identifier" minLength="1" maxLength="1">
+    <elementType name="DE0068" number="68" base="string" minLength="0" maxLength="35"/>
+    <elementType name="DE0070" number="70" base="decimal" minLength="0" maxLength="2"/>
+    <elementType name="DE0073" number="73" base="identifier" minLength="1" maxLength="1">
         <enumeration>
             <value>C</value>
             <value>F</value>
         </enumeration>
     </elementType>
-    <elementType name="DE.0074" number="74" base="decimal" minLength="0" maxLength="6"/>
-    <elementType name="DE.0077" number="77" base="string" minLength="3" maxLength="3"/>
-    <elementType name="DE.0078" number="78" base="string" minLength="0" maxLength="70"/>
-    <elementType name="DE.0081" number="81" base="identifier" minLength="1" maxLength="1">
+    <elementType name="DE0074" number="74" base="decimal" minLength="0" maxLength="6"/>
+    <elementType name="DE0077" number="77" base="string" minLength="3" maxLength="3"/>
+    <elementType name="DE0078" number="78" base="string" minLength="0" maxLength="70"/>
+    <elementType name="DE0081" number="81" base="identifier" minLength="1" maxLength="1">
         <enumeration>
             <value>D</value>
             <value>S</value>
         </enumeration>
     </elementType>
-    <elementType name="DE.0083" number="83" base="identifier" minLength="0" maxLength="3">
+    <elementType name="DE0083" number="83" base="identifier" minLength="0" maxLength="3">
         <enumeration>
             <value>4</value>
             <value>7</value>
             <value>8</value>
         </enumeration>
     </elementType>
-    <elementType name="DE.0085" number="85" base="identifier" minLength="0" maxLength="3">
+    <elementType name="DE0085" number="85" base="identifier" minLength="0" maxLength="3">
         <enumeration>
             <value>2</value>
             <value>7</value>
@@ -482,181 +487,181 @@
             <value>43</value>
         </enumeration>
     </elementType>
-    <elementType name="DE.0096" number="96" base="decimal" minLength="0" maxLength="6"/>
-    <elementType name="DE.0098" number="98" base="decimal" minLength="0" maxLength="3"/>
-    <elementType name="DE.0104" number="104" base="decimal" minLength="0" maxLength="3"/>
-    <compositeType name="CE.S001">
+    <elementType name="DE0096" number="96" base="decimal" minLength="0" maxLength="6"/>
+    <elementType name="DE0098" number="98" base="decimal" minLength="0" maxLength="3"/>
+    <elementType name="DE0104" number="104" base="decimal" minLength="0" maxLength="3"/>
+    <compositeType name="CES001">
         <sequence>
-            <element ref="DE.0001" minOccurs="1" maxOccurs="1"/>
-            <element ref="DE.0002" minOccurs="1" maxOccurs="1"/>
+            <element ref="DE0001" minOccurs="1" maxOccurs="1"/>
+            <element ref="DE0002" minOccurs="1" maxOccurs="1"/>
         </sequence>
     </compositeType>
-    <compositeType name="CE.S002">
+    <compositeType name="CES002">
         <sequence>
-            <element ref="DE.0004" minOccurs="1" maxOccurs="1"/>
-            <element ref="DE.0007" minOccurs="0" maxOccurs="1"/>
-            <element ref="DE.0008" minOccurs="0" maxOccurs="1"/>
+            <element ref="DE0004" minOccurs="1" maxOccurs="1"/>
+            <element ref="DE0007" minOccurs="0" maxOccurs="1"/>
+            <element ref="DE0008" minOccurs="0" maxOccurs="1"/>
         </sequence>
     </compositeType>
-    <compositeType name="CE.S003">
+    <compositeType name="CES003">
         <sequence>
-            <element ref="DE.0010" minOccurs="1" maxOccurs="1"/>
-            <element ref="DE.0007" minOccurs="0" maxOccurs="1"/>
-            <element ref="DE.0014" minOccurs="0" maxOccurs="1"/>
+            <element ref="DE0010" minOccurs="1" maxOccurs="1"/>
+            <element ref="DE0007" minOccurs="0" maxOccurs="1"/>
+            <element ref="DE0014" minOccurs="0" maxOccurs="1"/>
         </sequence>
     </compositeType>
-    <compositeType name="CE.S004">
+    <compositeType name="CES004">
         <sequence>
-            <element ref="DE.0017" minOccurs="1" maxOccurs="1"/>
-            <element ref="DE.0019" minOccurs="1" maxOccurs="1"/>
+            <element ref="DE0017" minOccurs="1" maxOccurs="1"/>
+            <element ref="DE0019" minOccurs="1" maxOccurs="1"/>
         </sequence>
     </compositeType>
-    <compositeType name="CE.S005">
+    <compositeType name="CES005">
         <sequence>
-            <element ref="DE.0022" minOccurs="1" maxOccurs="1"/>
-            <element ref="DE.0025" minOccurs="0" maxOccurs="1"/>
+            <element ref="DE0022" minOccurs="1" maxOccurs="1"/>
+            <element ref="DE0025" minOccurs="0" maxOccurs="1"/>
         </sequence>
     </compositeType>
-    <compositeType name="CE.S006">
+    <compositeType name="CES006">
         <sequence>
-            <element ref="DE.0040" minOccurs="1" maxOccurs="1"/>
-            <element ref="DE.0007" minOccurs="0" maxOccurs="1"/>
+            <element ref="DE0040" minOccurs="1" maxOccurs="1"/>
+            <element ref="DE0007" minOccurs="0" maxOccurs="1"/>
         </sequence>
     </compositeType>
-    <compositeType name="CE.S007">
+    <compositeType name="CES007">
         <sequence>
-            <element ref="DE.0044" minOccurs="1" maxOccurs="1"/>
-            <element ref="DE.0007" minOccurs="0" maxOccurs="1"/>
+            <element ref="DE0044" minOccurs="1" maxOccurs="1"/>
+            <element ref="DE0007" minOccurs="0" maxOccurs="1"/>
         </sequence>
     </compositeType>
-    <compositeType name="CE.S008">
+    <compositeType name="CES008">
         <sequence>
-            <element ref="DE.0052" minOccurs="1" maxOccurs="1"/>
-            <element ref="DE.0054" minOccurs="1" maxOccurs="1"/>
-            <element ref="DE.0057" minOccurs="0" maxOccurs="1"/>
+            <element ref="DE0052" minOccurs="1" maxOccurs="1"/>
+            <element ref="DE0054" minOccurs="1" maxOccurs="1"/>
+            <element ref="DE0057" minOccurs="0" maxOccurs="1"/>
         </sequence>
     </compositeType>
-    <compositeType name="CE.S009">
+    <compositeType name="CES009">
         <sequence>
-            <element ref="DE.0065" minOccurs="1" maxOccurs="1"/>
-            <element ref="DE.0052" minOccurs="1" maxOccurs="1"/>
-            <element ref="DE.0054" minOccurs="1" maxOccurs="1"/>
-            <element ref="DE.0051" minOccurs="1" maxOccurs="1"/>
-            <element ref="DE.0057" minOccurs="0" maxOccurs="1"/>
+            <element ref="DE0065" minOccurs="1" maxOccurs="1"/>
+            <element ref="DE0052" minOccurs="1" maxOccurs="1"/>
+            <element ref="DE0054" minOccurs="1" maxOccurs="1"/>
+            <element ref="DE0051" minOccurs="1" maxOccurs="1"/>
+            <element ref="DE0057" minOccurs="0" maxOccurs="1"/>
         </sequence>
     </compositeType>
-    <compositeType name="CE.S010">
+    <compositeType name="CES010">
         <sequence>
-            <element ref="DE.0070" minOccurs="1" maxOccurs="1"/>
-            <element ref="DE.0073" minOccurs="0" maxOccurs="1"/>
+            <element ref="DE0070" minOccurs="1" maxOccurs="1"/>
+            <element ref="DE0073" minOccurs="0" maxOccurs="1"/>
         </sequence>
     </compositeType>
-    <compositeType name="CE.S011">
+    <compositeType name="CES011">
         <sequence>
-            <element ref="DE.0098" minOccurs="1" maxOccurs="1"/>
-            <element ref="DE.0104" minOccurs="0" maxOccurs="1"/>
+            <element ref="DE0098" minOccurs="1" maxOccurs="1"/>
+            <element ref="DE0104" minOccurs="0" maxOccurs="1"/>
         </sequence>
     </compositeType>
     <segmentType name="UCD">
         <sequence>
-            <element ref="DE.0085" minOccurs="1" maxOccurs="1"/>
-            <composite ref="CE.S011" minOccurs="1" maxOccurs="1"/>
+            <element ref="DE0085" minOccurs="1" maxOccurs="1"/>
+            <composite ref="CES011" minOccurs="1" maxOccurs="1"/>
         </sequence>
     </segmentType>
     <segmentType name="UCF">
         <sequence>
-            <element ref="DE.0048" minOccurs="1" maxOccurs="1"/>
-            <composite ref="CE.S006" minOccurs="1" maxOccurs="1"/>
-            <composite ref="CE.S007" minOccurs="1" maxOccurs="1"/>
-            <element ref="DE.0083" minOccurs="1" maxOccurs="1"/>
-            <element ref="DE.0085" minOccurs="0" maxOccurs="1"/>
-            <element ref="DE.0013" minOccurs="0" maxOccurs="1"/>
-            <composite ref="CE.S011" minOccurs="0" maxOccurs="1"/>
+            <element ref="DE0048" minOccurs="1" maxOccurs="1"/>
+            <composite ref="CES006" minOccurs="1" maxOccurs="1"/>
+            <composite ref="CES007" minOccurs="1" maxOccurs="1"/>
+            <element ref="DE0083" minOccurs="1" maxOccurs="1"/>
+            <element ref="DE0085" minOccurs="0" maxOccurs="1"/>
+            <element ref="DE0013" minOccurs="0" maxOccurs="1"/>
+            <composite ref="CES011" minOccurs="0" maxOccurs="1"/>
         </sequence>
     </segmentType>
     <segmentType name="UCI">
         <sequence>
-            <element ref="DE.0020" minOccurs="1" maxOccurs="1"/>
-            <composite ref="CE.S002" minOccurs="1" maxOccurs="1"/>
-            <composite ref="CE.S003" minOccurs="1" maxOccurs="1"/>
-            <element ref="DE.0083" minOccurs="1" maxOccurs="1"/>
-            <element ref="DE.0085" minOccurs="0" maxOccurs="1"/>
-            <element ref="DE.0013" minOccurs="0" maxOccurs="1"/>
-            <composite ref="CE.S011" minOccurs="0" maxOccurs="1"/>
+            <element ref="DE0020" minOccurs="1" maxOccurs="1"/>
+            <composite ref="CES002" minOccurs="1" maxOccurs="1"/>
+            <composite ref="CES003" minOccurs="1" maxOccurs="1"/>
+            <element ref="DE0083" minOccurs="1" maxOccurs="1"/>
+            <element ref="DE0085" minOccurs="0" maxOccurs="1"/>
+            <element ref="DE0013" minOccurs="0" maxOccurs="1"/>
+            <composite ref="CES011" minOccurs="0" maxOccurs="1"/>
         </sequence>
     </segmentType>
     <segmentType name="UCM">
         <sequence>
-            <element ref="DE.0062" minOccurs="1" maxOccurs="1"/>
-            <composite ref="CE.S009" minOccurs="1" maxOccurs="1"/>
-            <element ref="DE.0083" minOccurs="1" maxOccurs="1"/>
-            <element ref="DE.0085" minOccurs="0" maxOccurs="1"/>
-            <element ref="DE.0013" minOccurs="0" maxOccurs="1"/>
-            <composite ref="CE.S011" minOccurs="0" maxOccurs="1"/>
+            <element ref="DE0062" minOccurs="1" maxOccurs="1"/>
+            <composite ref="CES009" minOccurs="1" maxOccurs="1"/>
+            <element ref="DE0083" minOccurs="1" maxOccurs="1"/>
+            <element ref="DE0085" minOccurs="0" maxOccurs="1"/>
+            <element ref="DE0013" minOccurs="0" maxOccurs="1"/>
+            <composite ref="CES011" minOccurs="0" maxOccurs="1"/>
         </sequence>
     </segmentType>
     <segmentType name="UCS">
         <sequence>
-            <element ref="DE.0096" minOccurs="1" maxOccurs="1"/>
-            <element ref="DE.0085" minOccurs="0" maxOccurs="1"/>
+            <element ref="DE0096" minOccurs="1" maxOccurs="1"/>
+            <element ref="DE0085" minOccurs="0" maxOccurs="1"/>
         </sequence>
     </segmentType>
     <segmentType name="UNB">
         <sequence>
-            <composite ref="CE.S001" minOccurs="1" maxOccurs="1"/>
-            <composite ref="CE.S002" minOccurs="1" maxOccurs="1"/>
-            <composite ref="CE.S003" minOccurs="1" maxOccurs="1"/>
-            <composite ref="CE.S004" minOccurs="1" maxOccurs="1"/>
-            <element ref="DE.0020" minOccurs="1" maxOccurs="1"/>
-            <composite ref="CE.S005" minOccurs="0" maxOccurs="1"/>
-            <element ref="DE.0026" minOccurs="0" maxOccurs="1"/>
-            <element ref="DE.0029" minOccurs="0" maxOccurs="1"/>
-            <element ref="DE.0031" minOccurs="0" maxOccurs="1"/>
-            <element ref="DE.0032" minOccurs="0" maxOccurs="1"/>
-            <element ref="DE.0035" minOccurs="0" maxOccurs="1"/>
+            <composite ref="CES001" minOccurs="1" maxOccurs="1"/>
+            <composite ref="CES002" minOccurs="1" maxOccurs="1"/>
+            <composite ref="CES003" minOccurs="1" maxOccurs="1"/>
+            <composite ref="CES004" minOccurs="1" maxOccurs="1"/>
+            <element ref="DE0020" minOccurs="1" maxOccurs="1"/>
+            <composite ref="CES005" minOccurs="0" maxOccurs="1"/>
+            <element ref="DE0026" minOccurs="0" maxOccurs="1"/>
+            <element ref="DE0029" minOccurs="0" maxOccurs="1"/>
+            <element ref="DE0031" minOccurs="0" maxOccurs="1"/>
+            <element ref="DE0032" minOccurs="0" maxOccurs="1"/>
+            <element ref="DE0035" minOccurs="0" maxOccurs="1"/>
         </sequence>
     </segmentType>
     <segmentType name="UNE">
         <sequence>
-            <element ref="DE.0060" minOccurs="1" maxOccurs="1"/>
-            <element ref="DE.0048" minOccurs="1" maxOccurs="1"/>
+            <element ref="DE0060" minOccurs="1" maxOccurs="1"/>
+            <element ref="DE0048" minOccurs="1" maxOccurs="1"/>
         </sequence>
     </segmentType>
     <segmentType name="UNG">
         <sequence>
-            <element ref="DE.0038" minOccurs="1" maxOccurs="1"/>
-            <composite ref="CE.S006" minOccurs="1" maxOccurs="1"/>
-            <composite ref="CE.S007" minOccurs="1" maxOccurs="1"/>
-            <composite ref="CE.S004" minOccurs="1" maxOccurs="1"/>
-            <element ref="DE.0048" minOccurs="1" maxOccurs="1"/>
-            <element ref="DE.0051" minOccurs="1" maxOccurs="1"/>
-            <composite ref="CE.S008" minOccurs="1" maxOccurs="1"/>
-            <element ref="DE.0058" minOccurs="0" maxOccurs="1"/>
+            <element ref="DE0038" minOccurs="1" maxOccurs="1"/>
+            <composite ref="CES006" minOccurs="1" maxOccurs="1"/>
+            <composite ref="CES007" minOccurs="1" maxOccurs="1"/>
+            <composite ref="CES004" minOccurs="1" maxOccurs="1"/>
+            <element ref="DE0048" minOccurs="1" maxOccurs="1"/>
+            <element ref="DE0051" minOccurs="1" maxOccurs="1"/>
+            <composite ref="CES008" minOccurs="1" maxOccurs="1"/>
+            <element ref="DE0058" minOccurs="0" maxOccurs="1"/>
         </sequence>
     </segmentType>
     <segmentType name="UNH">
         <sequence>
-            <element ref="DE.0062" minOccurs="1" maxOccurs="1"/>
-            <composite ref="CE.S009" minOccurs="1" maxOccurs="1"/>
-            <element ref="DE.0068" minOccurs="0" maxOccurs="1"/>
-            <composite ref="CE.S010" minOccurs="0" maxOccurs="1"/>
+            <element ref="DE0062" minOccurs="1" maxOccurs="1"/>
+            <composite ref="CES009" minOccurs="1" maxOccurs="1"/>
+            <element ref="DE0068" minOccurs="0" maxOccurs="1"/>
+            <composite ref="CES010" minOccurs="0" maxOccurs="1"/>
         </sequence>
     </segmentType>
     <segmentType name="UNS">
         <sequence>
-            <element ref="DE.0081" minOccurs="1" maxOccurs="1"/>
+            <element ref="DE0081" minOccurs="1" maxOccurs="1"/>
         </sequence>
     </segmentType>
     <segmentType name="UNT">
         <sequence>
-            <element ref="DE.0074" minOccurs="1" maxOccurs="1"/>
-            <element ref="DE.0062" minOccurs="1" maxOccurs="1"/>
+            <element ref="DE0074" minOccurs="1" maxOccurs="1"/>
+            <element ref="DE0062" minOccurs="1" maxOccurs="1"/>
         </sequence>
     </segmentType>
     <segmentType name="UNZ">
         <sequence>
-            <element ref="DE.0036" minOccurs="1" maxOccurs="1"/>
-            <element ref="DE.0020" minOccurs="1" maxOccurs="1"/>
+            <element ref="DE0036" minOccurs="1" maxOccurs="1"/>
+            <element ref="DE0020" minOccurs="1" maxOccurs="1"/>
         </sequence>
     </segmentType>
 </schema>

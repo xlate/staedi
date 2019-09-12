@@ -18,14 +18,14 @@ package io.xlate.edi.internal.stream.validation;
 import io.xlate.edi.internal.stream.internal.EventHandler;
 import io.xlate.edi.schema.EDISyntaxRule;
 
-class ExclusionSyntaxValidator extends SyntaxValidator {
+class SingleSyntaxValidator extends SyntaxValidator {
 
-    private static final ExclusionSyntaxValidator singleton = new ExclusionSyntaxValidator();
+    private static final SingleSyntaxValidator singleton = new SingleSyntaxValidator();
 
-    private ExclusionSyntaxValidator() {
+    private SingleSyntaxValidator() {
     }
 
-    static ExclusionSyntaxValidator getInstance() {
+    static SingleSyntaxValidator getInstance() {
         return singleton;
     }
 
@@ -35,6 +35,8 @@ class ExclusionSyntaxValidator extends SyntaxValidator {
 
         if (status.elementCount > 1) {
             signalExclusionError(syntax, structure, handler);
+        } else if (status.elementCount == 0) {
+            signalConditionError(syntax, structure, handler);
         }
     }
 }

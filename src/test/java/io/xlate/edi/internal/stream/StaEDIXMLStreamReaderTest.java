@@ -261,13 +261,15 @@ public class StaEDIXMLStreamReaderTest {
         assertEquals("GS", xmlReader.getLocalName());
 
         assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.nextTag());
-        assertEquals("ST", xmlReader.getLocalName());
-        assertEquals(XMLStreamConstants.END_ELEMENT, xmlReader.next());
-        assertEquals("ST", xmlReader.getLocalName());
+        assertEquals("TRANSACTION", xmlReader.getLocalName());
 
         assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.nextTag());
-        assertEquals("TRANSACTION", xmlReader.getLocalName());
+        assertEquals("ST", xmlReader.getLocalName());
+
         ediReader.setTransactionSchema(schema);
+
+        assertEquals(XMLStreamConstants.END_ELEMENT, xmlReader.next());
+        assertEquals("ST", xmlReader.getLocalName());
 
     }
 

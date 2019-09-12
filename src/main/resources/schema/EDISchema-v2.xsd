@@ -279,10 +279,10 @@
               <complexType>
                 <sequence>
                   <element ref="tns:element" minOccurs="1" maxOccurs="unbounded" />
-                  <element ref="tns:syntax" minOccurs="0" maxOccurs="unbounded" />
                 </sequence>
               </complexType>
             </element>
+            <element ref="tns:syntax" minOccurs="0" maxOccurs="unbounded" />
           </sequence>
 
           <attribute name="name" type="tns:nameType" use="required" />
@@ -319,10 +319,10 @@
                     <element ref="tns:element" />
                     <element ref="tns:composite" />
                   </choice>
-                  <element ref="tns:syntax" minOccurs="0" maxOccurs="unbounded" />
                 </sequence>
               </complexType>
             </element>
+            <element ref="tns:syntax" minOccurs="0" maxOccurs="unbounded" />
           </sequence>
 
           <attribute name="name" use="required">

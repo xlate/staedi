@@ -238,11 +238,11 @@ public class StaEDIStreamReader implements EDIStreamReader {
 
     @Override
     public void setTransactionSchema(Schema schema) {
-        if (getEventType() != EDIStreamEvent.START_TRANSACTION) {
-            throw new IllegalStateException("message schema set after transaction start");
+        if (proxy.isTransactionSchemaAllowed()) {
+            proxy.setTransactionSchema(schema);
+        } else {
+            throw new IllegalStateException("Transaction schema can only be set during transaction start");
         }
-
-        proxy.setTransactionSchema(schema);
     }
 
     @Override

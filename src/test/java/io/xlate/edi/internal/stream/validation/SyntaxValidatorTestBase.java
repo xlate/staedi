@@ -33,7 +33,6 @@ abstract class SyntaxValidatorTestBase {
         when(structureRef.getReferencedType()).thenReturn(structureType);
 
         structure = mock(UsageNode.class);
-        when(structure.getReference()).thenReturn(structureRef);
         when(structure.getReferencedType()).thenReturn(structureType);
     }
 

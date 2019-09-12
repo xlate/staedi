@@ -80,16 +80,16 @@ public class EventSequenceTest {
         }
         assertEquals(EDIStreamEvent.END_SEGMENT, event);
 
+        assertEquals(EDIStreamEvent.START_TRANSACTION, reader.next());
+        assertEquals("TRANSACTION", reader.getText());
+        reader.setTransactionSchema(loadX12FuncAckSchema());
+
         assertEquals(EDIStreamEvent.START_SEGMENT, reader.next());
         assertEquals("ST", reader.getText());
         while ((event = reader.next()) == EDIStreamEvent.ELEMENT_DATA) {
             continue;
         }
         assertEquals(EDIStreamEvent.END_SEGMENT, event);
-
-        assertEquals(EDIStreamEvent.START_TRANSACTION, reader.next());
-        assertEquals("TRANSACTION", reader.getText());
-        reader.setTransactionSchema(loadX12FuncAckSchema());
 
         assertEquals(EDIStreamEvent.START_SEGMENT, reader.next());
         assertEquals("AK1", reader.getText());
@@ -148,14 +148,14 @@ public class EventSequenceTest {
         }
         assertEquals(EDIStreamEvent.END_SEGMENT, event);
 
-        assertEquals(EDIStreamEvent.END_TRANSACTION, reader.next());
-
         assertEquals(EDIStreamEvent.START_SEGMENT, reader.next());
         assertEquals("SE", reader.getText());
         while ((event = reader.next()) == EDIStreamEvent.ELEMENT_DATA) {
             continue;
         }
         assertEquals(EDIStreamEvent.END_SEGMENT, event);
+
+        assertEquals(EDIStreamEvent.END_TRANSACTION, reader.next());
 
         assertEquals(EDIStreamEvent.START_SEGMENT, reader.next());
         assertEquals("GE", reader.getText());
@@ -211,16 +211,16 @@ public class EventSequenceTest {
         }
         assertEquals(EDIStreamEvent.END_SEGMENT, event);
 
+        assertEquals(EDIStreamEvent.START_TRANSACTION, reader.next());
+        assertEquals("TRANSACTION", reader.getText());
+        reader.setTransactionSchema(loadX12FuncAckSchema());
+
         assertEquals(EDIStreamEvent.START_SEGMENT, reader.next());
         assertEquals("ST", reader.getText());
         while ((event = reader.next()) == EDIStreamEvent.ELEMENT_DATA) {
             continue;
         }
         assertEquals(EDIStreamEvent.END_SEGMENT, event);
-
-        assertEquals(EDIStreamEvent.START_TRANSACTION, reader.next());
-        assertEquals("TRANSACTION", reader.getText());
-        reader.setTransactionSchema(loadX12FuncAckSchema());
 
         assertEquals(EDIStreamEvent.START_SEGMENT, reader.next());
         assertEquals("AK1", reader.getText());
@@ -233,14 +233,14 @@ public class EventSequenceTest {
         assertEquals(EDIStreamEvent.SEGMENT_ERROR, reader.next());
         assertEquals("AK9", reader.getText());
 
-        assertEquals(EDIStreamEvent.END_TRANSACTION, reader.next());
-
         assertEquals(EDIStreamEvent.START_SEGMENT, reader.next());
         assertEquals("SE", reader.getText());
         while ((event = reader.next()) == EDIStreamEvent.ELEMENT_DATA) {
             continue;
         }
         assertEquals(EDIStreamEvent.END_SEGMENT, event);
+
+        assertEquals(EDIStreamEvent.END_TRANSACTION, reader.next());
 
         assertEquals(EDIStreamEvent.START_SEGMENT, reader.next());
         assertEquals("GE", reader.getText());
@@ -310,6 +310,9 @@ public class EventSequenceTest {
         assertEquals("00000000000778", reader.getText());
         assertEquals(EDIStreamEvent.END_SEGMENT, reader.next());
 
+        assertEquals(EDIStreamEvent.START_TRANSACTION, reader.next());
+        assertEquals("TRANSACTION", reader.getText());
+
         assertEquals(EDIStreamEvent.START_SEGMENT, reader.next());
         assertEquals("UNH", reader.getText());
         assertEquals(EDIStreamEvent.ELEMENT_DATA, reader.next());
@@ -327,16 +330,11 @@ public class EventSequenceTest {
         assertEquals(EDIStreamEvent.END_COMPOSITE, reader.next());
         assertEquals(EDIStreamEvent.END_SEGMENT, reader.next());
 
-        assertEquals(EDIStreamEvent.START_TRANSACTION, reader.next());
-        assertEquals("TRANSACTION", reader.getText());
-
         assertEquals(EDIStreamEvent.START_SEGMENT, reader.next());
         assertEquals("BLA", reader.getText());
         assertEquals(EDIStreamEvent.ELEMENT_DATA, reader.next());
         assertEquals("UNVALIDATED", reader.getText());
         assertEquals(EDIStreamEvent.END_SEGMENT, reader.next());
-
-        assertEquals(EDIStreamEvent.END_TRANSACTION, reader.next());
 
         assertEquals(EDIStreamEvent.START_SEGMENT, reader.next());
         assertEquals("UNT", reader.getText());
@@ -345,6 +343,8 @@ public class EventSequenceTest {
         assertEquals(EDIStreamEvent.ELEMENT_DATA, reader.next());
         assertEquals("00000000000117", reader.getText());
         assertEquals(EDIStreamEvent.END_SEGMENT, reader.next());
+
+        assertEquals(EDIStreamEvent.END_TRANSACTION, reader.next());
 
         assertEquals(EDIStreamEvent.START_SEGMENT, reader.next());
         assertEquals("UNZ", reader.getText());
@@ -398,11 +398,11 @@ public class EventSequenceTest {
         assertEquals("295335", reader.getText());
         assertEquals(EDIStreamEvent.ELEMENT_DATA, reader.next()); // GS05
 
-        assertEquals(EDIStreamEvent.START_SEGMENT, reader.nextTag());
-        assertEquals("ST", reader.getText());
-
         assertEquals(EDIStreamEvent.START_TRANSACTION, reader.nextTag());
         reader.setTransactionSchema(loadX12FuncAckSchema());
+
+        assertEquals(EDIStreamEvent.START_SEGMENT, reader.nextTag());
+        assertEquals("ST", reader.getText());
 
         assertEquals(EDIStreamEvent.START_SEGMENT, reader.nextTag());
         assertEquals("AK1", reader.getText());
@@ -421,10 +421,10 @@ public class EventSequenceTest {
         assertEquals(EDIStreamEvent.START_SEGMENT, reader.nextTag());
         assertEquals("AK9", reader.getText());
 
-        //assertEquals(EDIStreamEvent.END_TRANSACTION, reader.nextTag());
-
         assertEquals(EDIStreamEvent.START_SEGMENT, reader.nextTag());
         assertEquals("SE", reader.getText());
+
+        //assertEquals(EDIStreamEvent.END_TRANSACTION, reader.nextTag());
 
         assertEquals(EDIStreamEvent.START_SEGMENT, reader.nextTag());
         assertEquals("GE", reader.getText());

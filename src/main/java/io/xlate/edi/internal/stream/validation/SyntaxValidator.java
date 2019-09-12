@@ -38,6 +38,8 @@ abstract class SyntaxValidator {
             return PairedSyntaxValidator.getInstance();
         case REQUIRED:
             return RequiredSyntaxValidator.getInstance();
+        case SINGLE:
+            return SingleSyntaxValidator.getInstance();
         default:
             throw new IllegalArgumentException("Unexpected syntax restriction type " + type + ".");
         }
@@ -90,6 +92,25 @@ abstract class SyntaxValidator {
 
                 handler.elementError(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR,
                                      EDIStreamValidationError.CONDITIONAL_REQUIRED_DATA_ELEMENT_MISSING,
+                                     element,
+                                     component,
+                                     -1);
+            }
+        }
+    }
+
+    static void signalExclusionError(EDISyntaxRule syntax, UsageNode structure, EventHandler handler) {
+        final List<UsageNode> children = structure.getChildren();
+        final int limit = children.size() + 1;
+        int tally = 0;
+
+        for (int position : syntax.getPositions()) {
+            if (position < limit && children.get(position - 1).isUsed() && ++tally > 1) {
+                final int element = getElementPosition(structure, position);
+                final int component = getComponentPosition(structure, position);
+
+                handler.elementError(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR,
+                                     EDIStreamValidationError.EXCLUSION_CONDITION_VIOLATED,
                                      element,
                                      component,
                                      -1);
