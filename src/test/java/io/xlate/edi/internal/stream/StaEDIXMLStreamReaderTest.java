@@ -339,4 +339,25 @@ public class StaEDIXMLStreamReaderTest {
         } catch (UnsupportedOperationException e) {}
     }
 
+    @Test
+    public void testGetTextString() throws Exception {
+        XMLStreamReader xmlReader = getXmlReader(DUMMY_X12);
+
+        Assert.assertEquals(XMLStreamConstants.START_DOCUMENT, xmlReader.next());
+        Assert.assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.next());
+        Assert.assertEquals("INTERCHANGE", xmlReader.getLocalName());
+
+        Assert.assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.next());
+        Assert.assertEquals("ISA", xmlReader.getLocalName());
+        Assert.assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.next()); // ISA01;
+        Assert.assertEquals(XMLStreamConstants.CHARACTERS, xmlReader.next()); // ISA01 content;
+
+        String textString = xmlReader.getText();
+        Assert.assertEquals("00", textString);
+        char[] textArray = xmlReader.getTextCharacters();
+        Assert.assertArrayEquals(new char[] {'0', '0'}, textArray);
+        char[] textArrayLocal = new char[3];
+        xmlReader.getTextCharacters(xmlReader.getTextStart(), textArrayLocal, 0, xmlReader.getTextLength());
+        Assert.assertArrayEquals(new char[] {'0', '0', '\0'}, textArrayLocal);
+    }
 }

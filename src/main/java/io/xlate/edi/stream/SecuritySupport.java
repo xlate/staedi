@@ -34,9 +34,7 @@ class SecuritySupport {
     }
 
     String getSystemProperty(final String name) {
-        return AccessController.doPrivileged((PrivilegedAction<String>) () -> {
-            return System.getProperty(name);
-        });
+        return AccessController.doPrivileged((PrivilegedAction<String>) () -> System.getProperty(name));
     }
 
     URL getResource(ClassLoader loader, String name) {

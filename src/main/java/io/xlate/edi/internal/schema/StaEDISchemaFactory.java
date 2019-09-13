@@ -247,14 +247,14 @@ public class StaEDISchemaFactory extends SchemaFactory {
         }
 
         if (QN_GROUP.equals(element)) {
-            refs.add(readGroup(reader, types));
+            refs.add(readControlStructure(reader, element, QN_TRANSACTION, types));
             reader.nextTag(); // Advance to end element
             reader.nextTag(); // Advance to next start element
             element = reader.getName();
         }
 
         if (QN_TRANSACTION.equals(element)) {
-            refs.add(readTransactionControl(reader, types));
+            refs.add(readControlStructure(reader, element, null, types));
             reader.nextTag(); // Advance to end element
             reader.nextTag(); // Advance to next start element
         }
@@ -270,9 +270,10 @@ public class StaEDISchemaFactory extends SchemaFactory {
         types.put(interchange.getId(), interchange);
     }
 
-    Reference readGroup(XMLStreamReader reader, Map<String, EDIType> types) throws XMLStreamException {
-        QName element;
-
+    Reference readControlStructure(XMLStreamReader reader,
+                                   QName element,
+                                   QName subelement,
+                                   Map<String, EDIType> types) throws XMLStreamException {
         int minOccurs = 0;
         int maxOccurs = 99999;
 
@@ -297,72 +298,31 @@ public class StaEDISchemaFactory extends SchemaFactory {
         Reference trailerRef = createControlReference(reader, "trailer");
 
         readDescription(reader);
-        element = reader.getName();
+        QName nextElement = reader.getName();
 
-        if (!QN_TRANSACTION.equals(element)) {
-            unexpectedElement(element, reader);
+        if (subelement != null && !subelement.equals(nextElement)) {
+            unexpectedElement(nextElement, reader);
         }
 
         List<EDIReference> refs = new ArrayList<>(3);
         refs.add(headerRef);
-        refs.add(readTransactionControl(reader, types));
-        refs.add(trailerRef);
-
-        Structure group = new Structure(QN_GROUP.toString(),
-                                        EDIType.Type.GROUP,
-                                        EDIType.Type.GROUP.toString(),
-                                        refs,
-                                        Collections.emptyList());
-
-        types.put(group.getId(), group);
-
-        Reference groupRef = new Reference(group.getId(), "group", minOccurs, maxOccurs);
-        groupRef.setReferencedType(group);
-        return groupRef;
-    }
-
-    Reference readTransactionControl(XMLStreamReader reader, Map<String, EDIType> types) throws XMLStreamException {
-        int minOccurs = 0;
-        int maxOccurs = 99999;
-
-        String use = reader.getAttributeValue(null, "use");
-        if (use != null) {
-            switch (use) {
-            case "required":
-                minOccurs = 1;
-                break;
-            case "optional":
-                minOccurs = 0;
-                break;
-            case "prohibited":
-                maxOccurs = 0;
-                break;
-            default:
-                schemaException("Invalid value for 'use': " + use, reader);
-            }
+        if (subelement != null) {
+            refs.add(readControlStructure(reader, subelement, null, types));
         }
-
-        Reference headerRef = createControlReference(reader, "header");
-        Reference trailerRef = createControlReference(reader, "trailer");
-
-        readDescription(reader);
-
-        List<EDIReference> refs = new ArrayList<>(3);
-        refs.add(headerRef);
         refs.add(trailerRef);
 
-        Structure transaction = new Structure(QN_TRANSACTION.toString(),
-                                              EDIType.Type.TRANSACTION,
-                                              EDIType.Type.TRANSACTION.toString(),
-                                              refs,
-                                              Collections.emptyList());
+        Structure struct = new Structure(element.toString(),
+                                         complex.get(element),
+                                         complex.get(element).toString(),
+                                         refs,
+                                         Collections.emptyList());
 
-        types.put(transaction.getId(), transaction);
+        types.put(struct.getId(), struct);
 
-        Reference txRef = new Reference(transaction.getId(), "transaction", minOccurs, maxOccurs);
-        txRef.setReferencedType(transaction);
+        Reference structRef = new Reference(struct.getId(), element.getLocalPart(), minOccurs, maxOccurs);
+        structRef.setReferencedType(struct);
 
-        return txRef;
+        return structRef;
     }
 
     Reference createControlReference(XMLStreamReader reader, String attributeName) {
@@ -454,7 +414,12 @@ public class StaEDISchemaFactory extends SchemaFactory {
             switch (struct.getType()) {
             case INTERCHANGE:
                 // Transactions may be located directly within the interchange in EDIFACT.
-                setReference(struct, (Reference) ref, target, EDIType.Type.GROUP, EDIType.Type.TRANSACTION, EDIType.Type.SEGMENT);
+                setReference(struct,
+                             (Reference) ref,
+                             target,
+                             EDIType.Type.GROUP,
+                             EDIType.Type.TRANSACTION,
+                             EDIType.Type.SEGMENT);
                 break;
             case GROUP:
                 setReference(struct, (Reference) ref, target, EDIType.Type.TRANSACTION, EDIType.Type.SEGMENT);
@@ -750,7 +715,7 @@ public class StaEDISchemaFactory extends SchemaFactory {
         return -1;
     }
 
-    void requireEvent(int eventId, XMLStreamReader reader) throws XMLStreamException {
+    void requireEvent(int eventId, XMLStreamReader reader) {
         Integer event = reader.getEventType();
 
         if (event != eventId) {

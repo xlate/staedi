@@ -332,7 +332,6 @@ public class Lexer {
         @Override
         public void execute(State state, int start, int length) {
             if (location.isRepeated()) {
-                // location.clearComponentPosition();
                 location.incrementElementOccurrence();
             } else {
                 location.incrementElementPosition();

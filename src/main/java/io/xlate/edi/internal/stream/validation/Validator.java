@@ -142,7 +142,6 @@ public class Validator {
         final UsageNode startNode = correctSegment;
 
         UsageNode current = startNode;
-        //checkUsageTree(startNode);
         mandatory.clear();
         complete = false;
 

@@ -184,6 +184,12 @@ public class StaEDIXMLStreamReader implements XMLStreamReader {
         }
     }
 
+    private void requireCharacters() {
+        if (!isCharacters()) {
+            throw new IllegalStateException("Text only available for CHARACTERS");
+        }
+    }
+
     @Override
     public int next() throws XMLStreamException {
         if (!eventQueue.isEmpty()) {
@@ -379,29 +385,27 @@ public class StaEDIXMLStreamReader implements XMLStreamReader {
 
     @Override
     public String getText() {
-        if (isCharacters()) {
-            if (cdataBuilder.length() > 0) {
-                return Arrays.toString(cdata);
-            }
-            return ediReader.getText();
+        requireCharacters();
+
+        if (cdataBuilder.length() > 0) {
+            return Arrays.toString(cdata);
         }
-        throw new IllegalStateException("Text only available for CHARACTERS");
+        return ediReader.getText();
     }
 
     @Override
     public char[] getTextCharacters() {
-        if (isCharacters()) {
-            if (cdataBuilder.length() > 0) {
-                if (cdata == null) {
-                    cdata = new char[cdataBuilder.length()];
-                    cdataBuilder.getChars(0, cdataBuilder.length(), cdata, 0);
-                }
+        requireCharacters();
 
-                return cdata;
+        if (cdataBuilder.length() > 0) {
+            if (cdata == null) {
+                cdata = new char[cdataBuilder.length()];
+                cdataBuilder.getChars(0, cdataBuilder.length(), cdata, 0);
             }
-            return ediReader.getTextCharacters();
+
+            return cdata;
         }
-        throw new IllegalStateException("Text only available for CHARACTERS");
+        return ediReader.getTextCharacters();
     }
 
     @Override
@@ -409,42 +413,40 @@ public class StaEDIXMLStreamReader implements XMLStreamReader {
                                  char[] target,
                                  int targetStart,
                                  int length) throws XMLStreamException {
-        if (isCharacters()) {
-            if (cdataBuilder.length() > 0) {
-                if (cdata == null) {
-                    cdata = new char[cdataBuilder.length()];
-                    cdataBuilder.getChars(0, cdataBuilder.length(), cdata, 0);
-                }
 
-                // FIXME: array bounds check needed
-                System.arraycopy(cdata, sourceStart, target, targetStart, length);
-                return length;
+        requireCharacters();
+
+        if (cdataBuilder.length() > 0) {
+            if (cdata == null) {
+                cdata = new char[cdataBuilder.length()];
+                cdataBuilder.getChars(0, cdataBuilder.length(), cdata, 0);
             }
-            return ediReader.getTextCharacters(sourceStart, target, targetStart, length);
+
+            // FIXME: array bounds check needed
+            System.arraycopy(cdata, sourceStart, target, targetStart, length);
+            return length;
         }
-        throw new IllegalStateException("Text only available for CHARACTERS");
+        return ediReader.getTextCharacters(sourceStart, target, targetStart, length);
     }
 
     @Override
     public int getTextStart() {
-        if (isCharacters()) {
-            if (cdataBuilder.length() > 0) {
-                return 0;
-            }
-            return ediReader.getTextStart();
+        requireCharacters();
+
+        if (cdataBuilder.length() > 0) {
+            return 0;
         }
-        throw new IllegalStateException("Text only available for CHARACTERS");
+        return ediReader.getTextStart();
     }
 
     @Override
     public int getTextLength() {
-        if (isCharacters()) {
-            if (cdataBuilder.length() > 0) {
-                return cdataBuilder.length();
-            }
-            return ediReader.getTextLength();
+        requireCharacters();
+
+        if (cdataBuilder.length() > 0) {
+            return cdataBuilder.length();
         }
-        throw new IllegalStateException("Text only available for CHARACTERS");
+        return ediReader.getTextLength();
     }
 
     @Override

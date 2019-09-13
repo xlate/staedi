@@ -299,7 +299,7 @@ public class StaEDIStreamReader implements EDIStreamReader {
         checkTextState();
         final CharBuffer buffer = getBuffer();
 
-        return buffer.array();
+        return Arrays.copyOf(buffer.array(), buffer.length()) ;
     }
 
     @Override
@@ -324,7 +324,7 @@ public class StaEDIStreamReader implements EDIStreamReader {
             throw new IndexOutOfBoundsException("length < 0");
         }
         if (length > target.length) {
-            throw new IndexOutOfBoundsException("length > target.length");
+            throw new IndexOutOfBoundsException("length ("+length+") > target.length (" + target.length + ")");
         }
 
         final CharBuffer buffer = getBuffer();

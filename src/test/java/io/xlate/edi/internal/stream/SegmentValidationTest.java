@@ -97,9 +97,7 @@ public class SegmentValidationTest {
     }
 
     @Test
-    public void testMissingMandatoryXml()
-                                          throws EDISchemaException,
-                                          EDIStreamException {
+    public void testMissingMandatoryXml() throws EDISchemaException, EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = new ByteArrayInputStream((""
                 + "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~"
@@ -265,9 +263,7 @@ public class SegmentValidationTest {
     }
 
     @Test
-    public void testLoopOccurrence()
-                                     throws EDISchemaException,
-                                     EDIStreamException {
+    public void testLoopOccurrence() throws EDISchemaException, EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = new ByteArrayInputStream((""
                 + "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~"
@@ -300,9 +296,7 @@ public class SegmentValidationTest {
     }
 
     @Test
-    public void testOptionalLoopNotUsed()
-                                          throws EDISchemaException,
-                                          EDIStreamException {
+    public void testOptionalLoopNotUsed() throws EDISchemaException, EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = new ByteArrayInputStream((""
                 + "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~"

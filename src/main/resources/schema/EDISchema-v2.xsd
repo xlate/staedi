@@ -375,6 +375,7 @@
       <attribute name="type">
         <simpleType>
           <restriction base="NCName">
+            <enumeration value="single" />
             <enumeration value="paired" />
             <enumeration value="required" />
             <enumeration value="exclusion" />

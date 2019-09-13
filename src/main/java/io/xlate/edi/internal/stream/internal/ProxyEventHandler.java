@@ -182,10 +182,8 @@ public class ProxyEventHandler implements EventHandler {
     }
 
     boolean exitTransaction(CharSequence tag) {
-        if (transaction && !transactionSchemaAllowed && controlSchema != null && controlSchema.containsSegment(tag.toString())) {
-            return true;
-        }
-        return false;
+        return transaction && !transactionSchemaAllowed && controlSchema != null
+                && controlSchema.containsSegment(tag.toString());
     }
 
     @Override
@@ -346,7 +344,8 @@ public class ProxyEventHandler implements EventHandler {
                               String code,
                               Location savedLocation) {
 
-        if (event == EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR && eventCount > 0 && events[eventCount] == EDIStreamEvent.START_COMPOSITE) {
+        if (event == EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR && eventCount > 0
+                && events[eventCount] == EDIStreamEvent.START_COMPOSITE) {
             switch (error) {
             case TOO_MANY_DATA_ELEMENTS:
             case TOO_MANY_REPETITIONS:
@@ -363,7 +362,7 @@ public class ProxyEventHandler implements EventHandler {
 
                 events[eventCount - 1] = event;
                 errorTypes[eventCount - 1] = error;
-                eventData[eventCount - 1] = put(eventData[eventCount], holder.text, holder.start, holder.length);
+                eventData[eventCount - 1] = put(eventData[eventCount], holder);
                 referenceCodes[eventCount - 1] = code;
 
                 if (savedLocation != null) {
@@ -381,7 +380,7 @@ public class ProxyEventHandler implements EventHandler {
 
         events[eventCount] = event;
         errorTypes[eventCount] = error;
-        eventData[eventCount] = put(eventData[eventCount], holder.text, holder.start, holder.length);
+        eventData[eventCount] = put(eventData[eventCount], holder);
         referenceCodes[eventCount] = code;
 
         if (savedLocation != null) {
@@ -402,9 +401,9 @@ public class ProxyEventHandler implements EventHandler {
     }
 
     private static CharBuffer put(CharBuffer buffer,
-                                  char[] text,
-                                  int start,
-                                  int length) {
+                                  CharArraySequence holder) {
+
+        int length = holder != null ? holder.length : 50;
 
         if (buffer == null || buffer.capacity() < length) {
             buffer = CharBuffer.allocate(length);
@@ -412,8 +411,8 @@ public class ProxyEventHandler implements EventHandler {
 
         buffer.clear();
 
-        if (text != null) {
-            buffer.put(text, start, length);
+        if (holder != null && holder.text != null) {
+            buffer.put(holder.text, holder.start, holder.length);
         }
 
         buffer.flip();

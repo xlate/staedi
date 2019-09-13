@@ -15,6 +15,11 @@
  ******************************************************************************/
 package io.xlate.edi.internal.stream;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 
 import org.junit.Assert;
@@ -48,7 +53,6 @@ public class ErrorEventsTest {
         }
     };
 
-    @SuppressWarnings("resource")
     @Test
     public void testInvalidElements1() throws EDIStreamException, EDISchemaException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
@@ -161,5 +165,68 @@ public class ErrorEventsTest {
         Assert.assertEquals(4, reader.getLocation().getElementPosition());
         Assert.assertEquals(3, reader.getLocation().getElementOccurrence());
         Assert.assertEquals(-1, reader.getLocation().getComponentPosition());
+    }
+
+    @Test
+    public void testListSyntaxValid() throws EDIStreamException {
+        EDIInputFactory factory = EDIInputFactory.newFactory();
+        InputStream stream = new ByteArrayInputStream((""
+                + "UNB+UNOA:4:::02+005435656:1+006415160:1+20060515:1434+00000000000778'"
+                + "UNG+INVOIC+15623+23457+20060515:1433+CD1352+UN+D:97B+A3P52'"
+                + "UNH+00000000000117+INVOIC:D:97B:UN'"
+                + "UNT+2+00000000000117'"
+                + "UNE+1+CD1352'"
+                + "UNZ+1+00000000000778'").getBytes());
+
+        EDIStreamReader reader = factory.createEDIStreamReader(stream);
+        reader = factory.createFilteredReader(reader, errorFilter);
+
+        assertFalse("Unexpected errors", reader.hasNext());
+    }
+
+    @Test
+    public void testListSyntaxMissingFirst() throws EDIStreamException {
+        EDIInputFactory factory = EDIInputFactory.newFactory();
+        InputStream stream = new ByteArrayInputStream((""
+                + "UNB+UNOA:4:::02+005435656:1+006415160:1+20060515:1434+00000000000778'"
+                + "UNG++15623+23457+20060515:1433+CD1352+UN+D:97B+A3P52'"
+                + "UNH+00000000000117+INVOIC:D:97B:UN'"
+                + "UNT+2+00000000000117'"
+                + "UNE+1+CD1352'"
+                + "UNZ+1+00000000000778'").getBytes());
+
+        EDIStreamReader reader = factory.createEDIStreamReader(stream);
+        reader = factory.createFilteredReader(reader, errorFilter);
+
+        assertTrue("Expected errors not found", reader.hasNext());
+        reader.next();
+        assertEquals(EDIStreamValidationError.CONDITIONAL_REQUIRED_DATA_ELEMENT_MISSING, reader.getErrorType());
+        assertEquals(2, reader.getLocation().getSegmentPosition());
+        assertEquals(1, reader.getLocation().getElementPosition());
+
+        assertTrue("Unexpected errors exist", !reader.hasNext());
+    }
+
+    @Test
+    public void testListSyntaxMissingSecond() throws EDIStreamException {
+        EDIInputFactory factory = EDIInputFactory.newFactory();
+        InputStream stream = new ByteArrayInputStream((""
+                + "UNB+UNOA:4:::02+005435656:1+006415160:1+20060515:1434+00000000000778'"
+                + "UNG+INVOIC+15623+23457+20060515:1433+CD1352++D:97B+A3P52'"
+                + "UNH+00000000000117+INVOIC:D:97B:UN'"
+                + "UNT+2+00000000000117'"
+                + "UNE+1+CD1352'"
+                + "UNZ+1+00000000000778'").getBytes());
+
+        EDIStreamReader reader = factory.createEDIStreamReader(stream);
+        reader = factory.createFilteredReader(reader, errorFilter);
+
+        assertTrue("Expected errors not found", reader.hasNext());
+        reader.next();
+        assertEquals(EDIStreamValidationError.CONDITIONAL_REQUIRED_DATA_ELEMENT_MISSING, reader.getErrorType());
+        assertEquals(2, reader.getLocation().getSegmentPosition());
+        assertEquals(6, reader.getLocation().getElementPosition());
+
+        assertTrue("Unexpected errors exist", !reader.hasNext());
     }
 }
