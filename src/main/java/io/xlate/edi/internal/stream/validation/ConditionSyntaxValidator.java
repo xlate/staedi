@@ -18,7 +18,7 @@ package io.xlate.edi.internal.stream.validation;
 import io.xlate.edi.internal.stream.internal.EventHandler;
 import io.xlate.edi.schema.EDISyntaxRule;
 
-class ConditionSyntaxValidator extends SyntaxValidator {
+class ConditionSyntaxValidator implements SyntaxValidator {
 
     private static final ConditionSyntaxValidator singleton = new ConditionSyntaxValidator();
 
@@ -30,7 +30,7 @@ class ConditionSyntaxValidator extends SyntaxValidator {
     }
 
     @Override
-    void validate(EDISyntaxRule syntax, UsageNode structure, EventHandler handler) {
+    public void validate(EDISyntaxRule syntax, UsageNode structure, EventHandler handler) {
         SyntaxStatus status = scanSyntax(syntax, structure.getChildren());
 
         if (status.anchorPresent && status.elementCount < syntax.getPositions().size()) {

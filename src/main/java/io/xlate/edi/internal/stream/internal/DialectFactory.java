@@ -17,23 +17,21 @@ package io.xlate.edi.internal.stream.internal;
 
 public abstract class DialectFactory {
 
-    private enum Dialects {
-        X12("ISA", X12Dialect.class),
-        EDIFACT_A("UNA", EDIFACTDialect.class),
-        EDIFACT_B("UNB", EDIFACTDialect.class);
+    private enum DialectTag {
+        X12("ISA"),
+        EDIFACT_A("UNA"),
+        EDIFACT_B("UNB");
 
         private String tag;
-        private Class<? extends Dialect> clazz;
 
-        Dialects(String tag, Class<? extends Dialect> clazz) {
+        DialectTag(String tag) {
             this.tag = tag;
-            this.clazz = clazz;
         }
 
-        public static Class<? extends Dialect> forTag(String tag) {
-            for (Dialects d : Dialects.values()) {
+        public static DialectTag fromValue(String tag) {
+            for (DialectTag d : DialectTag.values()) {
                 if (d.tag.equals(tag)) {
-                    return d.clazz;
+                    return d;
                 }
             }
             return null;
@@ -46,20 +44,28 @@ public abstract class DialectFactory {
     }
 
     public static Dialect getDialect(String tag) throws EDIException {
-        Class<? extends Dialect> type = Dialects.forTag(tag);
+        DialectTag type = DialectTag.fromValue(tag);
 
         if (type != null) {
             Dialect dialect;
 
-            try {
-                dialect = type.getDeclaredConstructor().newInstance();
-            } catch (Exception e) {
-                throw new EDIException(e);
+            switch (type) {
+            case X12:
+                dialect = new X12Dialect();
+                break;
+            case EDIFACT_A:
+            case EDIFACT_B:
+                dialect = new EDIFACTDialect();
+                break;
+            default:
+                throw new EDIException(EDIException.UNSUPPORTED_DIALECT, tag);
             }
 
             dialect.setHeaderTag(tag);
+
             return dialect;
         }
+
         throw new EDIException(EDIException.UNSUPPORTED_DIALECT, tag);
     }
 }

@@ -13,28 +13,22 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  ******************************************************************************/
-package io.xlate.edi.stream;
+package io.xlate.edi.internal;
 
 import java.util.ServiceLoader;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.StreamSupport;
 
+import io.xlate.edi.EDIFactoryConfigurationError;
+
 /**
  * <p>
  * Implements pluggable Datatypes.
  * </p>
- *
- * <p>
- * This class is duplicated for each subpackage so keep it in sync. It is
- * package private for secure class loading.
- * </p>
- *
- * @author Santiago.PericasGeertsen@sun.com
  */
-class FactoryFinder {
-    private static final String DEFAULT_PACKAGE = "io.xlate.edi.stream.";
-    private static final Logger LOGGER = Logger.getLogger("io.xlate.edi.stream");
+public class FactoryFinder {
+    private static final Logger LOGGER = Logger.getLogger("io.xlate.edi");
 
     /**
      * Security support class use to check access control before getting certain
@@ -58,7 +52,7 @@ class FactoryFinder {
                                              ClassLoader cl,
                                              boolean doFallback) throws ClassNotFoundException {
         // make sure we have access to restricted packages
-        if (System.getSecurityManager() != null && className != null && className.startsWith(DEFAULT_PACKAGE)) {
+        if (System.getSecurityManager() != null && className != null) {
             ClassLoader loader = FactoryFinder.class.getClassLoader();
             return Class.forName(className, true, loader);
         }
@@ -99,7 +93,7 @@ class FactoryFinder {
      *            True if the current ClassLoader should be tried as a fallback
      *            if the class is not found using cl
      */
-    static <T> T newInstance(String className,
+    public static <T> T newInstance(String className,
                              ClassLoader cl,
                              boolean doFallback) throws EDIFactoryConfigurationError {
         try {
@@ -138,7 +132,7 @@ class FactoryFinder {
      *            Package private so this code can be shared.
      * @throws ClassNotFoundException
      */
-    static <T> T find(String factoryId, String fallbackClassName) throws EDIFactoryConfigurationError {
+    public static <T> T find(String factoryId, String fallbackClassName) throws EDIFactoryConfigurationError {
 
         if (LOGGER.isLoggable(Level.FINE)) {
             LOGGER.log(Level.FINE, "find factoryId =" + factoryId);

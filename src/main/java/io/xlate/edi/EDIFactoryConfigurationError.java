@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  ******************************************************************************/
-package io.xlate.edi.stream;
+package io.xlate.edi;
 
 public class EDIFactoryConfigurationError extends Error {
 

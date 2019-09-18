@@ -24,7 +24,7 @@ import io.xlate.edi.schema.EDIType;
 import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamValidationError;
 
-abstract class SyntaxValidator {
+interface SyntaxValidator {
 
     static SyntaxValidator getInstance(EDISyntaxRule.Type type) {
         switch (type) {
@@ -50,7 +50,7 @@ abstract class SyntaxValidator {
         protected boolean anchorPresent = false;
     }
 
-    static SyntaxStatus scanSyntax(EDISyntaxRule syntax, List<UsageNode> children) {
+    default SyntaxStatus scanSyntax(EDISyntaxRule syntax, List<UsageNode> children) {
         final SyntaxStatus status = new SyntaxStatus();
         final AtomicBoolean anchorPosition = new AtomicBoolean(true);
 
@@ -73,7 +73,7 @@ abstract class SyntaxValidator {
         return status;
     }
 
-    static void signalConditionError(EDISyntaxRule syntax, UsageNode structure, EventHandler handler) {
+    default void signalConditionError(EDISyntaxRule syntax, UsageNode structure, EventHandler handler) {
         final List<UsageNode> children = structure.getChildren();
         final int limit = children.size() + 1;
 
@@ -99,7 +99,7 @@ abstract class SyntaxValidator {
         }
     }
 
-    static void signalExclusionError(EDISyntaxRule syntax, UsageNode structure, EventHandler handler) {
+    default void signalExclusionError(EDISyntaxRule syntax, UsageNode structure, EventHandler handler) {
         final List<UsageNode> children = structure.getChildren();
         final int limit = children.size() + 1;
         int tally = 0;
@@ -119,20 +119,16 @@ abstract class SyntaxValidator {
     }
 
     static int getComponentPosition(UsageNode structure, int position) {
-        if (structure.getReferencedType().isType(EDIType.Type.COMPOSITE)) {
-            return position;
-        }
-
-        return -1;
+        return structure.isNodeType(EDIType.Type.COMPOSITE) ? position : -1;
     }
 
     static int getElementPosition(UsageNode structure, int position) {
-        if (structure.getReferencedType().isType(EDIType.Type.COMPOSITE)) {
+        if (structure.isNodeType(EDIType.Type.COMPOSITE)) {
             return structure.getParent().getIndex() + 1;
         }
 
         return position;
     }
 
-    abstract void validate(EDISyntaxRule syntax, UsageNode structure, EventHandler handler);
+    void validate(EDISyntaxRule syntax, UsageNode structure, EventHandler handler);
 }

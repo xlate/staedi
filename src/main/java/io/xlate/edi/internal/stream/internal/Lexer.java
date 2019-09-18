@@ -40,22 +40,12 @@ public class Lexer {
         void execute(State state, int start, int length);
     }
 
-    private Notifier isn = new InterchangeStartNotifier();
-    private Notifier ien = new InterchangeEndNotifier();
-    private Notifier ssn = new SegmentStartNotifier();
-    private Notifier sen = new SegmentEndNotifier();
-    private Notifier csn = new CompositeStartNotifier();
-    private Notifier cen = new CompositeEndNotifier();
-    private Notifier en = new ElementNotifier();
-    private Notifier bn = new BinaryDataNotifier();
-
     private final Deque<Notifier> events = new ArrayDeque<>(20);
     private final Deque<State> stateQueue = new ArrayDeque<>(20);
     private final Deque<Integer> startQueue = new ArrayDeque<>(20);
     private final Deque<Integer> lengthQueue = new ArrayDeque<>(20);
 
     private final InputStream stream;
-    private final EventHandler handler;
     private final InternalLocation location;
 
     private CharacterSet characters = new CharacterSet();
@@ -65,6 +55,15 @@ public class Lexer {
     private long binaryRemain = -1;
     private InputStream binaryStream = null;
 
+    private Notifier isn;
+    private Notifier ien;
+    private Notifier ssn;
+    private Notifier sen;
+    private Notifier csn;
+    private Notifier cen;
+    private Notifier en;
+    private Notifier bn;
+
     public Lexer(InputStream stream, EventHandler handler, InternalLocation location) {
         if (stream.markSupported()) {
             this.stream = stream;
@@ -72,8 +71,50 @@ public class Lexer {
             this.stream = new BufferedInputStream(stream);
         }
 
-        this.handler = handler;
         this.location = location;
+
+        isn = (notifyState, start, length) -> handler.interchangeBegin();
+
+        ien = (notifyState, start, length) -> {
+            handler.interchangeEnd();
+            dialect = null;
+            characters.reset();
+        };
+
+        ssn = (notifyState, start, length) -> {
+            location.incrementSegmentPosition();
+            handler.segmentBegin(buffer.array(), start, length);
+        };
+
+        sen = (notifyState, start, length) -> {
+            handler.segmentEnd();
+            location.clearSegmentLocations();
+        };
+
+        csn = (notifyState, start, length) -> {
+            if (location.isRepeated()) {
+                location.incrementElementOccurrence();
+            } else {
+                location.incrementElementPosition();
+            }
+
+            handler.compositeBegin(false);
+        };
+
+        cen = (notifyState, start, length) -> {
+            handler.compositeEnd(false);
+            location.clearComponentPosition();
+        };
+
+        en = (notifyState, start, length) -> {
+            updateLocation(notifyState, location);
+            handler.elementData(buffer.array(), start, length);
+        };
+
+        bn = (notifyState, start, length) -> {
+            updateLocation(notifyState, location);
+            handler.binaryData(binaryStream);
+        };
     }
 
     public boolean isInitialized() {
@@ -294,75 +335,6 @@ public class Lexer {
     private void error(int code) throws EDIException {
         Location where = new ImmutableLocation(location);
         throw new EDIException(code, where);
-    }
-
-    private class InterchangeStartNotifier implements Notifier {
-        @Override
-        public void execute(State state, int start, int length) {
-            handler.interchangeBegin();
-        }
-    }
-
-    private class InterchangeEndNotifier implements Notifier {
-        @Override
-        public void execute(State state, int start, int length) {
-            handler.interchangeEnd();
-            dialect = null;
-            characters.reset();
-        }
-    }
-
-    private class SegmentStartNotifier implements Notifier {
-        @Override
-        public void execute(State state, int start, int length) {
-            location.incrementSegmentPosition();
-            handler.segmentBegin(buffer.array(), start, length);
-        }
-    }
-
-    private class SegmentEndNotifier implements Notifier {
-        @Override
-        public void execute(State state, int start, int length) {
-            handler.segmentEnd();
-            location.clearSegmentLocations();
-        }
-    }
-
-    private class CompositeStartNotifier implements Notifier {
-        @Override
-        public void execute(State state, int start, int length) {
-            if (location.isRepeated()) {
-                location.incrementElementOccurrence();
-            } else {
-                location.incrementElementPosition();
-            }
-
-            handler.compositeBegin(false);
-        }
-    }
-
-    private class CompositeEndNotifier implements Notifier {
-        @Override
-        public void execute(State state, int start, int length) {
-            handler.compositeEnd(false);
-            location.clearComponentPosition();
-        }
-    }
-
-    private class BinaryDataNotifier implements Notifier {
-        @Override
-        public void execute(State state, int start, int length) {
-            updateLocation(state, location);
-            handler.binaryData(binaryStream);
-        }
-    }
-
-    private class ElementNotifier implements Notifier {
-        @Override
-        public void execute(State state, int start, int length) {
-            updateLocation(state, location);
-            handler.elementData(buffer.array(), start, length);
-        }
     }
 
     private static void updateLocation(State state, InternalLocation location) {

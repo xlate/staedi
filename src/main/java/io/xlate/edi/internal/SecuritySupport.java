@@ -13,13 +13,13 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  ******************************************************************************/
-package io.xlate.edi.stream;
+package io.xlate.edi.internal;
 
 import java.net.URL;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 
-class SecuritySupport {
+public class SecuritySupport {
     ClassLoader getContextClassLoader() {
         return AccessController.doPrivileged((PrivilegedAction<ClassLoader>) () -> {
             final Thread currentThread = Thread.currentThread();

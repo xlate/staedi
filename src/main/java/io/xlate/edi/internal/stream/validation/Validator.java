@@ -148,70 +148,19 @@ public class Validator {
         scan: while (current != null) {
             switch (current.getNodeType()) {
             case SEGMENT:
-                if (!current.getId().contentEquals(tag)) {
-                    /*
-                     * The schema segment does not match the segment tag found
-                     * in the stream.
-                     */
-                    break;
+                if (this.handleSegment(tag, current, startDepth, startNode, handler)) {
+                    break scan;
                 }
+                break;
 
-                if (current.isUsed() && current.isFirstChild()) {
-                    /*
-                     * The current segment is the first segment in the loop and
-                     * the loop has previous occurrences. Scan all segments in
-                     * the loop to determine if any segments in the previous
-                     * occurrence did not meet the minimum usage requirements.
-                     */
-                    UsageNode parent = current.getParent();
-
-                    for (UsageNode sibling : parent.getChildren()) {
-                        if (!sibling.hasMinimumUsage()) {
-                            mandatory.add(sibling.getId());
-                        }
-
-                        sibling.reset();
-                    }
-
-                    if (parent.isNodeType(EDIType.Type.LOOP)) {
-                        String loopId = parent.getCode();
-                        handler.loopEnd(loopId);
-                        handler.loopBegin(loopId);
-                    }
-                }
-
-                completeLoops(handler, startDepth, startNode);
-                current.incrementUsage();
-                current.resetChildren();
-
-                if (current.exceedsMaximumUsage()) {
-                    handleMissingMandatory(handler);
-                    handler.segmentError(
-                                         current.getId(),
-                                         EDIStreamValidationError.SEGMENT_EXCEEDS_MAXIMUM_USE);
-                }
-
-                correctSegment = segment = current;
-                break scan;
             case GROUP:
             case TRANSACTION:
             case LOOP:
-                if (!current.getFirstChild().getId().contentEquals(tag)) {
-                    break;
+                if (this.handleLoop(tag, current, startDepth, startNode, handler)) {
+                    break scan;
                 }
+                break;
 
-                completeLoops(handler, startDepth, startNode);
-                handler.loopBegin(current.getCode());
-                current.incrementUsage();
-
-                if (current.exceedsMaximumUsage()) {
-                    handleMissingMandatory(handler);
-                    handler.segmentError(tag,
-                                         EDIStreamValidationError.LOOP_OCCURS_OVER_MAXIMUM_TIMES);
-                }
-
-                correctSegment = segment = startLoop(current);
-                break scan;
             default:
                 break;
             }
@@ -303,6 +252,72 @@ public class Validator {
         }
 
         handleMissingMandatory(handler);
+    }
+
+    boolean handleSegment(CharSequence tag, UsageNode current, int startDepth, UsageNode startNode, EventHandler handler) {
+        if (!current.getId().contentEquals(tag)) {
+            /*
+             * The schema segment does not match the segment tag found
+             * in the stream.
+             */
+            return false;
+        }
+
+        if (current.isUsed() && current.isFirstChild()) {
+            /*
+             * The current segment is the first segment in the loop and
+             * the loop has previous occurrences. Scan all segments in
+             * the loop to determine if any segments in the previous
+             * occurrence did not meet the minimum usage requirements.
+             */
+            UsageNode parent = current.getParent();
+
+            for (UsageNode sibling : parent.getChildren()) {
+                if (!sibling.hasMinimumUsage()) {
+                    mandatory.add(sibling.getId());
+                }
+
+                sibling.reset();
+            }
+
+            if (parent.isNodeType(EDIType.Type.LOOP)) {
+                String loopId = parent.getCode();
+                handler.loopEnd(loopId);
+                handler.loopBegin(loopId);
+            }
+        }
+
+        completeLoops(handler, startDepth, startNode);
+        current.incrementUsage();
+        current.resetChildren();
+
+        if (current.exceedsMaximumUsage()) {
+            handleMissingMandatory(handler);
+            handler.segmentError(
+                                 current.getId(),
+                                 EDIStreamValidationError.SEGMENT_EXCEEDS_MAXIMUM_USE);
+        }
+
+        correctSegment = segment = current;
+        return true;
+    }
+
+    boolean handleLoop(CharSequence tag, UsageNode current, int startDepth, UsageNode startNode, EventHandler handler) {
+        if (!current.getFirstChild().getId().contentEquals(tag)) {
+            return false;
+        }
+
+        completeLoops(handler, startDepth, startNode);
+        handler.loopBegin(current.getCode());
+        current.incrementUsage();
+
+        if (current.exceedsMaximumUsage()) {
+            handleMissingMandatory(handler);
+            handler.segmentError(tag, EDIStreamValidationError.LOOP_OCCURS_OVER_MAXIMUM_TIMES);
+        }
+
+        correctSegment = segment = startLoop(current);
+        return true;
     }
 
     private void handleMissingMandatory(EventHandler handler) {

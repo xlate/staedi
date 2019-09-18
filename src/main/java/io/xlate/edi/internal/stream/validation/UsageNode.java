@@ -118,10 +118,6 @@ class UsageNode {
         return siblingIndex;
     }
 
-    void setIndex(int siblingIndex) {
-        this.siblingIndex = siblingIndex;
-    }
-
     void incrementUsage() {
         usageCount++;
     }
@@ -140,10 +136,6 @@ class UsageNode {
 
     boolean exceedsMaximumUsage() {
         return usageCount > link.getMaxOccurs();
-    }
-
-    int getUsageCount() {
-        return usageCount;
     }
 
     boolean isNodeType(EDIType.Type type) {

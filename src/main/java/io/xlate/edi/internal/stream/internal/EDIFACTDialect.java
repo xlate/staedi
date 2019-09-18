@@ -21,6 +21,7 @@ public class EDIFACTDialect implements Dialect {
 
     private static final String UNB = "UNB";
 
+    private static final String[] EMPTY = new String[0];
     private static final int EDIFACT_UNA_LENGTH = 9;
 
     private char componentDelimiter = ':';
@@ -49,30 +50,33 @@ public class EDIFACTDialect implements Dialect {
     }
 
     boolean initialize(CharacterSet characters) {
-        final int length = header.length();
-        int versionStart = -1;
+        String[] parsedVersion = parseVersion();
 
-        if (UNB.equals(headerTag)) {
-            if (length < 10) {
-                return false;
+        if (parsedVersion.length > 0) {
+            this.version = parsedVersion;
+
+            characters.setClass(componentDelimiter, CharacterClass.COMPONENT_DELIMITER);
+            characters.setClass(elementDelimiter, CharacterClass.ELEMENT_DELIMITER);
+
+            if (releaseIndicator != ' ') {
+                characters.setClass(releaseIndicator, CharacterClass.RELEASE_CHARACTER);
             }
 
-            versionStart = 4;
+            if (elementRepeater != ' ') {
+                characters.setClass(elementRepeater, CharacterClass.ELEMENT_REPEATER);
+            }
+
+            characters.setClass(segmentDelimiter, CharacterClass.SEGMENT_DELIMITER);
+            initialized = true;
         } else {
-            if (length < 18) {
-                return false;
-            }
-
-            for (int i = 11; i < length; i++) {
-                if (unbTag(header, i - 2)) {
-                    if (length < i + 7 || header.charAt(i + 1) != elementDelimiter) {
-                        return false;
-                    }
-                    versionStart = i + 2;
-                    break;
-                }
-            }
+            initialized = false;
         }
+
+        return initialized;
+    }
+
+    private String[] parseVersion() {
+        int versionStart = findVersionStart(headerTag, header, elementDelimiter);
 
         if (versionStart > -1) {
             StringBuilder versionBuilder = new StringBuilder();
@@ -81,23 +85,35 @@ public class EDIFACTDialect implements Dialect {
                 versionBuilder.append(header.charAt(i));
             }
 
-            version = versionBuilder.toString().split('\\' + String.valueOf(componentDelimiter));
+            return versionBuilder.toString().split('\\' + String.valueOf(componentDelimiter));
         }
 
-        characters.setClass(componentDelimiter, CharacterClass.COMPONENT_DELIMITER);
-        characters.setClass(elementDelimiter, CharacterClass.ELEMENT_DELIMITER);
-        if (releaseIndicator != ' ') {
-            characters.setClass(releaseIndicator, CharacterClass.RELEASE_CHARACTER);
-        }
-        if (elementRepeater != ' ') {
-            characters.setClass(elementRepeater, CharacterClass.ELEMENT_REPEATER);
-        }
-        characters.setClass(segmentDelimiter, CharacterClass.SEGMENT_DELIMITER);
-
-        return (initialized = true);
+        return EMPTY;
     }
 
-    private boolean unbTag(StringBuilder buffer, int position) {
+    static int findVersionStart(String headerTag, StringBuilder header, char elementDelimiter) {
+        final int length = header.length();
+        int versionStart = -1;
+
+        if (UNB.equals(headerTag)) {
+            if (length >= 10) {
+                versionStart = 4;
+            }
+        } else if (length >= 18) {
+            for (int i = 11; i < length; i++) {
+                if (unbTag(header, i - 2) &&
+                        length >= i + 7 &&
+                        header.charAt(i + 1) == elementDelimiter) {
+                    versionStart = i + 2;
+                    break;
+                }
+            }
+        }
+
+        return versionStart;
+    }
+
+    static boolean unbTag(StringBuilder buffer, int position) {
         return (buffer.charAt(position) == 'U' &&
                 buffer.charAt(position + 1) == 'N' &&
                 buffer.charAt(position + 2) == 'B');
@@ -132,71 +148,85 @@ public class EDIFACTDialect implements Dialect {
         header.append(value);
 
         if (UNB.equals(headerTag)) {
-            if (index == 0) {
-                characters.setClass(componentDelimiter, CharacterClass.COMPONENT_DELIMITER);
-                characters.setClass(releaseIndicator, CharacterClass.RELEASE_CHARACTER);
-                characters.setClass(elementRepeater, CharacterClass.ELEMENT_REPEATER);
-            } else if (index == 3) {
-                characters.setClass(elementDelimiter, CharacterClass.ELEMENT_DELIMITER);
-            } else if (segmentDelimiter == value) {
-                characters.setClass(segmentDelimiter, CharacterClass.SEGMENT_DELIMITER);
+            return processInterchangeHeader(characters, value);
+        }
+
+        return processServiceStringAdvice(characters, value);
+    }
+
+    boolean processInterchangeHeader(CharacterSet characters, char value) {
+        if (index == 0) {
+            characters.setClass(componentDelimiter, CharacterClass.COMPONENT_DELIMITER);
+            characters.setClass(releaseIndicator, CharacterClass.RELEASE_CHARACTER);
+            characters.setClass(elementRepeater, CharacterClass.ELEMENT_REPEATER);
+            return true;
+        } else if (index == 3) {
+            characters.setClass(elementDelimiter, CharacterClass.ELEMENT_DELIMITER);
+            return true;
+        } else if (segmentDelimiter == value) {
+            characters.setClass(segmentDelimiter, CharacterClass.SEGMENT_DELIMITER);
+            rejected = !initialize(characters);
+            return isConfirmed();
+        }
+
+        return true;
+    }
+
+    boolean processServiceStringAdvice(CharacterSet characters, char value) {
+        switch (index) {
+        case 3:
+            componentDelimiter = value;
+            setCharacterClass(characters, CharacterClass.COMPONENT_DELIMITER, value, true);
+            break;
+        case 4:
+            elementDelimiter = value;
+            setCharacterClass(characters, CharacterClass.ELEMENT_DELIMITER, value, true);
+            break;
+        case 5:
+            decimalMark = value;
+            break;
+        case 6:
+            releaseIndicator = value;
+            setCharacterClass(characters, CharacterClass.RELEASE_CHARACTER, value, false);
+            break;
+        case 7:
+            elementRepeater = value;
+            setCharacterClass(characters, CharacterClass.ELEMENT_REPEATER, value, false);
+            break;
+        case 8:
+            segmentDelimiter = value;
+            setCharacterClass(characters, CharacterClass.SEGMENT_DELIMITER, value, true);
+            break;
+        default:
+            break;
+        }
+
+        if (index > EDIFACT_UNA_LENGTH) {
+            if (unbStart > -1 && (index - unbStart) > 9) {
                 rejected = !initialize(characters);
                 return isConfirmed();
-            }
-        } else {
-            switch (index) {
-            case 3:
-                componentDelimiter = value;
-                characters.setClass(componentDelimiter, CharacterClass.COMPONENT_DELIMITER);
-                break;
-            case 4:
-                elementDelimiter = value;
-                characters.setClass(elementDelimiter, CharacterClass.ELEMENT_DELIMITER);
-                break;
-            case 5:
-                decimalMark = value;
-                break;
-            case 6:
-                releaseIndicator = value;
-                if (value != ' ') {
-                    characters.setClass(releaseIndicator, CharacterClass.RELEASE_CHARACTER);
-                }
-                break;
-            case 7:
-                elementRepeater = value;
-                if (value != ' ') {
-                    characters.setClass(elementRepeater, CharacterClass.ELEMENT_REPEATER);
-                }
-                break;
-            case 8:
-                segmentDelimiter = value;
-                characters.setClass(segmentDelimiter, CharacterClass.SEGMENT_DELIMITER);
-                break;
-            default:
-                break;
-            }
+            } else if (header.charAt(index) == 'B') {
+                CharSequence un = header.subSequence(index - 2, index);
 
-            if (index > EDIFACT_UNA_LENGTH) {
-                if (unbStart > -1 && (index - unbStart) > 9) {
-                    rejected = !initialize(characters);
-                    return isConfirmed();
-                } else if (header.charAt(index) == 'B') {
-                    CharSequence un = header.subSequence(index - 2, index);
-
-                    if ("UN".contentEquals(un)) {
-                        unbStart = index - 2;
-                    } else {
-                        // Some other segment / element?
-                        return false;
-                    }
-                } else if (unbStart < 0 && value == elementDelimiter) {
+                if ("UN".contentEquals(un)) {
+                    unbStart = index - 2;
+                } else {
                     // Some other segment / element?
                     return false;
                 }
+            } else if (unbStart < 0 && value == elementDelimiter) {
+                // Some other segment / element?
+                return false;
             }
         }
 
         return true;
+    }
+
+    void setCharacterClass(CharacterSet characters, CharacterClass charClass, char value, boolean allowSpace) {
+        if (value != ' ' || allowSpace) {
+            characters.setClass(value, charClass);
+        }
     }
 
     @Override
