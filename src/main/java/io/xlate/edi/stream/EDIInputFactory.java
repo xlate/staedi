@@ -15,6 +15,8 @@
  ******************************************************************************/
 package io.xlate.edi.stream;
 
+import io.xlate.edi.EDIFactoryConfigurationError;
+import io.xlate.edi.internal.FactoryFinder;
 import io.xlate.edi.schema.Schema;
 
 import java.io.InputStream;

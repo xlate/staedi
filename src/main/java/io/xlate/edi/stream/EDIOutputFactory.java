@@ -17,6 +17,9 @@ package io.xlate.edi.stream;
 
 import java.io.OutputStream;
 
+import io.xlate.edi.EDIFactoryConfigurationError;
+import io.xlate.edi.internal.FactoryFinder;
+
 public abstract class EDIOutputFactory {
 
     static final String FACTORY_ID = "io.xlate.edi.stream.EDIOutputFactory";

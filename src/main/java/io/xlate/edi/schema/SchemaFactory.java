@@ -18,6 +18,9 @@ package io.xlate.edi.schema;
 import java.io.InputStream;
 import java.net.URL;
 
+import io.xlate.edi.EDIFactoryConfigurationError;
+import io.xlate.edi.internal.FactoryFinder;
+
 public abstract class SchemaFactory {
 
     static final String FACTORY_ID = "io.xlate.edi.schema.SchemaFactory";
@@ -44,7 +47,7 @@ public abstract class SchemaFactory {
      * @throws EDISchemaFactoryConfigurationError
      *             if an instance of this factory cannot be loaded
      */
-    public static SchemaFactory newFactory() throws EDISchemaFactoryConfigurationError {
+    public static SchemaFactory newFactory() throws EDIFactoryConfigurationError {
         return FactoryFinder.find(FACTORY_ID, DEFAULT_IMPL);
     }
 
@@ -61,7 +64,7 @@ public abstract class SchemaFactory {
      *             if an instance of this factory cannot be loaded
      */
     public static SchemaFactory newFactory(String factoryId,
-                                           ClassLoader classLoader) throws EDISchemaFactoryConfigurationError {
+                                           ClassLoader classLoader) throws EDIFactoryConfigurationError {
         return FactoryFinder.newInstance(factoryId, classLoader, false);
     }
 
