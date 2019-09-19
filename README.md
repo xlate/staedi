@@ -1,4 +1,5 @@
-# StAEDI - Streaming API for EDI [![Build Status](https://travis-ci.org/xlate/staedi.svg?branch=master)](https://travis-ci.org/xlate/staedi) [![Coverage Status](https://coveralls.io/repos/github/xlate/staedi/badge.svg?branch=master)](https://coveralls.io/github/xlate/staedi?branch=master)
+# StAEDI - Streaming API for EDI 
+[![Build Status](https://travis-ci.org/xlate/staedi.svg?branch=master)](https://travis-ci.org/xlate/staedi) [![Coverage Status](https://coveralls.io/repos/github/xlate/staedi/badge.svg?branch=master)](https://coveralls.io/github/xlate/staedi?branch=master) [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=xlate_staedi&metric=alert_status)](https://sonarcloud.io/dashboard?id=xlate_staedi)
 
 ## Overview
 
