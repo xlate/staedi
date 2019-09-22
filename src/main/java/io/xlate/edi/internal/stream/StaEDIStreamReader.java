@@ -28,10 +28,10 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import io.xlate.edi.internal.schema.SchemaUtils;
-import io.xlate.edi.internal.stream.internal.Dialect;
-import io.xlate.edi.internal.stream.internal.InternalLocation;
-import io.xlate.edi.internal.stream.internal.Lexer;
-import io.xlate.edi.internal.stream.internal.ProxyEventHandler;
+import io.xlate.edi.internal.stream.tokenization.Dialect;
+import io.xlate.edi.internal.stream.tokenization.InternalLocation;
+import io.xlate.edi.internal.stream.tokenization.Lexer;
+import io.xlate.edi.internal.stream.tokenization.ProxyEventHandler;
 import io.xlate.edi.schema.EDISchemaException;
 import io.xlate.edi.schema.Schema;
 import io.xlate.edi.stream.EDIInputFactory;

@@ -19,8 +19,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
-import io.xlate.edi.internal.stream.internal.CharacterSet;
-import io.xlate.edi.internal.stream.internal.EDIException;
+import io.xlate.edi.internal.stream.tokenization.CharacterSet;
+import io.xlate.edi.internal.stream.tokenization.EDIException;
 import io.xlate.edi.schema.EDISimpleType;
 import io.xlate.edi.stream.EDIStreamValidationError;
 

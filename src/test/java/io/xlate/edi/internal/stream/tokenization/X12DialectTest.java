@@ -13,18 +13,18 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  ******************************************************************************/
-package io.xlate.edi.internal.stream.internal;
+package io.xlate.edi.internal.stream.tokenization;
 
 import static org.junit.Assert.fail;
 
 import org.junit.Assert;
 import org.junit.Test;
 
-import io.xlate.edi.internal.stream.internal.CharacterSet;
-import io.xlate.edi.internal.stream.internal.Dialect;
-import io.xlate.edi.internal.stream.internal.DialectFactory;
-import io.xlate.edi.internal.stream.internal.EDIException;
-import io.xlate.edi.internal.stream.internal.X12Dialect;
+import io.xlate.edi.internal.stream.tokenization.CharacterSet;
+import io.xlate.edi.internal.stream.tokenization.Dialect;
+import io.xlate.edi.internal.stream.tokenization.DialectFactory;
+import io.xlate.edi.internal.stream.tokenization.EDIException;
+import io.xlate.edi.internal.stream.tokenization.X12Dialect;
 
 public class X12DialectTest {
 

@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  ******************************************************************************/
-package io.xlate.edi.internal.stream.internal;
+package io.xlate.edi.internal.stream.tokenization;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -24,10 +24,10 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import io.xlate.edi.internal.stream.ConstantsTest;
-import io.xlate.edi.internal.stream.internal.EDIException;
-import io.xlate.edi.internal.stream.internal.EventHandler;
-import io.xlate.edi.internal.stream.internal.InternalLocation;
-import io.xlate.edi.internal.stream.internal.Lexer;
+import io.xlate.edi.internal.stream.tokenization.EDIException;
+import io.xlate.edi.internal.stream.tokenization.EventHandler;
+import io.xlate.edi.internal.stream.tokenization.InternalLocation;
+import io.xlate.edi.internal.stream.tokenization.Lexer;
 import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamValidationError;
 

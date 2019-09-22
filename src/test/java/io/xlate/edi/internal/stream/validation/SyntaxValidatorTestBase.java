@@ -5,7 +5,7 @@ import static org.mockito.Mockito.when;
 
 import org.junit.Before;
 
-import io.xlate.edi.internal.stream.internal.EventHandler;
+import io.xlate.edi.internal.stream.tokenization.EventHandler;
 import io.xlate.edi.internal.stream.validation.UsageNode;
 import io.xlate.edi.schema.EDIReference;
 import io.xlate.edi.schema.EDISyntaxRule;

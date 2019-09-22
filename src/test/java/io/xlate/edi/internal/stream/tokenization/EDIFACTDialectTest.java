@@ -13,16 +13,16 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  ******************************************************************************/
-package io.xlate.edi.internal.stream.internal;
+package io.xlate.edi.internal.stream.tokenization;
 
 import org.junit.Assert;
 import org.junit.Test;
 
-import io.xlate.edi.internal.stream.internal.CharacterSet;
-import io.xlate.edi.internal.stream.internal.Dialect;
-import io.xlate.edi.internal.stream.internal.DialectFactory;
-import io.xlate.edi.internal.stream.internal.EDIException;
-import io.xlate.edi.internal.stream.internal.EDIFACTDialect;
+import io.xlate.edi.internal.stream.tokenization.CharacterSet;
+import io.xlate.edi.internal.stream.tokenization.Dialect;
+import io.xlate.edi.internal.stream.tokenization.DialectFactory;
+import io.xlate.edi.internal.stream.tokenization.EDIException;
+import io.xlate.edi.internal.stream.tokenization.EDIFACTDialect;
 
 @SuppressWarnings("static-method")
 public class EDIFACTDialectTest {

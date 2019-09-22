@@ -15,13 +15,13 @@
  ******************************************************************************/
 package io.xlate.edi.internal.stream;
 
-import io.xlate.edi.internal.stream.internal.CharacterClass;
-import io.xlate.edi.internal.stream.internal.CharacterSet;
-import io.xlate.edi.internal.stream.internal.Dialect;
-import io.xlate.edi.internal.stream.internal.DialectFactory;
-import io.xlate.edi.internal.stream.internal.EDIException;
-import io.xlate.edi.internal.stream.internal.EDIFACTDialect;
-import io.xlate.edi.internal.stream.internal.State;
+import io.xlate.edi.internal.stream.tokenization.CharacterClass;
+import io.xlate.edi.internal.stream.tokenization.CharacterSet;
+import io.xlate.edi.internal.stream.tokenization.Dialect;
+import io.xlate.edi.internal.stream.tokenization.DialectFactory;
+import io.xlate.edi.internal.stream.tokenization.EDIException;
+import io.xlate.edi.internal.stream.tokenization.EDIFACTDialect;
+import io.xlate.edi.internal.stream.tokenization.State;
 import io.xlate.edi.stream.EDIStreamException;
 import io.xlate.edi.stream.EDIStreamWriter;
 import io.xlate.edi.stream.EDIStreamConstants.Delimiters;

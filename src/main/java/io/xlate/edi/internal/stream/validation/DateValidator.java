@@ -19,7 +19,7 @@ import java.io.IOException;
 import java.util.Calendar;
 import java.util.List;
 
-import io.xlate.edi.internal.stream.internal.EDIException;
+import io.xlate.edi.internal.stream.tokenization.EDIException;
 import io.xlate.edi.schema.EDISimpleType;
 import io.xlate.edi.stream.EDIStreamValidationError;
 

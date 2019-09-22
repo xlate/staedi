@@ -14,7 +14,7 @@ import java.util.stream.IntStream;
 
 import org.junit.Test;
 
-import io.xlate.edi.internal.stream.internal.EDIException;
+import io.xlate.edi.internal.stream.tokenization.EDIException;
 import io.xlate.edi.internal.stream.validation.DateValidator;
 import io.xlate.edi.internal.stream.validation.ElementValidator;
 import io.xlate.edi.schema.EDISimpleType;
