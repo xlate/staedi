@@ -25,8 +25,8 @@ public class DateValidatorTest {
     @Test
     public void testValidateLengthTooShort() {
         EDISimpleType element = mock(EDISimpleType.class);
-        when(element.getMinLength()).thenReturn(6);
-        when(element.getMaxLength()).thenReturn(8);
+        when(element.getMinLength()).thenReturn(6L);
+        when(element.getMaxLength()).thenReturn(8L);
         when(element.getValueSet()).thenReturn(Collections.emptySet());
         ElementValidator v = DateValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
@@ -39,8 +39,8 @@ public class DateValidatorTest {
     @Test
     public void testValidateInvalidLength() {
         EDISimpleType element = mock(EDISimpleType.class);
-        when(element.getMinLength()).thenReturn(6);
-        when(element.getMaxLength()).thenReturn(8);
+        when(element.getMinLength()).thenReturn(6L);
+        when(element.getMaxLength()).thenReturn(8L);
         when(element.getValueSet()).thenReturn(Collections.emptySet());
         ElementValidator v = DateValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
@@ -52,8 +52,8 @@ public class DateValidatorTest {
     @Test
     public void testValidateInvalidValue() {
         EDISimpleType element = mock(EDISimpleType.class);
-        when(element.getMinLength()).thenReturn(6);
-        when(element.getMaxLength()).thenReturn(8);
+        when(element.getMinLength()).thenReturn(6L);
+        when(element.getMaxLength()).thenReturn(8L);
         when(element.getValueSet()).thenReturn(Collections.emptySet());
         ElementValidator v = DateValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
@@ -65,8 +65,8 @@ public class DateValidatorTest {
     @Test
     public void testValidateValidValue() {
         EDISimpleType element = mock(EDISimpleType.class);
-        when(element.getMinLength()).thenReturn(6);
-        when(element.getMaxLength()).thenReturn(8);
+        when(element.getMinLength()).thenReturn(6L);
+        when(element.getMaxLength()).thenReturn(8L);
         when(element.getValueSet()).thenReturn(Collections.emptySet());
         ElementValidator v = DateValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
@@ -77,8 +77,8 @@ public class DateValidatorTest {
     @Test
     public void testValidateSixDigitDate() {
         EDISimpleType element = mock(EDISimpleType.class);
-        when(element.getMinLength()).thenReturn(6);
-        when(element.getMaxLength()).thenReturn(8);
+        when(element.getMinLength()).thenReturn(6L);
+        when(element.getMaxLength()).thenReturn(8L);
         when(element.getValueSet()).thenReturn(Collections.emptySet());
         ElementValidator v = DateValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
@@ -89,8 +89,8 @@ public class DateValidatorTest {
     @Test
     public void testValidateSixDigitDatePreviousCentury() {
         EDISimpleType element = mock(EDISimpleType.class);
-        when(element.getMinLength()).thenReturn(6);
-        when(element.getMaxLength()).thenReturn(8);
+        when(element.getMinLength()).thenReturn(6L);
+        when(element.getMaxLength()).thenReturn(8L);
         when(element.getValueSet()).thenReturn(Collections.emptySet());
         ElementValidator v = DateValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
@@ -102,8 +102,8 @@ public class DateValidatorTest {
     @Test
     public void testValidateDayAfterMonthEnd() {
         EDISimpleType element = mock(EDISimpleType.class);
-        when(element.getMinLength()).thenReturn(6);
-        when(element.getMaxLength()).thenReturn(8);
+        when(element.getMinLength()).thenReturn(6L);
+        when(element.getMaxLength()).thenReturn(8L);
         when(element.getValueSet()).thenReturn(Collections.emptySet());
         ElementValidator v = DateValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
@@ -118,8 +118,8 @@ public class DateValidatorTest {
     @Test
     public void testValidateFebruaryLeapYears() {
         EDISimpleType element = mock(EDISimpleType.class);
-        when(element.getMinLength()).thenReturn(6);
-        when(element.getMaxLength()).thenReturn(8);
+        when(element.getMinLength()).thenReturn(6L);
+        when(element.getMaxLength()).thenReturn(8L);
         when(element.getValueSet()).thenReturn(Collections.emptySet());
         ElementValidator v = DateValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
@@ -134,8 +134,8 @@ public class DateValidatorTest {
     @Test
     public void testValidateInvalidMonth() {
         EDISimpleType element = mock(EDISimpleType.class);
-        when(element.getMinLength()).thenReturn(6);
-        when(element.getMaxLength()).thenReturn(8);
+        when(element.getMinLength()).thenReturn(6L);
+        when(element.getMaxLength()).thenReturn(8L);
         when(element.getValueSet()).thenReturn(Collections.emptySet());
         ElementValidator v = DateValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
@@ -147,8 +147,8 @@ public class DateValidatorTest {
     @Test
     public void testFormatValueTooShort() {
         EDISimpleType element = mock(EDISimpleType.class);
-        when(element.getMinLength()).thenReturn(6);
-        when(element.getMaxLength()).thenReturn(8);
+        when(element.getMinLength()).thenReturn(6L);
+        when(element.getMaxLength()).thenReturn(8L);
         ElementValidator v = DateValidator.getInstance();
         StringBuilder output = new StringBuilder();
         try {
@@ -162,8 +162,8 @@ public class DateValidatorTest {
     @Test
     public void testFormatValueTooLong() {
         EDISimpleType element = mock(EDISimpleType.class);
-        when(element.getMinLength()).thenReturn(6);
-        when(element.getMaxLength()).thenReturn(8);
+        when(element.getMinLength()).thenReturn(6L);
+        when(element.getMaxLength()).thenReturn(8L);
         ElementValidator v = DateValidator.getInstance();
         StringBuilder output = new StringBuilder();
         try {
@@ -177,8 +177,8 @@ public class DateValidatorTest {
     @Test
     public void testFormatInvalidDate() {
         EDISimpleType element = mock(EDISimpleType.class);
-        when(element.getMinLength()).thenReturn(6);
-        when(element.getMaxLength()).thenReturn(8);
+        when(element.getMinLength()).thenReturn(6L);
+        when(element.getMaxLength()).thenReturn(8L);
         ElementValidator v = DateValidator.getInstance();
         StringBuilder output = new StringBuilder();
         try {
@@ -192,8 +192,8 @@ public class DateValidatorTest {
     @Test
     public void testFormatValidDate() throws EDIException {
         EDISimpleType element = mock(EDISimpleType.class);
-        when(element.getMinLength()).thenReturn(6);
-        when(element.getMaxLength()).thenReturn(8);
+        when(element.getMinLength()).thenReturn(6L);
+        when(element.getMaxLength()).thenReturn(8L);
         ElementValidator v = DateValidator.getInstance();
         StringBuilder output = new StringBuilder();
         v.format(element, "20000101", output);

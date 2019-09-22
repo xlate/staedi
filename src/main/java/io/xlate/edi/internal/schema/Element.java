@@ -25,15 +25,15 @@ class Element extends BasicType implements EDISimpleType {
 
     private Base base;
     private int number;
-    private int minLength;
-    private int maxLength;
+    private long minLength;
+    private long maxLength;
     private Set<String> values;
 
-    Element(String id, Base base, int number, int minLength, int maxLength) {
+    Element(String id, Base base, int number, long minLength, long maxLength) {
         this(id, base, number, minLength, maxLength, Collections.emptySet());
     }
 
-    Element(String id, Base base, int number, int minLength, int maxLength, Set<String> values) {
+    Element(String id, Base base, int number, long minLength, long maxLength, Set<String> values) {
         super(id, Type.ELEMENT);
         this.base = base;
         this.number = number;
@@ -71,12 +71,12 @@ class Element extends BasicType implements EDISimpleType {
     }
 
     @Override
-    public int getMinLength() {
+    public long getMinLength() {
         return minLength;
     }
 
     @Override
-    public int getMaxLength() {
+    public long getMaxLength() {
         return maxLength;
     }
 

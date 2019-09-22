@@ -41,10 +41,6 @@ class Structure extends BasicType implements EDIComplexType {
         this.syntaxRules = Collections.unmodifiableList(new ArrayList<>(syntaxRules));
     }
 
-    Structure(EDIComplexType other, List<EDIReference> references, List<EDISyntaxRule> syntaxRules) {
-        this(other.getId(), other.getType(), other.getCode(), references, syntaxRules);
-    }
-
     @Override
     public String toString() {
         StringBuilder buffer = new StringBuilder("id: ");

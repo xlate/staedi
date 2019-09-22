@@ -158,6 +158,14 @@ public class StaEDIStreamReader implements EDIStreamReader {
             complete = true;
         }
 
+        if (event == EDIStreamEvent.ELEMENT_DATA && proxy.isBinaryElementLength()) {
+        	try {
+        		this.setBinaryDataLength(Long.parseLong(getText()));
+        	} catch (NumberFormatException e) {
+        		// TODO: log it
+        	}
+        }
+
         return event;
     }
 

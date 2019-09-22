@@ -15,6 +15,7 @@
  ******************************************************************************/
 package io.xlate.edi.internal.stream;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -22,6 +23,9 @@ import static org.junit.Assert.fail;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.StringWriter;
+import java.util.Arrays;
+import java.util.Base64;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
@@ -144,7 +148,6 @@ public class StaEDIXMLStreamReaderTest {
         Assert.assertEquals("00", xmlReader.getElementText());
     }
 
-    @SuppressWarnings("static-method")
     private void assertElement(XMLStreamReader xmlReader, String tag, String value) throws Exception {
         Assert.assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.next());
         Assert.assertEquals(tag, xmlReader.getLocalName());
@@ -359,5 +362,125 @@ public class StaEDIXMLStreamReaderTest {
         char[] textArrayLocal = new char[3];
         xmlReader.getTextCharacters(xmlReader.getTextStart(), textArrayLocal, 0, xmlReader.getTextLength());
         Assert.assertArrayEquals(new char[] {'0', '0', '\0'}, textArrayLocal);
+    }
+
+    @Test
+    public void testGetCdataBinary() throws Exception {
+    	EDIInputFactory factory = EDIInputFactory.newFactory();
+        InputStream stream = getClass().getClassLoader().getResourceAsStream("x12/simple_with_binary_segment.edi");
+        EDIStreamReader ediReader = factory.createEDIStreamReader(stream);
+        AtomicReference<String> segmentName = new AtomicReference<>();
+        EDIStreamFilter ediFilter = new EDIStreamFilter() {
+            @Override
+            public boolean accept(EDIStreamReader reader) {
+                switch (reader.getEventType()) {
+                case START_SEGMENT:
+                	segmentName.set(reader.getText());
+                	return true;
+                case START_INTERCHANGE:
+                case START_GROUP:
+                case START_TRANSACTION:
+                case START_LOOP:
+                case ELEMENT_DATA_BINARY:
+                case END_SEGMENT:
+                case END_LOOP:
+                case END_TRANSACTION:
+                case END_GROUP:
+                case END_INTERCHANGE:
+                    return true;
+                default:
+                    return "BIN".equals(segmentName.get());
+                }
+            }
+        };
+        ediReader = factory.createFilteredReader(ediReader, ediFilter);
+        XMLStreamReader xmlReader = new StaEDIXMLStreamReader(ediReader);
+
+        SchemaFactory schemaFactory = SchemaFactory.newFactory();
+        Schema schema = schemaFactory.createSchema(getClass().getClassLoader().getResource("x12/EDISchemaBinarySegment.xml"));
+
+        assertEquals(XMLStreamConstants.START_DOCUMENT, xmlReader.next());
+        assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.next());
+        assertEquals("INTERCHANGE", xmlReader.getLocalName());
+
+        assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.next());
+        assertEquals("ISA", xmlReader.getLocalName());
+        assertEquals(XMLStreamConstants.END_ELEMENT, xmlReader.next());
+        assertEquals("ISA", xmlReader.getLocalName());
+
+        assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.nextTag());
+        assertEquals("GROUP", xmlReader.getLocalName());
+
+        assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.nextTag());
+        assertEquals("GS", xmlReader.getLocalName());
+        assertEquals(XMLStreamConstants.END_ELEMENT, xmlReader.next());
+        assertEquals("GS", xmlReader.getLocalName());
+
+        assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.nextTag());
+        assertEquals("TRANSACTION", xmlReader.getLocalName());
+
+        assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.nextTag());
+        assertEquals("ST", xmlReader.getLocalName());
+
+        ediReader.setTransactionSchema(schema);
+
+        assertEquals(XMLStreamConstants.END_ELEMENT, xmlReader.next());
+        assertEquals("ST", xmlReader.getLocalName());
+
+        /* BIN #1 ********************************************************************/
+        assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.nextTag());
+        assertEquals("BIN", xmlReader.getLocalName());
+
+        assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.next()); // BIN01;
+        assertEquals(XMLStreamConstants.CHARACTERS, xmlReader.next()); // BIN01 content;
+        assertEquals("25", xmlReader.getText());
+        assertEquals(XMLStreamConstants.END_ELEMENT, xmlReader.next()); // BIN01;
+
+        assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.next()); // BIN02;
+        assertEquals(XMLStreamConstants.CDATA, xmlReader.next()); // BIN02 content;
+        assertEquals(Base64.getEncoder().encodeToString("1234567890123456789012345".getBytes()), xmlReader.getText());
+        assertEquals(XMLStreamConstants.END_ELEMENT, xmlReader.next()); // BIN02;
+
+        assertEquals(XMLStreamConstants.END_ELEMENT, xmlReader.next());
+        assertEquals("BIN", xmlReader.getLocalName());
+
+        /* BIN #2 ********************************************************************/
+        assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.nextTag());
+        assertEquals("BIN", xmlReader.getLocalName());
+
+        assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.next()); // BIN01;
+        assertEquals(XMLStreamConstants.CHARACTERS, xmlReader.next()); // BIN01 content;
+        assertEquals("25", xmlReader.getText());
+        assertEquals(XMLStreamConstants.END_ELEMENT, xmlReader.next()); // BIN01;
+
+        assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.next()); // BIN02;
+        assertEquals(XMLStreamConstants.CDATA, xmlReader.next()); // BIN02 content;
+        String expected2 = Base64.getEncoder().encodeToString("12345678901234567890\n1234".getBytes());
+        assertArrayEquals(expected2.toCharArray(), xmlReader.getTextCharacters());
+        assertEquals(XMLStreamConstants.END_ELEMENT, xmlReader.next()); // BIN02;
+
+        assertEquals(XMLStreamConstants.END_ELEMENT, xmlReader.next());
+        assertEquals("BIN", xmlReader.getLocalName());
+
+        /* BIN #3 ********************************************************************/
+        assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.nextTag());
+        assertEquals("BIN", xmlReader.getLocalName());
+
+        assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.next()); // BIN01;
+        assertEquals(XMLStreamConstants.CHARACTERS, xmlReader.next()); // BIN01 content;
+        assertEquals("25", xmlReader.getText());
+        assertEquals(XMLStreamConstants.END_ELEMENT, xmlReader.next()); // BIN01;
+
+        assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.next()); // BIN02;
+        assertEquals(XMLStreamConstants.CDATA, xmlReader.next()); // BIN02 content;
+        String expected3 = Base64.getEncoder().encodeToString("1234567890\n1234567890\n12\n".getBytes());
+        char[] target3 = new char[100];
+        xmlReader.getTextCharacters(xmlReader.getTextStart(), target3, 0, xmlReader.getTextLength());
+        char[] result3 = Arrays.copyOf(target3, xmlReader.getTextLength());
+        assertArrayEquals(expected3.toCharArray(), result3);
+        assertEquals(XMLStreamConstants.END_ELEMENT, xmlReader.next()); // BIN02;
+
+        assertEquals(XMLStreamConstants.END_ELEMENT, xmlReader.next());
+        assertEquals("BIN", xmlReader.getLocalName());
     }
 }

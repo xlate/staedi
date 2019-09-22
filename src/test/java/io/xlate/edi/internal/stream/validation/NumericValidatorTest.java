@@ -31,8 +31,8 @@ public class NumericValidatorTest {
     @Test
     public void testValidateLengthTooShort() {
         EDISimpleType element = mock(EDISimpleType.class);
-        when(element.getMinLength()).thenReturn(5);
-        when(element.getMaxLength()).thenReturn(10);
+        when(element.getMinLength()).thenReturn(5L);
+        when(element.getMaxLength()).thenReturn(10L);
         when(element.getValueSet()).thenReturn(Collections.emptySet());
         ElementValidator v = NumericValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
@@ -44,8 +44,8 @@ public class NumericValidatorTest {
     @Test
     public void testValidateLengthTooLong() {
         EDISimpleType element = mock(EDISimpleType.class);
-        when(element.getMinLength()).thenReturn(5);
-        when(element.getMaxLength()).thenReturn(10);
+        when(element.getMinLength()).thenReturn(5L);
+        when(element.getMaxLength()).thenReturn(10L);
         when(element.getValueSet()).thenReturn(Collections.emptySet());
         ElementValidator v = NumericValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
@@ -57,8 +57,8 @@ public class NumericValidatorTest {
     @Test
     public void testValidateInvalidCharacter() {
         EDISimpleType element = mock(EDISimpleType.class);
-        when(element.getMinLength()).thenReturn(5);
-        when(element.getMaxLength()).thenReturn(10);
+        when(element.getMinLength()).thenReturn(5L);
+        when(element.getMaxLength()).thenReturn(10L);
         when(element.getValueSet()).thenReturn(Collections.emptySet());
         ElementValidator v = NumericValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
@@ -70,8 +70,8 @@ public class NumericValidatorTest {
     @Test
     public void testFormatValueTooLong() {
         EDISimpleType element = mock(EDISimpleType.class);
-        when(element.getMinLength()).thenReturn(4);
-        when(element.getMaxLength()).thenReturn(5);
+        when(element.getMinLength()).thenReturn(4L);
+        when(element.getMaxLength()).thenReturn(5L);
         ElementValidator v = NumericValidator.getInstance();
         StringBuilder output = new StringBuilder();
         try {
@@ -85,8 +85,8 @@ public class NumericValidatorTest {
     @Test
     public void testFormatInvalidCharacterData() {
         EDISimpleType element = mock(EDISimpleType.class);
-        when(element.getMinLength()).thenReturn(4);
-        when(element.getMaxLength()).thenReturn(5);
+        when(element.getMinLength()).thenReturn(4L);
+        when(element.getMaxLength()).thenReturn(5L);
         ElementValidator v = NumericValidator.getInstance();
         StringBuilder output = new StringBuilder();
         try {
@@ -100,8 +100,8 @@ public class NumericValidatorTest {
     @Test
     public void testFormatValidNumber() throws EDIException {
         EDISimpleType element = mock(EDISimpleType.class);
-        when(element.getMinLength()).thenReturn(4);
-        when(element.getMaxLength()).thenReturn(8);
+        when(element.getMinLength()).thenReturn(4L);
+        when(element.getMaxLength()).thenReturn(8L);
         when(element.getValueSet()).thenReturn(Collections.emptySet());
         ElementValidator v = NumericValidator.getInstance();
         StringBuilder output = new StringBuilder();
@@ -112,8 +112,8 @@ public class NumericValidatorTest {
     @Test
     public void testFormatValidNumberPadded() throws EDIException {
         EDISimpleType element = mock(EDISimpleType.class);
-        when(element.getMinLength()).thenReturn(6);
-        when(element.getMaxLength()).thenReturn(8);
+        when(element.getMinLength()).thenReturn(6L);
+        when(element.getMaxLength()).thenReturn(8L);
         when(element.getValueSet()).thenReturn(Collections.emptySet());
         ElementValidator v = NumericValidator.getInstance();
         StringBuilder output = new StringBuilder();

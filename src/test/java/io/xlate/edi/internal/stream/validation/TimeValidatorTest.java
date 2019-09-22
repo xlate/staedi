@@ -21,8 +21,8 @@ public class TimeValidatorTest {
     @Test
     public void testValidateValueTooShort() {
         EDISimpleType element = mock(EDISimpleType.class);
-        when(element.getMinLength()).thenReturn(4);
-        when(element.getMaxLength()).thenReturn(8);
+        when(element.getMinLength()).thenReturn(4L);
+        when(element.getMaxLength()).thenReturn(8L);
         when(element.getValueSet()).thenReturn(Collections.emptySet());
         ElementValidator v = TimeValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
@@ -35,8 +35,8 @@ public class TimeValidatorTest {
     @Test
     public void testValidateValueTooLong() {
         EDISimpleType element = mock(EDISimpleType.class);
-        when(element.getMinLength()).thenReturn(4);
-        when(element.getMaxLength()).thenReturn(8);
+        when(element.getMinLength()).thenReturn(4L);
+        when(element.getMaxLength()).thenReturn(8L);
         when(element.getValueSet()).thenReturn(Collections.emptySet());
         ElementValidator v = TimeValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
@@ -49,8 +49,8 @@ public class TimeValidatorTest {
     @Test
     public void testValidateInvalidValue() {
         EDISimpleType element = mock(EDISimpleType.class);
-        when(element.getMinLength()).thenReturn(4);
-        when(element.getMaxLength()).thenReturn(8);
+        when(element.getMinLength()).thenReturn(4L);
+        when(element.getMaxLength()).thenReturn(8L);
         when(element.getValueSet()).thenReturn(Collections.emptySet());
         ElementValidator v = TimeValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
@@ -62,8 +62,8 @@ public class TimeValidatorTest {
     @Test
     public void testValidateValidValue() {
         EDISimpleType element = mock(EDISimpleType.class);
-        when(element.getMinLength()).thenReturn(4);
-        when(element.getMaxLength()).thenReturn(8);
+        when(element.getMinLength()).thenReturn(4L);
+        when(element.getMaxLength()).thenReturn(8L);
         when(element.getValueSet()).thenReturn(Collections.emptySet());
         ElementValidator v = TimeValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
@@ -88,8 +88,8 @@ public class TimeValidatorTest {
     @Test
     public void testFormatValueTooLong() {
         EDISimpleType element = mock(EDISimpleType.class);
-        when(element.getMinLength()).thenReturn(4);
-        when(element.getMaxLength()).thenReturn(8);
+        when(element.getMinLength()).thenReturn(4L);
+        when(element.getMaxLength()).thenReturn(8L);
         when(element.getValueSet()).thenReturn(Collections.emptySet());
         ElementValidator v = TimeValidator.getInstance();
         StringBuilder output = new StringBuilder();
@@ -104,8 +104,8 @@ public class TimeValidatorTest {
     @Test
     public void testFormatInvalidTime() {
         EDISimpleType element = mock(EDISimpleType.class);
-        when(element.getMinLength()).thenReturn(4);
-        when(element.getMaxLength()).thenReturn(8);
+        when(element.getMinLength()).thenReturn(4L);
+        when(element.getMaxLength()).thenReturn(8L);
         when(element.getValueSet()).thenReturn(Collections.emptySet());
         ElementValidator v = TimeValidator.getInstance();
         StringBuilder output = new StringBuilder();
@@ -120,8 +120,8 @@ public class TimeValidatorTest {
     @Test
     public void testFormatValidTime() throws EDIException {
         EDISimpleType element = mock(EDISimpleType.class);
-        when(element.getMinLength()).thenReturn(4);
-        when(element.getMaxLength()).thenReturn(8);
+        when(element.getMinLength()).thenReturn(4L);
+        when(element.getMaxLength()).thenReturn(8L);
         when(element.getValueSet()).thenReturn(Collections.emptySet());
         ElementValidator v = TimeValidator.getInstance();
         StringBuilder output = new StringBuilder();
@@ -132,8 +132,8 @@ public class TimeValidatorTest {
     @Test
     public void testFormatValidTimePadded() throws EDIException {
         EDISimpleType element = mock(EDISimpleType.class);
-        when(element.getMinLength()).thenReturn(6);
-        when(element.getMaxLength()).thenReturn(8);
+        when(element.getMinLength()).thenReturn(6L);
+        when(element.getMaxLength()).thenReturn(8L);
         when(element.getValueSet()).thenReturn(Collections.emptySet());
         ElementValidator v = TimeValidator.getInstance();
         StringBuilder output = new StringBuilder();

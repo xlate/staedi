@@ -307,6 +307,10 @@ public class ProxyEventHandler implements EventHandler {
         }
     }
 
+    public boolean isBinaryElementLength() {
+    	return validator() != null && validator().isBinaryElementLength();
+    }
+
     @Override
     public void binaryData(InputStream binaryStream) {
         enqueueEvent(EDIStreamEvent.ELEMENT_DATA_BINARY, EDIStreamValidationError.NONE, "", null);
@@ -456,7 +460,7 @@ public class ProxyEventHandler implements EventHandler {
         }
 
         @Override
-        public CharSequence subSequence(@SuppressWarnings("hiding") int start, int end) {
+        public CharSequence subSequence(int start, int end) {
             if (start < 0) {
                 throw new IndexOutOfBoundsException(Integer.toString(start));
             }

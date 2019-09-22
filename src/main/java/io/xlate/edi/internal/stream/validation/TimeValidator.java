@@ -56,7 +56,7 @@ class TimeValidator extends ElementValidator {
         try {
             result.append(value);
 
-            for (int i = length, min = element.getMinLength(); i < min; i++) {
+            for (long i = length, min = element.getMinLength(); i < min; i++) {
                 result.append('0');
             }
         } catch (IOException e) {

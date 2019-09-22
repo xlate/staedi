@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.xml.namespace.QName;
@@ -573,8 +574,8 @@ public class StaEDISchemaFactory extends SchemaFactory {
         }
 
         String refTag = element.getLocalPart();
-        int minOccurs = getIntegerAttribute(reader, "minOccurs", 0);
-        int maxOccurs = getIntegerAttribute(reader, "maxOccurs", 1);
+        int minOccurs = parseAttribute(reader, "minOccurs", Integer::parseInt, 0);
+        int maxOccurs = parseAttribute(reader, "maxOccurs", Integer::parseInt, 1);
 
         Reference ref;
 
@@ -657,9 +658,9 @@ public class StaEDISchemaFactory extends SchemaFactory {
             schemaException("Invalid element 'type': [" + base + ']', reader, e);
         }
 
-        int number = getIntegerAttribute(reader, "number", -1);
-        int minLength = getIntegerAttribute(reader, "minLength", 1);
-        int maxLength = getIntegerAttribute(reader, "maxLength", 1);
+        int number = parseAttribute(reader, "number", Integer::parseInt, -1);
+        long minLength = parseAttribute(reader, "minLength", Long::parseLong, 1L);
+        long maxLength = parseAttribute(reader, "maxLength", Long::parseLong, 1L);
 
         final Set<String> values;
 
@@ -702,17 +703,17 @@ public class StaEDISchemaFactory extends SchemaFactory {
         return values;
     }
 
-    int getIntegerAttribute(XMLStreamReader reader, String attrName, int defaultValue) {
+    <T> T parseAttribute(XMLStreamReader reader, String attrName, Function<String, T> converter, T defaultValue) {
         String attr = reader.getAttributeValue(null, attrName);
 
         try {
-            return attr != null ? Integer.parseInt(attr) : defaultValue;
-        } catch (NumberFormatException e) {
+            return attr != null ? converter.apply(attr) : defaultValue;
+        } catch (Exception e) {
             schemaException("Invalid " + attrName, reader, e);
         }
 
         // Impossible
-        return -1;
+        return null;
     }
 
     void requireEvent(int eventId, XMLStreamReader reader) {

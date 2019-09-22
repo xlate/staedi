@@ -53,7 +53,7 @@ class NumericValidator extends ElementValidator {
         }
 
         try {
-            for (int i = length, min = element.getMinLength(); i < min; i++) {
+            for (long i = length, min = element.getMinLength(); i < min; i++) {
                 result.append('0');
             }
 

@@ -65,8 +65,8 @@ public class StaEDIXMLStreamReader implements XMLStreamReader {
         return null;
     }
 
-    private boolean isEvent(int eventType) {
-        return eventQueue.element().equals(eventType);
+    private boolean isEvent(int... eventTypes) {
+    	return Arrays.stream(eventTypes).anyMatch(eventQueue.element()::equals);
     }
 
     private QName deriveName(QName parent, String hint) {
@@ -114,9 +114,13 @@ public class StaEDIXMLStreamReader implements XMLStreamReader {
             break;
 
         case ELEMENT_DATA_BINARY:
+            /*
+             * This section will read the binary data and Base64 the stream
+             * into an XML CDATA section.
+             * */
             name = deriveName(elementStack.getFirst(), null);
             enqueueEvent(START_ELEMENT, name, false);
-            enqueueEvent(CHARACTERS, DUMMY_QNAME, false);
+            enqueueEvent(CDATA, DUMMY_QNAME, false);
 
             // This only will work if using a validation filter!
             InputStream input = ediReader.getBinaryData();
@@ -305,7 +309,7 @@ public class StaEDIXMLStreamReader implements XMLStreamReader {
 
     @Override
     public boolean isCharacters() {
-        return isEvent(CHARACTERS);
+        return isEvent(CHARACTERS, CDATA);
     }
 
     @Override
@@ -388,7 +392,12 @@ public class StaEDIXMLStreamReader implements XMLStreamReader {
         requireCharacters();
 
         if (cdataBuilder.length() > 0) {
-            return Arrays.toString(cdata);
+        	if (cdata == null) {
+                cdata = new char[cdataBuilder.length()];
+                cdataBuilder.getChars(0, cdataBuilder.length(), cdata, 0);
+            }
+
+            return new String(cdata);
         }
         return ediReader.getText();
     }

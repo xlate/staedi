@@ -82,7 +82,7 @@ class AlphaNumericValidator extends ElementValidator {
                 result.append(character);
             }
 
-            for (int i = length, min = element.getMinLength(); i < min; i++) {
+            for (long i = length, min = element.getMinLength(); i < min; i++) {
                 result.append(' ');
             }
         } catch (IOException e) {

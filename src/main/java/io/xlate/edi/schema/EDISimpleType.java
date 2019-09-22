@@ -33,9 +33,9 @@ public interface EDISimpleType extends EDIType {
 
     int getNumber();
 
-    int getMinLength();
+    long getMinLength();
 
-    int getMaxLength();
+    long getMaxLength();
 
     Set<String> getValueSet();
 

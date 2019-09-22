@@ -22,6 +22,7 @@ import io.xlate.edi.internal.stream.internal.EventHandler;
 import io.xlate.edi.internal.stream.internal.InternalLocation;
 import io.xlate.edi.schema.EDIComplexType;
 import io.xlate.edi.schema.EDIReference;
+import io.xlate.edi.schema.EDISimpleType;
 import io.xlate.edi.schema.EDISyntaxRule;
 import io.xlate.edi.schema.EDIType;
 import io.xlate.edi.schema.Schema;
@@ -59,6 +60,19 @@ public class Validator {
 
     public String getCompositeReferenceCode() {
         return composite != null ? composite.getCode() : null;
+    }
+
+    public boolean isBinaryElementLength() {
+    	if (element != null) {
+    		UsageNode next = element.getNextSibling();
+
+    		if (next != null && next.isNodeType(EDIType.Type.ELEMENT)) {
+    			EDISimpleType nextType = (EDISimpleType) next.getReferencedType();
+    			return nextType.getBase() == EDISimpleType.Base.BINARY;
+    		}
+    	}
+
+    	return false;
     }
 
     public String getElementReferenceNumber() {
