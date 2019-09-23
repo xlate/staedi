@@ -28,7 +28,6 @@ import io.xlate.edi.stream.EDIStreamWriter;
 
 public class StaEDIOutputFactory extends EDIOutputFactory {
 
-    public static final String PRETTY_PRINT = "io.xlate.edi.internal.internal.stream.prettyPrint";
     private static final String DEFAULT_ENCODING = "US-ASCII";
 
     private final Set<String> supportedCharsets;
