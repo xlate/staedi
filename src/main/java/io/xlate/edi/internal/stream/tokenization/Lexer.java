@@ -158,28 +158,20 @@ public class Lexer {
 
         CharacterClass clazz;
         int input;
+        boolean eventsReady = false;
 
-        while ((input = stream.read()) > -1) {
+        while (!eventsReady && (input = stream.read()) > -1) {
             location.incrementOffset();
 
             clazz = characters.getClass(input);
             previous = state;
+            state = state.transition(clazz);
 
-            switch (state = state.transition(clazz)) {
+            switch (state) {
             case INITIAL:
             case TAG_SEARCH:
             case HEADER_TAG_SEARCH:
                 break;
-            case TRAILER_TAG_I:
-            case TRAILER_TAG_E:
-            case TRAILER_TAG_A:
-            case TRAILER_TAG_U:
-            case TRAILER_TAG_N:
-            case TRAILER_TAG_Z:
-                buffer.put((char) input);
-                break;
-            /*case HEADER_TAG_A:
-            case HEADER_TAG_B:*/
             case HEADER_TAG_I:
             case HEADER_TAG_N:
             case HEADER_TAG_S:
@@ -187,6 +179,12 @@ public class Lexer {
             case TAG_1:
             case TAG_2:
             case TAG_3:
+            case TRAILER_TAG_I:
+            case TRAILER_TAG_E:
+            case TRAILER_TAG_A:
+            case TRAILER_TAG_U:
+            case TRAILER_TAG_N:
+            case TRAILER_TAG_Z:
             case ELEMENT_DATA:
             case ELEMENT_INVALID_DATA:
             case TRAILER_ELEMENT_DATA:
@@ -195,104 +193,58 @@ public class Lexer {
             case HEADER_TAG_1:
             case HEADER_TAG_2:
             case HEADER_TAG_3:
-                buffer.put((char) input);
-                dialect.appendHeader(characters, (char) input);
+            	handleStateHeaderTag(input);
                 break;
             case DATA_RELEASE:
                 // Skip this character - next character will be literal value
                 break;
             case ELEMENT_DATA_BINARY:
-                /*
-                 * Not all of the binary data has been consumed. I.e. #next was
-                 * called before completion.
-                 */
-                if (--binaryRemain < 1) {
-                    state = State.ELEMENT_END_BINARY;
-                }
-
+            	handleStateElementDataBinary();
                 break;
             case INTERCHANGE_CANDIDATE:
-                stream.mark(500);
-                buffer.put((char) input);
-                final char[] header = buffer.array();
-                final int length = buffer.position();
-                dialect = DialectFactory.getDialect(header, 0, length);
-                for (int i = 0; i < length; i++) {
-                    dialect.appendHeader(characters, header[i]);
-                }
-                openInterchange();
-                openSegment();
+            	handleStateInterchangeCandidate(input);
                 break;
             case HEADER_DATA:
-                dialect.appendHeader(characters, (char) input);
-
-                if (characters.isDelimiter(input)) {
-                    if (characters.getDelimiter(CharacterClass.SEGMENT_DELIMITER) == input) {
-                        closeSegment();
-                        state = State.HEADER_TAG_SEARCH;
-                    }
-                } else if (!characters.isRelease(input) && dialect.getDecimalMark() != input) {
-                    buffer.put((char) input);
-                }
-
-                if (dialectConfirmed(State.TAG_SEARCH)) {
-                    return;
-                }
+            	handleStateHeaderData(input);
+                eventsReady = dialectConfirmed(State.TAG_SEARCH);
                 break;
             case HEADER_SEGMENT_BEGIN:
                 dialect.appendHeader(characters, (char) input);
                 openSegment();
-                if (dialectConfirmed(State.ELEMENT_END)) {
-                    return;
-                }
+                eventsReady = dialectConfirmed(State.ELEMENT_END);
                 break;
             case HEADER_ELEMENT_END:
                 dialect.appendHeader(characters, (char) input);
                 handleElement();
-                if (dialectConfirmed(State.ELEMENT_END)) {
-                    return;
-                }
+                eventsReady = dialectConfirmed(State.ELEMENT_END);
                 break;
             case HEADER_COMPONENT_END:
                 dialect.appendHeader(characters, (char) input);
                 handleComponent();
-                if (dialectConfirmed(State.COMPONENT_END)) {
-                    return;
-                }
+                eventsReady = dialectConfirmed(State.COMPONENT_END);
                 break;
             case SEGMENT_BEGIN:
             case TRAILER_BEGIN:
                 openSegment();
-                if (nextEvent()) {
-                    return;
-                }
+                eventsReady = nextEvent();
                 break;
             case SEGMENT_END:
                 closeSegment();
-                if (nextEvent()) {
-                    return;
-                }
+                eventsReady = nextEvent();
                 break;
             case COMPONENT_END:
                 handleComponent();
-                if (nextEvent()) {
-                    return;
-                }
+                eventsReady = nextEvent();
                 break;
             case ELEMENT_END:
             case TRAILER_ELEMENT_END:
             case ELEMENT_REPEAT:
                 handleElement();
-                if (nextEvent()) {
-                    return;
-                }
+                eventsReady = nextEvent();
                 break;
             case INTERCHANGE_END:
                 closeInterchange();
-                if (nextEvent()) {
-                    return;
-                }
-
+                eventsReady = nextEvent();
                 break;
             default:
                 if (clazz != CharacterClass.INVALID) {
@@ -309,6 +261,47 @@ public class Lexer {
                     error(EDIException.INVALID_CHARACTER);
                 }
             }
+        }
+    }
+
+    void handleStateHeaderTag(int input) {
+    	buffer.put((char) input);
+        dialect.appendHeader(characters, (char) input);
+    }
+
+    void handleStateElementDataBinary() {
+    	/*
+         * Not all of the binary data has been consumed. I.e. #next was
+         * called before completion.
+         */
+        if (--binaryRemain < 1) {
+            state = State.ELEMENT_END_BINARY;
+        }
+    }
+
+    void handleStateInterchangeCandidate(int input) throws EDIException {
+    	stream.mark(500);
+        buffer.put((char) input);
+        final char[] header = buffer.array();
+        final int length = buffer.position();
+        dialect = DialectFactory.getDialect(header, 0, length);
+        for (int i = 0; i < length; i++) {
+            dialect.appendHeader(characters, header[i]);
+        }
+        openInterchange();
+        openSegment();
+    }
+
+    void handleStateHeaderData(int input) throws EDIException {
+    	dialect.appendHeader(characters, (char) input);
+
+        if (characters.isDelimiter(input)) {
+            if (characters.getDelimiter(CharacterClass.SEGMENT_DELIMITER) == input) {
+                closeSegment();
+                state = State.HEADER_TAG_SEARCH;
+            }
+        } else if (!characters.isRelease(input) && dialect.getDecimalMark() != input) {
+            buffer.put((char) input);
         }
     }
 

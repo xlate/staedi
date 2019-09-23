@@ -207,7 +207,7 @@ public class ProxyEventHandler implements EventHandler {
                 List<EDIStreamValidationError> errors = validator().getElementErrors();
 
                 for (EDIStreamValidationError error : errors) {
-                    enqueueEvent(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR, error, "", null);
+                    enqueueEvent(error.getCategory(), error, "", null);
                 }
             } else {
                 code = validator().getCompositeReferenceCode();
@@ -260,7 +260,7 @@ public class ProxyEventHandler implements EventHandler {
                     switch (error) {
                     case TOO_MANY_DATA_ELEMENTS:
                     case TOO_MANY_REPETITIONS:
-                        enqueueEvent(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR,
+                        enqueueEvent(error.getCategory(),
                                      error,
                                      elementHolder,
                                      code,
@@ -338,7 +338,7 @@ public class ProxyEventHandler implements EventHandler {
     }
 
     private Validator validator() {
-        // Do not use the transactionValidator in the period where is may be set/mutated by the user
+        // Do not use the transactionValidator in the period where it may be set/mutated by the user
         return transaction && !transactionSchemaAllowed ? transactionValidator : controlValidator;
     }
 

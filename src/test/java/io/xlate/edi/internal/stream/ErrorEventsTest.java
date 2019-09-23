@@ -229,4 +229,51 @@ public class ErrorEventsTest {
 
         assertTrue("Unexpected errors exist", !reader.hasNext());
     }
+
+    @Test
+    public void testTooManyOccurrencesComposite() throws EDIStreamException {
+        EDIInputFactory factory = EDIInputFactory.newFactory();
+        InputStream stream = new ByteArrayInputStream((""
+                + "UNB+UNOA:4:::02+005435656:1+006415160:1+20060515:1434+00000000000778'"
+                + "UNG+INVOIC+15623+23457+20060515:1433+CD1352+UN+D:97B+A3P52'"
+                + "UNH+00000000000117+INVOIC:D:97B:UN+FIRST OK*TOO MANY REPETITIONS'"
+                + "UNT+2+00000000000117'"
+                + "UNE+1+CD1352'"
+                + "UNZ+1+00000000000778'").getBytes());
+
+        EDIStreamReader reader = factory.createEDIStreamReader(stream);
+        reader = factory.createFilteredReader(reader, errorFilter);
+
+        assertTrue("Expected errors not found", reader.hasNext());
+        reader.next();
+        assertEquals(EDIStreamValidationError.TOO_MANY_REPETITIONS, reader.getErrorType());
+        assertEquals(3, reader.getLocation().getSegmentPosition());
+        assertEquals(3, reader.getLocation().getElementPosition());
+        assertEquals(2, reader.getLocation().getElementOccurrence());
+
+        assertTrue("Unexpected errors exist", !reader.hasNext());
+    }
+
+    @Test
+    public void testTooManyElementsComposite() throws EDIStreamException {
+        EDIInputFactory factory = EDIInputFactory.newFactory();
+        InputStream stream = new ByteArrayInputStream((""
+                + "UNB+UNOA:4:::02+005435656:1+006415160:1+20060515:1434+00000000000778'"
+                + "UNG+INVOIC+15623+23457+20060515:1433+CD1352+UN+D:97B+A3P52'"
+                + "UNH+00000000000117+INVOIC:D:97B:UN++++++MY:EXTRA:COMPOSITE'"
+                + "UNT+2+00000000000117'"
+                + "UNE+1+CD1352'"
+                + "UNZ+1+00000000000778'").getBytes());
+
+        EDIStreamReader reader = factory.createEDIStreamReader(stream);
+        reader = factory.createFilteredReader(reader, errorFilter);
+
+        assertTrue("Expected errors not found", reader.hasNext());
+        reader.next();
+        assertEquals(EDIStreamValidationError.TOO_MANY_DATA_ELEMENTS, reader.getErrorType());
+        assertEquals(3, reader.getLocation().getSegmentPosition());
+        assertEquals(8, reader.getLocation().getElementPosition());
+
+        assertTrue("Unexpected errors exist", !reader.hasNext());
+    }
 }
