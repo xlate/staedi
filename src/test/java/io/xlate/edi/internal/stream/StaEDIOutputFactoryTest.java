@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2017 xlate.io LLC, http://www.xlate.io
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License.  You may obtain a copy
  * of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
@@ -26,20 +26,11 @@ import io.xlate.edi.stream.EDIStreamConstants;
 import io.xlate.edi.stream.EDIStreamException;
 import io.xlate.edi.stream.EDIStreamWriter;
 
-@SuppressWarnings("static-method")
 public class StaEDIOutputFactoryTest {
 
 	@Test
 	public void testNewFactory() {
 		EDIOutputFactory factory = EDIOutputFactory.newFactory();
-		Assert.assertTrue(factory instanceof StaEDIOutputFactory);
-	}
-
-	@Test
-	public void testNewFactoryById() {
-		String factoryId = StaEDIOutputFactory.class.getName();
-		ClassLoader loader = null;// Thread.currentThread().getContextClassLoader();
-		EDIOutputFactory factory = EDIOutputFactory.newFactory(factoryId, loader);
 		Assert.assertTrue(factory instanceof StaEDIOutputFactory);
 	}
 

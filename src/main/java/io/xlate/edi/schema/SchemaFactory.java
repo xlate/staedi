@@ -18,54 +18,21 @@ package io.xlate.edi.schema;
 import java.io.InputStream;
 import java.net.URL;
 
-import io.xlate.edi.EDIFactoryConfigurationError;
-import io.xlate.edi.internal.FactoryFinder;
+import io.xlate.edi.internal.schema.StaEDISchemaFactory;
 
 public abstract class SchemaFactory {
 
-    static final String FACTORY_ID = "io.xlate.edi.schema.SchemaFactory";
-    static final String DEFAULT_IMPL = "io.xlate.edi.internal.schema.StaEDISchemaFactory";
-
     /**
      * Create a new instance of the factory. This static method creates a new
-     * factory instance. This method uses the following ordered lookup procedure
-     * to determine the EDIOutputFactory implementation class to load:
+     * factory instance.
      *
-     * <ol>
-     * <li>Use the io.xlate.edi.stream.EDIOutputFactory system property.
-     * <li>Use the Services API (as detailed in the JAR specification), if
-     * available, to determine the classname. The Services API will look for a
-     * classname in the file
-     * META-INF/services/io.xlate.edi.stream.EDIOutputFactory in jars available
-     * to the runtime.
-     * <li>Platform default EDIOutputFactory instance.
-     * </ol>
      * Once an application has obtained a reference to an EDIOutputFactory it
      * can use the factory to configure and obtain stream instances.
      *
      * @return the factory implementation
-     * @throws EDISchemaFactoryConfigurationError
-     *             if an instance of this factory cannot be loaded
      */
-    public static SchemaFactory newFactory() throws EDIFactoryConfigurationError {
-        return FactoryFinder.find(FACTORY_ID, DEFAULT_IMPL);
-    }
-
-    /**
-     * Create a new instance of the factory. If the classLoader argument is
-     * null, then the ContextClassLoader is used.
-     *
-     * @param factoryId
-     *            - Name of the factory to find, same as a property name
-     * @param classLoader
-     *            - classLoader to use
-     * @return the factory implementation
-     * @throws EDISchemaFactoryConfigurationError
-     *             if an instance of this factory cannot be loaded
-     */
-    public static SchemaFactory newFactory(String factoryId,
-                                           ClassLoader classLoader) throws EDIFactoryConfigurationError {
-        return FactoryFinder.newInstance(factoryId, classLoader, false);
+    public static SchemaFactory newFactory() {
+        return new StaEDISchemaFactory();
     }
 
     public abstract Schema createSchema(URL location) throws EDISchemaException;

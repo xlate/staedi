@@ -37,14 +37,6 @@ public class StaEDIInputFactoryTest {
     }
 
     @Test
-    public void testNewFactoryById() {
-        String factoryId = StaEDIInputFactory.class.getName();
-        ClassLoader loader = null;// Thread.currentThread().getContextClassLoader();
-        EDIInputFactory factory = EDIInputFactory.newFactory(factoryId, loader);
-        Assert.assertTrue(factory instanceof StaEDIInputFactory);
-    }
-
-    @Test
     public void testCreateEDIStreamReader()
                                             throws EDIStreamException {
 

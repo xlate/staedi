@@ -15,27 +15,26 @@
  ******************************************************************************/
 package io.xlate.edi.stream;
 
-import io.xlate.edi.EDIFactoryConfigurationError;
-import io.xlate.edi.internal.FactoryFinder;
-import io.xlate.edi.schema.Schema;
-
 import java.io.InputStream;
+
+import io.xlate.edi.internal.stream.StaEDIInputFactory;
+import io.xlate.edi.schema.Schema;
 
 public abstract class EDIInputFactory {
 
     public static final String EDI_VALIDATE_CONTROL_STRUCTURE = "io.xlate.edi.stream.EDI_VALIDATE_CONTROL_STRUCTURE";
 
-    static final String FACTORY_ID = "io.xlate.edi.stream.EDIInputFactory";
-    static final String DEFAULT_IMPL = "io.xlate.edi.internal.stream.StaEDIInputFactory";
-
-    public static EDIInputFactory newFactory() throws EDIFactoryConfigurationError {
-        return FactoryFinder.find(FACTORY_ID, DEFAULT_IMPL);
-    }
-
-    public static EDIInputFactory newFactory(String factoryId,
-                                             ClassLoader classLoader) throws EDIFactoryConfigurationError {
-
-        return FactoryFinder.newInstance(factoryId, classLoader, false);
+    /**
+     * Create a new instance of the factory. This static method creates a new
+     * factory instance.
+     *
+     * Once an application has obtained a reference to an EDIInputFactory it
+     * can use the factory to configure and obtain stream instances.
+     *
+     * @return the factory implementation
+     */
+    public static EDIInputFactory newFactory() {
+        return new StaEDIInputFactory();
     }
 
     public abstract EDIStreamReader createEDIStreamReader(InputStream stream) throws EDIStreamException;

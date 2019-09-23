@@ -32,7 +32,6 @@ import io.xlate.edi.schema.Schema;
 import io.xlate.edi.schema.SchemaFactory;
 import io.xlate.edi.stream.EDIStreamConstants.Standards;
 
-@SuppressWarnings("static-method")
 public class StaEDISchemaFactoryTest {
 
 	@Test
@@ -49,7 +48,6 @@ public class StaEDISchemaFactoryTest {
 	public void testCreateSchemaByStream() throws EDISchemaException {
 		SchemaFactory factory = SchemaFactory.newFactory();
 		assertTrue("Not an instance", factory instanceof StaEDISchemaFactory);
-		@SuppressWarnings("resource")
 		InputStream schemaStream = getClass().getClassLoader().getResourceAsStream("x12/EDISchema997.xml");
 		Schema schema = factory.createSchema(schemaStream);
 		assertEquals("Incorrect root id",  StaEDISchema.TRANSACTION, schema.getMainLoop().getId());
