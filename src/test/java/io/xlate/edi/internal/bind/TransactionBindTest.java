@@ -1,6 +1,7 @@
 package io.xlate.edi.internal.bind;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -58,12 +59,16 @@ public class TransactionBindTest {
         }
 
         StringWriter writer = new StringWriter();
-        Transformer transformer = TransformerFactory.newInstance().newTransformer();
-        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-        transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
-        transformer.transform(new DOMSource(doc), new StreamResult(writer));
-        String xml = writer.toString();
-        System.out.println(xml);
+        try {
+            Transformer transformer = TransformerFactory.newInstance().newTransformer();
+            transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+            transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
+            transformer.transform(new DOMSource(doc), new StreamResult(writer));
+            //String xml = writer.toString();
+            //System.out.println(xml);
+        } catch (Exception e) {
+        	fail("Unexpected exception: " + e.getMessage());
+        }
     }
 
     @XmlRootElement(name = "transaction")
