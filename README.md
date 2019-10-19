@@ -41,6 +41,7 @@ Input data is provided using a series of events via the `EDIStreamReader` class.
 In addition to events such as the start of a segment or element, the looping/nested structure of the
 EDI stream is represented using derived events.
 
+```
 + Start Interchange
 | +-- Start Segment (ISA/UNB)
 | |     Element Data (repeats)
@@ -76,7 +77,7 @@ EDI stream is represented using derived events.
 | |     Element Data (repeats)
 | +-- End Segment (IEA / UNZ)
 + End Interchange
-
+```
 
 ```java
 EDIInputFactory factory = EDIInputFactory.newFactory();
