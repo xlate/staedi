@@ -112,6 +112,7 @@ public class StaEDIStreamReader implements EDIStreamReader {
         delimiters.put(Delimiters.SEGMENT, dialect.getSegmentTerminator());
         delimiters.put(Delimiters.DATA_ELEMENT, dialect.getDataElementSeparator());
         delimiters.put(Delimiters.COMPONENT_ELEMENT, dialect.getComponentElementSeparator());
+        delimiters.put(Delimiters.DECIMAL, dialect.getDecimalMark());
 
         if (dialect.getRepetitionSeparator() != '\0') {
             delimiters.put(Delimiters.REPETITION, dialect.getRepetitionSeparator());
@@ -140,16 +141,15 @@ public class StaEDIStreamReader implements EDIStreamReader {
             }
         }
 
-        if (proxy.nextEvent()) {
-            return proxy.getEvent();
-        }
-        proxy.resetEvents();
+        if (!proxy.nextEvent()) {
+            proxy.resetEvents();
 
-        try {
-            lexer.parse();
-        } catch (IOException e) {
-            Location where = getLocation();
-            throw new EDIStreamException("Error parsing input", where, e);
+            try {
+                lexer.parse();
+            } catch (IOException e) {
+                Location where = getLocation();
+                throw new EDIStreamException("Error parsing input", where, e);
+            }
         }
 
         final EDIStreamEvent event = proxy.getEvent();
@@ -159,11 +159,11 @@ public class StaEDIStreamReader implements EDIStreamReader {
         }
 
         if (event == EDIStreamEvent.ELEMENT_DATA && proxy.isBinaryElementLength()) {
-        	try {
-        		this.setBinaryDataLength(Long.parseLong(getText()));
-        	} catch (NumberFormatException e) {
-        		// TODO: log it
-        	}
+            try {
+                this.setBinaryDataLength(Long.parseLong(getText()));
+            } catch (NumberFormatException e) {
+                throw new EDIStreamException("Failed to parse binary element length", location, e);
+            }
         }
 
         return event;

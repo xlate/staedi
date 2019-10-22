@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Set;
 
 import io.xlate.edi.internal.stream.tokenization.CharacterSet;
+import io.xlate.edi.internal.stream.tokenization.Dialect;
 import io.xlate.edi.internal.stream.tokenization.EDIException;
 import io.xlate.edi.schema.EDISimpleType;
 import io.xlate.edi.stream.EDIStreamValidationError;
@@ -36,7 +37,8 @@ class AlphaNumericValidator extends ElementValidator {
     }
 
     @Override
-    void validate(EDISimpleType element,
+    void validate(Dialect dialect,
+                  EDISimpleType element,
                   CharSequence value,
                   List<EDIStreamValidationError> errors) {
 
@@ -60,7 +62,7 @@ class AlphaNumericValidator extends ElementValidator {
     }
 
     @Override
-    void format(EDISimpleType element, CharSequence value, Appendable result) throws EDIException {
+    void format(Dialect dialect, EDISimpleType element, CharSequence value, Appendable result) throws EDIException {
         int length = value.length();
         assertMaxLength(element, length);
 

@@ -460,7 +460,6 @@ public class StaEDIXMLStreamReader implements XMLStreamReader {
 
     @Override
     public String getEncoding() {
-        // TODO Auto-generated method stub
         return null;
     }
 

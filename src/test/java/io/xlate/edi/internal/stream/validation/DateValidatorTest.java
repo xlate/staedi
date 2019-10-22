@@ -12,8 +12,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.IntStream;
 
+import org.junit.Before;
 import org.junit.Test;
 
+import io.xlate.edi.internal.stream.tokenization.CharacterSet;
+import io.xlate.edi.internal.stream.tokenization.Dialect;
+import io.xlate.edi.internal.stream.tokenization.DialectFactory;
 import io.xlate.edi.internal.stream.tokenization.EDIException;
 import io.xlate.edi.internal.stream.validation.DateValidator;
 import io.xlate.edi.internal.stream.validation.ElementValidator;
@@ -21,6 +25,15 @@ import io.xlate.edi.schema.EDISimpleType;
 import io.xlate.edi.stream.EDIStreamValidationError;
 
 public class DateValidatorTest {
+
+    Dialect dialect;
+
+    @Before
+    public void setUp() throws EDIException {
+        dialect = DialectFactory.getDialect("UNA");
+        CharacterSet chars = new CharacterSet();
+        "UNA=*.?^~UNB*UNOA=3*005435656=1*006415160=1*060515=1434*00000000000778~".chars().forEach(c -> dialect.appendHeader(chars, (char) c));
+    }
 
     @Test
     public void testValidateLengthTooShort() {
@@ -30,7 +43,7 @@ public class DateValidatorTest {
         when(element.getValueSet()).thenReturn(Collections.emptySet());
         ElementValidator v = DateValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
-        v.validate(element, "0901", errors);
+        v.validate(dialect, element, "0901", errors);
         assertEquals(2, errors.size());
         assertEquals(EDIStreamValidationError.DATA_ELEMENT_TOO_SHORT, errors.get(0));
         assertEquals(EDIStreamValidationError.INVALID_DATE, errors.get(1));
@@ -44,7 +57,7 @@ public class DateValidatorTest {
         when(element.getValueSet()).thenReturn(Collections.emptySet());
         ElementValidator v = DateValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
-        v.validate(element, "0901000", errors); // Length 7
+        v.validate(dialect, element, "0901000", errors); // Length 7
         assertEquals(1, errors.size());
         assertEquals(EDIStreamValidationError.INVALID_DATE, errors.get(0));
     }
@@ -57,7 +70,7 @@ public class DateValidatorTest {
         when(element.getValueSet()).thenReturn(Collections.emptySet());
         ElementValidator v = DateValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
-        v.validate(element, "AAAA0901", errors);
+        v.validate(dialect, element, "AAAA0901", errors);
         assertEquals(1, errors.size());
         assertEquals(EDIStreamValidationError.INVALID_DATE, errors.get(0));
     }
@@ -70,7 +83,7 @@ public class DateValidatorTest {
         when(element.getValueSet()).thenReturn(Collections.emptySet());
         ElementValidator v = DateValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
-        v.validate(element, "20190901", errors);
+        v.validate(dialect, element, "20190901", errors);
         assertEquals(0, errors.size());
     }
 
@@ -82,7 +95,7 @@ public class DateValidatorTest {
         when(element.getValueSet()).thenReturn(Collections.emptySet());
         ElementValidator v = DateValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
-        v.validate(element, "191201", errors);
+        v.validate(dialect, element, "191201", errors);
         assertEquals(0, errors.size());
     }
 
@@ -94,8 +107,8 @@ public class DateValidatorTest {
         when(element.getValueSet()).thenReturn(Collections.emptySet());
         ElementValidator v = DateValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
-        v.validate(element, "991231", errors);
-        v.validate(element, "990228", errors);
+        v.validate(dialect, element, "991231", errors);
+        v.validate(dialect, element, "990228", errors);
         assertEquals(0, errors.size());
     }
 
@@ -107,10 +120,10 @@ public class DateValidatorTest {
         when(element.getValueSet()).thenReturn(Collections.emptySet());
         ElementValidator v = DateValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
-        v.validate(element, "00000132", errors);
-        v.validate(element, "00000431", errors);
-        v.validate(element, "00000230", errors);
-        v.validate(element, "00010229", errors);
+        v.validate(dialect, element, "00000132", errors);
+        v.validate(dialect, element, "00000431", errors);
+        v.validate(dialect, element, "00000230", errors);
+        v.validate(dialect, element, "00010229", errors);
         assertEquals(4, errors.size());
         IntStream.range(0, 3).forEach(i -> assertEquals(EDIStreamValidationError.INVALID_DATE, errors.get(i)));
     }
@@ -123,10 +136,10 @@ public class DateValidatorTest {
         when(element.getValueSet()).thenReturn(Collections.emptySet());
         ElementValidator v = DateValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
-        v.validate(element, "20000229", errors);
-        v.validate(element, "19960229", errors);
+        v.validate(dialect, element, "20000229", errors);
+        v.validate(dialect, element, "19960229", errors);
         assertEquals(0, errors.size());
-        v.validate(element, "19000229", errors);
+        v.validate(dialect, element, "19000229", errors);
         assertEquals(1, errors.size());
         assertEquals(EDIStreamValidationError.INVALID_DATE, errors.get(0));
     }
@@ -139,7 +152,7 @@ public class DateValidatorTest {
         when(element.getValueSet()).thenReturn(Collections.emptySet());
         ElementValidator v = DateValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
-        v.validate(element, "20001301", errors);
+        v.validate(dialect, element, "20001301", errors);
         assertEquals(1, errors.size());
         assertEquals(EDIStreamValidationError.INVALID_DATE, errors.get(0));
     }
@@ -152,7 +165,7 @@ public class DateValidatorTest {
         ElementValidator v = DateValidator.getInstance();
         StringBuilder output = new StringBuilder();
         try {
-            v.format(element, "20000", output);
+            v.format(dialect, element, "20000", output);
             fail("Exception was expected");
         } catch (EDIException e) {
             assertTrue(e.getMessage().startsWith("EDIE008"));
@@ -167,7 +180,7 @@ public class DateValidatorTest {
         ElementValidator v = DateValidator.getInstance();
         StringBuilder output = new StringBuilder();
         try {
-            v.format(element, "200001011", output);
+            v.format(dialect, element, "200001011", output);
             fail("Exception was expected");
         } catch (EDIException e) {
             assertTrue(e.getMessage().startsWith("EDIE005"));
@@ -182,7 +195,7 @@ public class DateValidatorTest {
         ElementValidator v = DateValidator.getInstance();
         StringBuilder output = new StringBuilder();
         try {
-            v.format(element, "20000100", output);
+            v.format(dialect, element, "20000100", output);
             fail("Exception was expected");
         } catch (EDIException e) {
             assertTrue(e.getMessage().startsWith("EDIE007"));
@@ -196,7 +209,7 @@ public class DateValidatorTest {
         when(element.getMaxLength()).thenReturn(8L);
         ElementValidator v = DateValidator.getInstance();
         StringBuilder output = new StringBuilder();
-        v.format(element, "20000101", output);
+        v.format(dialect, element, "20000101", output);
         assertEquals("20000101", output.toString());
     }
 }

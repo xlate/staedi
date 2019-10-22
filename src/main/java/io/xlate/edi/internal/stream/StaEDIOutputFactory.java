@@ -43,6 +43,7 @@ public class StaEDIOutputFactory extends EDIOutputFactory {
         supportedProperties.add(EDIStreamConstants.Delimiters.DATA_ELEMENT);
         supportedProperties.add(EDIStreamConstants.Delimiters.COMPONENT_ELEMENT);
         supportedProperties.add(EDIStreamConstants.Delimiters.REPETITION);
+        supportedProperties.add(EDIStreamConstants.Delimiters.DECIMAL);
         supportedProperties.add(EDIStreamConstants.Delimiters.RELEASE);
 
         supportedProperties.add(PRETTY_PRINT);

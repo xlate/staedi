@@ -22,7 +22,7 @@ import io.xlate.edi.stream.EDIStreamValidationError;
 
 public interface EventHandler {
 
-    void interchangeBegin();
+    void interchangeBegin(Dialect dialect);
 
     void interchangeEnd();
 

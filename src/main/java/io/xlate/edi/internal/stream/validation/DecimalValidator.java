@@ -15,6 +15,8 @@
  ******************************************************************************/
 package io.xlate.edi.internal.stream.validation;
 
+import io.xlate.edi.internal.stream.tokenization.Dialect;
+
 class DecimalValidator extends NumericValidator {
 
     private static final DecimalValidator singleton = new DecimalValidator();
@@ -27,7 +29,8 @@ class DecimalValidator extends NumericValidator {
     }
 
     @Override
-    int validate(CharSequence value) {
+    int validate(Dialect dialect, CharSequence value) {
+        final char decimalMark = dialect.getDecimalMark();
         int length = value.length();
 
         int dec = 0;
@@ -48,14 +51,6 @@ class DecimalValidator extends NumericValidator {
             case '9':
                 break;
 
-            case '.':
-                length--;
-
-                if (++dec > 1 || exp > 0) {
-                    invalid = true;
-                }
-                break;
-
             case 'E':
                 length--;
 
@@ -73,7 +68,16 @@ class DecimalValidator extends NumericValidator {
                 break;
 
             default:
-                invalid = true;
+                if (value.charAt(i) == decimalMark) {
+                    length--;
+
+                    if (++dec > 1 || exp > 0) {
+                        invalid = true;
+                    }
+                } else {
+                    invalid = true;
+                }
+
                 break;
             }
         }

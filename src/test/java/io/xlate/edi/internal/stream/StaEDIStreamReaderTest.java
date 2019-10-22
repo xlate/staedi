@@ -88,6 +88,7 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
         expected.put(Delimiters.DATA_ELEMENT, '*');
         expected.put(Delimiters.COMPONENT_ELEMENT, ':');
         expected.put(Delimiters.REPETITION, '^');
+        expected.put(Delimiters.DECIMAL, '.');
 
         Map<String, Character> delimiters = null;
         int delimiterExceptions = 0;
@@ -112,14 +113,15 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
     public void testGetDelimitersEDIFACTA() throws EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = getClass().getClassLoader().getResourceAsStream(
-                                                                             "EDIFACT/invoic_d97b_una.edi");
+                                                                             "EDIFACT/invoic_d93a_una.edi");
         EDIStreamReader reader = factory.createEDIStreamReader(stream);
         Map<String, Character> expected = new HashMap<>(5);
-        expected.put(Delimiters.SEGMENT, '~');
-        expected.put(Delimiters.DATA_ELEMENT, '*');
-        expected.put(Delimiters.COMPONENT_ELEMENT, '=');
-        expected.put(Delimiters.REPETITION, '^');
+        expected.put(Delimiters.SEGMENT, '\'');
+        expected.put(Delimiters.DATA_ELEMENT, '+');
+        expected.put(Delimiters.COMPONENT_ELEMENT, ':');
+        expected.put(Delimiters.REPETITION, ' ');
         expected.put(Delimiters.RELEASE, '?');
+        expected.put(Delimiters.DECIMAL, ',');
 
         Map<String, Character> delimiters = null;
         int delimiterExceptions = 0;
@@ -152,6 +154,7 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
         expected.put(Delimiters.COMPONENT_ELEMENT, ':');
         expected.put(Delimiters.REPETITION, '*');
         expected.put(Delimiters.RELEASE, '?');
+        expected.put(Delimiters.DECIMAL, '.');
 
         Map<String, Character> delimiters = null;
         int delimiterExceptions = 0;
@@ -883,6 +886,34 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
                     // Exception for invalid delimiter will occur next
                     event = reader.next();
                     Assert.assertEquals(EDIStreamEvent.ELEMENT_DATA_BINARY, event);
+                }
+            }
+        } finally {
+            reader.close();
+        }
+    }
+
+    @Test(expected = EDIStreamException.class)
+    public void testGetBinaryDataInvalidLength() throws Exception {
+        EDIInputFactory factory = EDIInputFactory.newFactory();
+        InputStream stream = getClass().getClassLoader().getResourceAsStream("x12/nonnumeric_BIN01.edi");
+        EDIStreamReader reader = factory.createEDIStreamReader(stream);
+        SchemaFactory schemaFactory = SchemaFactory.newFactory();
+        Schema schema = schemaFactory.createSchema(getClass().getClassLoader().getResource("x12/EDISchemaBinarySegment.xml"));
+
+        EDIStreamEvent event;
+        String tag = null;
+
+        try {
+            while (reader.hasNext()) {
+                try {
+                    reader.nextTag();
+                } catch (NoSuchElementException e) {
+                    break;
+                }
+
+                if (reader.getEventType() == EDIStreamEvent.START_TRANSACTION) {
+                    reader.setTransactionSchema(schema);
                 }
             }
         } finally {

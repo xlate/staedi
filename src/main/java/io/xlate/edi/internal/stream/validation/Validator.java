@@ -18,6 +18,7 @@ package io.xlate.edi.internal.stream.validation;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.xlate.edi.internal.stream.tokenization.Dialect;
 import io.xlate.edi.internal.stream.tokenization.EventHandler;
 import io.xlate.edi.internal.stream.tokenization.InternalLocation;
 import io.xlate.edi.schema.EDIComplexType;
@@ -63,16 +64,16 @@ public class Validator {
     }
 
     public boolean isBinaryElementLength() {
-    	if (element != null) {
-    		UsageNode next = element.getNextSibling();
+        if (element != null) {
+            UsageNode next = element.getNextSibling();
 
-    		if (next != null && next.isNodeType(EDIType.Type.ELEMENT)) {
-    			EDISimpleType nextType = (EDISimpleType) next.getReferencedType();
-    			return nextType.getBase() == EDISimpleType.Base.BINARY;
-    		}
-    	}
+            if (next != null && next.isNodeType(EDIType.Type.ELEMENT)) {
+                EDISimpleType nextType = (EDISimpleType) next.getReferencedType();
+                return nextType.getBase() == EDISimpleType.Base.BINARY;
+            }
+        }
 
-    	return false;
+        return false;
     }
 
     public String getElementReferenceNumber() {
@@ -239,7 +240,9 @@ public class Validator {
                 current = this.root.getFirstChild();
 
                 if (!current.getId().contentEquals(tag)) {
-                    if (containerSchema != null && containerSchema.containsSegment(tag.toString())) {
+                    final String tagString = tag.toString();
+
+                    if (containerSchema != null && containerSchema.containsSegment(tagString)) {
                         // The segment is defined in the containing schema. Handle missing mandatory
                         // segments and complete any open loops.
                         handleMissingMandatory(handler);
@@ -251,7 +254,7 @@ public class Validator {
                         this.depth = startDepth;
                         mandatory.clear();
 
-                        if (schema.containsSegment(tag.toString())) {
+                        if (schema.containsSegment(tagString)) {
                             handler.segmentError(tag,
                                                  EDIStreamValidationError.UNEXPECTED_SEGMENT);
                         } else {
@@ -396,7 +399,7 @@ public class Validator {
         return composite != null;
     }
 
-    public boolean validateElement(InternalLocation position, CharSequence value) {
+    public boolean validateElement(Dialect dialect, InternalLocation position, CharSequence value) {
         if (!segmentExpected) {
             return true;
         }
@@ -473,7 +476,7 @@ public class Validator {
                 }
             }
 
-            this.element.validate(value, elementErrors);
+            this.element.validate(dialect, value, elementErrors);
         } else {
             if (!element.hasMinimumUsage()) {
                 elementErrors.add(EDIStreamValidationError.REQUIRED_DATA_ELEMENT_MISSING);

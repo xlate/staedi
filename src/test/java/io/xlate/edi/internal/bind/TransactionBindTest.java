@@ -6,8 +6,7 @@ import java.beans.Introspector;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
+import java.lang.reflect.AccessibleObject;
 import java.math.BigDecimal;
 import java.util.ArrayDeque;
 import java.util.Arrays;
@@ -160,22 +159,22 @@ public class TransactionBindTest {
     }
 
     Class<?> classForElement(Class<?> bean, String name) {
-        Class<?> type = fieldType(bean, XmlElement.class, f -> f.getAnnotation(XmlElement.class).name().equals(name));
-        if (type != null) {
-            return type;
-        }
-        return methodType(bean, XmlElement.class, m -> m.getAnnotation(XmlElement.class).name().equals(name));
+        return getAnnotatedClass(bean, XmlElement.class, a -> a.getAnnotation(XmlElement.class).name().equals(name));
     }
 
     Class<?> classForValue(Class<?> bean) {
-        Class<?> type = fieldType(bean, XmlValue.class, f -> true);
+        return getAnnotatedClass(bean, XmlValue.class, a -> true);
+    }
+
+    <A extends Annotation> Class<?> getAnnotatedClass(Class<?> bean, Class<A> annotation, Predicate<AccessibleObject> filter) {
+        Class<?> type = fieldType(bean, annotation, filter);
         if (type != null) {
             return type;
         }
-        return methodType(bean, XmlValue.class, m -> true);
+        return methodType(bean, annotation, filter);
     }
 
-    <A extends Annotation> Class<?> fieldType(Class<?> bean, Class<A> anno, Predicate<Field> filter) {
+    <A extends Annotation> Class<?> fieldType(Class<?> bean, Class<A> anno, Predicate<AccessibleObject> filter) {
         return Arrays.stream(bean.getDeclaredFields())
                 .filter(f -> f.isAnnotationPresent(anno))
                 .filter(filter)
@@ -184,7 +183,7 @@ public class TransactionBindTest {
                 .orElse(null);
     }
 
-    <A extends Annotation> Class<?> methodType(Class<?> bean, Class<A> anno, Predicate<Method> filter) {
+    <A extends Annotation> Class<?> methodType(Class<?> bean, Class<A> anno, Predicate<AccessibleObject> filter) {
         return Arrays.stream(bean.getDeclaredMethods())
                 .filter(m -> !m.getReturnType().equals(Void.class))
                 .filter(m -> m.isAnnotationPresent(anno))

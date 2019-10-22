@@ -50,6 +50,7 @@ public class ProxyEventHandler implements EventHandler {
     private Location[] locations = new Location[99];
     private int eventCount = 0;
     private int eventIndex = 0;
+    private Dialect dialect;
 
     public ProxyEventHandler(InternalLocation location, Schema controlSchema) {
         this.location = location;
@@ -127,7 +128,8 @@ public class ProxyEventHandler implements EventHandler {
     }
 
     @Override
-    public void interchangeBegin() {
+    public void interchangeBegin(Dialect dialect) {
+        this.dialect = dialect;
         enqueueEvent(EDIStreamEvent.START_INTERCHANGE, EDIStreamValidationError.NONE, "", null);
     }
 
@@ -237,7 +239,7 @@ public class ProxyEventHandler implements EventHandler {
 
         if (validator() != null) {
             final boolean composite = location.getComponentPosition() > -1;
-            boolean valid = validator().validateElement(location, elementHolder);
+            boolean valid = validator().validateElement(dialect, location, elementHolder);
             derivedComposite = !composite && validator().isComposite();
 
             code = validator().getElementReferenceNumber();
@@ -308,7 +310,7 @@ public class ProxyEventHandler implements EventHandler {
     }
 
     public boolean isBinaryElementLength() {
-    	return validator() != null && validator().isBinaryElementLength();
+        return validator() != null && validator().isBinaryElementLength();
     }
 
     @Override

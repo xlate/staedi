@@ -20,7 +20,7 @@ import java.net.URL;
 
 import io.xlate.edi.internal.schema.StaEDISchemaFactory;
 
-public abstract class SchemaFactory {
+public interface SchemaFactory {
 
     /**
      * Create a new instance of the factory. This static method creates a new

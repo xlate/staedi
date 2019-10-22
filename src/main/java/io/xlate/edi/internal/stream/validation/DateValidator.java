@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.util.Calendar;
 import java.util.List;
 
+import io.xlate.edi.internal.stream.tokenization.Dialect;
 import io.xlate.edi.internal.stream.tokenization.EDIException;
 import io.xlate.edi.schema.EDISimpleType;
 import io.xlate.edi.stream.EDIStreamValidationError;
@@ -35,7 +36,8 @@ class DateValidator extends ElementValidator {
     }
 
     @Override
-    void validate(EDISimpleType element,
+    void validate(Dialect dialect,
+                  EDISimpleType element,
                   CharSequence value,
                   List<EDIStreamValidationError> errors) {
 
@@ -47,7 +49,7 @@ class DateValidator extends ElementValidator {
     }
 
     @Override
-    void format(EDISimpleType element, CharSequence value, Appendable result) throws EDIException {
+    void format(Dialect dialect, EDISimpleType element, CharSequence value, Appendable result) throws EDIException {
         int length = value.length();
         assertMinLength(element, length);
         assertMaxLength(element, length);

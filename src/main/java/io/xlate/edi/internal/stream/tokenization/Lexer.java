@@ -73,7 +73,7 @@ public class Lexer {
 
         this.location = location;
 
-        isn = (notifyState, start, length) -> handler.interchangeBegin();
+        isn = (notifyState, start, length) -> handler.interchangeBegin(dialect);
 
         ien = (notifyState, start, length) -> {
             handler.interchangeEnd();

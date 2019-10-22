@@ -33,6 +33,7 @@ public interface EDIStreamConstants {
         public static final String DATA_ELEMENT = "io.xlate.edi.stream.delim.dataElement";
         public static final String COMPONENT_ELEMENT = "io.xlate.edi.stream.delim.componentElement";
         public static final String REPETITION = "io.xlate.edi.stream.delim.repetition";
+        public static final String DECIMAL = "io.xlate.edi.stream.delim.decimal";
         public static final String RELEASE = "io.xlate.edi.stream.delim.release";
     }
 }

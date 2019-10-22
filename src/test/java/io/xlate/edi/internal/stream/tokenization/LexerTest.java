@@ -37,7 +37,7 @@ public class LexerTest {
 		final Map<String, Object> content = new HashMap<>(2);
 
 		@Override
-		public void interchangeBegin() {
+		public void interchangeBegin(Dialect dialect) {
 			content.put("LAST", "interchangeBegin");
 			content.put("INTERCHANGE_START", true);
 		}
@@ -101,7 +101,7 @@ public class LexerTest {
 
 	EventHandler handler = new EventHandler() {
 		@Override
-		public void interchangeBegin() {
+		public void interchangeBegin(Dialect dialect) {
 			interchangeStarted = true;
 		}
 

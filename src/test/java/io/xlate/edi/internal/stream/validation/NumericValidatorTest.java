@@ -8,8 +8,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.junit.Before;
 import org.junit.Test;
 
+import io.xlate.edi.internal.stream.tokenization.CharacterSet;
+import io.xlate.edi.internal.stream.tokenization.Dialect;
+import io.xlate.edi.internal.stream.tokenization.DialectFactory;
 import io.xlate.edi.internal.stream.tokenization.EDIException;
 import io.xlate.edi.internal.stream.validation.ElementValidator;
 import io.xlate.edi.internal.stream.validation.NumericValidator;
@@ -18,14 +22,23 @@ import io.xlate.edi.stream.EDIStreamValidationError;
 
 public class NumericValidatorTest {
 
+    Dialect dialect;
+
+    @Before
+    public void setUp() throws EDIException {
+        dialect = DialectFactory.getDialect("UNA");
+        CharacterSet chars = new CharacterSet();
+        "UNA=*.?^~UNB*UNOA=3*005435656=1*006415160=1*060515=1434*00000000000778~".chars().forEach(c -> dialect.appendHeader(chars, (char) c));
+    }
+
     @Test
     public void testValidateInvalidNegative() {
-        assertEquals(-2, NumericValidator.getInstance().validate("20-"));
+        assertEquals(-2, NumericValidator.getInstance().validate(dialect, "20-"));
     }
 
     @Test
     public void testValidateValidNegative() {
-        assertEquals(2, NumericValidator.getInstance().validate("-20"));
+        assertEquals(2, NumericValidator.getInstance().validate(dialect, "-20"));
     }
 
     @Test
@@ -36,7 +49,7 @@ public class NumericValidatorTest {
         when(element.getValueSet()).thenReturn(Collections.emptySet());
         ElementValidator v = NumericValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
-        v.validate(element, "1234", errors);
+        v.validate(dialect, element, "1234", errors);
         assertEquals(1, errors.size());
         assertEquals(EDIStreamValidationError.DATA_ELEMENT_TOO_SHORT, errors.get(0));
     }
@@ -49,7 +62,7 @@ public class NumericValidatorTest {
         when(element.getValueSet()).thenReturn(Collections.emptySet());
         ElementValidator v = NumericValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
-        v.validate(element, "12345678901", errors);
+        v.validate(dialect, element, "12345678901", errors);
         assertEquals(1, errors.size());
         assertEquals(EDIStreamValidationError.DATA_ELEMENT_TOO_LONG, errors.get(0));
     }
@@ -62,7 +75,7 @@ public class NumericValidatorTest {
         when(element.getValueSet()).thenReturn(Collections.emptySet());
         ElementValidator v = NumericValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
-        v.validate(element, "1234F", errors);
+        v.validate(dialect, element, "1234F", errors);
         assertEquals(1, errors.size());
         assertEquals(EDIStreamValidationError.INVALID_CHARACTER_DATA, errors.get(0));
     }
@@ -75,7 +88,7 @@ public class NumericValidatorTest {
         ElementValidator v = NumericValidator.getInstance();
         StringBuilder output = new StringBuilder();
         try {
-            v.format(element, "123456", output);
+            v.format(dialect, element, "123456", output);
             fail("Exception was expected:" + output.toString());
         } catch (EDIException e) {
             assertEquals("EDIE005", e.getMessage().subSequence(0, 7));
@@ -90,7 +103,7 @@ public class NumericValidatorTest {
         ElementValidator v = NumericValidator.getInstance();
         StringBuilder output = new StringBuilder();
         try {
-            v.format(element, "1234F", output);
+            v.format(dialect, element, "1234F", output);
             fail("Exception was expected: " + output.toString());
         } catch (EDIException e) {
             assertEquals("EDIE004", e.getMessage().subSequence(0, 7));
@@ -105,7 +118,7 @@ public class NumericValidatorTest {
         when(element.getValueSet()).thenReturn(Collections.emptySet());
         ElementValidator v = NumericValidator.getInstance();
         StringBuilder output = new StringBuilder();
-        v.format(element, "1234", output);
+        v.format(dialect, element, "1234", output);
         assertEquals("1234", output.toString());
     }
 
@@ -117,7 +130,7 @@ public class NumericValidatorTest {
         when(element.getValueSet()).thenReturn(Collections.emptySet());
         ElementValidator v = NumericValidator.getInstance();
         StringBuilder output = new StringBuilder();
-        v.format(element, "123", output);
+        v.format(dialect, element, "123", output);
         assertEquals("000123", output.toString());
     }
 }

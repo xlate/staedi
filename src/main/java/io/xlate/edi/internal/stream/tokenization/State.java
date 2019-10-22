@@ -127,7 +127,6 @@ public enum State {
 
     private static final State BD = State.ELEMENT_DATA_BINARY;
 
-    //TODO Decimal character for EDIFACT
     /*
      * The state transition table takes the current state and the current
      * symbol, and returns either a new state or an action. An action is

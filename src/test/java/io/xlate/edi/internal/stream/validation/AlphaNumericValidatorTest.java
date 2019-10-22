@@ -12,15 +12,26 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 
+import org.junit.Before;
 import org.junit.Test;
 
+import io.xlate.edi.internal.stream.tokenization.CharacterSet;
+import io.xlate.edi.internal.stream.tokenization.Dialect;
+import io.xlate.edi.internal.stream.tokenization.DialectFactory;
 import io.xlate.edi.internal.stream.tokenization.EDIException;
-import io.xlate.edi.internal.stream.validation.AlphaNumericValidator;
-import io.xlate.edi.internal.stream.validation.ElementValidator;
 import io.xlate.edi.schema.EDISimpleType;
 import io.xlate.edi.stream.EDIStreamValidationError;
 
 public class AlphaNumericValidatorTest {
+
+    Dialect dialect;
+
+    @Before
+    public void setUp() throws EDIException {
+        dialect = DialectFactory.getDialect("UNA");
+        CharacterSet chars = new CharacterSet();
+        "UNA=*.?^~UNB*UNOA=3*005435656=1*006415160=1*060515=1434*00000000000778~".chars().forEach(c -> dialect.appendHeader(chars, (char) c));
+    }
 
     @Test
     public void testValidateLengthTooShort() {
@@ -30,7 +41,7 @@ public class AlphaNumericValidatorTest {
         when(element.getValueSet()).thenReturn(Collections.emptySet());
         ElementValidator v = AlphaNumericValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
-        v.validate(element, "TEST", errors);
+        v.validate(dialect, element, "TEST", errors);
         assertEquals(1, errors.size());
         assertEquals(EDIStreamValidationError.DATA_ELEMENT_TOO_SHORT, errors.get(0));
     }
@@ -43,7 +54,7 @@ public class AlphaNumericValidatorTest {
         when(element.getValueSet()).thenReturn(Collections.emptySet());
         ElementValidator v = AlphaNumericValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
-        v.validate(element, "TESTTEST", errors);
+        v.validate(dialect, element, "TESTTEST", errors);
         assertEquals(1, errors.size());
         assertEquals(EDIStreamValidationError.DATA_ELEMENT_TOO_LONG, errors.get(0));
     }
@@ -56,7 +67,7 @@ public class AlphaNumericValidatorTest {
         when(element.getValueSet()).thenReturn(new HashSet<>(Arrays.asList("VAL1", "VAL2")));
         ElementValidator v = AlphaNumericValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
-        v.validate(element, "TEST", errors);
+        v.validate(dialect, element, "TEST", errors);
         assertEquals(1, errors.size());
         assertEquals(EDIStreamValidationError.INVALID_CODE_VALUE, errors.get(0));
     }
@@ -69,7 +80,7 @@ public class AlphaNumericValidatorTest {
         when(element.getValueSet()).thenReturn(new HashSet<>(Arrays.asList("VAL1", "VAL\u0008")));
         ElementValidator v = AlphaNumericValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
-        v.validate(element, "VAL\u0008", errors);
+        v.validate(dialect, element, "VAL\u0008", errors);
         assertEquals(1, errors.size());
         assertEquals(EDIStreamValidationError.INVALID_CHARACTER_DATA, errors.get(0));
     }
@@ -82,7 +93,7 @@ public class AlphaNumericValidatorTest {
         ElementValidator v = AlphaNumericValidator.getInstance();
         StringBuilder output = new StringBuilder();
         try {
-            v.format(element, "TESTTEST", output);
+            v.format(dialect, element, "TESTTEST", output);
             fail("Exception was expected");
         } catch (EDIException e) {
             assertTrue(e.getMessage().startsWith("EDIE005"));
@@ -98,7 +109,7 @@ public class AlphaNumericValidatorTest {
         ElementValidator v = AlphaNumericValidator.getInstance();
         StringBuilder output = new StringBuilder();
         try {
-            v.format(element, "TESTTEST", output);
+            v.format(dialect, element, "TESTTEST", output);
             fail("Exception was expected");
         } catch (EDIException e) {
             assertTrue(e.getMessage().startsWith("EDIE006"));
@@ -113,7 +124,7 @@ public class AlphaNumericValidatorTest {
         when(element.getValueSet()).thenReturn(new HashSet<>(Arrays.asList("VAL1", "VAL2")));
         ElementValidator v = AlphaNumericValidator.getInstance();
         StringBuilder output = new StringBuilder();
-        v.format(element, "VAL1", output);
+        v.format(dialect, element, "VAL1", output);
         assertEquals("VAL1", output.toString());
     }
 
@@ -125,7 +136,7 @@ public class AlphaNumericValidatorTest {
         ElementValidator v = AlphaNumericValidator.getInstance();
         StringBuilder output = new StringBuilder();
         try {
-            v.format(element, "TES\u0008", output);
+            v.format(dialect, element, "TES\u0008", output);
             fail("Exception was expected");
         } catch (EDIException e) {
             assertTrue(e.getMessage().startsWith("EDIE004"));
@@ -139,7 +150,7 @@ public class AlphaNumericValidatorTest {
         when(element.getMaxLength()).thenReturn(10L);
         ElementValidator v = AlphaNumericValidator.getInstance();
         StringBuilder output = new StringBuilder();
-        v.format(element, "TEST", output);
+        v.format(dialect, element, "TEST", output);
         assertEquals("TEST      ", output.toString());
     }
 }

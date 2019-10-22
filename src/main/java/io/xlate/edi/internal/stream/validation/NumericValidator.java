@@ -18,6 +18,7 @@ package io.xlate.edi.internal.stream.validation;
 import java.io.IOException;
 import java.util.List;
 
+import io.xlate.edi.internal.stream.tokenization.Dialect;
 import io.xlate.edi.internal.stream.tokenization.EDIException;
 import io.xlate.edi.schema.EDISimpleType;
 import io.xlate.edi.stream.EDIStreamValidationError;
@@ -34,8 +35,8 @@ class NumericValidator extends ElementValidator {
     }
 
     @Override
-    void validate(EDISimpleType element, CharSequence value, List<EDIStreamValidationError> errors) {
-        int length = validate(value);
+    void validate(Dialect dialect, EDISimpleType element, CharSequence value, List<EDIStreamValidationError> errors) {
+        int length = validate(dialect, value);
         validateLength(element, Math.abs(length), errors);
 
         if (length < 0) {
@@ -44,8 +45,8 @@ class NumericValidator extends ElementValidator {
     }
 
     @Override
-    void format(EDISimpleType element, CharSequence value, Appendable result) throws EDIException {
-        int length = validate(value);
+    void format(Dialect dialect, EDISimpleType element, CharSequence value, Appendable result) throws EDIException {
+        int length = validate(dialect, value);
         assertMaxLength(element, Math.abs(length));
 
         if (length < 0) {
@@ -63,7 +64,15 @@ class NumericValidator extends ElementValidator {
         }
     }
 
-    int validate(CharSequence value) {
+    /**
+     * Validate that the value contains only characters the represent an
+     * integer.
+     *
+     * @param dialect the dialect currently be parsed
+     * @param value the sequence of characters to validate
+     * @return true of the value is a valid integer representation, otherwise false
+     */
+    int validate(Dialect dialect, CharSequence value) {
         int length = value.length();
         boolean invalid = false;
 

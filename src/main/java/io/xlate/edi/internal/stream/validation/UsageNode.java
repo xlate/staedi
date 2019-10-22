@@ -15,6 +15,7 @@
  ******************************************************************************/
 package io.xlate.edi.internal.stream.validation;
 
+import io.xlate.edi.internal.stream.tokenization.Dialect;
 import io.xlate.edi.schema.EDIComplexType;
 import io.xlate.edi.schema.EDIReference;
 import io.xlate.edi.schema.EDISimpleType;
@@ -95,13 +96,13 @@ class UsageNode {
         return -1;
     }
 
-    void validate(CharSequence value, List<EDIStreamValidationError> errors) {
+    void validate(Dialect dialect, CharSequence value, List<EDIStreamValidationError> errors) {
         if (validator == null) {
             throw new UnsupportedOperationException("simple type only");
         }
 
         final EDISimpleType element = (EDISimpleType) link.getReferencedType();
-        validator.validate(element, value, errors);
+        validator.validate(dialect, element, value, errors);
     }
 
     List<EDISyntaxRule> getSyntaxRules() {

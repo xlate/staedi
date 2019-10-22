@@ -8,8 +8,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.junit.Before;
 import org.junit.Test;
 
+import io.xlate.edi.internal.stream.tokenization.CharacterSet;
+import io.xlate.edi.internal.stream.tokenization.Dialect;
+import io.xlate.edi.internal.stream.tokenization.DialectFactory;
 import io.xlate.edi.internal.stream.tokenization.EDIException;
 import io.xlate.edi.internal.stream.validation.ElementValidator;
 import io.xlate.edi.internal.stream.validation.TimeValidator;
@@ -17,6 +21,15 @@ import io.xlate.edi.schema.EDISimpleType;
 import io.xlate.edi.stream.EDIStreamValidationError;
 
 public class TimeValidatorTest {
+
+    Dialect dialect;
+
+    @Before
+    public void setUp() throws EDIException {
+        dialect = DialectFactory.getDialect("UNA");
+        CharacterSet chars = new CharacterSet();
+        "UNA=*.?^~UNB*UNOA=3*005435656=1*006415160=1*060515=1434*00000000000778~".chars().forEach(c -> dialect.appendHeader(chars, (char) c));
+    }
 
     @Test
     public void testValidateValueTooShort() {
@@ -26,7 +39,7 @@ public class TimeValidatorTest {
         when(element.getValueSet()).thenReturn(Collections.emptySet());
         ElementValidator v = TimeValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
-        v.validate(element, "09", errors);
+        v.validate(dialect, element, "09", errors);
         assertEquals(2, errors.size());
         assertEquals(EDIStreamValidationError.DATA_ELEMENT_TOO_SHORT, errors.get(0));
         assertEquals(EDIStreamValidationError.INVALID_TIME, errors.get(1));
@@ -40,7 +53,7 @@ public class TimeValidatorTest {
         when(element.getValueSet()).thenReturn(Collections.emptySet());
         ElementValidator v = TimeValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
-        v.validate(element, "1230599999", errors);
+        v.validate(dialect, element, "1230599999", errors);
         assertEquals(2, errors.size());
         assertEquals(EDIStreamValidationError.DATA_ELEMENT_TOO_LONG, errors.get(0));
         assertEquals(EDIStreamValidationError.INVALID_TIME, errors.get(1));
@@ -54,7 +67,7 @@ public class TimeValidatorTest {
         when(element.getValueSet()).thenReturn(Collections.emptySet());
         ElementValidator v = TimeValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
-        v.validate(element, "123059AA", errors);
+        v.validate(dialect, element, "123059AA", errors);
         assertEquals(1, errors.size());
         assertEquals(EDIStreamValidationError.INVALID_TIME, errors.get(0));
     }
@@ -67,7 +80,7 @@ public class TimeValidatorTest {
         when(element.getValueSet()).thenReturn(Collections.emptySet());
         ElementValidator v = TimeValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
-        v.validate(element, "12305900", errors);
+        v.validate(dialect, element, "12305900", errors);
         assertEquals(0, errors.size());
     }
 
@@ -94,7 +107,7 @@ public class TimeValidatorTest {
         ElementValidator v = TimeValidator.getInstance();
         StringBuilder output = new StringBuilder();
         try {
-            v.format(element, "1230599999", output);
+            v.format(dialect, element, "1230599999", output);
             fail("Exception was expected");
         } catch (EDIException e) {
             assertTrue(e.getMessage().startsWith("EDIE005"));
@@ -110,7 +123,7 @@ public class TimeValidatorTest {
         ElementValidator v = TimeValidator.getInstance();
         StringBuilder output = new StringBuilder();
         try {
-            v.format(element, "123059AA", output);
+            v.format(dialect, element, "123059AA", output);
             fail("Exception was expected");
         } catch (EDIException e) {
             assertTrue(e.getMessage().startsWith("EDIE009"));
@@ -125,7 +138,7 @@ public class TimeValidatorTest {
         when(element.getValueSet()).thenReturn(Collections.emptySet());
         ElementValidator v = TimeValidator.getInstance();
         StringBuilder output = new StringBuilder();
-        v.format(element, "123059", output);
+        v.format(dialect, element, "123059", output);
         assertEquals("123059", output.toString());
     }
 
@@ -137,7 +150,7 @@ public class TimeValidatorTest {
         when(element.getValueSet()).thenReturn(Collections.emptySet());
         ElementValidator v = TimeValidator.getInstance();
         StringBuilder output = new StringBuilder();
-        v.format(element, "1230", output);
+        v.format(dialect, element, "1230", output);
         assertEquals("123000", output.toString());
     }
 

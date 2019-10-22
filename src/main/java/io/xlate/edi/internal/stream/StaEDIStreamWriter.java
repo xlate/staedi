@@ -24,6 +24,7 @@ import io.xlate.edi.internal.stream.tokenization.EDIFACTDialect;
 import io.xlate.edi.internal.stream.tokenization.State;
 import io.xlate.edi.stream.EDIStreamException;
 import io.xlate.edi.stream.EDIStreamWriter;
+import io.xlate.edi.stream.EDIOutputFactory;
 import io.xlate.edi.stream.EDIStreamConstants.Delimiters;
 
 import java.io.IOException;
@@ -56,8 +57,9 @@ public class StaEDIStreamWriter implements EDIStreamWriter {
     private char segmentTerminator;
     private char dataElementSeparator;
     private char componentElementSeparator;
-    private char releaseIndicator;
     private char repetitionSeparator;
+    private char decimalMark;
+    private char releaseIndicator;
 
     private final boolean prettyPrint;
     private final String lineSeparator;
@@ -66,7 +68,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter {
         this.stream = stream;
         this.encoding = encoding;
         this.properties = new HashMap<>(properties);
-        this.prettyPrint = property(StaEDIOutputFactory.PRETTY_PRINT);
+        this.prettyPrint = property(EDIOutputFactory.PRETTY_PRINT);
 
         if (prettyPrint) {
             lineSeparator = System.getProperty("line.separator");
@@ -103,6 +105,12 @@ public class StaEDIStreamWriter implements EDIStreamWriter {
             repetitionSeparator = property(Delimiters.REPETITION);
         } else {
             repetitionSeparator = dialect.getRepetitionSeparator();
+        }
+
+        if (properties.containsKey(Delimiters.DECIMAL)) {
+            decimalMark = property(Delimiters.DECIMAL);
+        } else {
+            decimalMark = dialect.getDecimalMark();
         }
 
         if (properties.containsKey(Delimiters.RELEASE)) {
@@ -264,7 +272,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter {
             if (dialect instanceof EDIFACTDialect && "UNA".equals(name)) {
                 write(this.componentElementSeparator);
                 write(this.dataElementSeparator);
-                write('.'); //TODO make dynamic
+                write(this.decimalMark);
                 write(this.releaseIndicator);
                 write(this.repetitionSeparator);
             }

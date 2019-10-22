@@ -44,7 +44,7 @@ import io.xlate.edi.schema.EDIType;
 import io.xlate.edi.schema.Schema;
 import io.xlate.edi.schema.SchemaFactory;
 
-public class StaEDISchemaFactory extends SchemaFactory {
+public class StaEDISchemaFactory implements SchemaFactory {
 
     private static XMLInputFactory factory = XMLInputFactory.newFactory();
 
