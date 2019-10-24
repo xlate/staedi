@@ -1,0 +1,36 @@
+package io.xlate.edi.internal.stream.tokenization;
+
+import static org.junit.Assert.*;
+
+import org.junit.Test;
+
+public class DialectFactoryTest {
+
+    static char[] X12 = { '\0', 'I', 'S', 'A', '\0' };
+    static char[] EDIFACT_A = { '\0', 'U', 'N', 'A', '\0' };
+    static char[] EDIFACT_B = { '\0', 'U', 'N', 'B', '\0' };
+    static char[] BAD = { 'B', 'A', 'D', '\0' };
+
+    @Test
+    public void testX12() throws EDIException {
+        Dialect d1 = DialectFactory.getDialect(X12, 1, 3);
+        assertEquals("ISA", d1.getHeaderTag());
+    }
+
+    @Test
+    public void testEDIFACT_A() throws EDIException {
+        Dialect d1 = DialectFactory.getDialect(EDIFACT_A, 1, 3);
+        assertEquals("UNA", d1.getHeaderTag());
+    }
+
+    @Test
+    public void testEDIFACT_B() throws EDIException {
+        Dialect d1 = DialectFactory.getDialect(EDIFACT_B, 1, 3);
+        assertEquals("UNB", d1.getHeaderTag());
+    }
+
+    @Test(expected = EDIException.class)
+    public void testInvalidTag() throws EDIException {
+        DialectFactory.getDialect(BAD, 1, 3);
+    }
+}

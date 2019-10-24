@@ -15,9 +15,9 @@
  ******************************************************************************/
 package io.xlate.edi.internal.stream.tokenization;
 
-public abstract class DialectFactory {
+public interface DialectFactory {
 
-    private enum DialectTag {
+    enum DialectTag {
         X12("ISA"),
         EDIFACT_A("UNA"),
         EDIFACT_B("UNB");
@@ -47,20 +47,7 @@ public abstract class DialectFactory {
         DialectTag type = DialectTag.fromValue(tag);
 
         if (type != null) {
-            Dialect dialect;
-
-            switch (type) {
-            case X12:
-                dialect = new X12Dialect();
-                break;
-            case EDIFACT_A:
-            case EDIFACT_B:
-                dialect = new EDIFACTDialect();
-                break;
-            default:
-                throw new EDIException(EDIException.UNSUPPORTED_DIALECT, tag);
-            }
-
+            Dialect dialect = (type == DialectTag.X12) ? new X12Dialect() : new EDIFACTDialect();
             dialect.setHeaderTag(tag);
 
             return dialect;

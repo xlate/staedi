@@ -17,6 +17,7 @@ package io.xlate.edi.internal.stream;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -27,6 +28,7 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.concurrent.atomic.AtomicReference;
 
+import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
@@ -482,5 +484,93 @@ public class StaEDIXMLStreamReaderTest {
 
         assertEquals(XMLStreamConstants.END_ELEMENT, xmlReader.next());
         assertEquals("BIN", xmlReader.getLocalName());
+    }
+
+    @Test
+    public void testGetCdataBinary_BoundsChecks() throws Exception {
+        EDIInputFactory factory = EDIInputFactory.newFactory();
+        InputStream stream = getClass().getClassLoader().getResourceAsStream("x12/simple_with_binary_segment.edi");
+        EDIStreamReader ediReader = factory.createEDIStreamReader(stream);
+        XMLStreamReader xmlReader = new StaEDIXMLStreamReader(ediReader);
+        XMLInputFactory xmlFactory = XMLInputFactory.newFactory();
+        xmlReader = xmlFactory.createFilteredReader(xmlReader, reader -> {
+            if (reader.getEventType() == XMLStreamConstants.START_DOCUMENT) {
+                return true;
+            }
+
+            if (reader.getEventType() == XMLStreamConstants.START_ELEMENT) {
+                if ("TRANSACTION".equals(reader.getLocalName())) {
+                    return true;
+                }
+                if ("BIN02".equals(reader.getLocalName())) {
+                    return true;
+                }
+            }
+            if (reader.getEventType() == XMLStreamConstants.END_ELEMENT) {
+                if ("BIN02".equals(reader.getLocalName())) {
+                    return true;
+                }
+            }
+            if (reader.getEventType() == XMLStreamConstants.CDATA) {
+                return true;
+            }
+
+            return false;
+        });
+
+        SchemaFactory schemaFactory = SchemaFactory.newFactory();
+        Schema schema = schemaFactory.createSchema(getClass().getClassLoader().getResource("x12/EDISchemaBinarySegment.xml"));
+        char[] target = new char[100];
+
+        assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.next());
+        assertEquals("TRANSACTION", xmlReader.getLocalName());
+        ediReader.setTransactionSchema(schema);
+
+        /* BIN #1 ********************************************************************/
+        assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.next()); // BIN02;
+        assertEquals(XMLStreamConstants.CDATA, xmlReader.next()); // BIN02 content;
+        assertTrue(xmlReader.hasText());
+        assertNull(xmlReader.getEncoding());
+
+        try {
+            xmlReader.getTextCharacters(xmlReader.getTextStart(), target, -1, xmlReader.getTextLength());
+            fail("Exception expected");
+        } catch (Exception e) {
+            assertTrue(e instanceof IndexOutOfBoundsException);
+        }
+
+        try {
+            xmlReader.getTextCharacters(xmlReader.getTextStart(), target, 101, xmlReader.getTextLength());
+            fail("Exception expected");
+        } catch (Exception e) {
+            assertTrue(e instanceof IndexOutOfBoundsException);
+        }
+
+        try {
+            xmlReader.getTextCharacters(xmlReader.getTextStart(), target, 0, -1);
+            fail("Exception expected");
+        } catch (Exception e) {
+            assertTrue(e instanceof IndexOutOfBoundsException);
+        }
+
+        try {
+            xmlReader.getTextCharacters(xmlReader.getTextStart(), target, 0, 101);
+            fail("Exception expected");
+        } catch (Exception e) {
+            assertTrue(e instanceof IndexOutOfBoundsException);
+        }
+
+        assertEquals(Base64.getEncoder().encodeToString("1234567890123456789012345".getBytes()), xmlReader.getText());
+        assertEquals(XMLStreamConstants.END_ELEMENT, xmlReader.next()); // BIN02;
+
+        /* BIN #2 ********************************************************************/
+        assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.next()); // BIN02;
+        assertEquals(XMLStreamConstants.CDATA, xmlReader.next()); // BIN02 content;
+        assertEquals(XMLStreamConstants.END_ELEMENT, xmlReader.next()); // BIN02;
+
+        /* BIN #3 ********************************************************************/
+        assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.next()); // BIN02;
+        assertEquals(XMLStreamConstants.CDATA, xmlReader.next()); // BIN02 content;
+        assertEquals(XMLStreamConstants.END_ELEMENT, xmlReader.next()); // BIN02;
     }
 }

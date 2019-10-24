@@ -384,7 +384,7 @@ public class StaEDIXMLStreamReader implements XMLStreamReader {
 
     @Override
     public int getEventType() {
-        return eventQueue.element();
+        return eventQueue.isEmpty() ? -1 : eventQueue.element();
     }
 
     @Override
@@ -431,7 +431,19 @@ public class StaEDIXMLStreamReader implements XMLStreamReader {
                 cdataBuilder.getChars(0, cdataBuilder.length(), cdata, 0);
             }
 
-            // FIXME: array bounds check needed
+            if (targetStart < 0) {
+                throw new IndexOutOfBoundsException("targetStart < 0");
+            }
+            if (targetStart > target.length) {
+                throw new IndexOutOfBoundsException("targetStart > target.length");
+            }
+            if (length < 0) {
+                throw new IndexOutOfBoundsException("length < 0");
+            }
+            if (targetStart + length > target.length) {
+                throw new IndexOutOfBoundsException("targetStart + length > target.length");
+            }
+
             System.arraycopy(cdata, sourceStart, target, targetStart, length);
             return length;
         }
