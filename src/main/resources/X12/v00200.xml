@@ -23,8 +23,6 @@
       <group header="GS" trailer="GE">
         <transaction header="ST" trailer="SE" />
       </group>
-
-      <transaction header="ST" trailer="SE" />
     </sequence>
   </interchange>
 
