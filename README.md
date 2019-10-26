@@ -88,38 +88,39 @@ InputStream stream = new FileInputStream(...);
 EDIStreamReader reader = factory.createEDIStreamReader(stream);
 
 while (reader.hasNext()) {
-	switch (reader.next()) {
-	case Events.START_INTERCHANGE:
-		/* Retrieve the standard - "X12" or "EDIFACT" */
-		String standard = reader.getStandard();
-		/*-
-		 * Retrieve the version string array. An array is used to support
-		 * the componentized version element used in the EDIFACT standard.
-		 *
-		 * e.g. [ "00501" ] (X12) or [ "UNOA", "3" ] (EDIFACT)
-		 */
-		String[] version = reader.getVersion();
-		break;
+  switch (reader.next()) {
+  case START_INTERCHANGE:
+    /* Retrieve the standard - "X12" or "EDIFACT" */
+    String standard = reader.getStandard();
 
-	case Events.START_SEGMENT:
-		// Retrieve the segment name - e.g. "ISA" (X12) or "UNB" (EDIFACT)
-		String segmentName = reader.getText();
-		break;
+    /*
+     * Retrieve the version string array. An array is used to support
+     * the componentized version element used in the EDIFACT standard.
+     *
+     * e.g. [ "00501" ] (X12) or [ "UNOA", "3" ] (EDIFACT)
+     */
+    String[] version = reader.getVersion();
+    break;
 
-	case Events.END_SEGMENT:
-		break;
+  case START_SEGMENT:
+    // Retrieve the segment name - e.g. "ISA" (X12) or "UNB" (EDIFACT)
+    String segmentName = reader.getText();
+    break;
 
-	case Events.START_COMPOSITE:
-		break;
+  case END_SEGMENT:
+    break;
 
-	case Events.END_COMPOSITE:
-		break;
+  case START_COMPOSITE:
+    break;
 
-	case Events.ELEMENT_DATA:
-		// Retrieve the value of the current element
-		String data = reader.getText();
-		break;
-	}
+  case END_COMPOSITE:
+    break;
+
+  case ELEMENT_DATA:
+    // Retrieve the value of the current element
+    String data = reader.getText();
+    break;
+  }
 }
 
 reader.close();
