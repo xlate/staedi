@@ -1,22 +1,21 @@
 package io.xlate.edi.internal.stream.validation;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import io.xlate.edi.internal.stream.tokenization.CharacterSet;
 import io.xlate.edi.internal.stream.tokenization.Dialect;
 import io.xlate.edi.internal.stream.tokenization.DialectFactory;
 import io.xlate.edi.internal.stream.tokenization.EDIException;
-import io.xlate.edi.internal.stream.validation.DecimalValidator;
 
 public class DecimalValidatorTest {
 
     Dialect dialectEdifact;
     Dialect dialectX12;
 
-    @Before
+    @BeforeEach
     public void setUp() throws EDIException {
         dialectEdifact = DialectFactory.getDialect("UNA");
         CharacterSet charsEdifact = new CharacterSet();

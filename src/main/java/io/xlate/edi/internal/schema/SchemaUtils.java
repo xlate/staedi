@@ -60,14 +60,13 @@ public class SchemaUtils {
         }
     }
 
-    public static Enumeration<URL> getStreams(String resource) throws IOException {
-        ClassLoader loader = Thread.currentThread().getContextClassLoader();
+    static Enumeration<URL> getStreams(String resource) throws IOException {
+        ClassLoader loader = SchemaUtils.class.getClassLoader();
         return loader.getResources(resource);
     }
 
-    public static URL getURL(String resource) {
-        ClassLoader loader = Thread.currentThread().getContextClassLoader();
-        return loader.getResource(resource);
+    static URL getURL(String resource) {
+        return SchemaUtils.class.getResource(resource);
     }
 
     public static Schema getControlSchema(String standard, String[] version) throws EDISchemaException {

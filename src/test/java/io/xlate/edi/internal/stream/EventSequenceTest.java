@@ -15,14 +15,14 @@
  ******************************************************************************/
 package io.xlate.edi.internal.stream;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.net.URL;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import io.xlate.edi.internal.schema.SchemaUtils;
 import io.xlate.edi.schema.EDISchemaException;
@@ -268,6 +268,7 @@ public class EventSequenceTest {
                 + "UNT+2+00000000000117'"
                 + "UNZ+1+00000000000778'").getBytes());
 
+        @SuppressWarnings("resource")
         EDIStreamReader reader = factory.createEDIStreamReader(stream);
         assertEquals(EDIStreamEvent.START_INTERCHANGE, reader.next());
         assertArrayEquals(new String[] { "UNOA", "3" }, reader.getVersion());
@@ -473,7 +474,7 @@ public class EventSequenceTest {
 
     private Schema loadX12FuncAckSchema() throws EDISchemaException {
         SchemaFactory schemaFactory = SchemaFactory.newFactory();
-        URL schemaLocation = SchemaUtils.getURL("x12/EDISchema997.xml");
+        URL schemaLocation = getClass().getResource("/x12/EDISchema997.xml");
 
         return schemaFactory.createSchema(schemaLocation);
     }

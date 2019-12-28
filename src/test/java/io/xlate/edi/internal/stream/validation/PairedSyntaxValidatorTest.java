@@ -1,6 +1,6 @@
 package io.xlate.edi.internal.stream.validation;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
@@ -10,13 +10,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.stubbing.Answer;
 
-import io.xlate.edi.internal.stream.validation.PairedSyntaxValidator;
-import io.xlate.edi.internal.stream.validation.SyntaxValidator;
-import io.xlate.edi.internal.stream.validation.UsageNode;
 import io.xlate.edi.schema.EDISyntaxRule.Type;
 import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamValidationError;
@@ -25,7 +22,7 @@ public class PairedSyntaxValidatorTest extends SyntaxValidatorTestBase {
 
     PairedSyntaxValidator validator;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         validator = (PairedSyntaxValidator) SyntaxValidator.getInstance(Type.PAIRED);
         super.setUp();

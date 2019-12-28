@@ -42,9 +42,8 @@ public abstract class EDIOutputFactory {
      * @param stream
      *            - the stream to write to
      * @return the writer instance
-     * @throws EDIStreamException
      */
-    public abstract EDIStreamWriter createEDIStreamWriter(OutputStream stream) throws EDIStreamException;
+    public abstract EDIStreamWriter createEDIStreamWriter(OutputStream stream);
 
     /**
      * Create a new EDIStreamWriter that writes to a stream
@@ -55,6 +54,7 @@ public abstract class EDIOutputFactory {
      *            - the encoding to use
      * @return the writer instance
      * @throws EDIStreamException
+     *  when encoding is not supported
      */
     public abstract EDIStreamWriter createEDIStreamWriter(OutputStream stream,
                                                           String encoding) throws EDIStreamException;
@@ -77,7 +77,7 @@ public abstract class EDIOutputFactory {
      * @throws IllegalArgumentException
      *             if the property is not supported
      */
-    public abstract Object getProperty(String name);
+    public abstract Object getProperty(String name) throws IllegalArgumentException;
 
     /**
      * Allows the user to set specific feature/property on the underlying
@@ -93,5 +93,5 @@ public abstract class EDIOutputFactory {
      * @throws IllegalArgumentException
      *             if the property is not supported
      */
-    public abstract void setProperty(String name, Object value);
+    public abstract void setProperty(String name, Object value) throws IllegalArgumentException;
 }

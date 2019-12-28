@@ -1,20 +1,19 @@
 package io.xlate.edi.internal.schema;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Arrays;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import io.xlate.edi.internal.schema.SyntaxRestriction;
 import io.xlate.edi.schema.EDISyntaxRule;
 
 public class SyntaxRestrictionTest {
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testConstructorEmptyList() {
-        EDISyntaxRule rule = new SyntaxRestriction(EDISyntaxRule.Type.PAIRED, Arrays.asList());
-        fail("Exception was not thrown, " + rule);
+        assertThrows(IllegalArgumentException.class, () -> new SyntaxRestriction(EDISyntaxRule.Type.PAIRED, Arrays.asList()));
     }
 
     @Test

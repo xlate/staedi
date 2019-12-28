@@ -15,15 +15,16 @@
  ******************************************************************************/
 package io.xlate.edi.internal.stream;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.net.URL;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import io.xlate.edi.internal.schema.SchemaUtils;
 import io.xlate.edi.schema.EDISchemaException;
@@ -37,6 +38,7 @@ import io.xlate.edi.stream.EDIStreamReader;
 import io.xlate.edi.stream.EDIStreamValidationError;
 import io.xlate.edi.stream.EDIStreamConstants.Standards;
 
+@SuppressWarnings("resource")
 public class SegmentValidationTest {
 
     EDIStreamFilter segmentErrorFilter = new EDIStreamFilter() {
@@ -65,15 +67,15 @@ public class SegmentValidationTest {
                 + "IEA*1*508121953~").getBytes());
 
         SchemaFactory schemaFactory = SchemaFactory.newFactory();
-        URL schemaLocation = SchemaUtils.getURL("x12/EDISchemaSegmentValidation.xml");
+        URL schemaLocation = getClass().getResource("/x12/EDISchemaSegmentValidation.xml");
         Schema schema = schemaFactory.createSchema(schemaLocation);
 
         EDIStreamReader reader = factory.createEDIStreamReader(stream, schema);
         reader = factory.createFilteredReader(reader, segmentErrorFilter);
 
-        assertEquals("Expecting start of transaction", EDIStreamEvent.START_TRANSACTION, reader.next());
-        reader.setTransactionSchema(schemaFactory.createSchema(SchemaUtils.getURL("x12/EDISchemaSegmentValidationTx.xml")));
-        assertTrue("Unexpected segment errors exist", !reader.hasNext());
+        assertEquals(EDIStreamEvent.START_TRANSACTION, reader.next(), "Expecting start of transaction");
+        reader.setTransactionSchema(schemaFactory.createSchema(getClass().getResource("/x12/EDISchemaSegmentValidationTx.xml")));
+        assertTrue(!reader.hasNext(), "Unexpected segment errors exist");
     }
 
     @Test
@@ -92,8 +94,8 @@ public class SegmentValidationTest {
         reader.setControlSchema(schema);
         reader = factory.createFilteredReader(reader, segmentErrorFilter);
 
-        assertEquals("Expecting start of transaction", EDIStreamEvent.START_TRANSACTION, reader.next());
-        assertTrue("Segment errors exist", !reader.hasNext());
+        assertEquals(EDIStreamEvent.START_TRANSACTION, reader.next(), "Expecting start of transaction");
+        assertTrue(!reader.hasNext(), "Segment errors exist");
     }
 
     @Test
@@ -108,16 +110,16 @@ public class SegmentValidationTest {
                 + "IEA*1*508121953~").getBytes());
 
         SchemaFactory schemaFactory = SchemaFactory.newFactory();
-        URL schemaLocation = SchemaUtils.getURL("x12/EDISchemaSegmentValidation.xml");
+        URL schemaLocation = getClass().getResource("/x12/EDISchemaSegmentValidation.xml");
         Schema schema = schemaFactory.createSchema(schemaLocation);
 
         EDIStreamReader reader = factory.createEDIStreamReader(stream, schema);
         reader = factory.createFilteredReader(reader, segmentErrorFilter);
 
-        assertEquals("Expecting start of transaction", EDIStreamEvent.START_TRANSACTION, reader.next());
-        reader.setTransactionSchema(schemaFactory.createSchema(SchemaUtils.getURL("x12/EDISchemaSegmentValidationTx.xml")));
+        assertEquals(EDIStreamEvent.START_TRANSACTION, reader.next(), "Expecting start of transaction");
+        reader.setTransactionSchema(schemaFactory.createSchema(getClass().getResource("/x12/EDISchemaSegmentValidationTx.xml")));
 
-        assertTrue("Segment errors do not exist", reader.hasNext());
+        assertTrue(reader.hasNext(), "Segment errors do not exist");
         reader.next();
         assertEquals(EDIStreamValidationError.MANDATORY_SEGMENT_MISSING, reader.getErrorType());
         assertEquals("S12", reader.getText());
@@ -125,7 +127,7 @@ public class SegmentValidationTest {
         assertEquals(EDIStreamValidationError.MANDATORY_SEGMENT_MISSING, reader.getErrorType());
         assertEquals("S19", reader.getText());
 
-        assertTrue("Unexpected segment errors exist", !reader.hasNext());
+        assertTrue(!reader.hasNext(), "Unexpected segment errors exist");
     }
 
     @Test
@@ -143,14 +145,14 @@ public class SegmentValidationTest {
         reader.setControlSchema(schema);
         reader = factory.createFilteredReader(reader, segmentErrorFilter);
 
-        assertEquals("Expecting start of transaction", EDIStreamEvent.START_TRANSACTION, reader.next());
+        assertEquals(EDIStreamEvent.START_TRANSACTION, reader.next(), "Expecting start of transaction");
 
-        assertTrue("Segment errors do not exist", reader.hasNext());
+        assertTrue(reader.hasNext(), "Segment errors do not exist");
         reader.next();
         assertEquals(EDIStreamValidationError.MANDATORY_SEGMENT_MISSING, reader.getErrorType());
         assertEquals("UNT", reader.getText());
 
-        assertTrue("Unexpected segment errors exist", !reader.hasNext());
+        assertTrue(!reader.hasNext(), "Unexpected segment errors exist");
     }
 
     @Test
@@ -167,21 +169,21 @@ public class SegmentValidationTest {
                 + "IEA*1*508121953~").getBytes());
 
         SchemaFactory schemaFactory = SchemaFactory.newFactory();
-        URL schemaLocation = SchemaUtils.getURL("x12/EDISchemaSegmentValidation.xml");
+        URL schemaLocation = getClass().getResource("/x12/EDISchemaSegmentValidation.xml");
         Schema schema = schemaFactory.createSchema(schemaLocation);
 
         EDIStreamReader reader = factory.createEDIStreamReader(stream, schema);
         reader = factory.createFilteredReader(reader, segmentErrorFilter);
 
-        assertEquals("Expecting start of transaction", EDIStreamEvent.START_TRANSACTION, reader.next());
-        reader.setTransactionSchema(schemaFactory.createSchema(SchemaUtils.getURL("x12/EDISchemaSegmentValidationTx.xml")));
+        assertEquals(EDIStreamEvent.START_TRANSACTION, reader.next(), "Expecting start of transaction");
+        reader.setTransactionSchema(schemaFactory.createSchema(getClass().getResource("/x12/EDISchemaSegmentValidationTx.xml")));
 
-        assertTrue("Segment errors do not exist", reader.hasNext());
+        assertTrue(reader.hasNext(), "Segment errors do not exist");
         reader.next();
         assertEquals(EDIStreamValidationError.UNEXPECTED_SEGMENT, reader.getErrorType());
         assertEquals("S21", reader.getText());
 
-        assertTrue("Unexpected segment errors exist", !reader.hasNext());
+        assertTrue(!reader.hasNext(), "Unexpected segment errors exist");
     }
 
     @Test
@@ -203,16 +205,16 @@ public class SegmentValidationTest {
                 + "IEA*1*508121953~").getBytes());
 
         SchemaFactory schemaFactory = SchemaFactory.newFactory();
-        URL schemaLocation = SchemaUtils.getURL("x12/EDISchemaSegmentValidation.xml");
+        URL schemaLocation = getClass().getResource("/x12/EDISchemaSegmentValidation.xml");
         Schema schema = schemaFactory.createSchema(schemaLocation);
 
         EDIStreamReader reader = factory.createEDIStreamReader(stream, schema);
         reader = factory.createFilteredReader(reader, segmentErrorFilter);
 
-        assertEquals("Expecting start of transaction", EDIStreamEvent.START_TRANSACTION, reader.next());
-        reader.setTransactionSchema(schemaFactory.createSchema(SchemaUtils.getURL("x12/EDISchemaSegmentValidationTx.xml")));
+        assertEquals(EDIStreamEvent.START_TRANSACTION, reader.next(), "Expecting start of transaction");
+        reader.setTransactionSchema(schemaFactory.createSchema(getClass().getResource("/x12/EDISchemaSegmentValidationTx.xml")));
 
-        assertTrue("Segment errors do not exist", reader.hasNext());
+        assertTrue(reader.hasNext(), "Segment errors do not exist");
         reader.next();
         assertEquals(EDIStreamValidationError.SEGMENT_NOT_IN_PROPER_SEQUENCE, reader.getErrorType());
         assertEquals("S13", reader.getText());
@@ -226,7 +228,7 @@ public class SegmentValidationTest {
         assertEquals(EDIStreamValidationError.SEGMENT_EXCEEDS_MAXIMUM_USE, reader.getErrorType());
         assertEquals("S14", reader.getText());
 
-        assertTrue("Unexpected segment errors exist", !reader.hasNext());
+        assertTrue(!reader.hasNext(), "Unexpected segment errors exist");
     }
 
     @Test
@@ -245,21 +247,21 @@ public class SegmentValidationTest {
                 + "IEA*1*508121953~").getBytes());
 
         SchemaFactory schemaFactory = SchemaFactory.newFactory();
-        URL schemaLocation = SchemaUtils.getURL("x12/EDISchemaSegmentValidation.xml");
+        URL schemaLocation = getClass().getResource("/x12/EDISchemaSegmentValidation.xml");
         Schema schema = schemaFactory.createSchema(schemaLocation);
 
         EDIStreamReader reader = factory.createEDIStreamReader(stream, schema);
         reader = factory.createFilteredReader(reader, segmentErrorFilter);
 
-        assertEquals("Expecting start of transaction", EDIStreamEvent.START_TRANSACTION, reader.next());
-        reader.setTransactionSchema(schemaFactory.createSchema(SchemaUtils.getURL("x12/EDISchemaSegmentValidationTx.xml")));
+        assertEquals(EDIStreamEvent.START_TRANSACTION, reader.next(), "Expecting start of transaction");
+        reader.setTransactionSchema(schemaFactory.createSchema(getClass().getResource("/x12/EDISchemaSegmentValidationTx.xml")));
 
-        assertTrue("Segment errors do not exist", reader.hasNext());
+        assertTrue(reader.hasNext(), "Segment errors do not exist");
         reader.next();
         assertEquals(EDIStreamValidationError.SEGMENT_NOT_IN_DEFINED_TRANSACTION_SET, reader.getErrorType());
         assertEquals("S0B", reader.getText());
 
-        assertTrue("Unexpected segment errors exist", !reader.hasNext());
+        assertTrue(!reader.hasNext(), "Unexpected segment errors exist");
     }
 
     @Test
@@ -278,21 +280,21 @@ public class SegmentValidationTest {
                 + "IEA*1*508121953~").getBytes());
 
         SchemaFactory schemaFactory = SchemaFactory.newFactory();
-        URL schemaLocation = SchemaUtils.getURL("x12/EDISchemaSegmentValidation.xml");
+        URL schemaLocation = getClass().getResource("/x12/EDISchemaSegmentValidation.xml");
         Schema schema = schemaFactory.createSchema(schemaLocation);
 
         EDIStreamReader reader = factory.createEDIStreamReader(stream, schema);
         reader = factory.createFilteredReader(reader, segmentErrorFilter);
 
-        assertEquals("Expecting start of transaction", EDIStreamEvent.START_TRANSACTION, reader.next());
-        reader.setTransactionSchema(schemaFactory.createSchema(SchemaUtils.getURL("x12/EDISchemaSegmentValidationTx.xml")));
+        assertEquals(EDIStreamEvent.START_TRANSACTION, reader.next(), "Expecting start of transaction");
+        reader.setTransactionSchema(schemaFactory.createSchema(getClass().getResource("/x12/EDISchemaSegmentValidationTx.xml")));
 
-        assertTrue("Segment errors do not exist", reader.hasNext());
+        assertTrue(reader.hasNext(), "Segment errors do not exist");
         reader.next();
         assertEquals(EDIStreamValidationError.LOOP_OCCURS_OVER_MAXIMUM_TIMES, reader.getErrorType());
         assertEquals("S11", reader.getText());
 
-        assertTrue("Unexpected segment errors exist", !reader.hasNext());
+        assertTrue(!reader.hasNext(), "Unexpected segment errors exist");
     }
 
     @Test
@@ -305,14 +307,14 @@ public class SegmentValidationTest {
                 + "IEA*1*508121953~").getBytes());
 
         SchemaFactory schemaFactory = SchemaFactory.newFactory();
-        URL schemaLocation = SchemaUtils.getURL("x12/EDISchemaSegmentValidation.xml");
+        URL schemaLocation = getClass().getResource("/x12/EDISchemaSegmentValidation.xml");
         Schema schema = schemaFactory.createSchema(schemaLocation);
 
         EDIStreamReader reader = factory.createEDIStreamReader(stream, schema);
         reader = factory.createFilteredReader(reader, segmentErrorFilter);
 
-        assertEquals("Expecting start of transaction", EDIStreamEvent.START_TRANSACTION, reader.next());
-        assertTrue("Unexpected segment errors exist", !reader.hasNext());
+        assertEquals(EDIStreamEvent.START_TRANSACTION, reader.next(), "Expecting start of transaction");
+        assertTrue(!reader.hasNext(), "Unexpected segment errors exist");
     }
 
     @Test
@@ -323,17 +325,17 @@ public class SegmentValidationTest {
                 + "IEA*1*508121953~").getBytes());
 
         SchemaFactory schemaFactory = SchemaFactory.newFactory();
-        URL schemaLocation = SchemaUtils.getURL("x12/EDISchemaSegmentValidation.xml");
+        URL schemaLocation = getClass().getResource("/x12/EDISchemaSegmentValidation.xml");
         Schema schema = schemaFactory.createSchema(schemaLocation);
 
         EDIStreamReader reader = factory.createEDIStreamReader(stream, schema);
         reader = factory.createFilteredReader(reader, segmentErrorFilter);
 
-        assertTrue("Segment errors do not exist", reader.hasNext());
+        assertTrue(reader.hasNext(), "Segment errors do not exist");
         reader.next();
         assertEquals(EDIStreamValidationError.MANDATORY_SEGMENT_MISSING, reader.getErrorType());
         assertEquals("S01", reader.getText());
 
-        assertTrue("Unexpected segment errors exist", !reader.hasNext());
+        assertTrue(!reader.hasNext(), "Unexpected segment errors exist");
     }
 }

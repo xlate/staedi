@@ -15,11 +15,13 @@
  ******************************************************************************/
 package io.xlate.edi.internal.stream;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -38,8 +40,7 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stax.StAXSource;
 import javax.xml.transform.stream.StreamResult;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.xmlunit.builder.DiffBuilder;
 import org.xmlunit.builder.Input;
@@ -53,6 +54,7 @@ import io.xlate.edi.stream.EDIStreamException;
 import io.xlate.edi.stream.EDIStreamFilter;
 import io.xlate.edi.stream.EDIStreamReader;
 
+@SuppressWarnings("resource")
 public class StaEDIXMLStreamReaderTest {
 
     static byte[] DUMMY_X12 = ("ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~"
@@ -68,8 +70,7 @@ public class StaEDIXMLStreamReaderTest {
 
     XMLStreamReader getXmlReader(String resource) throws EDIStreamException, XMLStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
-        ClassLoader loader = getClass().getClassLoader();
-        InputStream stream = loader.getResourceAsStream(resource);
+        InputStream stream = getClass().getResourceAsStream(resource);
         EDIStreamReader ediReader = factory.createEDIStreamReader(stream);
         return new StaEDIXMLStreamReader(ediReader);
     }
@@ -90,24 +91,24 @@ public class StaEDIXMLStreamReaderTest {
 
     @Test
     public void testCreateEDIXMLStreamReader() throws EDIStreamException, XMLStreamException {
-        XMLStreamReader xmlReader = getXmlReader("x12/simple997.edi");
-        Assert.assertNotNull("xmlReader was null", xmlReader);
+        XMLStreamReader xmlReader = getXmlReader("/x12/simple997.edi");
+        assertNotNull(xmlReader, "xmlReader was null");
     }
 
     @Test
     public void testHasNext() throws Exception {
         XMLStreamReader xmlReader = getXmlReader(DUMMY_X12);
-        Assert.assertTrue(xmlReader.hasNext());
+        assertTrue(xmlReader.hasNext());
     }
 
     private static void assertSegmentBoundaries(XMLStreamReader xmlReader, String tag, int elementCount)
                                                                                                          throws XMLStreamException {
-        Assert.assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.next());
-        Assert.assertEquals(tag, xmlReader.getLocalName());
+        assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.next());
+        assertEquals(tag, xmlReader.getLocalName());
         xmlReader.require(XMLStreamConstants.START_ELEMENT, null, tag);
         skipEvents(xmlReader, 3 * elementCount);
-        Assert.assertEquals(XMLStreamConstants.END_ELEMENT, xmlReader.next());
-        Assert.assertEquals(tag, xmlReader.getLocalName());
+        assertEquals(XMLStreamConstants.END_ELEMENT, xmlReader.next());
+        assertEquals(tag, xmlReader.getLocalName());
         xmlReader.require(XMLStreamConstants.END_ELEMENT, null, tag);
     }
 
@@ -115,9 +116,9 @@ public class StaEDIXMLStreamReaderTest {
     public void testSegmentSequence() throws Exception {
         XMLStreamReader xmlReader = getXmlReader(DUMMY_X12);
 
-        Assert.assertEquals(XMLStreamConstants.START_DOCUMENT, xmlReader.next());
-        Assert.assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.next());
-        Assert.assertEquals("INTERCHANGE", xmlReader.getLocalName());
+        assertEquals(XMLStreamConstants.START_DOCUMENT, xmlReader.next());
+        assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.next());
+        assertEquals("INTERCHANGE", xmlReader.getLocalName());
 
         assertSegmentBoundaries(xmlReader, "ISA", 16);
         assertSegmentBoundaries(xmlReader, "S01", 1);
@@ -127,47 +128,47 @@ public class StaEDIXMLStreamReaderTest {
         assertSegmentBoundaries(xmlReader, "S09", 1);
         assertSegmentBoundaries(xmlReader, "IEA", 2);
 
-        Assert.assertEquals(XMLStreamConstants.END_ELEMENT, xmlReader.next());
-        Assert.assertEquals("INTERCHANGE", xmlReader.getLocalName());
-        Assert.assertEquals(XMLStreamConstants.END_DOCUMENT, xmlReader.next());
+        assertEquals(XMLStreamConstants.END_ELEMENT, xmlReader.next());
+        assertEquals("INTERCHANGE", xmlReader.getLocalName());
+        assertEquals(XMLStreamConstants.END_DOCUMENT, xmlReader.next());
     }
 
     @Test
     public void testGetElementText() throws Exception {
         XMLStreamReader xmlReader = getXmlReader(DUMMY_X12);
 
-        Assert.assertEquals(XMLStreamConstants.START_DOCUMENT, xmlReader.next());
-        Assert.assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.next());
-        Assert.assertEquals("INTERCHANGE", xmlReader.getLocalName());
+        assertEquals(XMLStreamConstants.START_DOCUMENT, xmlReader.next());
+        assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.next());
+        assertEquals("INTERCHANGE", xmlReader.getLocalName());
 
-        Assert.assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.next());
-        Assert.assertEquals("ISA", xmlReader.getLocalName());
-        Assert.assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.next()); // ISA01;
-        Assert.assertEquals("00", xmlReader.getElementText());
-        Assert.assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.next()); // ISA02;
-        Assert.assertEquals("          ", xmlReader.getElementText());
-        Assert.assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.next()); // ISA03;
-        Assert.assertEquals("00", xmlReader.getElementText());
+        assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.next());
+        assertEquals("ISA", xmlReader.getLocalName());
+        assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.next()); // ISA01;
+        assertEquals("00", xmlReader.getElementText());
+        assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.next()); // ISA02;
+        assertEquals("          ", xmlReader.getElementText());
+        assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.next()); // ISA03;
+        assertEquals("00", xmlReader.getElementText());
     }
 
     private void assertElement(XMLStreamReader xmlReader, String tag, String value) throws Exception {
-        Assert.assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.next());
-        Assert.assertEquals(tag, xmlReader.getLocalName());
-        Assert.assertEquals(value, xmlReader.getElementText());
-        Assert.assertEquals(XMLStreamConstants.END_ELEMENT, xmlReader.getEventType());
-        Assert.assertEquals(tag, xmlReader.getLocalName());
+        assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.next());
+        assertEquals(tag, xmlReader.getLocalName());
+        assertEquals(value, xmlReader.getElementText());
+        assertEquals(XMLStreamConstants.END_ELEMENT, xmlReader.getEventType());
+        assertEquals(tag, xmlReader.getLocalName());
     }
 
     @Test
     public void testElementEvents() throws Exception {
         XMLStreamReader xmlReader = getXmlReader(TINY_X12);
-        Assert.assertEquals(XMLStreamConstants.START_DOCUMENT, xmlReader.next());
+        assertEquals(XMLStreamConstants.START_DOCUMENT, xmlReader.next());
 
-        Assert.assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.next());
-        Assert.assertEquals("INTERCHANGE", xmlReader.getLocalName());
+        assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.next());
+        assertEquals("INTERCHANGE", xmlReader.getLocalName());
 
-        Assert.assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.next());
-        Assert.assertEquals("ISA", xmlReader.getLocalName());
+        assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.next());
+        assertEquals("ISA", xmlReader.getLocalName());
         assertElement(xmlReader, "ISA01", "00");
         assertElement(xmlReader, "ISA02", "          ");
         assertElement(xmlReader, "ISA03", "00");
@@ -184,27 +185,27 @@ public class StaEDIXMLStreamReaderTest {
         assertElement(xmlReader, "ISA14", "0");
         assertElement(xmlReader, "ISA15", "P");
         assertElement(xmlReader, "ISA16", ":");
-        Assert.assertEquals(XMLStreamConstants.END_ELEMENT, xmlReader.next());
-        Assert.assertEquals("ISA", xmlReader.getLocalName());
+        assertEquals(XMLStreamConstants.END_ELEMENT, xmlReader.next());
+        assertEquals("ISA", xmlReader.getLocalName());
 
-        Assert.assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.next());
-        Assert.assertEquals("IEA", xmlReader.getLocalName());
+        assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.next());
+        assertEquals("IEA", xmlReader.getLocalName());
         assertElement(xmlReader, "IEA01", "1");
         assertElement(xmlReader, "IEA02", "508121953");
-        Assert.assertEquals(XMLStreamConstants.END_ELEMENT, xmlReader.next());
-        Assert.assertEquals("IEA", xmlReader.getLocalName());
+        assertEquals(XMLStreamConstants.END_ELEMENT, xmlReader.next());
+        assertEquals("IEA", xmlReader.getLocalName());
 
-        Assert.assertEquals(XMLStreamConstants.END_ELEMENT, xmlReader.next());
-        Assert.assertEquals("INTERCHANGE", xmlReader.getLocalName());
-        Assert.assertEquals(XMLStreamConstants.END_DOCUMENT, xmlReader.next());
+        assertEquals(XMLStreamConstants.END_ELEMENT, xmlReader.next());
+        assertEquals("INTERCHANGE", xmlReader.getLocalName());
+        assertEquals(XMLStreamConstants.END_DOCUMENT, xmlReader.next());
 
-        Assert.assertFalse(xmlReader.hasNext());
+        assertFalse(xmlReader.hasNext());
         xmlReader.close();
     }
 
     @Test
     public void testWriteXml() throws Exception {
-        XMLStreamReader xmlReader = getXmlReader("x12/extraDelimiter997.edi");
+        XMLStreamReader xmlReader = getXmlReader("/x12/extraDelimiter997.edi");
         xmlReader.next(); // Per StAXSource JavaDoc, put in START_DOCUMENT state
         TransformerFactory factory = TransformerFactory.newInstance();
         Transformer transformer = factory.newTransformer();
@@ -215,15 +216,15 @@ public class StaEDIXMLStreamReaderTest {
         String resultString = result.toString();
         Diff d = DiffBuilder.compare(Input.fromFile("src/test/resources/x12/extraDelimiter997.xml"))
                    .withTest(resultString).build();
-        assertTrue("XML unexpectedly different:\n" + d.toString(new DefaultComparisonFormatter()), !d.hasDifferences());
+        assertTrue(!d.hasDifferences(), () -> "XML unexpectedly different:\n" + d.toString(new DefaultComparisonFormatter()));
     }
 
     @Test
     public void testSchemaValidatedInput() throws Exception {
         EDIInputFactory factory = EDIInputFactory.newFactory();
-        InputStream stream = getClass().getClassLoader().getResourceAsStream("x12/simple997.edi");
+        InputStream stream = getClass().getResourceAsStream("/x12/simple997.edi");
         SchemaFactory schemaFactory = SchemaFactory.newFactory();
-        Schema schema = schemaFactory.createSchema(getClass().getClassLoader().getResource("x12/EDISchema997.xml"));
+        Schema schema = schemaFactory.createSchema(getClass().getResource("/x12/EDISchema997.xml"));
         EDIStreamReader ediReader = factory.createEDIStreamReader(stream);
         EDIStreamFilter ediFilter = new EDIStreamFilter() {
             @Override
@@ -279,6 +280,7 @@ public class StaEDIXMLStreamReaderTest {
     }
 
     @Test
+    @SuppressWarnings("unused")
     public void testUnsupportedOperations() throws Exception {
         EDIStreamReader ediReader = Mockito.mock(EDIStreamReader.class);
         XMLStreamReader xmlReader = new StaEDIXMLStreamReader(ediReader);
@@ -348,28 +350,28 @@ public class StaEDIXMLStreamReaderTest {
     public void testGetTextString() throws Exception {
         XMLStreamReader xmlReader = getXmlReader(DUMMY_X12);
 
-        Assert.assertEquals(XMLStreamConstants.START_DOCUMENT, xmlReader.next());
-        Assert.assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.next());
-        Assert.assertEquals("INTERCHANGE", xmlReader.getLocalName());
+        assertEquals(XMLStreamConstants.START_DOCUMENT, xmlReader.next());
+        assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.next());
+        assertEquals("INTERCHANGE", xmlReader.getLocalName());
 
-        Assert.assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.next());
-        Assert.assertEquals("ISA", xmlReader.getLocalName());
-        Assert.assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.next()); // ISA01;
-        Assert.assertEquals(XMLStreamConstants.CHARACTERS, xmlReader.next()); // ISA01 content;
+        assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.next());
+        assertEquals("ISA", xmlReader.getLocalName());
+        assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.next()); // ISA01;
+        assertEquals(XMLStreamConstants.CHARACTERS, xmlReader.next()); // ISA01 content;
 
         String textString = xmlReader.getText();
-        Assert.assertEquals("00", textString);
+        assertEquals("00", textString);
         char[] textArray = xmlReader.getTextCharacters();
-        Assert.assertArrayEquals(new char[] {'0', '0'}, textArray);
+        assertArrayEquals(new char[] {'0', '0'}, textArray);
         char[] textArrayLocal = new char[3];
         xmlReader.getTextCharacters(xmlReader.getTextStart(), textArrayLocal, 0, xmlReader.getTextLength());
-        Assert.assertArrayEquals(new char[] {'0', '0', '\0'}, textArrayLocal);
+        assertArrayEquals(new char[] {'0', '0', '\0'}, textArrayLocal);
     }
 
     @Test
     public void testGetCdataBinary() throws Exception {
     	EDIInputFactory factory = EDIInputFactory.newFactory();
-        InputStream stream = getClass().getClassLoader().getResourceAsStream("x12/simple_with_binary_segment.edi");
+        InputStream stream = getClass().getResourceAsStream("/x12/simple_with_binary_segment.edi");
         EDIStreamReader ediReader = factory.createEDIStreamReader(stream);
         AtomicReference<String> segmentName = new AtomicReference<>();
         EDIStreamFilter ediFilter = new EDIStreamFilter() {
@@ -399,7 +401,7 @@ public class StaEDIXMLStreamReaderTest {
         XMLStreamReader xmlReader = new StaEDIXMLStreamReader(ediReader);
 
         SchemaFactory schemaFactory = SchemaFactory.newFactory();
-        Schema schema = schemaFactory.createSchema(getClass().getClassLoader().getResource("x12/EDISchemaBinarySegment.xml"));
+        Schema schema = schemaFactory.createSchema(getClass().getResource("/x12/EDISchemaBinarySegment.xml"));
 
         assertEquals(XMLStreamConstants.START_DOCUMENT, xmlReader.next());
         assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.next());
@@ -489,10 +491,10 @@ public class StaEDIXMLStreamReaderTest {
     @Test
     public void testGetCdataBinary_BoundsChecks() throws Exception {
         EDIInputFactory factory = EDIInputFactory.newFactory();
-        InputStream stream = getClass().getClassLoader().getResourceAsStream("x12/simple_with_binary_segment.edi");
+        InputStream stream = getClass().getResourceAsStream("/x12/simple_with_binary_segment.edi");
         EDIStreamReader ediReader = factory.createEDIStreamReader(stream);
         XMLStreamReader xmlReader = new StaEDIXMLStreamReader(ediReader);
-        XMLInputFactory xmlFactory = XMLInputFactory.newFactory();
+        XMLInputFactory xmlFactory = XMLInputFactory.newInstance();
         xmlReader = xmlFactory.createFilteredReader(xmlReader, reader -> {
             if (reader.getEventType() == XMLStreamConstants.START_DOCUMENT) {
                 return true;
@@ -519,7 +521,7 @@ public class StaEDIXMLStreamReaderTest {
         });
 
         SchemaFactory schemaFactory = SchemaFactory.newFactory();
-        Schema schema = schemaFactory.createSchema(getClass().getClassLoader().getResource("x12/EDISchemaBinarySegment.xml"));
+        Schema schema = schemaFactory.createSchema(getClass().getResource("/x12/EDISchemaBinarySegment.xml"));
         char[] target = new char[100];
 
         assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.next());

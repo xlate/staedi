@@ -2,306 +2,297 @@
  * Copyright 2017 xlate.io LLC, http://www.xlate.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
- * use this file except in compliance with the License.  You may obtain a copy
- * of the License at
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
  * License for the specific language governing permissions and limitations under
  * the License.
  ******************************************************************************/
 package io.xlate.edi.internal.stream.tokenization;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import io.xlate.edi.internal.stream.ConstantsTest;
-import io.xlate.edi.internal.stream.tokenization.EDIException;
-import io.xlate.edi.internal.stream.tokenization.EventHandler;
-import io.xlate.edi.internal.stream.tokenization.InternalLocation;
-import io.xlate.edi.internal.stream.tokenization.Lexer;
 import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamValidationError;
 
+@SuppressWarnings("resource")
 public class LexerTest {
 
-	class TestLexerEventHandler implements EventHandler, ConstantsTest {
-		final Map<String, Object> content = new HashMap<>(2);
+    class TestLexerEventHandler implements EventHandler, ConstantsTest {
+        final Map<String, Object> content = new HashMap<>(2);
 
-		@Override
-		public void interchangeBegin(Dialect dialect) {
-			content.put("LAST", "interchangeBegin");
-			content.put("INTERCHANGE_START", true);
-		}
+        @Override
+        public void interchangeBegin(Dialect dialect) {
+            content.put("LAST", "interchangeBegin");
+            content.put("INTERCHANGE_START", true);
+        }
 
-		@Override
-		public void interchangeEnd() {
-			content.put("LAST", "interchangeEnd");
-		}
+        @Override
+        public void interchangeEnd() {
+            content.put("LAST", "interchangeEnd");
+        }
 
-		@Override
-		public void loopBegin(CharSequence id) {
-			content.put("LAST", "loopBegin");
-		}
+        @Override
+        public void loopBegin(CharSequence id) {
+            content.put("LAST", "loopBegin");
+        }
 
-		@Override
-		public void loopEnd(CharSequence id) {
-			content.put("LAST", "loopEnd");
-		}
+        @Override
+        public void loopEnd(CharSequence id) {
+            content.put("LAST", "loopEnd");
+        }
 
-		@Override
-		public void segmentBegin(char[] text, int start, int length) {
-			content.put("LAST", "segmentBegin");
-			content.put("SEGMENT", new String(text, start, length));
-		}
+        @Override
+        public void segmentBegin(char[] text, int start, int length) {
+            content.put("LAST", "segmentBegin");
+            content.put("SEGMENT", new String(text, start, length));
+        }
 
-		@Override
-		public void segmentEnd() {
-			content.put("LAST", "segmentEnd");
-		}
+        @Override
+        public void segmentEnd() {
+            content.put("LAST", "segmentEnd");
+        }
 
-		@Override
-		public void compositeBegin(boolean isNil) {
-			content.put("LAST", "compositeBegin");
-		}
+        @Override
+        public void compositeBegin(boolean isNil) {
+            content.put("LAST", "compositeBegin");
+        }
 
-		@Override
-		public void compositeEnd(boolean isNil) {
-			content.put("LAST", "compositeEnd");
-		}
+        @Override
+        public void compositeEnd(boolean isNil) {
+            content.put("LAST", "compositeEnd");
+        }
 
-		@Override
-		public void elementData(char[] text, int start, int length) {
-			content.put("LAST", "elementData");
-			content.put("ELEMENT", new String(text, start, length));
-		}
+        @Override
+        public void elementData(char[] text, int start, int length) {
+            content.put("LAST", "elementData");
+            content.put("ELEMENT", new String(text, start, length));
+        }
 
-		@Override
-		public void binaryData(InputStream binary) {}
+        @Override
+        public void binaryData(InputStream binary) {
+        }
 
-		@Override
-		public void segmentError(CharSequence token, EDIStreamValidationError error) {}
+        @Override
+        public void segmentError(CharSequence token, EDIStreamValidationError error) {
+        }
 
-		@Override
-		public void elementError(
-				EDIStreamEvent event,
-				EDIStreamValidationError error,
-				int elem,
-				int component,
-				int repetition) {}
-	}
+        @Override
+        public void elementError(
+                                 EDIStreamEvent event,
+                                 EDIStreamValidationError error,
+                                 int elem,
+                                 int component,
+                                 int repetition) {
+        }
+    }
 
-	EventHandler handler = new EventHandler() {
-		@Override
-		public void interchangeBegin(Dialect dialect) {
-			interchangeStarted = true;
-		}
+    EventHandler handler = new EventHandler() {
+        @Override
+        public void interchangeBegin(Dialect dialect) {
+            interchangeStarted = true;
+        }
 
-		@Override
-		public void interchangeEnd() {
-			interchangeEnded = true;
-		}
+        @Override
+        public void interchangeEnd() {
+            interchangeEnded = true;
+        }
 
-		@Override
-		public void loopBegin(CharSequence id) {}
+        @Override
+        public void loopBegin(CharSequence id) {
+        }
 
-		@Override
-		public void loopEnd(CharSequence id) {}
+        @Override
+        public void loopEnd(CharSequence id) {
+        }
 
-		@Override
-		public void segmentBegin(char[] text, int start, int length) {
-			segment = new String(text, start, length);
-		}
+        @Override
+        public void segmentBegin(char[] text, int start, int length) {
+            segment = new String(text, start, length);
+        }
 
-		@Override
-		public void segmentEnd() {}
+        @Override
+        public void segmentEnd() {
+        }
 
-		@Override
-		public void compositeBegin(boolean isNil) {
-			compositeStarted = true;
-		}
+        @Override
+        public void compositeBegin(boolean isNil) {
+            compositeStarted = true;
+        }
 
-		@Override
-		public void compositeEnd(boolean isNil) {
-			compositeEnded = true;
-		}
+        @Override
+        public void compositeEnd(boolean isNil) {
+            compositeEnded = true;
+        }
 
-		@Override
-		public void elementData(char[] text, int start, int length) {
-			element = new String(text, start, length);
-		}
+        @Override
+        public void elementData(char[] text, int start, int length) {
+            element = new String(text, start, length);
+        }
 
-		@Override
-		public void binaryData(InputStream binary) {}
+        @Override
+        public void binaryData(InputStream binary) {
+        }
 
-		@Override
-		public void segmentError(CharSequence token, EDIStreamValidationError error) {}
+        @Override
+        public void segmentError(CharSequence token, EDIStreamValidationError error) {
+        }
 
-		@Override
-		public void elementError(
-				EDIStreamEvent event,
-				EDIStreamValidationError error,
-				int elem,
-				int component,
-				int repetition) {}
-	};
+        @Override
+        public void elementError(
+                                 EDIStreamEvent event,
+                                 EDIStreamValidationError error,
+                                 int elem,
+                                 int component,
+                                 int repetition) {
+        }
+    };
 
-	boolean interchangeStarted = false;
-	boolean interchangeEnded = false;
-	boolean compositeStarted = false;
-	boolean compositeEnded = false;
-	String segment;
-	String element;
+    boolean interchangeStarted = false;
+    boolean interchangeEnded = false;
+    boolean compositeStarted = false;
+    boolean compositeEnded = false;
+    String segment;
+    String element;
 
-	@Test
-	public void testParseX12() throws EDIException, IOException {
-		@SuppressWarnings("resource")
-		InputStream stream =
-				getClass().getClassLoader().getResourceAsStream(
-						"x12/simple997.edi");
-		interchangeStarted = false;
-		interchangeEnded = false;
-		compositeStarted = false;
-		compositeEnded = false;
-		segment = null;
-		element = null;
+    @Test
+    public void testParseX12() throws EDIException, IOException {
+        InputStream stream = getClass().getResourceAsStream("/x12/simple997.edi");
+        interchangeStarted = false;
+        interchangeEnded = false;
+        compositeStarted = false;
+        compositeEnded = false;
+        segment = null;
+        element = null;
 
-		final InternalLocation location = new InternalLocation();
-		final Lexer lexer = new Lexer(stream, handler, location);
+        final InternalLocation location = new InternalLocation();
+        final Lexer lexer = new Lexer(stream, handler, location);
 
-		lexer.parse();
-		Assert.assertTrue("Interchange not started", interchangeStarted);
-		lexer.parse();
-		Assert.assertEquals("ISA not received", "ISA", segment);
-		lexer.parse();
-		Assert.assertEquals("00 not received", "00", element);
-	}
+        lexer.parse();
+        assertTrue(interchangeStarted, "Interchange not started");
+        lexer.parse();
+        assertEquals("ISA", segment, "ISA not received");
+        lexer.parse();
+        assertEquals("00", element, "00 not received");
+    }
 
-	@Test
-	public void testParseEDIFACT() throws EDIException, IOException {
-		@SuppressWarnings("resource")
-		InputStream stream =
-				getClass().getClassLoader().getResourceAsStream(
-						"EDIFACT/invoic_d97b.edi");
-		interchangeStarted = false;
-		interchangeEnded = false;
-		compositeStarted = false;
-		compositeEnded = false;
-		segment = null;
-		element = null;
+    @Test
+    public void testParseEDIFACT() throws EDIException, IOException {
+        InputStream stream = getClass().getResourceAsStream("/EDIFACT/invoic_d97b.edi");
+        interchangeStarted = false;
+        interchangeEnded = false;
+        compositeStarted = false;
+        compositeEnded = false;
+        segment = null;
+        element = null;
 
-		final InternalLocation location = new InternalLocation();
-		final Lexer lexer = new Lexer(stream, handler, location);
+        final InternalLocation location = new InternalLocation();
+        final Lexer lexer = new Lexer(stream, handler, location);
 
-		lexer.parse();
-		Assert.assertTrue("Interchange not started", interchangeStarted);
-		lexer.parse();
-		Assert.assertEquals("UNB not received", "UNB", segment);
-		lexer.parse();
-		Assert.assertTrue("Composite not started", compositeStarted);
-		lexer.parse();
-		Assert.assertEquals("UNOA not received", "UNOA", element);
-	}
+        lexer.parse();
+        assertTrue(interchangeStarted, "Interchange not started");
+        lexer.parse();
+        assertEquals("UNB", segment, "UNB not received");
+        lexer.parse();
+        assertTrue(compositeStarted, "Composite not started");
+        lexer.parse();
+        assertEquals("UNOA", element, "UNOA not received");
+    }
 
-	@Test
-	public void testParseTagsX12() throws EDIException, IOException {
-		@SuppressWarnings("resource")
-		InputStream stream =
-				getClass().getClassLoader().getResourceAsStream(
-						"x12/simple997.edi");
+    @Test
+    public void testParseTagsX12() throws EDIException, IOException {
+        InputStream stream = getClass().getResourceAsStream("/x12/simple997.edi");
+        TestLexerEventHandler eventHandler = new TestLexerEventHandler();
+        final InternalLocation location = new InternalLocation();
+        final Lexer lexer = new Lexer(stream, eventHandler, location);
+        String last;
+        int s = -1;
 
-		TestLexerEventHandler eventHandler = new TestLexerEventHandler();
+        do {
+            lexer.parse();
+            last = (String) eventHandler.content.get("LAST");
 
-		final InternalLocation location = new InternalLocation();
-		final Lexer lexer = new Lexer(stream, eventHandler, location);
-		String last;
-		int s = -1;
+            if ("segmentBegin".equals(last)) {
+                String tag = (String) eventHandler.content.get("SEGMENT");
 
-		do {
-			lexer.parse();
-			last = (String) eventHandler.content.get("LAST");
+                if (++s < ConstantsTest.simple997tags.length) {
+                    assertEquals(ConstantsTest.simple997tags[s], tag, "Unexpected segment");
+                } else {
+                    fail("Unexpected segment: " + tag);
+                }
 
-			if ("segmentBegin".equals(last)) {
-				String tag = (String) eventHandler.content.get("SEGMENT");
+            }
+        } while (!"interchangeEnd".equals(last));
 
-				if (++s < ConstantsTest.simple997tags.length) {
-					Assert.assertEquals("Unexpected segment", ConstantsTest.simple997tags[s], tag);
-				} else {
-					Assert.fail("Unexpected segment: " + tag);
-				}
+        assertTrue(s > 0, "No events");
+    }
 
+    @Test
+    public void testParseTagsEDIFACTA() throws EDIException, IOException {
+        InputStream stream = getClass().getResourceAsStream("/EDIFACT/invoic_d97b_una.edi");
+        TestLexerEventHandler eventHandler = new TestLexerEventHandler();
+        final InternalLocation location = new InternalLocation();
+        final Lexer lexer = new Lexer(stream, eventHandler, location);
+        String last;
+        int s = -1;
 
-			}
-		} while (!"interchangeEnd".equals(last));
+        do {
+            lexer.parse();
+            last = (String) eventHandler.content.get("LAST");
 
-		Assert.assertTrue("No events", s > 0);
-	}
+            if ("segmentBegin".equals(last)) {
+                String tag = (String) eventHandler.content.get("SEGMENT");
 
-	@Test
-	public void testParseTagsEDIFACTA() throws EDIException, IOException {
-		@SuppressWarnings("resource")
-		InputStream stream =
-				getClass().getClassLoader().getResourceAsStream(
-						"EDIFACT/invoic_d97b_una.edi");
-		TestLexerEventHandler eventHandler = new TestLexerEventHandler();
-		final InternalLocation location = new InternalLocation();
-		final Lexer lexer = new Lexer(stream, eventHandler, location);
-		String last;
-		int s = -1;
+                if (++s < ConstantsTest.invoic_d97b_unatags.length) {
+                    assertEquals(ConstantsTest.invoic_d97b_unatags[s], tag, "Unexpected segment");
+                } else {
+                    fail("Unexpected segment: " + tag);
+                }
+            }
+        } while (!"interchangeEnd".equals(last));
 
-		do {
-			lexer.parse();
-			last = (String) eventHandler.content.get("LAST");
+        assertTrue(s > 0, "No events");
+    }
 
-			if ("segmentBegin".equals(last)) {
-				String tag = (String) eventHandler.content.get("SEGMENT");
+    @Test
+    public void testParseTagsEDIFACTB() throws EDIException, IOException {
+        InputStream stream = getClass().getResourceAsStream("/EDIFACT/invoic_d97b.edi");
+        TestLexerEventHandler eventHandler = new TestLexerEventHandler();
+        final InternalLocation location = new InternalLocation();
+        final Lexer lexer = new Lexer(stream, eventHandler, location);
+        String last;
+        int s = -1;
 
-				if (++s < ConstantsTest.invoic_d97b_unatags.length) {
-					Assert.assertEquals("Unexpected segment", ConstantsTest.invoic_d97b_unatags[s], tag);
-				} else {
-					Assert.fail("Unexpected segment: " + tag);
-				}
-			}
-		} while (!"interchangeEnd".equals(last));
+        do {
+            lexer.parse();
+            last = (String) eventHandler.content.get("LAST");
 
-		Assert.assertTrue("No events", s > 0);
-	}
+            if ("segmentBegin".equals(last)) {
+                String tag = (String) eventHandler.content.get("SEGMENT");
 
-	@Test
-	public void testParseTagsEDIFACTB() throws EDIException, IOException {
-		@SuppressWarnings("resource")
-		InputStream stream =
-				getClass().getClassLoader().getResourceAsStream(
-						"EDIFACT/invoic_d97b.edi");
-		TestLexerEventHandler eventHandler = new TestLexerEventHandler();
-		final InternalLocation location = new InternalLocation();
-		final Lexer lexer = new Lexer(stream, eventHandler, location);
-		String last;
-		int s = -1;
+                if (++s < ConstantsTest.invoic_d97btags.length) {
+                    assertEquals(ConstantsTest.invoic_d97btags[s], tag, "Unexpected segment");
+                } else {
+                    fail("Unexpected segment: " + tag);
+                }
+            }
+        } while (!"interchangeEnd".equals(last));
 
-		do {
-			lexer.parse();
-			last = (String) eventHandler.content.get("LAST");
-
-			if ("segmentBegin".equals(last)) {
-				String tag = (String) eventHandler.content.get("SEGMENT");
-
-				if (++s < ConstantsTest.invoic_d97btags.length) {
-					Assert.assertEquals("Unexpected segment", ConstantsTest.invoic_d97btags[s], tag);
-				} else {
-					Assert.fail("Unexpected segment: " + tag);
-				}
-			}
-		} while (!"interchangeEnd".equals(last));
-
-		Assert.assertTrue("No events", s > 0);
-	}
+        assertTrue(s > 0, "No events");
+    }
 }

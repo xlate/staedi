@@ -1,6 +1,7 @@
 package io.xlate.edi.internal.stream.validation;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -8,15 +9,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import io.xlate.edi.internal.stream.tokenization.CharacterSet;
 import io.xlate.edi.internal.stream.tokenization.Dialect;
 import io.xlate.edi.internal.stream.tokenization.DialectFactory;
 import io.xlate.edi.internal.stream.tokenization.EDIException;
-import io.xlate.edi.internal.stream.validation.ElementValidator;
-import io.xlate.edi.internal.stream.validation.NumericValidator;
 import io.xlate.edi.schema.EDISimpleType;
 import io.xlate.edi.stream.EDIStreamValidationError;
 
@@ -24,7 +23,7 @@ public class NumericValidatorTest {
 
     Dialect dialect;
 
-    @Before
+    @BeforeEach
     public void setUp() throws EDIException {
         dialect = DialectFactory.getDialect("UNA");
         CharacterSet chars = new CharacterSet();
@@ -46,7 +45,7 @@ public class NumericValidatorTest {
         EDISimpleType element = mock(EDISimpleType.class);
         when(element.getMinLength()).thenReturn(5L);
         when(element.getMaxLength()).thenReturn(10L);
-        when(element.getValueSet()).thenReturn(Collections.emptySet());
+        when(element.getValueSet()).thenReturn(Collections.<String>emptySet());
         ElementValidator v = NumericValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
         v.validate(dialect, element, "1234", errors);
@@ -59,7 +58,7 @@ public class NumericValidatorTest {
         EDISimpleType element = mock(EDISimpleType.class);
         when(element.getMinLength()).thenReturn(5L);
         when(element.getMaxLength()).thenReturn(10L);
-        when(element.getValueSet()).thenReturn(Collections.emptySet());
+        when(element.getValueSet()).thenReturn(Collections.<String>emptySet());
         ElementValidator v = NumericValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
         v.validate(dialect, element, "12345678901", errors);
@@ -72,7 +71,7 @@ public class NumericValidatorTest {
         EDISimpleType element = mock(EDISimpleType.class);
         when(element.getMinLength()).thenReturn(5L);
         when(element.getMaxLength()).thenReturn(10L);
-        when(element.getValueSet()).thenReturn(Collections.emptySet());
+        when(element.getValueSet()).thenReturn(Collections.<String>emptySet());
         ElementValidator v = NumericValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
         v.validate(dialect, element, "1234F", errors);
@@ -115,7 +114,7 @@ public class NumericValidatorTest {
         EDISimpleType element = mock(EDISimpleType.class);
         when(element.getMinLength()).thenReturn(4L);
         when(element.getMaxLength()).thenReturn(8L);
-        when(element.getValueSet()).thenReturn(Collections.emptySet());
+        when(element.getValueSet()).thenReturn(Collections.<String>emptySet());
         ElementValidator v = NumericValidator.getInstance();
         StringBuilder output = new StringBuilder();
         v.format(dialect, element, "1234", output);
@@ -127,7 +126,7 @@ public class NumericValidatorTest {
         EDISimpleType element = mock(EDISimpleType.class);
         when(element.getMinLength()).thenReturn(6L);
         when(element.getMaxLength()).thenReturn(8L);
-        when(element.getValueSet()).thenReturn(Collections.emptySet());
+        when(element.getValueSet()).thenReturn(Collections.<String>emptySet());
         ElementValidator v = NumericValidator.getInstance();
         StringBuilder output = new StringBuilder();
         v.format(dialect, element, "123", output);

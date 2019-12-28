@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -134,10 +135,12 @@ public class StaEDIStreamReader implements EDIStreamReader {
             try {
                 setControlSchema(SchemaUtils.getControlSchema(getStandard(), getVersion()));
             } catch (EDISchemaException e) {
-                LOGGER.warning(String.format("Exception loading controlSchema for standard %s, version %s",
-                                             getStandard(),
-                                             Arrays.stream(getVersion()).map(Object::toString)
-                                                   .collect(Collectors.joining(", "))));
+                LOGGER.log(Level.WARNING,
+                           String.format("Exception loading controlSchema for standard %s, version %s",
+                                         getStandard(),
+                                         Arrays.stream(getVersion()).map(Object::toString)
+                                               .collect(Collectors.joining(", "))),
+                           e);
             }
         }
 

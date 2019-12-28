@@ -15,36 +15,33 @@
  ******************************************************************************/
 package io.xlate.edi.internal.schema;
 
-import java.io.IOException;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
 import java.io.InputStream;
 import java.util.Map;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import io.xlate.edi.internal.schema.SchemaUtils;
-import io.xlate.edi.internal.schema.StaEDISchema;
-import io.xlate.edi.internal.schema.StaEDISchemaFactory;
 import io.xlate.edi.schema.EDISchemaException;
 import io.xlate.edi.schema.EDIType;
 
+@SuppressWarnings("resource")
 public class StaEDISchemaTest {
 
-    @Test(expected = NullPointerException.class)
-    public void testSetTypesNullTypes() throws EDISchemaException {
+    @Test
+    public void testSetTypesNullTypes() {
         StaEDISchema schema = new StaEDISchema();
-        schema.setTypes(null);
+        assertThrows(NullPointerException.class, () -> schema.setTypes(null));
     }
 
     @Test
-    public void testRootTypeIsInterchange() throws EDISchemaException, IOException {
+    public void testRootTypeIsInterchange() throws EDISchemaException {
         StaEDISchema schema = new StaEDISchema();
-        InputStream schemaStream = SchemaUtils.getStreams("X12/v00402.xml")
-                                              .nextElement()
-                                              .openStream();
+        InputStream schemaStream = getClass().getResourceAsStream("/X12/v00402.xml");
         Map<String, EDIType> types = new StaEDISchemaFactory().loadTypes(schemaStream);
         schema.setTypes(types);
 
-        Assert.assertEquals(EDIType.Type.INTERCHANGE, schema.getType(StaEDISchema.INTERCHANGE).getType());
+        assertEquals(EDIType.Type.INTERCHANGE, schema.getType(StaEDISchema.INTERCHANGE).getType());
     }
 }

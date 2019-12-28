@@ -1,8 +1,8 @@
 package io.xlate.edi.internal.stream.validation;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -12,8 +12,8 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import io.xlate.edi.internal.stream.tokenization.CharacterSet;
 import io.xlate.edi.internal.stream.tokenization.Dialect;
@@ -26,7 +26,7 @@ public class AlphaNumericValidatorTest {
 
     Dialect dialect;
 
-    @Before
+    @BeforeEach
     public void setUp() throws EDIException {
         dialect = DialectFactory.getDialect("UNA");
         CharacterSet chars = new CharacterSet();
@@ -38,7 +38,7 @@ public class AlphaNumericValidatorTest {
         EDISimpleType element = mock(EDISimpleType.class);
         when(element.getMinLength()).thenReturn(5L);
         when(element.getMaxLength()).thenReturn(5L);
-        when(element.getValueSet()).thenReturn(Collections.emptySet());
+        when(element.getValueSet()).thenReturn(Collections.<String>emptySet());
         ElementValidator v = AlphaNumericValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
         v.validate(dialect, element, "TEST", errors);
@@ -51,7 +51,7 @@ public class AlphaNumericValidatorTest {
         EDISimpleType element = mock(EDISimpleType.class);
         when(element.getMinLength()).thenReturn(5L);
         when(element.getMaxLength()).thenReturn(5L);
-        when(element.getValueSet()).thenReturn(Collections.emptySet());
+        when(element.getValueSet()).thenReturn(Collections.<String>emptySet());
         ElementValidator v = AlphaNumericValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
         v.validate(dialect, element, "TESTTEST", errors);
@@ -64,7 +64,7 @@ public class AlphaNumericValidatorTest {
         EDISimpleType element = mock(EDISimpleType.class);
         when(element.getMinLength()).thenReturn(4L);
         when(element.getMaxLength()).thenReturn(5L);
-        when(element.getValueSet()).thenReturn(new HashSet<>(Arrays.asList("VAL1", "VAL2")));
+        when(element.getValueSet()).thenReturn(new HashSet<String>(Arrays.asList("VAL1", "VAL2")));
         ElementValidator v = AlphaNumericValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
         v.validate(dialect, element, "TEST", errors);
@@ -77,7 +77,7 @@ public class AlphaNumericValidatorTest {
         EDISimpleType element = mock(EDISimpleType.class);
         when(element.getMinLength()).thenReturn(4L);
         when(element.getMaxLength()).thenReturn(5L);
-        when(element.getValueSet()).thenReturn(new HashSet<>(Arrays.asList("VAL1", "VAL\u0008")));
+        when(element.getValueSet()).thenReturn(new HashSet<String>(Arrays.asList("VAL1", "VAL\u0008")));
         ElementValidator v = AlphaNumericValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
         v.validate(dialect, element, "VAL\u0008", errors);
@@ -105,7 +105,7 @@ public class AlphaNumericValidatorTest {
         EDISimpleType element = mock(EDISimpleType.class);
         when(element.getMinLength()).thenReturn(4L);
         when(element.getMaxLength()).thenReturn(8L);
-        when(element.getValueSet()).thenReturn(new HashSet<>(Arrays.asList("VAL1", "VAL2")));
+        when(element.getValueSet()).thenReturn(new HashSet<String>(Arrays.asList("VAL1", "VAL2")));
         ElementValidator v = AlphaNumericValidator.getInstance();
         StringBuilder output = new StringBuilder();
         try {
@@ -121,7 +121,7 @@ public class AlphaNumericValidatorTest {
         EDISimpleType element = mock(EDISimpleType.class);
         when(element.getMinLength()).thenReturn(4L);
         when(element.getMaxLength()).thenReturn(8L);
-        when(element.getValueSet()).thenReturn(new HashSet<>(Arrays.asList("VAL1", "VAL2")));
+        when(element.getValueSet()).thenReturn(new HashSet<String>(Arrays.asList("VAL1", "VAL2")));
         ElementValidator v = AlphaNumericValidator.getInstance();
         StringBuilder output = new StringBuilder();
         v.format(dialect, element, "VAL1", output);

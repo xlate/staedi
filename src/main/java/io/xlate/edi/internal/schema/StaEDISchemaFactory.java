@@ -46,7 +46,7 @@ import io.xlate.edi.schema.SchemaFactory;
 
 public class StaEDISchemaFactory implements SchemaFactory {
 
-    private static XMLInputFactory factory = XMLInputFactory.newFactory();
+    private static XMLInputFactory factory = XMLInputFactory.newInstance();
 
     private static final String XMLNS = "http://xlate.io/EDISchema/v2";
     private static final String REFERR_UNDECLARED = "Type %s references undeclared %s with ref='%s'";

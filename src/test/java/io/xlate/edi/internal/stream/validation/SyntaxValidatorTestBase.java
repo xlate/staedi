@@ -3,7 +3,7 @@ package io.xlate.edi.internal.stream.validation;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 
 import io.xlate.edi.internal.stream.tokenization.EventHandler;
 import io.xlate.edi.internal.stream.validation.UsageNode;
@@ -19,7 +19,7 @@ abstract class SyntaxValidatorTestBase {
     protected EDIReference structureRef;
     protected EDIType structureType;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         syntax = mock(EDISyntaxRule.class);
         when(syntax.getType()).thenReturn(EDISyntaxRule.Type.CONDITIONAL);

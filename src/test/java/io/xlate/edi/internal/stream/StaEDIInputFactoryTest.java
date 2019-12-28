@@ -15,10 +15,14 @@
  ******************************************************************************/
 package io.xlate.edi.internal.stream;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import java.io.InputStream;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import io.xlate.edi.internal.stream.StaEDIInputFactory;
 import io.xlate.edi.schema.EDISchemaException;
@@ -28,52 +32,51 @@ import io.xlate.edi.stream.EDIInputFactory;
 import io.xlate.edi.stream.EDIStreamException;
 import io.xlate.edi.stream.EDIStreamReader;
 
+@SuppressWarnings("resource")
 public class StaEDIInputFactoryTest {
 
     @Test
     public void testNewFactory() {
         EDIInputFactory factory = EDIInputFactory.newFactory();
-        Assert.assertTrue(factory instanceof StaEDIInputFactory);
+        assertTrue(factory instanceof StaEDIInputFactory);
     }
 
     @Test
-    public void testCreateEDIStreamReader()
-                                            throws EDIStreamException {
-
+    public void testCreateEDIStreamReader() throws EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
-        InputStream stream = getClass().getClassLoader().getResourceAsStream("x12/simple997.edi");
+        InputStream stream = getClass().getResourceAsStream("/x12/simple997.edi");
         EDIStreamReader reader = factory.createEDIStreamReader(stream);
-        Assert.assertNotNull("Reader was null", reader);
+        assertNotNull(reader, "Reader was null");
     }
 
     @Test
     public void testCreateEDIStreamReaderEncoded() throws EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
-        InputStream stream = getClass().getClassLoader().getResourceAsStream("x12/simple997.edi");
+        InputStream stream = getClass().getResourceAsStream("/x12/simple997.edi");
         String encoding = "US-ASCII";
         EDIStreamReader reader = factory.createEDIStreamReader(stream, encoding);
-        Assert.assertNotNull("Reader was null", reader);
+        assertNotNull(reader, "Reader was null");
     }
 
     @Test
     public void testCreateEDIStreamReaderValidated() throws EDIStreamException, EDISchemaException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
-        InputStream stream = getClass().getClassLoader().getResourceAsStream("x12/simple997.edi");
+        InputStream stream = getClass().getResourceAsStream("/x12/simple997.edi");
         SchemaFactory schemaFactory = SchemaFactory.newFactory();
-        Schema schema = schemaFactory.createSchema(getClass().getClassLoader().getResource("x12/EDISchema997.xml"));
+        Schema schema = schemaFactory.createSchema(getClass().getResourceAsStream("/x12/EDISchema997.xml"));
         EDIStreamReader reader = factory.createEDIStreamReader(stream, schema);
-        Assert.assertNotNull("Reader was null", reader);
+        assertNotNull(reader, "Reader was null");
     }
 
     @Test
     public void testCreateEDIStreamReaderEncodedValidated() throws EDIStreamException, EDISchemaException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
-        InputStream stream = getClass().getClassLoader().getResourceAsStream("x12/simple997.edi");
+        InputStream stream = getClass().getResourceAsStream("/x12/simple997.edi");
         String encoding = "US-ASCII";
         SchemaFactory schemaFactory = SchemaFactory.newFactory();
-        Schema schema = schemaFactory.createSchema(getClass().getClassLoader().getResource("x12/EDISchema997.xml"));
+        Schema schema = schemaFactory.createSchema(getClass().getResourceAsStream("/x12/EDISchema997.xml"));
         EDIStreamReader reader = factory.createEDIStreamReader(stream, encoding, schema);
-        Assert.assertNotNull("Reader was null", reader);
+        assertNotNull(reader, "Reader was null");
     }
 
     @Test
@@ -82,25 +85,24 @@ public class StaEDIInputFactoryTest {
         EDIStreamReader reader = null;
         // EDIStreamFilter is a functional interface
         reader = factory.createFilteredReader(reader, (r) -> false);
-        Assert.assertNotNull("Reader was null", reader);
+        assertNotNull(reader, "Reader was null");
     }
 
     @Test
     public void testIsPropertySupported() {
         EDIInputFactory factory = EDIInputFactory.newFactory();
-        Assert.assertFalse("Reporter property not supported",
-                           factory.isPropertySupported("FOO"));
+        assertFalse(factory.isPropertySupported("FOO"), "Reporter property not supported");
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testGetPropertyUnsupported() {
         EDIInputFactory factory = EDIInputFactory.newFactory();
-        factory.getProperty("FOO");
+        assertThrows(IllegalArgumentException.class, () -> factory.getProperty("FOO"));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testSetPropertyUnsupported() {
         EDIInputFactory factory = EDIInputFactory.newFactory();
-        factory.setProperty("FOO", null);
+        assertThrows(IllegalArgumentException.class, () -> factory.setProperty("FOO", null));
     }
 }

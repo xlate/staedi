@@ -85,7 +85,7 @@ public interface EDIStreamReader extends Closeable, EDIStreamConstants {
      * Frees any resources associated with this Reader. This method does not
      * close the underlying input stream.
      *
-     * @throws EDIStreamException
+     * @throws IOException
      *             if there are errors freeing associated resources
      */
     @Override
@@ -131,6 +131,7 @@ public interface EDIStreamReader extends Closeable, EDIStreamConstants {
      * START_INTERCHANGE.
      *
      * @param schema
+     *             the schema instance to use for validation of control structures
      * @throws IllegalStateException
      *             when the current event type is not START_INTERCHANGE
      */
@@ -147,6 +148,7 @@ public interface EDIStreamReader extends Closeable, EDIStreamConstants {
      * before the end of the segment representing the beginning of the transaction.
      *
      * @param schema
+     *             the schema instance to use for validation of business transaction structures
      * @throws IllegalStateException
      *             when the reader is not positioned on the start transaction segment
      */
@@ -246,9 +248,9 @@ public interface EDIStreamReader extends Closeable, EDIStreamConstants {
      *            - the number of characters to copy
      * @return the number of characters actually copied
      * @throws IndexOutOfBoundsException
-     *             if targetStart < 0 or > than the length of target
+     *             if targetStart &lt; 0 or &gt; than the length of target
      * @throws IndexOutOfBoundsException
-     *             if length < 0 or targetStart + length > length of target
+     *             if length &lt; 0 or targetStart + length &gt; length of target
      * @throws NullPointerException
      *             if target is null
      */

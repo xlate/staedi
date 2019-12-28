@@ -25,6 +25,7 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 public class StaEDIInputFactory extends EDIInputFactory {
@@ -62,6 +63,8 @@ public class StaEDIInputFactory extends EDIInputFactory {
 
     @Override
     public EDIStreamReader createEDIStreamReader(InputStream stream, String encoding, Schema schema) throws EDIStreamException {
+        Objects.requireNonNull(stream);
+
         if (supportedCharsets.contains(encoding)) {
             return new StaEDIStreamReader(stream, encoding, schema, properties);
         }

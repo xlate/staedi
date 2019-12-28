@@ -15,6 +15,10 @@
  ******************************************************************************/
 package io.xlate.edi.internal.stream;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -23,12 +27,8 @@ import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.util.Map;
 
-import org.junit.Assert;
-import org.junit.FixMethodOrder;
-import org.junit.Test;
-import org.junit.runners.MethodSorters;
+import org.junit.jupiter.api.Test;
 
-import io.xlate.edi.internal.stream.StaEDIOutputFactory;
 import io.xlate.edi.stream.EDIInputFactory;
 import io.xlate.edi.stream.EDIOutputFactory;
 import io.xlate.edi.stream.EDIStreamConstants;
@@ -37,7 +37,7 @@ import io.xlate.edi.stream.EDIStreamException;
 import io.xlate.edi.stream.EDIStreamReader;
 import io.xlate.edi.stream.EDIStreamWriter;
 
-@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@SuppressWarnings("resource")
 public class StaEDIStreamWriterTest {
 
     private void writeHeader(EDIStreamWriter writer) throws EDIStreamException {
@@ -59,13 +59,13 @@ public class StaEDIStreamWriterTest {
     }
 
     @Test
-    public void testGetProperty() throws EDIStreamException {
+    public void testGetProperty() {
         EDIOutputFactory factory = EDIOutputFactory.newFactory();
         factory.setProperty(EDIStreamConstants.Delimiters.SEGMENT, '~');
         OutputStream stream = new ByteArrayOutputStream(4096);
         EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
         Object segmentTerminator = writer.getProperty(EDIStreamConstants.Delimiters.SEGMENT);
-        Assert.assertEquals(Character.valueOf('~'), segmentTerminator);
+        assertEquals(Character.valueOf('~'), segmentTerminator);
     }
 
     @Test
@@ -76,41 +76,38 @@ public class StaEDIStreamWriterTest {
             EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
             writer.startInterchange();
         } catch (Exception e) {
-            Assert.fail("Unexpected exception: " + e.getMessage());
+            fail("Unexpected exception: " + e.getMessage());
         }
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testStartInterchangeIllegalX12() throws EDIStreamException {
         EDIOutputFactory factory = EDIOutputFactory.newFactory();
         OutputStream stream = new ByteArrayOutputStream(4096);
         EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
         writer.startInterchange();
         writer.writeStartSegment("ISA");
-        writer.startInterchange();
-        Assert.fail("Exception expected");
+        assertThrows(IllegalStateException.class, () -> writer.startInterchange());
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testStartInterchangeIllegalEDIFACTA() throws EDIStreamException {
         EDIOutputFactory factory = EDIOutputFactory.newFactory();
         OutputStream stream = new ByteArrayOutputStream(4096);
         EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
         writer.startInterchange();
         writer.writeStartSegment("UNA");
-        writer.startInterchange();
-        Assert.fail("Exception expected");
+        assertThrows(IllegalStateException.class, () -> writer.startInterchange());
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testStartInterchangeIllegalEDIFACTB() throws EDIStreamException {
         EDIOutputFactory factory = EDIOutputFactory.newFactory();
         OutputStream stream = new ByteArrayOutputStream(4096);
         EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
         writer.startInterchange();
         writer.writeStartSegment("UNB");
-        writer.startInterchange();
-        Assert.fail("Exception expected");
+        assertThrows(IllegalStateException.class, () -> writer.startInterchange());
     }
 
     @Test
@@ -122,17 +119,16 @@ public class StaEDIStreamWriterTest {
             writer.startInterchange();
             writer.endInterchange();
         } catch (Exception e) {
-            Assert.fail("Unexpected exception: " + e.getMessage());
+            fail("Unexpected exception: " + e.getMessage());
         }
     }
 
-    @Test(expected = IllegalStateException.class)
-    public void testEndInterchangeIllegal() throws EDIStreamException {
+    @Test
+    public void testEndInterchangeIllegal() {
         EDIOutputFactory factory = EDIOutputFactory.newFactory();
         OutputStream stream = new ByteArrayOutputStream(4096);
         EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
-        writer.endInterchange();
-        Assert.fail("Exception expected");
+        assertThrows(IllegalStateException.class, () -> writer.endInterchange());
     }
 
     @Test
@@ -142,10 +138,10 @@ public class StaEDIStreamWriterTest {
         EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
         writer.startInterchange();
         writer.writeStartSegment("ISA");
-        Assert.assertEquals("ISA", stream.toString());
+        assertEquals("ISA", stream.toString());
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testWriteStartSegmentIllegal() throws EDIStreamException {
         EDIOutputFactory factory = EDIOutputFactory.newFactory();
         OutputStream stream = new ByteArrayOutputStream(4096);
@@ -153,8 +149,7 @@ public class StaEDIStreamWriterTest {
         writer.startInterchange();
         writer.writeStartSegment("ISA");
         writer.writeStartElement();
-        writer.writeStartSegment("GS");
-        Assert.fail("Exception expected");
+        assertThrows(IllegalStateException.class, () -> writer.writeStartSegment("GS"));
     }
 
     @Test
@@ -166,17 +161,16 @@ public class StaEDIStreamWriterTest {
         writer.writeStartSegment("ISA");
         writer.writeStartElement().writeElementData("E1").endElement();
         writer.writeEndSegment();
-        Assert.assertEquals("ISA*E1~", stream.toString());
+        assertEquals("ISA*E1~", stream.toString());
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testWriteEndSegmentIllegal() throws EDIStreamException {
         EDIOutputFactory factory = EDIOutputFactory.newFactory();
         OutputStream stream = new ByteArrayOutputStream(4096);
         EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
         writer.startInterchange();
-        writer.writeEndSegment();
-        Assert.fail("Exception expected");
+        assertThrows(IllegalStateException.class, () -> writer.writeEndSegment());
     }
 
     @Test
@@ -194,20 +188,19 @@ public class StaEDIStreamWriterTest {
               .endElement()
               .writeStartElement()
               .endElement();
-        Assert.assertEquals("ISA****", stream.toString());
+        assertEquals("ISA****", stream.toString());
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testWriteStartElementIllegal() throws EDIStreamException {
         EDIOutputFactory factory = EDIOutputFactory.newFactory();
         OutputStream stream = new ByteArrayOutputStream(4096);
         EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
         writer.startInterchange();
         writer.writeStartSegment("ISA");
-        writer.writeStartElement()
-              .startComponent()
-              .writeStartElement();
-        Assert.fail("Exception expected");
+        assertThrows(IllegalStateException.class, () -> writer.writeStartElement()
+                     .startComponent()
+                     .writeStartElement());
     }
 
     @Test
@@ -220,18 +213,17 @@ public class StaEDIStreamWriterTest {
         stream.reset();
         writer.writeStartSegment("BIN");
         writer.writeStartElementBinary().writeEndSegment();
-        Assert.assertEquals("BIN*~", stream.toString());
+        assertEquals("BIN*~", stream.toString());
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testWriteStartElementBinaryIllegal() throws IllegalStateException, EDIStreamException {
         EDIOutputFactory factory = EDIOutputFactory.newFactory();
         OutputStream stream = new ByteArrayOutputStream(4096);
         EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
         writer.startInterchange();
         writer.writeStartSegment("ISA");
-        writer.writeStartElement().writeStartElementBinary().writeEndSegment();
-        Assert.fail("Exception expected");
+        assertThrows(IllegalStateException.class, () -> writer.writeStartElement().writeStartElementBinary().writeEndSegment());
     }
 
     @Test
@@ -246,21 +238,20 @@ public class StaEDIStreamWriterTest {
               .endComponent()
               .startComponent()
               .writeEndSegment();
-        Assert.assertEquals("ISA*:~", stream.toString());
+        assertEquals("ISA*:~", stream.toString());
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testComponentIllegal() throws IllegalStateException, EDIStreamException {
         EDIOutputFactory factory = EDIOutputFactory.newFactory();
         OutputStream stream = new ByteArrayOutputStream(4096);
         EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
         writer.startInterchange();
         writer.writeStartSegment("ISA");
-        writer.writeStartElement()
+        assertThrows(IllegalStateException.class, () -> writer.writeStartElement()
               .startComponent()
               .startComponent() // Double
-              .writeEndSegment();
-        Assert.fail("Exception expected");
+              .writeEndSegment());
     }
 
     @Test
@@ -277,7 +268,7 @@ public class StaEDIStreamWriterTest {
               .writeRepeatElement()
               .writeElementData("R2")
               .writeEndSegment();
-        Assert.assertEquals("SEG*R1^R2~", stream.toString());
+        assertEquals("SEG*R1^R2~", stream.toString());
     }
 
     @Test
@@ -292,7 +283,7 @@ public class StaEDIStreamWriterTest {
         writer.writeEmptyElement();
         writer.writeEmptyElement();
         writer.writeEndSegment();
-        Assert.assertEquals("ISA****~", stream.toString());
+        assertEquals("ISA****~", stream.toString());
     }
 
     @Test
@@ -308,7 +299,7 @@ public class StaEDIStreamWriterTest {
         writer.writeEmptyComponent();
         writer.writeEmptyComponent();
         writer.writeEndSegment();
-        Assert.assertEquals("ISA*:::~", stream.toString());
+        assertEquals("ISA*:::~", stream.toString());
     }
 
     @Test
@@ -321,10 +312,10 @@ public class StaEDIStreamWriterTest {
         writer.writeStartElement();
         writer.writeElementData("TEST-ELEMENT");
         writer.writeEndSegment();
-        Assert.assertEquals("ISA*TEST-ELEMENT~", stream.toString());
+        assertEquals("ISA*TEST-ELEMENT~", stream.toString());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testWriteElementDataCharSequenceIllegal() throws EDIStreamException {
         EDIOutputFactory factory = EDIOutputFactory.newFactory();
         OutputStream stream = new ByteArrayOutputStream(4096);
@@ -333,9 +324,7 @@ public class StaEDIStreamWriterTest {
         writeHeader(writer);
         writer.writeStartSegment("GS");
         writer.writeStartElement();
-        writer.writeElementData("** BAD^ELEMENT **");
-        writer.writeEndSegment();
-        Assert.fail("Exception expected");
+        assertThrows(IllegalArgumentException.class, () -> writer.writeElementData("** BAD^ELEMENT **"));
     }
 
     @Test
@@ -348,10 +337,10 @@ public class StaEDIStreamWriterTest {
         writer.writeStartElement();
         writer.writeElementData(new char[] { 'C', 'H', 'A', 'R', 'S' }, 0, 5);
         writer.writeEndSegment();
-        Assert.assertEquals("ISA*CHARS~", stream.toString());
+        assertEquals("ISA*CHARS~", stream.toString());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testWriteElementDataCharArrayIllegal() throws EDIStreamException {
         EDIOutputFactory factory = EDIOutputFactory.newFactory();
         OutputStream stream = new ByteArrayOutputStream(4096);
@@ -360,8 +349,7 @@ public class StaEDIStreamWriterTest {
         writeHeader(writer);
         writer.writeStartSegment("GS");
         writer.writeStartElement();
-        writer.writeElementData(new char[] { 'C', 'H', '~', 'R', 'S' }, 0, 5);
-        Assert.fail("Exception expected");
+        assertThrows(IllegalArgumentException.class, () -> writer.writeElementData(new char[] { 'C', 'H', '~', 'R', 'S' }, 0, 5));
     }
 
     @Test
@@ -382,7 +370,7 @@ public class StaEDIStreamWriterTest {
         writer.writeBinaryData(binaryStream);
         writer.endElement();
         writer.writeEndSegment();
-        Assert.assertEquals("BIN*8*\n\u0000\u0001\u0002\u0003\u0004\u0005\t~", stream.toString());
+        assertEquals("BIN*8*\n\u0000\u0001\u0002\u0003\u0004\u0005\t~", stream.toString());
     }
 
     @Test
@@ -402,7 +390,7 @@ public class StaEDIStreamWriterTest {
         writer.writeBinaryData(binary, 0, binary.length);
         writer.endElement();
         writer.writeEndSegment();
-        Assert.assertEquals("BIN*11*0123456789A~", stream.toString());
+        assertEquals("BIN*11*0123456789A~", stream.toString());
     }
 
     @Test
@@ -423,7 +411,7 @@ public class StaEDIStreamWriterTest {
         writer.writeBinaryData(buffer);
         writer.endElement();
         writer.writeEndSegment();
-        Assert.assertEquals("BIN*14*BUSTMYBUFFERS\n~", stream.toString());
+        assertEquals("BIN*14*BUSTMYBUFFERS\n~", stream.toString());
     }
 
     @Test
@@ -434,8 +422,7 @@ public class StaEDIStreamWriterTest {
         InputStream source = new InputStream() {
             final InputStream delegate;
             {
-                delegate = getClass().getClassLoader().getResourceAsStream(
-                                                                           "x12/sample275_with_HL7_valid_BIN01.edi");
+                delegate = getClass().getResourceAsStream("/x12/sample275_with_HL7_valid_BIN01.edi");
             }
 
             @Override
@@ -492,7 +479,7 @@ public class StaEDIStreamWriterTest {
 
                     if ("BIN".equals(tag)) {
                         long binaryDataLength = Long.parseLong(text);
-                        Assert.assertEquals(2768, binaryDataLength);
+                        assertEquals(2768, binaryDataLength);
                         reader.setBinaryDataLength(binaryDataLength);
                     }
 
@@ -523,7 +510,7 @@ public class StaEDIStreamWriterTest {
             reader.close();
         }
 
-        Assert.assertEquals(expected.toString().trim(), result.toString().trim());
+        assertEquals(expected.toString().trim(), result.toString().trim());
     }
 
     @Test
@@ -534,7 +521,7 @@ public class StaEDIStreamWriterTest {
         InputStream source = new InputStream() {
             final InputStream delegate;
             {
-                delegate = getClass().getClassLoader().getResourceAsStream("EDIFACT/invoic_d97b_una.edi");
+                delegate = getClass().getResourceAsStream("/EDIFACT/invoic_d97b_una.edi");
             }
 
             @Override
@@ -624,7 +611,7 @@ public class StaEDIStreamWriterTest {
             reader.close();
         }
 
-        Assert.assertEquals(expected.toString().trim(), result.toString().trim());
+        assertEquals(expected.toString().trim(), result.toString().trim());
     }
 
     @Test
@@ -635,7 +622,7 @@ public class StaEDIStreamWriterTest {
         InputStream source = new InputStream() {
             final InputStream delegate;
             {
-                delegate = getClass().getClassLoader().getResourceAsStream("EDIFACT/invoic_d97b.edi");
+                delegate = getClass().getResourceAsStream("/EDIFACT/invoic_d97b.edi");
             }
 
             @Override
@@ -717,7 +704,7 @@ public class StaEDIStreamWriterTest {
             reader.close();
         }
 
-        Assert.assertEquals(expected.toString().trim(), result.toString().trim());
+        assertEquals(expected.toString().trim(), result.toString().trim());
     }
 
 }

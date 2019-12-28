@@ -1,8 +1,9 @@
 package io.xlate.edi.internal.stream.tokenization;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class DialectFactoryTest {
 
@@ -29,8 +30,8 @@ public class DialectFactoryTest {
         assertEquals("UNB", d1.getHeaderTag());
     }
 
-    @Test(expected = EDIException.class)
-    public void testInvalidTag() throws EDIException {
-        DialectFactory.getDialect(BAD, 1, 3);
+    @Test
+    public void testInvalidTag() {
+        assertThrows(EDIException.class, () -> DialectFactory.getDialect(BAD, 1, 3));
     }
 }

@@ -72,12 +72,12 @@ public class EDISchemaException extends Exception {
      * Construct an exception with the associated message, exception and
      * location.
      *
-     * @param th
-     *            a nested exception
-     * @param msg
+     * @param message
      *            the message to report
      * @param location
      *            the location of the error
+     * @param cause
+     *            a nested exception
      */
     public EDISchemaException(String message, Location location, Throwable cause) {
         super("EDISchemaException at [row,col]:[" + location.getLineNumber()
@@ -92,7 +92,7 @@ public class EDISchemaException extends Exception {
      * Construct an exception with the assocated message, exception and
      * location.
      *
-     * @param msg
+     * @param message
      *            the message to report
      * @param location
      *            the location of the error

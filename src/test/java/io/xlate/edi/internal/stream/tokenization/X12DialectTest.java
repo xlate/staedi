@@ -15,29 +15,25 @@
  ******************************************************************************/
 package io.xlate.edi.internal.stream.tokenization;
 
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
-import org.junit.Assert;
-import org.junit.Test;
-
-import io.xlate.edi.internal.stream.tokenization.CharacterSet;
-import io.xlate.edi.internal.stream.tokenization.Dialect;
-import io.xlate.edi.internal.stream.tokenization.DialectFactory;
-import io.xlate.edi.internal.stream.tokenization.EDIException;
-import io.xlate.edi.internal.stream.tokenization.X12Dialect;
+import org.junit.jupiter.api.Test;
 
 public class X12DialectTest {
 
     @Test
     public void testX12Dialect() throws EDIException {
         Dialect x12 = DialectFactory.getDialect("ISA".toCharArray(), 0, 3);
-        Assert.assertTrue("Incorrect type", x12 instanceof X12Dialect);
+        assertTrue(x12 instanceof X12Dialect, "Incorrect type");
     }
 
     @Test
     public void testGetEnvelopeTag() throws EDIException {
         Dialect x12 = DialectFactory.getDialect("ISA".toCharArray(), 0, 3);
-        Assert.assertEquals("Incorrect header tag", "ISA", x12.getHeaderTag());
+        assertEquals("ISA", x12.getHeaderTag(), "Incorrect header tag");
     }
 
     @Test
@@ -56,7 +52,7 @@ public class X12DialectTest {
         X12Dialect x12 = (X12Dialect) DialectFactory.getDialect("ISA".toCharArray(), 0, 3);
         x12.header = "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~".toCharArray();
         x12.initialize(new CharacterSet());
-        Assert.assertArrayEquals("Invalid version", new String[] { "00501" }, x12.getVersion());
+        assertArrayEquals(new String[] { "00501" }, x12.getVersion(), "Invalid version");
     }
 
 }
