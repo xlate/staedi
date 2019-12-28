@@ -17,7 +17,6 @@ package io.xlate.edi.internal.schema;
 
 import io.xlate.edi.schema.EDIReference;
 import io.xlate.edi.schema.EDIType;
-import io.xlate.edi.schema.Schema;
 
 class Reference implements EDIReference {
 
@@ -26,7 +25,6 @@ class Reference implements EDIReference {
     private EDIType referencedType;
     private int minOccurs;
     private int maxOccurs;
-    private Schema schema;
 
     Reference(String refId, String refTag, int minOccurs, int maxOccurs) {
         this.refId = refId;
@@ -55,10 +53,6 @@ class Reference implements EDIReference {
 
     @Override
     public EDIType getReferencedType() {
-        if (referencedType == null && schema != null) {
-            setReferencedType(schema.getType(refId));
-        }
-
         return referencedType;
     }
 
@@ -74,9 +68,5 @@ class Reference implements EDIReference {
     @Override
     public int getMaxOccurs() {
         return maxOccurs;
-    }
-
-    void setSchema(Schema schema) {
-        this.schema = schema;
     }
 }

@@ -72,7 +72,7 @@ public class CharacterSet {
                                                         _CNTRL, /* 1D GS */
                                                         _CNTRL, /* 1E RS */
                                                         _CNTRL, /* 1F US */
-                                                        _SPACE, /* 20 ␠ */
+                                                        _SPACE, /* 20 Space */
                                                         _OTHER, /* 21 ! */
                                                         _OTHER, /* 22 " */
                                                         _OTHER, /* 23 # */
@@ -237,21 +237,5 @@ public class CharacterSet {
 
     public static boolean isValid(int character) {
         return character >= 128 || prototype[character] != _INVLD;
-    }
-
-    @Override
-    public String toString() {
-        StringBuilder string = new StringBuilder();
-
-        for (int c = 0, m = list.length; c < m; c++) {
-            string.append(c);
-            string.append(") \t");
-            string.append((char) c);
-            string.append(": \t'");
-            string.append(list[c].toString());
-            string.append("'\n");
-        }
-
-        return string.toString();
     }
 }
