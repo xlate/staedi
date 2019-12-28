@@ -7,7 +7,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.IntStream;
 
@@ -21,7 +20,7 @@ import io.xlate.edi.internal.stream.tokenization.EDIException;
 import io.xlate.edi.schema.EDISimpleType;
 import io.xlate.edi.stream.EDIStreamValidationError;
 
-public class DateValidatorTest {
+public class DateValidatorTest implements ValueSetTester {
 
     Dialect dialect;
 
@@ -37,7 +36,7 @@ public class DateValidatorTest {
         EDISimpleType element = mock(EDISimpleType.class);
         when(element.getMinLength()).thenReturn(6L);
         when(element.getMaxLength()).thenReturn(8L);
-        when(element.getValueSet()).thenReturn(Collections.<String>emptySet());
+        when(element.getValueSet()).thenReturn(setOf());
         ElementValidator v = DateValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
         v.validate(dialect, element, "0901", errors);
@@ -51,7 +50,7 @@ public class DateValidatorTest {
         EDISimpleType element = mock(EDISimpleType.class);
         when(element.getMinLength()).thenReturn(6L);
         when(element.getMaxLength()).thenReturn(8L);
-        when(element.getValueSet()).thenReturn(Collections.<String>emptySet());
+        when(element.getValueSet()).thenReturn(setOf());
         ElementValidator v = DateValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
         v.validate(dialect, element, "0901000", errors); // Length 7
@@ -64,7 +63,7 @@ public class DateValidatorTest {
         EDISimpleType element = mock(EDISimpleType.class);
         when(element.getMinLength()).thenReturn(6L);
         when(element.getMaxLength()).thenReturn(8L);
-        when(element.getValueSet()).thenReturn(Collections.<String>emptySet());
+        when(element.getValueSet()).thenReturn(setOf());
         ElementValidator v = DateValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
         v.validate(dialect, element, "AAAA0901", errors);
@@ -77,7 +76,7 @@ public class DateValidatorTest {
         EDISimpleType element = mock(EDISimpleType.class);
         when(element.getMinLength()).thenReturn(6L);
         when(element.getMaxLength()).thenReturn(8L);
-        when(element.getValueSet()).thenReturn(Collections.<String>emptySet());
+        when(element.getValueSet()).thenReturn(setOf());
         ElementValidator v = DateValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
         v.validate(dialect, element, "20190901", errors);
@@ -89,7 +88,7 @@ public class DateValidatorTest {
         EDISimpleType element = mock(EDISimpleType.class);
         when(element.getMinLength()).thenReturn(6L);
         when(element.getMaxLength()).thenReturn(8L);
-        when(element.getValueSet()).thenReturn(Collections.<String>emptySet());
+        when(element.getValueSet()).thenReturn(setOf());
         ElementValidator v = DateValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
         v.validate(dialect, element, "191201", errors);
@@ -101,7 +100,7 @@ public class DateValidatorTest {
         EDISimpleType element = mock(EDISimpleType.class);
         when(element.getMinLength()).thenReturn(6L);
         when(element.getMaxLength()).thenReturn(8L);
-        when(element.getValueSet()).thenReturn(Collections.<String>emptySet());
+        when(element.getValueSet()).thenReturn(setOf());
         ElementValidator v = DateValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
         v.validate(dialect, element, "991231", errors);
@@ -114,7 +113,7 @@ public class DateValidatorTest {
         EDISimpleType element = mock(EDISimpleType.class);
         when(element.getMinLength()).thenReturn(6L);
         when(element.getMaxLength()).thenReturn(8L);
-        when(element.getValueSet()).thenReturn(Collections.<String>emptySet());
+        when(element.getValueSet()).thenReturn(setOf());
         ElementValidator v = DateValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
         v.validate(dialect, element, "00000132", errors);
@@ -130,7 +129,7 @@ public class DateValidatorTest {
         EDISimpleType element = mock(EDISimpleType.class);
         when(element.getMinLength()).thenReturn(6L);
         when(element.getMaxLength()).thenReturn(8L);
-        when(element.getValueSet()).thenReturn(Collections.<String>emptySet());
+        when(element.getValueSet()).thenReturn(setOf());
         ElementValidator v = DateValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
         v.validate(dialect, element, "20000229", errors);
@@ -146,7 +145,7 @@ public class DateValidatorTest {
         EDISimpleType element = mock(EDISimpleType.class);
         when(element.getMinLength()).thenReturn(6L);
         when(element.getMaxLength()).thenReturn(8L);
-        when(element.getValueSet()).thenReturn(Collections.<String>emptySet());
+        when(element.getValueSet()).thenReturn(setOf());
         ElementValidator v = DateValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
         v.validate(dialect, element, "20001301", errors);

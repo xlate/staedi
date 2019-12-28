@@ -8,7 +8,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -21,7 +20,7 @@ import io.xlate.edi.internal.stream.tokenization.EDIException;
 import io.xlate.edi.schema.EDISimpleType;
 import io.xlate.edi.stream.EDIStreamValidationError;
 
-public class TimeValidatorTest {
+public class TimeValidatorTest implements ValueSetTester {
 
     Dialect dialect;
 
@@ -37,7 +36,7 @@ public class TimeValidatorTest {
         EDISimpleType element = mock(EDISimpleType.class);
         when(element.getMinLength()).thenReturn(4L);
         when(element.getMaxLength()).thenReturn(8L);
-        when(element.getValueSet()).thenReturn(Collections.<String>emptySet());
+        when(element.getValueSet()).thenReturn(setOf());
         ElementValidator v = TimeValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
         v.validate(dialect, element, "09", errors);
@@ -51,7 +50,7 @@ public class TimeValidatorTest {
         EDISimpleType element = mock(EDISimpleType.class);
         when(element.getMinLength()).thenReturn(4L);
         when(element.getMaxLength()).thenReturn(8L);
-        when(element.getValueSet()).thenReturn(Collections.<String>emptySet());
+        when(element.getValueSet()).thenReturn(setOf());
         ElementValidator v = TimeValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
         v.validate(dialect, element, "1230599999", errors);
@@ -65,7 +64,7 @@ public class TimeValidatorTest {
         EDISimpleType element = mock(EDISimpleType.class);
         when(element.getMinLength()).thenReturn(4L);
         when(element.getMaxLength()).thenReturn(8L);
-        when(element.getValueSet()).thenReturn(Collections.<String>emptySet());
+        when(element.getValueSet()).thenReturn(setOf());
         ElementValidator v = TimeValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
         v.validate(dialect, element, "123059AA", errors);
@@ -78,7 +77,7 @@ public class TimeValidatorTest {
         EDISimpleType element = mock(EDISimpleType.class);
         when(element.getMinLength()).thenReturn(4L);
         when(element.getMaxLength()).thenReturn(8L);
-        when(element.getValueSet()).thenReturn(Collections.<String>emptySet());
+        when(element.getValueSet()).thenReturn(setOf());
         ElementValidator v = TimeValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
         v.validate(dialect, element, "12305900", errors);
@@ -104,7 +103,7 @@ public class TimeValidatorTest {
         EDISimpleType element = mock(EDISimpleType.class);
         when(element.getMinLength()).thenReturn(4L);
         when(element.getMaxLength()).thenReturn(8L);
-        when(element.getValueSet()).thenReturn(Collections.<String>emptySet());
+        when(element.getValueSet()).thenReturn(setOf());
         ElementValidator v = TimeValidator.getInstance();
         StringBuilder output = new StringBuilder();
         try {
@@ -120,7 +119,7 @@ public class TimeValidatorTest {
         EDISimpleType element = mock(EDISimpleType.class);
         when(element.getMinLength()).thenReturn(4L);
         when(element.getMaxLength()).thenReturn(8L);
-        when(element.getValueSet()).thenReturn(Collections.<String>emptySet());
+        when(element.getValueSet()).thenReturn(setOf());
         ElementValidator v = TimeValidator.getInstance();
         StringBuilder output = new StringBuilder();
         try {
@@ -136,7 +135,7 @@ public class TimeValidatorTest {
         EDISimpleType element = mock(EDISimpleType.class);
         when(element.getMinLength()).thenReturn(4L);
         when(element.getMaxLength()).thenReturn(8L);
-        when(element.getValueSet()).thenReturn(Collections.<String>emptySet());
+        when(element.getValueSet()).thenReturn(setOf());
         ElementValidator v = TimeValidator.getInstance();
         StringBuilder output = new StringBuilder();
         v.format(dialect, element, "123059", output);
@@ -148,7 +147,7 @@ public class TimeValidatorTest {
         EDISimpleType element = mock(EDISimpleType.class);
         when(element.getMinLength()).thenReturn(6L);
         when(element.getMaxLength()).thenReturn(8L);
-        when(element.getValueSet()).thenReturn(Collections.<String>emptySet());
+        when(element.getValueSet()).thenReturn(setOf());
         ElementValidator v = TimeValidator.getInstance();
         StringBuilder output = new StringBuilder();
         v.format(dialect, element, "1230", output);
