@@ -27,7 +27,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 import io.xlate.edi.internal.stream.ConstantsTest;
-import io.xlate.edi.internal.stream.InternalLocation;
+import io.xlate.edi.internal.stream.StaEDIStreamLocation;
 import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamValidationError;
 
@@ -181,7 +181,7 @@ public class LexerTest {
         segment = null;
         element = null;
 
-        final InternalLocation location = new InternalLocation();
+        final StaEDIStreamLocation location = new StaEDIStreamLocation();
         final Lexer lexer = new Lexer(stream, handler, location);
 
         lexer.parse();
@@ -202,7 +202,7 @@ public class LexerTest {
         segment = null;
         element = null;
 
-        final InternalLocation location = new InternalLocation();
+        final StaEDIStreamLocation location = new StaEDIStreamLocation();
         final Lexer lexer = new Lexer(stream, handler, location);
 
         lexer.parse();
@@ -219,7 +219,7 @@ public class LexerTest {
     public void testParseTagsX12() throws EDIException, IOException {
         InputStream stream = getClass().getResourceAsStream("/x12/simple997.edi");
         TestLexerEventHandler eventHandler = new TestLexerEventHandler();
-        final InternalLocation location = new InternalLocation();
+        final StaEDIStreamLocation location = new StaEDIStreamLocation();
         final Lexer lexer = new Lexer(stream, eventHandler, location);
         String last;
         int s = -1;
@@ -247,7 +247,7 @@ public class LexerTest {
     public void testParseTagsEDIFACTA() throws EDIException, IOException {
         InputStream stream = getClass().getResourceAsStream("/EDIFACT/invoic_d97b_una.edi");
         TestLexerEventHandler eventHandler = new TestLexerEventHandler();
-        final InternalLocation location = new InternalLocation();
+        final StaEDIStreamLocation location = new StaEDIStreamLocation();
         final Lexer lexer = new Lexer(stream, eventHandler, location);
         String last;
         int s = -1;
@@ -274,7 +274,7 @@ public class LexerTest {
     public void testParseTagsEDIFACTB() throws EDIException, IOException {
         InputStream stream = getClass().getResourceAsStream("/EDIFACT/invoic_d97b.edi");
         TestLexerEventHandler eventHandler = new TestLexerEventHandler();
-        final InternalLocation location = new InternalLocation();
+        final StaEDIStreamLocation location = new StaEDIStreamLocation();
         final Lexer lexer = new Lexer(stream, eventHandler, location);
         String last;
         int s = -1;

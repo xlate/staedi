@@ -17,24 +17,27 @@ package io.xlate.edi.internal.stream;
 
 import io.xlate.edi.stream.Location;
 
-public class ImmutableLocation implements Location {
+public class LocationView implements Location {
 
-    private final int lineNumber;
-    private final int columnNumber;
-    private final int characterOffset;
-    private final int segmentPosition;
-    private final int elementPosition;
-    private final int componentPosition;
-    private final int elementRepetition;
+    protected int lineNumber;
+    protected int columnNumber;
+    protected int characterOffset;
+    protected int segmentPosition;
+    protected int elementPosition;
+    protected int componentPosition;
+    protected int elementOccurrence;
 
-    public ImmutableLocation(Location source) {
+    public LocationView(Location source) {
         lineNumber = source.getLineNumber();
         columnNumber = source.getColumnNumber();
         characterOffset = source.getCharacterOffset();
         segmentPosition = source.getSegmentPosition();
         elementPosition = source.getElementPosition();
         componentPosition = source.getComponentPosition();
-        elementRepetition = source.getElementOccurrence();
+        elementOccurrence = source.getElementOccurrence();
+    }
+
+    protected LocationView() {
     }
 
     @Override
@@ -69,6 +72,6 @@ public class ImmutableLocation implements Location {
 
     @Override
     public int getElementOccurrence() {
-        return elementRepetition;
+        return elementOccurrence;
     }
 }

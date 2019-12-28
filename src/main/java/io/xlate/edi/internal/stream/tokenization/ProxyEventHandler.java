@@ -20,8 +20,8 @@ import java.nio.CharBuffer;
 import java.util.Iterator;
 import java.util.List;
 
-import io.xlate.edi.internal.stream.ImmutableLocation;
-import io.xlate.edi.internal.stream.InternalLocation;
+import io.xlate.edi.internal.stream.LocationView;
+import io.xlate.edi.internal.stream.StaEDIStreamLocation;
 import io.xlate.edi.internal.stream.validation.Validator;
 import io.xlate.edi.schema.EDIType;
 import io.xlate.edi.schema.Schema;
@@ -31,7 +31,7 @@ import io.xlate.edi.stream.Location;
 
 public class ProxyEventHandler implements EventHandler {
 
-    private final InternalLocation location;
+    private final StaEDIStreamLocation location;
 
     private Schema controlSchema;
     private Validator controlValidator;
@@ -54,7 +54,7 @@ public class ProxyEventHandler implements EventHandler {
     private int eventIndex = 0;
     private Dialect dialect;
 
-    public ProxyEventHandler(InternalLocation location, Schema controlSchema) {
+    public ProxyEventHandler(StaEDIStreamLocation location, Schema controlSchema) {
         this.location = location;
         setControlSchema(controlSchema);
     }
@@ -255,7 +255,7 @@ public class ProxyEventHandler implements EventHandler {
                 Iterator<EDIStreamValidationError> cursor = errors.iterator();
 
                 if (derivedComposite) {
-                    savedLocation = new ImmutableLocation(location);
+                    savedLocation = new LocationView(location);
                 }
 
                 while (cursor.hasNext()) {
@@ -280,12 +280,12 @@ public class ProxyEventHandler implements EventHandler {
             if (derivedComposite && text != null/* Not an empty composite */) {
                 this.compositeBegin(length == 0);
                 location.incrementComponentPosition();
-                savedLocation = new ImmutableLocation(location);
+                savedLocation = new LocationView(location);
             }
 
             if (!valid) {
                 List<EDIStreamValidationError> errors = validator().getElementErrors();
-                savedLocation = new ImmutableLocation(location);
+                savedLocation = new LocationView(location);
 
                 for (EDIStreamValidationError error : errors) {
                     enqueueEvent(error.getCategory(),
@@ -333,7 +333,7 @@ public class ProxyEventHandler implements EventHandler {
                              final int component,
                              final int repetition) {
 
-        InternalLocation copy = location.copy();
+        StaEDIStreamLocation copy = location.copy();
         copy.setElementPosition(element);
         copy.setElementOccurrence(repetition);
         copy.setComponentPosition(component);

@@ -22,8 +22,8 @@ import java.nio.CharBuffer;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
-import io.xlate.edi.internal.stream.ImmutableLocation;
-import io.xlate.edi.internal.stream.InternalLocation;
+import io.xlate.edi.internal.stream.LocationView;
+import io.xlate.edi.internal.stream.StaEDIStreamLocation;
 import io.xlate.edi.stream.Location;
 
 public class Lexer {
@@ -48,7 +48,7 @@ public class Lexer {
     private final Deque<Integer> lengthQueue = new ArrayDeque<>(20);
 
     private final InputStream stream;
-    private final InternalLocation location;
+    private final StaEDIStreamLocation location;
 
     private CharacterSet characters = new CharacterSet();
     private CharBuffer buffer = CharBuffer.allocate(4096);
@@ -66,7 +66,7 @@ public class Lexer {
     private Notifier en;
     private Notifier bn;
 
-    public Lexer(InputStream stream, EventHandler handler, InternalLocation location) {
+    public Lexer(InputStream stream, EventHandler handler, StaEDIStreamLocation location) {
         if (stream.markSupported()) {
             this.stream = stream;
         } else {
@@ -323,16 +323,16 @@ public class Lexer {
     }
 
     private void error(int code, CharSequence message) throws EDIException {
-        Location where = new ImmutableLocation(location);
+        Location where = new LocationView(location);
         throw new EDIException(code, message.toString(), where);
     }
 
     private void error(int code) throws EDIException {
-        Location where = new ImmutableLocation(location);
+        Location where = new LocationView(location);
         throw new EDIException(code, where);
     }
 
-    private static void updateLocation(State state, InternalLocation location) {
+    private static void updateLocation(State state, StaEDIStreamLocation location) {
         if (state == State.ELEMENT_REPEAT) {
             if (location.isRepeated()) {
                 location.incrementElementOccurrence();

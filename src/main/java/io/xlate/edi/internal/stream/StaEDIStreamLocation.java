@@ -17,19 +17,12 @@ package io.xlate.edi.internal.stream;
 
 import io.xlate.edi.stream.Location;
 
-public class InternalLocation implements Location {
+public class StaEDIStreamLocation extends LocationView implements Location {
 
-    private int lineNumber = -1;
-    private int columnNumber = -1;
-    private int characterOffset = -1;
-    private int segmentPosition = -1;
-    private int elementPosition = -1;
-    private int elementOccurrence = -1;
-    private int componentPosition = -1;
     private boolean repeated = false;
 
-    public InternalLocation copy() {
-        InternalLocation copy = new InternalLocation();
+    public StaEDIStreamLocation copy() {
+        StaEDIStreamLocation copy = new StaEDIStreamLocation();
         copy.lineNumber = this.lineNumber;
         copy.columnNumber = this.columnNumber;
         copy.characterOffset = this.characterOffset;
@@ -41,47 +34,12 @@ public class InternalLocation implements Location {
         return copy;
     }
 
-    @Override
-    public int getLineNumber() {
-        return lineNumber;
-    }
-
-    @Override
-    public int getColumnNumber() {
-        return columnNumber;
-    }
-
-    @Override
-    public int getCharacterOffset() {
-        return characterOffset;
-    }
-
-    @Override
-    public int getSegmentPosition() {
-        return segmentPosition;
-    }
-
-    @Override
-    public int getElementPosition() {
-        return elementPosition;
-    }
-
     public void setElementPosition(int elementPosition) {
         this.elementPosition = elementPosition;
     }
 
-    @Override
-    public int getElementOccurrence() {
-        return elementOccurrence;
-    }
-
     public void setElementOccurrence(int elementOccurrence) {
         this.elementOccurrence = elementOccurrence;
-    }
-
-    @Override
-    public int getComponentPosition() {
-        return componentPosition;
     }
 
     public void setComponentPosition(int componentPosition) {

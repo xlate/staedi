@@ -50,7 +50,7 @@ public class StaEDIStreamReader implements EDIStreamReader {
     private final String encoding;
     private Schema controlSchema;
     private final Map<String, Object> properties;
-    private final InternalLocation location = new InternalLocation();
+    private final StaEDIStreamLocation location = new StaEDIStreamLocation();
     private final ProxyEventHandler proxy;
     private final Lexer lexer;
 

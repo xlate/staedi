@@ -18,7 +18,7 @@ package io.xlate.edi.internal.stream.validation;
 import java.util.ArrayList;
 import java.util.List;
 
-import io.xlate.edi.internal.stream.InternalLocation;
+import io.xlate.edi.internal.stream.StaEDIStreamLocation;
 import io.xlate.edi.internal.stream.tokenization.Dialect;
 import io.xlate.edi.internal.stream.tokenization.EventHandler;
 import io.xlate.edi.schema.EDIComplexType;
@@ -399,7 +399,7 @@ public class Validator {
         return composite != null;
     }
 
-    public boolean validateElement(Dialect dialect, InternalLocation position, CharSequence value) {
+    public boolean validateElement(Dialect dialect, StaEDIStreamLocation position, CharSequence value) {
         if (!segmentExpected) {
             return true;
         }
@@ -486,7 +486,7 @@ public class Validator {
         return elementErrors.isEmpty();
     }
 
-    public void validateSyntax(EventHandler handler, final InternalLocation location, final boolean isComposite) {
+    public void validateSyntax(EventHandler handler, final StaEDIStreamLocation location, final boolean isComposite) {
         if (isComposite && composite == null) {
             // End composite but element is not composite in schema
             return;
