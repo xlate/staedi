@@ -30,7 +30,6 @@ import java.util.stream.Collectors;
 
 import io.xlate.edi.internal.schema.SchemaUtils;
 import io.xlate.edi.internal.stream.tokenization.Dialect;
-import io.xlate.edi.internal.stream.tokenization.InternalLocation;
 import io.xlate.edi.internal.stream.tokenization.Lexer;
 import io.xlate.edi.internal.stream.tokenization.ProxyEventHandler;
 import io.xlate.edi.schema.EDISchemaException;

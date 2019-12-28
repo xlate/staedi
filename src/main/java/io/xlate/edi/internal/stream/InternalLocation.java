@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  ******************************************************************************/
-package io.xlate.edi.internal.stream.tokenization;
+package io.xlate.edi.internal.stream;
 
 import io.xlate.edi.stream.Location;
 

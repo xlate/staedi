@@ -27,6 +27,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 import io.xlate.edi.internal.stream.ConstantsTest;
+import io.xlate.edi.internal.stream.InternalLocation;
 import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamValidationError;
 

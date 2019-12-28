@@ -22,6 +22,8 @@ import java.nio.CharBuffer;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
+import io.xlate.edi.internal.stream.ImmutableLocation;
+import io.xlate.edi.internal.stream.InternalLocation;
 import io.xlate.edi.stream.Location;
 
 public class Lexer {

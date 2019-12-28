@@ -20,6 +20,8 @@ import java.nio.CharBuffer;
 import java.util.Iterator;
 import java.util.List;
 
+import io.xlate.edi.internal.stream.ImmutableLocation;
+import io.xlate.edi.internal.stream.InternalLocation;
 import io.xlate.edi.internal.stream.validation.Validator;
 import io.xlate.edi.schema.EDIType;
 import io.xlate.edi.schema.Schema;

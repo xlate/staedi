@@ -18,9 +18,9 @@ package io.xlate.edi.internal.stream.validation;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.xlate.edi.internal.stream.InternalLocation;
 import io.xlate.edi.internal.stream.tokenization.Dialect;
 import io.xlate.edi.internal.stream.tokenization.EventHandler;
-import io.xlate.edi.internal.stream.tokenization.InternalLocation;
 import io.xlate.edi.schema.EDIComplexType;
 import io.xlate.edi.schema.EDIReference;
 import io.xlate.edi.schema.EDISimpleType;
