@@ -38,6 +38,13 @@ public class LocationView implements Location {
     }
 
     protected LocationView() {
+        lineNumber = -1;
+        columnNumber = -1;
+        characterOffset = -1;
+        segmentPosition = -1;
+        elementPosition = -1;
+        componentPosition = -1;
+        elementOccurrence = -1;
     }
 
     @Override
