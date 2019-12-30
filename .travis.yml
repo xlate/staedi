@@ -18,4 +18,4 @@ script:
 
 after_success:
   - # Runs the tests with coverage and then execute the SonarCloud analysis (Java 11+ only)
-  - [[ $(bc -l <<< "$(java -version 2>&1 | awk -F '\"' '/version/ {print $2}' | awk -F'.' '{print $1"."$2}') >= 11") -eq 1 ]] && mvn -Pcoverage -B verify sonar:sonar -Dsonar.projectKey=xlate_staedi || echo "Not Java 11"
+  - ./ci_coverage.sh
