@@ -20,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.net.URL;
 
@@ -84,4 +85,49 @@ public class StaEDISchemaFactoryTest {
         SchemaFactory factory = SchemaFactory.newFactory();
         assertThrows(IllegalArgumentException.class, () -> factory.setProperty("BAR", "BAZ"));
     }
+
+    @Test
+    public void testExceptionThrownWithoutSchema() {
+        SchemaFactory factory = SchemaFactory.newFactory();
+        InputStream stream = new ByteArrayInputStream("<noschema></noschema>".getBytes());
+        EDISchemaException thrown = assertThrows(EDISchemaException.class, () -> factory.createSchema(stream));
+        assertEquals("Unexpected XML element [noschema]", thrown.getOriginalMessage());
+    }
+
+    @Test
+    public void testExceptionThrownWithoutInterchangeAndTransaction() {
+        SchemaFactory factory = SchemaFactory.newFactory();
+        InputStream stream = new ByteArrayInputStream(("<schema xmlns='" + StaEDISchemaFactory.XMLNS + "'><random/></schema>").getBytes());
+        EDISchemaException thrown = assertThrows(EDISchemaException.class, () -> factory.createSchema(stream));
+        assertEquals("Unexpected XML element [{"+StaEDISchemaFactory.XMLNS+"}random]", thrown.getOriginalMessage());
+    }
+
+    @Test
+    public void testInterchangeRequiredAttributes() {
+        SchemaFactory factory = SchemaFactory.newFactory();
+        InputStream stream1 = new ByteArrayInputStream(("<schema xmlns='" + StaEDISchemaFactory.XMLNS + "'><interchange _header='ABC' trailer='XYZ' /></schema>").getBytes());
+        EDISchemaException thrown1 = assertThrows(EDISchemaException.class, () -> factory.createSchema(stream1));
+        assertEquals("Missing required attribute [header]", thrown1.getOriginalMessage());
+
+        InputStream stream2 = new ByteArrayInputStream(("<schema xmlns='" + StaEDISchemaFactory.XMLNS + "'><interchange header='ABC' _trailer='XYZ' /></schema>").getBytes());
+        EDISchemaException thrown2 = assertThrows(EDISchemaException.class, () -> factory.createSchema(stream2));
+        assertEquals("Missing required attribute [trailer]", thrown2.getOriginalMessage());
+
+    }
+
+    @Test
+    public void testUnexpectedElementBeforeSequence() {
+        SchemaFactory factory = SchemaFactory.newFactory();
+        InputStream stream = new ByteArrayInputStream((""
+                + "<schema xmlns='" + StaEDISchemaFactory.XMLNS + "'>"
+                        + "<interchange header='ABC' trailer='XYZ'>"
+                        + "<description><![CDATA[TEXT ALLOWED]]></description>"
+                        + "<unexpected></unexpected>"
+                        + "<sequence></sequence>"
+                        + "</interchange>"
+                        + "</schema>").getBytes());
+        EDISchemaException thrown = assertThrows(EDISchemaException.class, () -> factory.createSchema(stream));
+        assertEquals("Unexpected XML element [{"+StaEDISchemaFactory.XMLNS+"}unexpected]", thrown.getOriginalMessage());
+    }
+
 }

@@ -48,7 +48,7 @@ public class StaEDISchemaFactory implements SchemaFactory {
 
     private static XMLInputFactory factory = XMLInputFactory.newInstance();
 
-    private static final String XMLNS = "http://xlate.io/EDISchema/v2";
+    static final String XMLNS = "http://xlate.io/EDISchema/v2";
     private static final String REFERR_UNDECLARED = "Type %s references undeclared %s with ref='%s'";
     private static final String REFERR_ILLEGAL = "Type '%s' must not be referenced as '%s' in definition of type '%s'";
 
@@ -146,20 +146,20 @@ public class StaEDISchemaFactory implements SchemaFactory {
         throw new IllegalArgumentException("Unsupported property: " + name);
     }
 
-    static void unexpectedElement(QName element, XMLStreamReader reader) {
-        schemaException("Unexpected XML element [" + element.toString() + ']', reader);
+    static StaEDISchemaReadException schemaException(String message) {
+        return new StaEDISchemaReadException(message, null, null);
     }
 
-    static void schemaException(String message, XMLStreamReader reader, Throwable cause) {
-        throw new StaEDISchemaReadException(message, reader.getLocation(), cause);
+    static StaEDISchemaReadException schemaException(String message, XMLStreamReader reader) {
+        return schemaException(message, reader, null);
     }
 
-    static void schemaException(String message, XMLStreamReader reader) {
-        schemaException(message, reader, null);
+    static StaEDISchemaReadException unexpectedElement(QName element, XMLStreamReader reader) {
+        return schemaException("Unexpected XML element [" + element.toString() + ']', reader);
     }
 
-    static void schemaException(String message) {
-        throw new StaEDISchemaReadException(message, null, null);
+    static StaEDISchemaReadException schemaException(String message, XMLStreamReader reader, Throwable cause) {
+        return new StaEDISchemaReadException(message, reader.getLocation(), cause);
     }
 
     Map<String, EDIType> loadTypes(InputStream stream) throws EDISchemaException {
@@ -192,14 +192,14 @@ public class StaEDISchemaFactory implements SchemaFactory {
         element = reader.getName();
 
         if (!QN_SCHEMA.equals(element)) {
-            unexpectedElement(element, reader);
+            throw unexpectedElement(element, reader);
         }
 
         reader.nextTag();
         element = reader.getName();
 
         if (!QN_INTERCHANGE.equals(element) && !QN_TRANSACTION.equals(element)) {
-            unexpectedElement(element, reader);
+            throw unexpectedElement(element, reader);
         }
 
         return QN_INTERCHANGE.equals(element);
@@ -231,7 +231,7 @@ public class StaEDISchemaFactory implements SchemaFactory {
         element = reader.getName();
 
         if (!QN_SEQUENCE.equals(element)) {
-            unexpectedElement(element, reader);
+            throw unexpectedElement(element, reader);
         }
 
         reader.nextTag();
@@ -291,7 +291,7 @@ public class StaEDISchemaFactory implements SchemaFactory {
                 maxOccurs = 0;
                 break;
             default:
-                schemaException("Invalid value for 'use': " + use, reader);
+                throw schemaException("Invalid value for 'use': " + use, reader);
             }
         }
 
@@ -302,7 +302,7 @@ public class StaEDISchemaFactory implements SchemaFactory {
         QName nextElement = reader.getName();
 
         if (subelement != null && !subelement.equals(nextElement)) {
-            unexpectedElement(nextElement, reader);
+            throw unexpectedElement(nextElement, reader);
         }
 
         List<EDIReference> refs = new ArrayList<>(3);
@@ -330,7 +330,7 @@ public class StaEDISchemaFactory implements SchemaFactory {
         String refId = reader.getAttributeValue(null, attributeName);
 
         if (refId == null) {
-            schemaException("Missing required attribute [" + attributeName + ']', reader);
+            throw schemaException("Missing required attribute [" + attributeName + ']', reader);
         }
 
         return new Reference(refId, "segment", 1, 1);
@@ -375,17 +375,17 @@ public class StaEDISchemaFactory implements SchemaFactory {
             nameCheck(name, types, reader);
             types.put(name, buildSimpleType(reader));
         } else {
-            schemaException("Unexpected element: " + element, reader);
+            throw schemaException("Unexpected element: " + element, reader);
         }
     }
 
     void nameCheck(String name, Map<String, EDIType> types, XMLStreamReader reader) {
         if (name == null) {
-            schemaException("missing type name", reader);
+            throw schemaException("missing type name", reader);
         }
 
         if (types.containsKey(name)) {
-            schemaException("duplicate name: " + name, reader);
+            throw schemaException("duplicate name: " + name, reader);
         }
     }
 
@@ -403,13 +403,13 @@ public class StaEDISchemaFactory implements SchemaFactory {
             EDIType target = types.get(impl.getRefId());
 
             if (target == null) {
-                schemaException(String.format(REFERR_UNDECLARED, struct.getId(), impl.getRefTag(), impl.getRefId()));
+                throw schemaException(String.format(REFERR_UNDECLARED, struct.getId(), impl.getRefTag(), impl.getRefId()));
             }
 
             final EDIType.Type refType = target.getType();
 
             if (refType != refTypeId(impl.getRefTag())) {
-                schemaException(String.format(REFERR_ILLEGAL, impl.getRefId(), impl.getRefTag(), struct.getId()));
+                throw schemaException(String.format(REFERR_ILLEGAL, impl.getRefId(), impl.getRefTag(), struct.getId()));
             }
 
             switch (struct.getType()) {
@@ -464,7 +464,7 @@ public class StaEDISchemaFactory implements SchemaFactory {
             excp.append(". Allowed types: " + Arrays.stream(allowedTargets)
                                                     .map(Object::toString)
                                                     .collect(Collectors.joining(", ")));
-            schemaException(excp.toString());
+            throw schemaException(excp.toString());
         }
     }
 
@@ -483,7 +483,7 @@ public class StaEDISchemaFactory implements SchemaFactory {
             name = reader.getAttributeValue(null, "name");
 
             if (type == EDIType.Type.SEGMENT && !name.matches("^[A-Z][A-Z0-9]{1,2}$")) {
-                schemaException("Invalid segment name [" + name + ']', reader);
+                throw schemaException("Invalid segment name [" + name + ']', reader);
             }
         }
 
@@ -502,7 +502,7 @@ public class StaEDISchemaFactory implements SchemaFactory {
 
                 if (element.equals(QN_SEQUENCE)) {
                     if (sequence) {
-                        schemaException("multiple sequence elements", reader);
+                        throw schemaException("multiple sequence elements", reader);
                     }
                     sequence = true;
                     addReferences(reader, types, refs);
@@ -520,8 +520,7 @@ public class StaEDISchemaFactory implements SchemaFactory {
                     }
                 }
 
-                schemaException("Unexpected element " + element, reader);
-                break;
+                throw schemaException("Unexpected element " + element, reader);
 
             case XMLStreamConstants.END_ELEMENT:
                 if (reader.getName().equals(complexType)) {
@@ -570,7 +569,7 @@ public class StaEDISchemaFactory implements SchemaFactory {
             refId = reader.getAttributeValue(null, "code");
             //TODO: ensure not null
         } else {
-            unexpectedElement(element, reader);
+            throw unexpectedElement(element, reader);
         }
 
         String refTag = element.getLocalPart();
@@ -599,9 +598,9 @@ public class StaEDISchemaFactory implements SchemaFactory {
         try {
             typeInt = EDISyntaxRule.Type.valueOf(type.toUpperCase());
         } catch (NullPointerException e) {
-            schemaException("Invalid syntax 'type': [null]", reader, e);
+            throw schemaException("Invalid syntax 'type': [null]", reader, e);
         } catch (IllegalArgumentException e) {
-            schemaException("Invalid syntax 'type': [" + type + ']', reader, e);
+            throw schemaException("Invalid syntax 'type': [" + type + ']', reader, e);
         }
 
         SyntaxRestriction rule = new SyntaxRestriction(typeInt, buildSyntaxPositions(reader));
@@ -625,7 +624,7 @@ public class StaEDISchemaFactory implements SchemaFactory {
                     try {
                         positions.add(Integer.parseInt(position));
                     } catch (@SuppressWarnings("unused") NumberFormatException e) {
-                        schemaException("invalid position", reader);
+                        throw schemaException("invalid position", reader);
                     }
                 }
 
@@ -641,9 +640,7 @@ public class StaEDISchemaFactory implements SchemaFactory {
             }
         }
 
-        schemaException("missing end element " + QN_SYNTAX, reader);
-        // For compilation only
-        return Collections.emptyList();
+        throw schemaException("missing end element " + QN_SYNTAX, reader);
     }
 
     Element buildSimpleType(XMLStreamReader reader) throws XMLStreamException {
@@ -655,7 +652,7 @@ public class StaEDISchemaFactory implements SchemaFactory {
         try {
             intBase = EDISimpleType.Base.valueOf(base.toUpperCase());
         } catch (Exception e) {
-            schemaException("Invalid element 'type': [" + base + ']', reader, e);
+            throw schemaException("Invalid element 'type': [" + base + ']', reader, e);
         }
 
         int number = parseAttribute(reader, "number", Integer::parseInt, -1);
@@ -686,7 +683,7 @@ public class StaEDISchemaFactory implements SchemaFactory {
                 if (element.equals(QN_VALUE)) {
                     values.add(reader.getElementText());
                 } else if (!element.equals(QN_ENUMERATION)) {
-                    schemaException("unexpected element " + element, reader);
+                    throw schemaException("unexpected element " + element, reader);
                 }
 
                 break;
@@ -709,18 +706,15 @@ public class StaEDISchemaFactory implements SchemaFactory {
         try {
             return attr != null ? converter.apply(attr) : defaultValue;
         } catch (Exception e) {
-            schemaException("Invalid " + attrName, reader, e);
+            throw schemaException("Invalid " + attrName, reader, e);
         }
-
-        // Impossible
-        return null;
     }
 
     void requireEvent(int eventId, XMLStreamReader reader) {
         Integer event = reader.getEventType();
 
         if (event != eventId) {
-            schemaException("Unexpected XML event [" + event + ']', reader);
+            throw schemaException("Unexpected XML event [" + event + ']', reader);
         }
     }
 
@@ -737,14 +731,14 @@ public class StaEDISchemaFactory implements SchemaFactory {
             String text = reader.getText().trim();
 
             if (text.length() > 0) {
-                schemaException("Unexpected XML [" + text + "]", reader);
+                throw schemaException("Unexpected XML [" + text + "]", reader);
             }
             break;
         case XMLStreamConstants.COMMENT:
             // Ignore comments
             break;
         default:
-            schemaException("Unexpected XML event [" + event + ']', reader);
+            throw schemaException("Unexpected XML event [" + event + ']', reader);
         }
     }
 }
