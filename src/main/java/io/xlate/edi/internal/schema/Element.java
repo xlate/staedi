@@ -23,6 +23,7 @@ import io.xlate.edi.schema.EDISimpleType;
 
 class Element extends BasicType implements EDISimpleType {
 
+    private static final String TOSTRING_FORMAT = "id: %s, type: %s, base: %s, number: %d, minLength: %d, maxLength: %d, values: %s";
     private Base base;
     private int number;
     private long minLength;
@@ -44,20 +45,7 @@ class Element extends BasicType implements EDISimpleType {
 
     @Override
     public String toString() {
-        StringBuilder buffer = new StringBuilder("id: ");
-        buffer.append(getId());
-        buffer.append(", type: element");
-        buffer.append(", base: ");
-        buffer.append(base);
-        buffer.append(", number: ");
-        buffer.append(number);
-        buffer.append(", minLength: ");
-        buffer.append(minLength);
-        buffer.append(", maxLength: ");
-        buffer.append(maxLength);
-        buffer.append(", values: ");
-        buffer.append(values);
-        return buffer.toString();
+        return String.format(TOSTRING_FORMAT, getId(), getType(), base, number, minLength, maxLength, values);
     }
 
     @Override

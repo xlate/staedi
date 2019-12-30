@@ -15,6 +15,14 @@
  ******************************************************************************/
 package io.xlate.edi.internal.stream;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Supplier;
+
 import io.xlate.edi.internal.stream.tokenization.CharacterClass;
 import io.xlate.edi.internal.stream.tokenization.CharacterSet;
 import io.xlate.edi.internal.stream.tokenization.Dialect;
@@ -22,17 +30,10 @@ import io.xlate.edi.internal.stream.tokenization.DialectFactory;
 import io.xlate.edi.internal.stream.tokenization.EDIException;
 import io.xlate.edi.internal.stream.tokenization.EDIFACTDialect;
 import io.xlate.edi.internal.stream.tokenization.State;
-import io.xlate.edi.stream.EDIStreamException;
-import io.xlate.edi.stream.EDIStreamWriter;
 import io.xlate.edi.stream.EDIOutputFactory;
 import io.xlate.edi.stream.EDIStreamConstants.Delimiters;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.ByteBuffer;
-import java.util.HashMap;
-import java.util.Map;
+import io.xlate.edi.stream.EDIStreamException;
+import io.xlate.edi.stream.EDIStreamWriter;
 
 public class StaEDIStreamWriter implements EDIStreamWriter {
 
@@ -83,49 +84,23 @@ public class StaEDIStreamWriter implements EDIStreamWriter {
     }
 
     private void setupDelimiters() {
-        if (properties.containsKey(Delimiters.SEGMENT)) {
-            segmentTerminator = property(Delimiters.SEGMENT);
-        } else {
-            segmentTerminator = dialect.getSegmentTerminator();
-        }
+        segmentTerminator = getDelimiter(properties, Delimiters.SEGMENT, dialect::getSegmentTerminator);
+        dataElementSeparator = getDelimiter(properties, Delimiters.DATA_ELEMENT, dialect::getDataElementSeparator);
+        componentElementSeparator = getDelimiter(properties, Delimiters.COMPONENT_ELEMENT, dialect::getComponentElementSeparator);
+        repetitionSeparator = getDelimiter(properties, Delimiters.REPETITION, dialect::getRepetitionSeparator);
+        decimalMark = getDelimiter(properties, Delimiters.DECIMAL, dialect::getDecimalMark);
+        releaseIndicator = getDelimiter(properties, Delimiters.RELEASE, dialect::getReleaseIndicator);
+    }
 
-        if (properties.containsKey(Delimiters.DATA_ELEMENT)) {
-            dataElementSeparator = property(Delimiters.DATA_ELEMENT);
-        } else {
-            dataElementSeparator = dialect.getDataElementSeparator();
+    static char getDelimiter(Map<String, Object> properties, String key, Supplier<Character> defaultSupplier) {
+        if (properties.containsKey(key)) {
+            return (char) properties.get(key);
         }
-
-        if (properties.containsKey(Delimiters.COMPONENT_ELEMENT)) {
-            componentElementSeparator = property(Delimiters.COMPONENT_ELEMENT);
-        } else {
-            componentElementSeparator = dialect.getComponentElementSeparator();
-        }
-
-        if (properties.containsKey(Delimiters.REPETITION)) {
-            repetitionSeparator = property(Delimiters.REPETITION);
-        } else {
-            repetitionSeparator = dialect.getRepetitionSeparator();
-        }
-
-        if (properties.containsKey(Delimiters.DECIMAL)) {
-            decimalMark = property(Delimiters.DECIMAL);
-        } else {
-            decimalMark = dialect.getDecimalMark();
-        }
-
-        if (properties.containsKey(Delimiters.RELEASE)) {
-            releaseIndicator = property(Delimiters.RELEASE);
-        } else {
-            releaseIndicator = dialect.getReleaseIndicator();
-        }
+        return defaultSupplier.get();
     }
 
     private static void ensureArgs(int arrayLength, int start, int end) {
-        if (start < 0 || start > arrayLength) {
-            throw new IndexOutOfBoundsException();
-        }
-
-        if (end > arrayLength) {
+        if (start < 0 || start > arrayLength || end > arrayLength) {
             throw new IndexOutOfBoundsException();
         }
 

@@ -65,7 +65,7 @@
 
         <choice maxOccurs="unbounded">
           <element ref="tns:elementType" maxOccurs="unbounded" />
-          <element ref="tns:compositeType" maxOccurs="unbounded" />
+          <element ref="tns:compositeType" minOccurs="0" maxOccurs="unbounded" />
           <element ref="tns:segmentType" maxOccurs="unbounded" />
         </choice>
       </sequence>

@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import io.xlate.edi.schema.EDIComplexType;
 import io.xlate.edi.schema.EDIReference;
@@ -27,6 +28,7 @@ import io.xlate.edi.schema.EDIType;
 
 class Structure extends BasicType implements EDIComplexType {
 
+    private static final String TOSTRING_FORMAT = "id: %s, type: %s, code: %s, references: [%s], syntaxRestrictions: [%s]";
     private String code;
     private List<EDIReference> references;
     private List<EDISyntaxRule> syntaxRules;
@@ -43,18 +45,9 @@ class Structure extends BasicType implements EDIComplexType {
 
     @Override
     public String toString() {
-        StringBuilder buffer = new StringBuilder("id: ");
-        buffer.append(getId());
-        buffer.append(", type: ");
-        buffer.append(getType());
-        buffer.append(", code: ");
-        buffer.append(code);
-        buffer.append(", references: [");
-        references.forEach(r -> buffer.append('{').append(r).append('}'));
-        buffer.append("], syntaxRestrictions: [");
-        syntaxRules.forEach(r -> buffer.append('{').append(r).append('}'));
-        buffer.append(']');
-        return buffer.toString();
+        return String.format(TOSTRING_FORMAT, getId(), getType(), code,
+                             references.stream().map(r -> "{" + r + '}').collect(Collectors.joining(",")),
+                             syntaxRules.stream().map(r -> "{" + r + '}').collect(Collectors.joining(",")));
     }
 
     @Override

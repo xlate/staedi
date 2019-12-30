@@ -23,6 +23,7 @@ import io.xlate.edi.schema.EDISyntaxRule;
 
 class SyntaxRestriction implements EDISyntaxRule {
 
+    private static final String TOSTRING_FORMAT = "type: %s, positions: %s";
     private EDISyntaxRule.Type type;
     private List<Integer> positions;
 
@@ -40,11 +41,7 @@ class SyntaxRestriction implements EDISyntaxRule {
 
     @Override
     public String toString() {
-        StringBuilder buffer = new StringBuilder("type: ");
-        buffer.append(type.toString());
-        buffer.append(", positions: ");
-        buffer.append(positions);
-        return buffer.toString();
+        return String.format(TOSTRING_FORMAT, type, positions);
     }
 
     @Override
