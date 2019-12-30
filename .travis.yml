@@ -14,7 +14,8 @@ script:
   - # Build project, run tests, and generate JavaDocs
   - mvn -B test javadoc:javadoc
   - # Run the tests in OpenJDK 8
-  - jdk_switcher use openjdk8
+  - export JAVA_HOME=$HOME/openjdk8
+  - ~/bin/install-jdk.sh --install openjdk8 --target $JAVA_HOME
   - mvn -B test
 
 after_success:
