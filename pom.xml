@@ -51,6 +51,8 @@
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
+
+    <version.jakarta.xml.bind.api>2.3.2</version.jakarta.xml.bind.api>
   </properties>
 
   <build>
@@ -146,7 +148,7 @@
       <dependency>
         <groupId>jakarta.xml.bind</groupId>
         <artifactId>jakarta.xml.bind-api</artifactId>
-        <version>2.3.2</version>
+        <version>${version.jakarta.xml.bind.api}</version>
       </dependency>
 
       <!-- Testing -->
@@ -300,6 +302,13 @@
                 </goals>
               </execution>
             </executions>
+            <dependencies>
+              <dependency>
+                <groupId>jakarta.xml.bind</groupId>
+                <artifactId>jakarta.xml.bind-api</artifactId>
+                <version>${version.jakarta.xml.bind.api}</version>
+              </dependency>
+            </dependencies>
           </plugin>
         </plugins>
       </build>
