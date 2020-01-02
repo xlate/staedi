@@ -21,7 +21,7 @@ import io.xlate.edi.internal.stream.StaEDIOutputFactory;
 
 public abstract class EDIOutputFactory {
 
-	public static final String PRETTY_PRINT = "io.xlate.edi.stream.PRETTY_PRINT";
+    public static final String PRETTY_PRINT = "io.xlate.edi.stream.PRETTY_PRINT";
 
     /**
      * Create a new instance of the factory. This static method creates a new

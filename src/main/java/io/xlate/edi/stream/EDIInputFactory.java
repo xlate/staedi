@@ -37,19 +37,66 @@ public abstract class EDIInputFactory {
         return new StaEDIInputFactory();
     }
 
-    public abstract EDIStreamReader createEDIStreamReader(InputStream stream) throws EDIStreamException;
+    /**
+     * Creates a new {@link EDIStreamReader} using the given {@link InputStream} (with default encoding).
+     *
+     * @param stream {@link InputStream} from which the EDI data will be read
+     * @return a new {@link EDIStreamReader} which reads from the stream
+     */
+    public abstract EDIStreamReader createEDIStreamReader(InputStream stream);
 
+    /**
+     * Creates a new {@link EDIStreamReader} using the given {@link InputStream} and encoding.
+     *
+     * @param stream {@link InputStream} from which the EDI data will be read
+     * @param encoding character encoding of the stream
+     * @return a new {@link EDIStreamReader} which reads from the stream
+     * @throws EDIStreamException when encoding is not supported
+     */
     public abstract EDIStreamReader createEDIStreamReader(InputStream stream,
                                                           String encoding) throws EDIStreamException;
 
-    public abstract EDIStreamReader createEDIStreamReader(InputStream stream, Schema schema) throws EDIStreamException;
+    /**
+     * Creates a new {@link EDIStreamReader} using the given {@link InputStream} (with default encoding)
+     * which uses the {@link Schema} for validation of the input's control structures
+     * (interchange, group, transaction).
+     *
+     * Note that a separate schema for validation of messages/transactions may be passed directly to the
+     * {@link EDIStreamReader} once the type and version of the messages is known.
+     *
+     * @param stream {@link InputStream} from which the EDI data will be read
+     * @param schema {@link Schema} for control structure validation
+     * @return a new {@link EDIStreamReader} which reads from the stream
+     */
+    public abstract EDIStreamReader createEDIStreamReader(InputStream stream, Schema schema);
 
+    /**
+     * Creates a new {@link EDIStreamReader} using the given {@link InputStream} and encoding
+     * which uses the {@link Schema} for validation of the input's control structures
+     * (interchange, group, transaction).
+     *
+     * Note that a separate schema for validation of messages/transactions may be passed directly to the
+     * {@link EDIStreamReader} once the type and version of the messages is known.
+     *
+     * @param stream {@link InputStream} from which the EDI data will be read
+     * @param encoding character encoding of the stream
+     * @param schema {@link Schema} for control structure validation
+     * @return a new {@link EDIStreamReader} which reads from the stream
+     * @throws EDIStreamException when encoding is not supported
+     */
     public abstract EDIStreamReader createEDIStreamReader(InputStream stream,
                                                           String encoding,
                                                           Schema schema) throws EDIStreamException;
 
-    public abstract EDIStreamReader createFilteredReader(EDIStreamReader reader,
-                                                         EDIStreamFilter filter) throws EDIStreamException;
+    /**
+     * Creates a new {@link EDIStreamReader} by wrapping the given reader with the
+     * {@link EDIStreamFilter} filter.
+     *
+     * @param reader the reader to wrap
+     * @param filter a filter to wrap the given reader
+     * @return a new {@link EDIStreamReader} which uses filter
+     */
+    public abstract EDIStreamReader createFilteredReader(EDIStreamReader reader, EDIStreamFilter filter);
 
     /**
      * Query the set of properties that this factory supports.

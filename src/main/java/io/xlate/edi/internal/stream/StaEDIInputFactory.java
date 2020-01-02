@@ -47,8 +47,8 @@ public class StaEDIInputFactory extends EDIInputFactory {
     }
 
     @Override
-    public EDIStreamReader createEDIStreamReader(InputStream stream) throws EDIStreamException {
-        return createEDIStreamReader(stream, DEFAULT_ENCODING, null);
+    public EDIStreamReader createEDIStreamReader(InputStream stream) {
+        return createEDIStreamReader(stream, (Schema) null);
     }
 
     @Override
@@ -57,8 +57,8 @@ public class StaEDIInputFactory extends EDIInputFactory {
     }
 
     @Override
-    public EDIStreamReader createEDIStreamReader(InputStream stream, Schema schema) throws EDIStreamException {
-        return createEDIStreamReader(stream, DEFAULT_ENCODING, schema);
+    public EDIStreamReader createEDIStreamReader(InputStream stream, Schema schema) {
+        return new StaEDIStreamReader(stream, DEFAULT_ENCODING, schema, properties);
     }
 
     @Override
@@ -73,7 +73,7 @@ public class StaEDIInputFactory extends EDIInputFactory {
     }
 
     @Override
-    public EDIStreamReader createFilteredReader(EDIStreamReader reader, EDIStreamFilter filter) throws EDIStreamException {
+    public EDIStreamReader createFilteredReader(EDIStreamReader reader, EDIStreamFilter filter) {
         return new StaEDIFilteredStreamReader(reader, filter);
     }
 

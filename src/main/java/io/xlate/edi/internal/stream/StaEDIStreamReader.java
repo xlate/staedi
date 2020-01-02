@@ -130,7 +130,7 @@ public class StaEDIStreamReader implements EDIStreamReader {
         ensureOpen();
         ensureIncomplete();
 
-        if (EDIStreamEvent.START_INTERCHANGE == proxy.getEvent() && validateControlStructure()) {
+        if (EDIStreamEvent.START_INTERCHANGE == proxy.getEvent() && useInternalControlSchema()) {
             try {
                 setControlSchema(SchemaUtils.getControlSchema(getStandard(), getVersion()));
             } catch (EDISchemaException e) {
@@ -206,6 +206,7 @@ public class StaEDIStreamReader implements EDIStreamReader {
     @Override
     public void close() throws IOException {
         this.closed = true;
+        // Do not close the stream
     }
 
     @Override
@@ -408,7 +409,7 @@ public class StaEDIStreamReader implements EDIStreamReader {
 
     /**************************************************************************/
 
-    boolean validateControlStructure() {
+    boolean useInternalControlSchema() {
         if (this.controlSchema != null) {
             return false;
         }
