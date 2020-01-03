@@ -29,6 +29,10 @@ import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
+import io.xlate.edi.internal.schema.SchemaUtils;
+import io.xlate.edi.schema.EDISchemaException;
+import io.xlate.edi.schema.Schema;
+import io.xlate.edi.schema.SchemaFactory;
 import io.xlate.edi.stream.EDIInputFactory;
 import io.xlate.edi.stream.EDIOutputFactory;
 import io.xlate.edi.stream.EDIStreamConstants;
@@ -707,4 +711,125 @@ public class StaEDIStreamWriterTest {
         assertEquals(expected.toString().trim(), result.toString().trim());
     }
 
+    @Test
+    public void testValidatedSegmentTags() throws EDISchemaException, EDIStreamException {
+        EDIOutputFactory outputFactory = EDIOutputFactory.newFactory();
+        outputFactory.setProperty(StaEDIOutputFactory.PRETTY_PRINT, true);
+        ByteArrayOutputStream result = new ByteArrayOutputStream(16384);
+        EDIStreamWriter writer = outputFactory.createEDIStreamWriter(result);
+
+        Schema control = SchemaUtils.getControlSchema("X12", new String[] { "00501" });
+        writer.setControlSchema(control);
+
+        /*SchemaFactory schemaFactory = SchemaFactory.newFactory();
+        Schema transaction = schemaFactory.createSchema(getClass().getResource("/x12/EDISchema997.xml"));
+        writer.setTransactionSchema(transaction);*/
+
+        writer.startInterchange();
+        writeHeader(writer);
+        EDIStreamException exception = assertThrows(EDIStreamException.class, () -> writer.writeStartSegment("ST"));
+        assertEquals("Segment Error: ST; UNEXPECTED_SEGMENT", exception.getMessage());
+    }
+
+    @Test
+    public void testInputEquivalenceValidatedX12() throws Exception {
+        EDIInputFactory inputFactory = EDIInputFactory.newFactory();
+        final ByteArrayOutputStream expected = new ByteArrayOutputStream(16384);
+        Schema control = SchemaUtils.getControlSchema("X12", new String[] { "00501" });
+
+        SchemaFactory schemaFactory = SchemaFactory.newFactory();
+        Schema transaction = schemaFactory.createSchema(getClass().getResource("/x12/EDISchema997.xml"));
+
+        InputStream source = new InputStream() {
+            final InputStream delegate;
+            {
+                delegate = getClass().getResourceAsStream("/x12/simple997.edi");
+            }
+
+            @Override
+            public int read() throws IOException {
+                int value = delegate.read();
+
+                if (value != -1) {
+                    expected.write(value);
+                    return value;
+                }
+
+                return -1;
+            }
+        };
+        EDIStreamReader reader = inputFactory.createEDIStreamReader(source);
+
+        EDIOutputFactory outputFactory = EDIOutputFactory.newFactory();
+        outputFactory.setProperty(StaEDIOutputFactory.PRETTY_PRINT, true);
+        ByteArrayOutputStream result = new ByteArrayOutputStream(16384);
+        EDIStreamWriter writer = outputFactory.createEDIStreamWriter(result);
+        writer.setControlSchema(control);
+
+        EDIStreamEvent event;
+        String tag = null;
+        boolean composite = false;
+
+        try {
+            while (reader.hasNext()) {
+                event = reader.next();
+
+                switch (event) {
+                case START_INTERCHANGE:
+                    writer.startInterchange();
+                    break;
+                case END_INTERCHANGE:
+                    writer.endInterchange();
+                    break;
+                case START_SEGMENT:
+                    tag = reader.getText();
+                    writer.writeStartSegment(tag);
+                    break;
+                case END_SEGMENT:
+                    writer.writeEndSegment();
+
+                    if ("ST".equals(tag)) {
+                        writer.setTransactionSchema(transaction);
+                    }
+                    break;
+                case START_COMPOSITE:
+                    writer.writeStartElement();
+                    composite = true;
+                    break;
+                case END_COMPOSITE:
+                    writer.endElement();
+                    composite = false;
+                    break;
+                case ELEMENT_DATA:
+                    String text = reader.getText();
+
+                    if (composite) {
+                        writer.startComponent();
+                        writer.writeElementData(text);
+                        writer.endComponent();
+                    } else {
+                        if (reader.getLocation().getElementOccurrence() > 1) {
+                            writer.writeRepeatElement();
+                        } else {
+                            writer.writeStartElement();
+                        }
+                        writer.writeElementData(text);
+                        writer.endElement();
+                    }
+                    break;
+                case ELEMENT_DATA_BINARY:
+                    writer.writeStartElementBinary();
+                    writer.writeBinaryData(reader.getBinaryData());
+                    writer.endElement();
+                    break;
+                default:
+                    break;
+                }
+            }
+        } finally {
+            reader.close();
+        }
+
+        assertEquals(expected.toString().trim(), result.toString().trim());
+    }
 }

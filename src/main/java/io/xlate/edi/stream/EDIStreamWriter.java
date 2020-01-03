@@ -18,6 +18,8 @@ package io.xlate.edi.stream;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 
+import io.xlate.edi.schema.Schema;
+
 public interface EDIStreamWriter {
 
     /**
@@ -47,6 +49,41 @@ public interface EDIStreamWriter {
      *             if there are errors flushing the cache
      */
     void flush() throws EDIStreamException;
+
+    /**
+     * <p>
+     * Sets the schema to be used for validation of the control structure for
+     * this stream writer. This schema will be used to validate interchange,
+     * group, and transaction/message envelopes.
+     * <p>
+     * Calls to this method are only valid before the interchange is started.
+     *
+     * @param controlSchema
+     *             the schema instance to use for validation of control structures
+     * @throws IllegalStateException
+     *             when the writer is not in its initial state
+     *
+     * @since 1.1
+     */
+    void setControlSchema(Schema controlSchema);
+
+    /**
+     * <p>
+     * Sets the schema to be used for validation of the business transaction for
+     * this stream writer. This schema will be used to validate only the
+     * contents of a transaction/message, <em>not including</em> the begin/end control
+     * structures.
+     * <p>
+     * This method may be called at any time. However, when non-null, the writer will make
+     * use of the transaction schema for output validation. It is the responsibility of the
+     * caller to set the transaction schema to null at the end of the business transaction.
+     *
+     * @param transactionSchema
+     *             the schema instance to use for validation of business transaction structures
+     *
+     * @since 1.1
+     */
+    void setTransactionSchema(Schema transactionSchema);
 
     EDIStreamWriter startInterchange() throws EDIStreamException;
 

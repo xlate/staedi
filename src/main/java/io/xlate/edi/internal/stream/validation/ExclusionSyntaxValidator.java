@@ -15,7 +15,7 @@
  ******************************************************************************/
 package io.xlate.edi.internal.stream.validation;
 
-import io.xlate.edi.internal.stream.tokenization.EventHandler;
+import io.xlate.edi.internal.stream.tokenization.ValidationEventHandler;
 import io.xlate.edi.schema.EDISyntaxRule;
 
 class ExclusionSyntaxValidator implements SyntaxValidator {
@@ -30,7 +30,7 @@ class ExclusionSyntaxValidator implements SyntaxValidator {
     }
 
     @Override
-    public void validate(EDISyntaxRule syntax, UsageNode structure, EventHandler handler) {
+    public void validate(EDISyntaxRule syntax, UsageNode structure, ValidationEventHandler handler) {
         SyntaxStatus status = scanSyntax(syntax, structure.getChildren());
 
         if (status.elementCount > 1) {

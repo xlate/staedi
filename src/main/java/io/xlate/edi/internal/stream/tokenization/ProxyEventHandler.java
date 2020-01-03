@@ -20,6 +20,7 @@ import java.nio.CharBuffer;
 import java.util.Iterator;
 import java.util.List;
 
+import io.xlate.edi.internal.stream.CharArraySequence;
 import io.xlate.edi.internal.stream.LocationView;
 import io.xlate.edi.internal.stream.StaEDIStreamLocation;
 import io.xlate.edi.internal.stream.validation.Validator;
@@ -167,9 +168,7 @@ public class ProxyEventHandler implements EventHandler {
 
     @Override
     public void segmentBegin(char[] text, int start, int length) {
-        segmentHolder.text = text;
-        segmentHolder.start = start;
-        segmentHolder.length = length;
+        segmentHolder.set(text, start, length);
 
         Validator validator = validator();
 
@@ -193,7 +192,7 @@ public class ProxyEventHandler implements EventHandler {
     @Override
     public void segmentEnd() {
         if (validator() != null) {
-            validator().validateSyntax(this, location, false);
+            validator().validateSyntax(this, this, location, false);
         }
 
         enqueueEvent(EDIStreamEvent.END_SEGMENT, EDIStreamValidationError.NONE, segmentHolder, null, null);
@@ -224,7 +223,7 @@ public class ProxyEventHandler implements EventHandler {
     @Override
     public void compositeEnd(boolean isNil) {
         if (validator() != null && !isNil) {
-            validator().validateSyntax(this, location, true);
+            validator().validateSyntax(this, this, location, true);
         }
         enqueueEvent(EDIStreamEvent.END_COMPOSITE, EDIStreamValidationError.NONE, "", null);
     }
@@ -235,9 +234,7 @@ public class ProxyEventHandler implements EventHandler {
         Location savedLocation = null;
         String code = null;
 
-        elementHolder.text = text;
-        elementHolder.start = start;
-        elementHolder.length = length;
+        elementHolder.set(text, start, length);
 
         if (validator() != null) {
             final boolean composite = location.getComponentPosition() > -1;
@@ -408,10 +405,8 @@ public class ProxyEventHandler implements EventHandler {
         eventCount++;
     }
 
-    private static CharBuffer put(CharBuffer buffer,
-                                  CharArraySequence holder) {
-
-        int length = holder != null ? holder.length : 50;
+    private static CharBuffer put(CharBuffer buffer, CharArraySequence holder) {
+        final int length = holder != null ? holder.length() : 50;
 
         if (buffer == null || buffer.capacity() < length) {
             buffer = CharBuffer.allocate(length);
@@ -419,8 +414,8 @@ public class ProxyEventHandler implements EventHandler {
 
         buffer.clear();
 
-        if (holder != null && holder.text != null) {
-            buffer.put(holder.text, holder.start, holder.length);
+        if (holder != null && length > 0) {
+            holder.putToBuffer(buffer);
         }
 
         buffer.flip();
@@ -442,66 +437,5 @@ public class ProxyEventHandler implements EventHandler {
         buffer.flip();
 
         return buffer;
-    }
-
-    private static class CharArraySequence implements CharSequence, Comparable<CharSequence> {
-        char[] text;
-        int start;
-        int length;
-
-        @Override
-        public int length() {
-            return length;
-        }
-
-        @Override
-        public char charAt(int index) {
-            if (index < 0 || index >= length) {
-                throw new StringIndexOutOfBoundsException(index);
-            }
-
-            return text[start + index];
-        }
-
-        @Override
-        public CharSequence subSequence(int start, int end) {
-            if (start < 0) {
-                throw new IndexOutOfBoundsException(Integer.toString(start));
-            }
-            if (end > length) {
-                throw new IndexOutOfBoundsException(Integer.toString(end));
-            }
-            if (start > end) {
-                throw new IndexOutOfBoundsException(Integer.toString(end - start));
-            }
-            return ((start == 0) && (end == length))
-                    ? this
-                    : new String(text, this.start + start, end - start);
-        }
-
-        @Override
-        public int compareTo(CharSequence other) {
-            int len1 = length;
-            int len2 = other.length();
-            int n = Math.min(len1, len2);
-            char[] v1 = text;
-            int i = start;
-            int j = 0;
-
-            while (n-- != 0) {
-                char c1 = v1[i++];
-                char c2 = other.charAt(j++);
-                if (c1 != c2) {
-                    return c1 - c2;
-                }
-            }
-
-            return len1 - len2;
-        }
-
-        @Override
-        public String toString() {
-            return new String(text, start, length);
-        }
     }
 }

@@ -5,8 +5,7 @@ import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.BeforeEach;
 
-import io.xlate.edi.internal.stream.tokenization.EventHandler;
-import io.xlate.edi.internal.stream.validation.UsageNode;
+import io.xlate.edi.internal.stream.tokenization.ValidationEventHandler;
 import io.xlate.edi.schema.EDIReference;
 import io.xlate.edi.schema.EDISyntaxRule;
 import io.xlate.edi.schema.EDIType;
@@ -14,7 +13,7 @@ import io.xlate.edi.schema.EDIType;
 abstract class SyntaxValidatorTestBase {
 
     protected EDISyntaxRule syntax;
-    protected EventHandler handler;
+    protected ValidationEventHandler handler;
     protected UsageNode structure;
     protected EDIReference structureRef;
     protected EDIType structureType;
@@ -24,7 +23,7 @@ abstract class SyntaxValidatorTestBase {
         syntax = mock(EDISyntaxRule.class);
         when(syntax.getType()).thenReturn(EDISyntaxRule.Type.CONDITIONAL);
 
-        handler = mock(EventHandler.class);
+        handler = mock(ValidationEventHandler.class);
 
         structureType = mock(EDIType.class);
         when(structureType.getType()).thenReturn(EDIType.Type.SEGMENT);

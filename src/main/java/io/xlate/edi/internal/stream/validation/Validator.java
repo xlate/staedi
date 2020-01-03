@@ -20,7 +20,8 @@ import java.util.List;
 
 import io.xlate.edi.internal.stream.StaEDIStreamLocation;
 import io.xlate.edi.internal.stream.tokenization.Dialect;
-import io.xlate.edi.internal.stream.tokenization.EventHandler;
+import io.xlate.edi.internal.stream.tokenization.ElementDataHandler;
+import io.xlate.edi.internal.stream.tokenization.ValidationEventHandler;
 import io.xlate.edi.schema.EDIComplexType;
 import io.xlate.edi.schema.EDIReference;
 import io.xlate.edi.schema.EDISimpleType;
@@ -143,14 +144,14 @@ public class Validator {
         return startSegment;
     }
 
-    private void completeLoops(EventHandler handler, int d, UsageNode node) {
+    private void completeLoops(ValidationEventHandler handler, int d, UsageNode node) {
         while (this.depth < d--) {
             node = node.getParent();
             handler.loopEnd(node.getCode());
         }
     }
 
-    public void validateSegment(EventHandler handler, CharSequence tag) {
+    public void validateSegment(ValidationEventHandler handler, CharSequence tag) {
         segmentExpected = true;
 
         final int startDepth = this.depth;
@@ -271,7 +272,7 @@ public class Validator {
         handleMissingMandatory(handler);
     }
 
-    boolean handleSegment(CharSequence tag, UsageNode current, int startDepth, UsageNode startNode, EventHandler handler) {
+    boolean handleSegment(CharSequence tag, UsageNode current, int startDepth, UsageNode startNode, ValidationEventHandler handler) {
         if (!current.getId().contentEquals(tag)) {
             /*
              * The schema segment does not match the segment tag found
@@ -319,7 +320,7 @@ public class Validator {
         return true;
     }
 
-    boolean handleLoop(CharSequence tag, UsageNode current, int startDepth, UsageNode startNode, EventHandler handler) {
+    boolean handleLoop(CharSequence tag, UsageNode current, int startDepth, UsageNode startNode, ValidationEventHandler handler) {
         if (!current.getFirstChild().getId().contentEquals(tag)) {
             return false;
         }
@@ -337,7 +338,7 @@ public class Validator {
         return true;
     }
 
-    private void handleMissingMandatory(EventHandler handler) {
+    private void handleMissingMandatory(ValidationEventHandler handler) {
         for (String id : mandatory) {
             handler.segmentError(id, EDIStreamValidationError.MANDATORY_SEGMENT_MISSING);
         }
@@ -486,7 +487,7 @@ public class Validator {
         return elementErrors.isEmpty();
     }
 
-    public void validateSyntax(EventHandler handler, final StaEDIStreamLocation location, final boolean isComposite) {
+    public void validateSyntax(ElementDataHandler handler, ValidationEventHandler validationHandler, final StaEDIStreamLocation location, final boolean isComposite) {
         if (isComposite && composite == null) {
             // End composite but element is not composite in schema
             return;
@@ -523,7 +524,7 @@ public class Validator {
         for (EDISyntaxRule rule : structure.getSyntaxRules()) {
             final EDISyntaxRule.Type ruleType = rule.getType();
             SyntaxValidator validator = SyntaxValidator.getInstance(ruleType);
-            validator.validate(rule, structure, handler);
+            validator.validate(rule, structure, validationHandler);
         }
     }
 }

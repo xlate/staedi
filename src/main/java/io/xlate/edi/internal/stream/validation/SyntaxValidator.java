@@ -18,7 +18,7 @@ package io.xlate.edi.internal.stream.validation;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import io.xlate.edi.internal.stream.tokenization.EventHandler;
+import io.xlate.edi.internal.stream.tokenization.ValidationEventHandler;
 import io.xlate.edi.schema.EDISyntaxRule;
 import io.xlate.edi.schema.EDIType;
 import io.xlate.edi.stream.EDIStreamEvent;
@@ -73,7 +73,7 @@ interface SyntaxValidator {
         return status;
     }
 
-    default void signalConditionError(EDISyntaxRule syntax, UsageNode structure, EventHandler handler) {
+    default void signalConditionError(EDISyntaxRule syntax, UsageNode structure, ValidationEventHandler handler) {
         final List<UsageNode> children = structure.getChildren();
         final int limit = children.size() + 1;
 
@@ -99,7 +99,7 @@ interface SyntaxValidator {
         }
     }
 
-    default void signalExclusionError(EDISyntaxRule syntax, UsageNode structure, EventHandler handler) {
+    default void signalExclusionError(EDISyntaxRule syntax, UsageNode structure, ValidationEventHandler handler) {
         final List<UsageNode> children = structure.getChildren();
         final int limit = children.size() + 1;
         int tally = 0;
@@ -130,5 +130,5 @@ interface SyntaxValidator {
         return position;
     }
 
-    void validate(EDISyntaxRule syntax, UsageNode structure, EventHandler handler);
+    void validate(EDISyntaxRule syntax, UsageNode structure, ValidationEventHandler handler);
 }
