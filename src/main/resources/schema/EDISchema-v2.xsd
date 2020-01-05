@@ -24,7 +24,6 @@
     <attribute name="title" type="string" use="optional" />
   </complexType>
 
-  <!-- Types -->
   <complexType name="controlType" abstract="true">
     <complexContent>
       <extension base="tns:baseType">
@@ -51,6 +50,37 @@
   <simpleType name="nameType">
     <restriction base="ID">
       <pattern value="[A-Z][A-Z0-9]+" />
+    </restriction>
+  </simpleType>
+
+  <simpleType name="useType">
+    <restriction base="string">
+      <enumeration value="required" />
+      <enumeration value="optional" />
+      <enumeration value="prohibited" />
+    </restriction>
+  </simpleType>
+
+  <simpleType name="syntaxType">
+    <restriction base="string">
+      <enumeration value="single" />
+      <enumeration value="paired" />
+      <enumeration value="required" />
+      <enumeration value="exclusion" />
+      <enumeration value="conditional" />
+      <enumeration value="list" />
+    </restriction>
+  </simpleType>
+
+  <simpleType name="elementBaseType">
+    <restriction base="string">
+      <enumeration value="binary" />
+      <enumeration value="date" />
+      <enumeration value="decimal" />
+      <enumeration value="identifier" />
+      <enumeration value="numeric" />
+      <enumeration value="string" />
+      <enumeration value="time" />
     </restriction>
   </simpleType>
 
@@ -91,29 +121,13 @@
                               <complexType>
                                 <complexContent>
                                   <extension base="tns:controlType">
-                                    <attribute name="use" default="optional">
-                                      <simpleType>
-                                        <restriction base="string">
-                                          <enumeration value="required" />
-                                          <enumeration value="optional" />
-                                          <enumeration value="prohibited" />
-                                        </restriction>
-                                      </simpleType>
-                                    </attribute>
+                                    <attribute name="use" type="tns:useType" default="optional" />
                                   </extension>
                                 </complexContent>
                               </complexType>
                             </element>
                           </sequence>
-                          <attribute name="use" default="optional">
-                            <simpleType>
-                              <restriction base="string">
-                                <enumeration value="required" />
-                                <enumeration value="optional" />
-                                <enumeration value="prohibited" />
-                              </restriction>
-                            </simpleType>
-                          </attribute>
+                          <attribute name="use" type="tns:useType" default="optional" />
                         </extension>
                       </complexContent>
                     </complexType>
@@ -123,15 +137,7 @@
                     <complexType>
                       <complexContent>
                         <extension base="tns:controlType">
-                          <attribute name="use" default="optional">
-                            <simpleType>
-                              <restriction base="string">
-                                <enumeration value="required" />
-                                <enumeration value="optional" />
-                                <enumeration value="prohibited" />
-                              </restriction>
-                            </simpleType>
-                          </attribute>
+                          <attribute name="use" type="tns:useType" default="optional" />
                         </extension>
                       </complexContent>
                     </complexType>
@@ -192,12 +198,12 @@
             </simpleType>
           </attribute>
 
-          <attribute name="minOccurs" type="unsignedInt" default="0">
+          <attribute name="minOccurs" type="nonNegativeInteger" default="0">
             <annotation>
               <documentation>The minimum number of times a loop may repeat. A value of 0 (zero) indicates that the loop is optional.</documentation>
             </annotation>
           </attribute>
-          <attribute name="maxOccurs" type="unsignedInt" default="1">
+          <attribute name="maxOccurs" type="nonNegativeInteger" default="1">
             <annotation>
               <documentation>The maximum number of times a loop may repeat.</documentation>
             </annotation>
@@ -226,20 +232,7 @@
             </simpleType>
           </attribute>
 
-          <attribute name="base" use="required">
-            <simpleType>
-              <restriction base="NCName">
-                <enumeration value="binary" />
-                <enumeration value="date" />
-                <enumeration value="decimal" />
-                <enumeration value="identifier" />
-                <enumeration value="numeric" />
-                <enumeration value="string" />
-                <enumeration value="time" />
-              </restriction>
-            </simpleType>
-          </attribute>
-
+          <attribute name="base" type="tns:elementBaseType" use="required" />
           <attribute name="minLength" type="nonNegativeInteger" default="1" />
           <attribute name="maxLength" type="nonNegativeInteger" default="1" />
         </extension>
@@ -372,18 +365,7 @@
       <sequence>
         <element ref="tns:position" maxOccurs="unbounded" />
       </sequence>
-      <attribute name="type">
-        <simpleType>
-          <restriction base="NCName">
-            <enumeration value="single" />
-            <enumeration value="paired" />
-            <enumeration value="required" />
-            <enumeration value="exclusion" />
-            <enumeration value="conditional" />
-            <enumeration value="list" />
-          </restriction>
-        </simpleType>
-      </attribute>
+      <attribute name="type" type="tns:syntaxType" />
     </complexType>
   </element>
 
