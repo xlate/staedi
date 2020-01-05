@@ -58,22 +58,6 @@ public class EDIException extends EDIStreamException {
                               "EDIE009 - Invalid time");
     }
 
-    public EDIException() {
-        super();
-    }
-
-    public EDIException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    EDIException(Integer id, Throwable cause) {
-        super(exceptionMessages.get(id), cause);
-    }
-
-    EDIException(Integer id, Throwable cause, String message) {
-        super(exceptionMessages.get(id) + message, cause);
-    }
-
     public EDIException(String message) {
         super(message);
     }

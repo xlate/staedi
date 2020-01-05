@@ -24,12 +24,6 @@ public class EDISchemaException extends Exception {
     protected final transient Location location;
     protected final String message;
 
-    public EDISchemaException() {
-        super();
-        this.location = null;
-        this.message = null;
-    }
-
     /**
      * Construct an exception with the associated message.
      *

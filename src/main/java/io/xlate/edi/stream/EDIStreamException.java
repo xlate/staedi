@@ -21,11 +21,6 @@ public class EDIStreamException extends Exception {
 
     protected final transient Location location;
 
-    public EDIStreamException() {
-        super();
-        location = null;
-    }
-
     /**
      * Construct an exception with the associated message.
      *
