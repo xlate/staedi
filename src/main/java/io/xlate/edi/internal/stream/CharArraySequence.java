@@ -3,14 +3,22 @@ package io.xlate.edi.internal.stream;
 import java.nio.CharBuffer;
 
 public class CharArraySequence implements CharSequence, Comparable<CharSequence> {
-    private char[] text;
-    private int start;
-    private int length;
+    private static final char[] EMPTY = {};
+
+    private char[] text = EMPTY;
+    private int start = 0;
+    private int length = 0;
 
     public void set(char[] text, int start, int length) {
         this.text = text;
         this.start = start;
         this.length = length;
+    }
+
+    public void clear() {
+        this.text = EMPTY;
+        this.start = 0;
+        this.length = 0;
     }
 
     public void putToBuffer(CharBuffer buffer) {

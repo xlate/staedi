@@ -38,8 +38,8 @@ public class LocationView implements Location {
     }
 
     protected LocationView() {
-        lineNumber = -1;
-        columnNumber = -1;
+        lineNumber = 1;
+        columnNumber = 0;
         characterOffset = -1;
         segmentPosition = -1;
         elementPosition = -1;

@@ -46,8 +46,13 @@ public class StaEDIStreamLocation extends LocationView implements Location {
         this.componentPosition = componentPosition;
     }
 
-    public void incrementOffset() {
+    public void incrementOffset(int value) {
         this.characterOffset++;
+        if (value == '\n') {
+            this.lineNumber++;
+            this.columnNumber = 0;
+        }
+        this.columnNumber++;
     }
 
     public void incrementSegmentPosition() {

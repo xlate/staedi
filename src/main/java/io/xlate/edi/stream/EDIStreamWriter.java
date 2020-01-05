@@ -85,6 +85,18 @@ public interface EDIStreamWriter {
      */
     void setTransactionSchema(Schema transactionSchema);
 
+    /**
+     * Return the current location of the writer. If the Location is unknown
+     * the processor should return an implementation of Location that returns -1
+     * for the location values. The location information is only valid until
+     * the next item is written to the output.
+     *
+     * @return current location of the writer
+     *
+     * @since 1.1
+     */
+    Location getLocation();
+
     EDIStreamWriter startInterchange() throws EDIStreamException;
 
     EDIStreamWriter endInterchange() throws EDIStreamException;

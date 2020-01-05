@@ -141,7 +141,7 @@ public class Lexer {
                 int input = stream.read();
 
                 if (input != -1) {
-                    location.incrementOffset();
+                    location.incrementOffset(input);
                     return input;
                 }
                 state = State.ELEMENT_END_BINARY;
@@ -163,7 +163,7 @@ public class Lexer {
         boolean eventsReady = false;
 
         while (!eventsReady && (input = stream.read()) > -1) {
-            location.incrementOffset();
+            location.incrementOffset(input);
 
             clazz = characters.getClass(input);
             previous = state;

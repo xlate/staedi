@@ -15,7 +15,6 @@
  ******************************************************************************/
 package io.xlate.edi.internal.stream;
 
-import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.CharBuffer;
@@ -62,12 +61,7 @@ public class StaEDIStreamReader implements EDIStreamReader {
             String encoding,
             Schema schema,
             Map<String, Object> properties) {
-        if (stream instanceof BufferedInputStream) {
-            this.stream = stream;
-        } else {
-            this.stream = new BufferedInputStream(stream);
-        }
-
+        this.stream = stream;
         this.encoding = encoding;
         this.controlSchema = schema;
         this.properties = new HashMap<>(properties);
