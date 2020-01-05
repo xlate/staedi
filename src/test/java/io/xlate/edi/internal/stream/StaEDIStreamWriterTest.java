@@ -19,8 +19,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
+import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -738,20 +740,18 @@ public class StaEDIStreamWriterTest {
         Schema control = SchemaUtils.getControlSchema("X12", new String[] { "00501" });
 
         SchemaFactory schemaFactory = SchemaFactory.newFactory();
-        Schema transaction = schemaFactory.createSchema(getClass().getResource("/x12/EDISchema997.xml"));
+        Schema transaction = schemaFactory.createSchema(getClass().getResource("/x12/EDISchema999.xml"));
+        final InputStream delegate = new BufferedInputStream(getClass().getResourceAsStream("/x12/simple999.edi"));
 
-        InputStream source = new InputStream() {
-            final InputStream delegate;
-            {
-                delegate = getClass().getResourceAsStream("/x12/simple997.edi");
-            }
-
+        InputStream source = new FilterInputStream(delegate) {
             @Override
             public int read() throws IOException {
                 int value = delegate.read();
 
                 if (value != -1) {
                     expected.write(value);
+                    System.out.write(value);
+                    System.out.flush();
                     return value;
                 }
 
@@ -765,6 +765,7 @@ public class StaEDIStreamWriterTest {
         ByteArrayOutputStream result = new ByteArrayOutputStream(16384);
         EDIStreamWriter writer = outputFactory.createEDIStreamWriter(result);
         writer.setControlSchema(control);
+        writer.setTransactionSchema(transaction);
 
         EDIStreamEvent event;
         String tag = null;
@@ -787,13 +788,13 @@ public class StaEDIStreamWriterTest {
                     break;
                 case END_SEGMENT:
                     writer.writeEndSegment();
-
-                    if ("ST".equals(tag)) {
-                        writer.setTransactionSchema(transaction);
-                    }
                     break;
                 case START_COMPOSITE:
-                    writer.writeStartElement();
+                    if (reader.getLocation().getElementOccurrence() > 1) {
+                        writer.writeRepeatElement();
+                    } else {
+                        writer.writeStartElement();
+                    }
                     composite = true;
                     break;
                 case END_COMPOSITE:
@@ -804,17 +805,27 @@ public class StaEDIStreamWriterTest {
                     String text = reader.getText();
 
                     if (composite) {
-                        writer.startComponent();
-                        writer.writeElementData(text);
-                        writer.endComponent();
+                        if (text == null || text.isEmpty()) {
+                            writer.writeEmptyComponent();
+                        } else {
+                            writer.startComponent();
+                            writer.writeElementData(text);
+                            writer.endComponent();
+                        }
                     } else {
                         if (reader.getLocation().getElementOccurrence() > 1) {
                             writer.writeRepeatElement();
+                            writer.writeElementData(text);
+                            writer.endElement();
                         } else {
-                            writer.writeStartElement();
+                            if (text == null || text.isEmpty()) {
+                                writer.writeEmptyElement();
+                            } else {
+                                writer.writeStartElement();
+                                writer.writeElementData(text);
+                                writer.endElement();
+                            }
                         }
-                        writer.writeElementData(text);
-                        writer.endElement();
                     }
                     break;
                 case ELEMENT_DATA_BINARY:
@@ -822,9 +833,20 @@ public class StaEDIStreamWriterTest {
                     writer.writeBinaryData(reader.getBinaryData());
                     writer.endElement();
                     break;
+                case START_GROUP:
+                case START_TRANSACTION:
+                case END_TRANSACTION:
+                case END_GROUP:
+                    // Ignore control loops
+                    continue;
                 default:
                     break;
                 }
+
+                //assertEquals(reader.getLocation().getSegmentPosition(), writer.getLocation().getSegmentPosition(), "Segment position mismatch");
+                //assertEquals(reader.getLocation().getElementPosition(), writer.getLocation().getElementPosition(), "Element position mismatch");
+                //assertEquals(reader.getLocation().getElementOccurrence(), writer.getLocation().getElementOccurrence(), "Element occurrence mismatch");
+                //assertEquals(reader.getLocation().getComponentPosition(), writer.getLocation().getComponentPosition(), "Component position mismatch");
             }
         } finally {
             reader.close();

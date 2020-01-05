@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<schema xmlns="http://xlate.io/EDISchema/v2">
+    <transaction>
+        <sequence>
+            <segment ref="AK1" minOccurs="1"/>
+            <loop code="L0001" maxOccurs="99999">
+                <sequence>
+                    <segment ref="AK2"/>
+                    <loop code="L0002" maxOccurs="99999">
+                        <sequence>
+                            <segment ref="IK3"/>
+                            <segment ref="CTX" maxOccurs="10"/>
+                            <loop code="L0003" maxOccurs="99999">
+                                <sequence>
+                                    <segment ref="IK4"/>
+                                    <segment ref="CTX" maxOccurs="10"/>
+                                </sequence>
+                            </loop>
+                        </sequence>
+                    </loop>
+                    <segment ref="IK5" minOccurs="1"/>
+                </sequence>
+            </loop>
+            <segment ref="AK9" minOccurs="1"/>
+        </sequence>
+    </transaction>
+    <elementType name="AK101" base="string" minLength="2" maxLength="2"/>
+    <elementType name="AK102" base="decimal" maxLength="9"/>
+    <elementType name="AK103" base="string" maxLength="12"/>
+    <elementType name="AK201" base="string" minLength="3" maxLength="3"/>
+    <elementType name="AK202" base="string" minLength="4" maxLength="9"/>
+    <elementType name="AK203" base="string" maxLength="35"/>
+    <elementType name="AK901" base="string"/>
+    <elementType name="AK902" base="decimal" maxLength="6"/>
+    <elementType name="AK903" base="decimal" maxLength="6"/>
+    <elementType name="AK904" base="decimal" maxLength="6"/>
+    <elementType name="AK905" base="string" maxLength="3"/>
+    <elementType name="AK906" base="string" maxLength="3"/>
+    <elementType name="AK907" base="string" maxLength="3"/>
+    <elementType name="AK908" base="string" maxLength="3"/>
+    <elementType name="AK909" base="string" maxLength="3"/>
+    <elementType name="CTX0101" base="string" maxLength="35"/>
+    <elementType name="CTX0102" base="string" maxLength="35"/>
+    <elementType name="CTX02" base="string" minLength="2" maxLength="3"/>
+    <elementType name="CTX03" base="decimal" maxLength="10"/>
+    <elementType name="CTX04" base="string" maxLength="4"/>
+    <elementType name="CTX0501" base="decimal" maxLength="2"/>
+    <elementType name="CTX0502" base="decimal" maxLength="2"/>
+    <elementType name="CTX0503" base="decimal" maxLength="4"/>
+    <elementType name="CTX0601" base="string" maxLength="4"/>
+    <elementType name="CTX0602" base="string" maxLength="4"/>
+    <elementType name="IK301" base="string" minLength="2" maxLength="3"/>
+    <elementType name="IK302" base="decimal" maxLength="10"/>
+    <elementType name="IK303" base="string" maxLength="4"/>
+    <elementType name="IK304" base="string" maxLength="3"/>
+    <elementType name="IK40101" base="decimal" maxLength="2"/>
+    <elementType name="IK40102" base="decimal" maxLength="2"/>
+    <elementType name="IK40103" base="decimal" maxLength="4"/>
+    <elementType name="IK402" base="string" maxLength="4"/>
+    <elementType name="IK403" base="string" maxLength="3"/>
+    <elementType name="IK404" base="string" maxLength="99"/>
+    <elementType name="IK501" base="string"/>
+    <elementType name="IK502" base="string" maxLength="3"/>
+    <elementType name="IK503" base="string" maxLength="3"/>
+    <elementType name="IK504" base="string" maxLength="3"/>
+    <elementType name="IK505" base="string" maxLength="3"/>
+    <elementType name="IK506" base="string" maxLength="3"/>
+    <compositeType name="CTX01">
+        <sequence>
+            <element ref="CTX0101" minOccurs="1"/>
+            <element ref="CTX0102"/>
+        </sequence>
+    </compositeType>
+    <compositeType name="CTX05">
+        <sequence>
+            <element ref="CTX0501" minOccurs="1"/>
+            <element ref="CTX0502"/>
+            <element ref="CTX0503"/>
+        </sequence>
+    </compositeType>
+    <compositeType name="CTX06">
+        <sequence>
+            <element ref="CTX0601" minOccurs="1"/>
+            <element ref="CTX0602"/>
+        </sequence>
+    </compositeType>
+    <compositeType name="IK401">
+        <sequence>
+            <element ref="IK40101" minOccurs="1"/>
+            <element ref="IK40102"/>
+            <element ref="IK40103"/>
+        </sequence>
+    </compositeType>
+    <segmentType name="AK1">
+        <sequence>
+            <element ref="AK101" minOccurs="1"/>
+            <element ref="AK102" minOccurs="1"/>
+            <element ref="AK103"/>
+        </sequence>
+    </segmentType>
+    <segmentType name="AK2">
+        <sequence>
+            <element ref="AK201" minOccurs="1"/>
+            <element ref="AK202" minOccurs="1"/>
+            <element ref="AK203"/>
+        </sequence>
+    </segmentType>
+    <segmentType name="AK9">
+        <sequence>
+            <element ref="AK901" minOccurs="1"/>
+            <element ref="AK902" minOccurs="1"/>
+            <element ref="AK903" minOccurs="1"/>
+            <element ref="AK904" minOccurs="1"/>
+            <element ref="AK905"/>
+            <element ref="AK906"/>
+            <element ref="AK907"/>
+            <element ref="AK908"/>
+            <element ref="AK909"/>
+        </sequence>
+    </segmentType>
+    <segmentType name="CTX">
+        <sequence>
+            <composite ref="CTX01" minOccurs="1" maxOccurs="10"/>
+            <element ref="CTX02"/>
+            <element ref="CTX03"/>
+            <element ref="CTX04"/>
+            <composite ref="CTX05"/>
+            <composite ref="CTX06"/>
+        </sequence>
+    </segmentType>
+    <segmentType name="IK3">
+        <sequence>
+            <element ref="IK301" minOccurs="1"/>
+            <element ref="IK302" minOccurs="1"/>
+            <element ref="IK303"/>
+            <element ref="IK304"/>
+        </sequence>
+    </segmentType>
+    <segmentType name="IK4">
+        <sequence>
+            <composite ref="IK401" minOccurs="1"/>
+            <element ref="IK402"/>
+            <element ref="IK403" minOccurs="1"/>
+            <element ref="IK404"/>
+        </sequence>
+    </segmentType>
+    <segmentType name="IK5">
+        <sequence>
+            <element ref="IK501" minOccurs="1"/>
+            <element ref="IK502"/>
+            <element ref="IK503"/>
+            <element ref="IK504"/>
+            <element ref="IK505"/>
+            <element ref="IK506"/>
+        </sequence>
+    </segmentType>
+</schema>
