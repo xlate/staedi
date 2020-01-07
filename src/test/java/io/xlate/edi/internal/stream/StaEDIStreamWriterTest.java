@@ -770,6 +770,8 @@ public class StaEDIStreamWriterTest {
         EDIStreamEvent event;
         String tag = null;
         boolean composite = false;
+        int componentMod = 0;
+        int elementMod = 0;
 
         try {
             while (reader.hasNext()) {
@@ -808,9 +810,19 @@ public class StaEDIStreamWriterTest {
                         if (text == null || text.isEmpty()) {
                             writer.writeEmptyComponent();
                         } else {
-                            writer.startComponent();
-                            writer.writeElementData(text);
-                            writer.endComponent();
+                            switch (++componentMod % 3) {
+                            case 0:
+                                writer.startComponent();
+                                writer.writeElementData(text);
+                                writer.endComponent();
+                                break;
+                            case 1:
+                                writer.writeComponent(text);
+                                break;
+                            case 2:
+                                writer.writeComponent(text.toCharArray(), 0, text.length());
+                                break;
+                            }
                         }
                     } else {
                         if (reader.getLocation().getElementOccurrence() > 1) {
@@ -821,9 +833,19 @@ public class StaEDIStreamWriterTest {
                             if (text == null || text.isEmpty()) {
                                 writer.writeEmptyElement();
                             } else {
-                                writer.writeStartElement();
-                                writer.writeElementData(text);
-                                writer.endElement();
+                                switch (++elementMod % 3) {
+                                case 0:
+                                    writer.writeStartElement();
+                                    writer.writeElementData(text);
+                                    writer.endElement();
+                                    break;
+                                case 1:
+                                    writer.writeElement(text);
+                                    break;
+                                case 2:
+                                    writer.writeElement(text.toCharArray(), 0, text.length());
+                                    break;
+                                }
                             }
                         }
                     }
