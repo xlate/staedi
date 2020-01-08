@@ -332,7 +332,7 @@ public class Lexer {
         throw new EDIException(code, where);
     }
 
-    private static void updateLocation(State state, StaEDIStreamLocation location) {
+    public static void updateLocation(State state, StaEDIStreamLocation location) {
         if (state == State.ELEMENT_REPEAT) {
             if (location.isRepeated()) {
                 location.incrementElementOccurrence();

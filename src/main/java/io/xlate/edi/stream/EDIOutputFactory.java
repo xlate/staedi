@@ -19,7 +19,7 @@ import java.io.OutputStream;
 
 import io.xlate.edi.internal.stream.StaEDIOutputFactory;
 
-public abstract class EDIOutputFactory {
+public abstract class EDIOutputFactory extends PropertySupport {
 
     public static final String PRETTY_PRINT = "io.xlate.edi.stream.PRETTY_PRINT";
 
@@ -59,39 +59,4 @@ public abstract class EDIOutputFactory {
     public abstract EDIStreamWriter createEDIStreamWriter(OutputStream stream,
                                                           String encoding) throws EDIStreamException;
 
-    /**
-     * Query the set of properties that this factory supports.
-     *
-     * @param name
-     *            - The name of the property (may not be null)
-     * @return true if the property is supported and false otherwise
-     */
-    public abstract boolean isPropertySupported(String name);
-
-    /**
-     * Get the value of a feature/property from the underlying implementation
-     *
-     * @param name
-     *            - The name of the property (may not be null)
-     * @return The value of the property
-     * @throws IllegalArgumentException
-     *             if the property is not supported
-     */
-    public abstract Object getProperty(String name) throws IllegalArgumentException;
-
-    /**
-     * Allows the user to set specific feature/property on the underlying
-     * implementation. The underlying implementation is not required to support
-     * every setting of every property in the specification and may use
-     * IllegalArgumentException to signal that an unsupported property may not
-     * be set with the specified value.
-     *
-     * @param name
-     *            - The name of the property (may not be null)
-     * @param value
-     *            - The value of the property
-     * @throws IllegalArgumentException
-     *             if the property is not supported
-     */
-    public abstract void setProperty(String name, Object value) throws IllegalArgumentException;
 }

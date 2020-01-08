@@ -15,31 +15,24 @@
  ******************************************************************************/
 package io.xlate.edi.internal.stream;
 
+import java.io.InputStream;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
+
 import io.xlate.edi.schema.Schema;
 import io.xlate.edi.stream.EDIInputFactory;
 import io.xlate.edi.stream.EDIStreamException;
 import io.xlate.edi.stream.EDIStreamFilter;
 import io.xlate.edi.stream.EDIStreamReader;
 
-import java.io.InputStream;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-
 public class StaEDIInputFactory extends EDIInputFactory {
 
     private static final String DEFAULT_ENCODING = "US-ASCII";
 
     private final Set<String> supportedCharsets;
-    private final Map<String, Object> properties;
-    private final Set<String> supportedProperties;
 
     public StaEDIInputFactory() {
-        properties = new HashMap<>();
-
-        supportedProperties = new HashSet<>();
         supportedProperties.add(EDI_VALIDATE_CONTROL_STRUCTURE);
 
         supportedCharsets = new HashSet<>();
@@ -75,28 +68,5 @@ public class StaEDIInputFactory extends EDIInputFactory {
     @Override
     public EDIStreamReader createFilteredReader(EDIStreamReader reader, EDIStreamFilter filter) {
         return new StaEDIFilteredStreamReader(reader, filter);
-    }
-
-    @Override
-    public boolean isPropertySupported(String name) {
-        return supportedProperties.contains(name);
-    }
-
-    @Override
-    public Object getProperty(String name) {
-        if (!isPropertySupported(name)) {
-            throw new IllegalArgumentException("Unsupported property: " + name);
-        }
-
-        return properties.get(name);
-    }
-
-    @Override
-    public void setProperty(String name, Object value) {
-        if (!isPropertySupported(name)) {
-            throw new IllegalArgumentException("Unsupported property: " + name);
-        }
-
-        properties.put(name, value);
     }
 }

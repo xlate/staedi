@@ -34,6 +34,7 @@ import io.xlate.edi.internal.stream.tokenization.DialectFactory;
 import io.xlate.edi.internal.stream.tokenization.EDIException;
 import io.xlate.edi.internal.stream.tokenization.EDIFACTDialect;
 import io.xlate.edi.internal.stream.tokenization.ElementDataHandler;
+import io.xlate.edi.internal.stream.tokenization.Lexer;
 import io.xlate.edi.internal.stream.tokenization.State;
 import io.xlate.edi.internal.stream.tokenization.ValidationEventHandler;
 import io.xlate.edi.internal.stream.validation.Validator;
@@ -336,7 +337,8 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         ensureLevel(LEVEL_SEGMENT);
         write(this.dataElementSeparator);
         level = LEVEL_ELEMENT;
-        updateLocation(state, location);
+        // FIXME: Move this into the 'write' methods and fix
+        Lexer.updateLocation(state, location);
         elementBuffer.clear();
         return this;
     }
@@ -376,7 +378,8 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         }
 
         level = LEVEL_COMPONENT;
-        updateLocation(state, location);
+        // FIXME: Move this into the 'write' methods and fix
+        Lexer.updateLocation(state, location);
         elementBuffer.clear();
         return this;
     }
@@ -397,7 +400,8 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         ensureLevelAtLeast(LEVEL_SEGMENT);
         write(this.repetitionSeparator);
         level = LEVEL_ELEMENT;
-        updateLocation(state, location);
+        // FIXME: Move this into the 'write' methods and fix
+        Lexer.updateLocation(state, location);
         return this;
     }
 
@@ -609,47 +613,6 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
                 errors.clear();
                 throw e;
             }
-        }
-    }
-
-    // FIXME: Move this into the 'write' methods and fix
-    private static void updateLocation(State state, StaEDIStreamLocation location) {
-        if (state == State.ELEMENT_REPEAT) {
-            if (location.isRepeated()) {
-                location.incrementElementOccurrence();
-            } else {
-                location.setElementOccurrence(1);
-            }
-            location.setRepeated(true);
-        } else if (location.isRepeated()) {
-            if (state != State.COMPONENT_END) {
-                /*
-                 * Only increment the position if we have not yet started
-                 * the composite - i.e, only a single component is present.
-                 */
-                if (location.getComponentPosition() < 1) {
-                    location.incrementElementOccurrence();
-                }
-
-                location.setRepeated(false);
-            }
-        } else {
-            location.setElementOccurrence(1);
-        }
-
-        switch (state) {
-        case COMPONENT_END:
-        case HEADER_COMPONENT_END:
-            location.incrementComponentPosition();
-            break;
-
-        default:
-            if (location.getComponentPosition() > 0) {
-                location.incrementComponentPosition();
-            } else if (location.getElementOccurrence() == 1) {
-                location.incrementElementPosition();
-            }
-            break;
         }
     }
 }
