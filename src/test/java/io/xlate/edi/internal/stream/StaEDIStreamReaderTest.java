@@ -277,23 +277,17 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
 
         String standard = null;
         int events = 0;
-        int standardExceptions = 0;
+        assertThrows(IllegalStateException.class, () -> reader.getStandard());
 
         while (reader.hasNext()) {
-            if (reader.next() == EDIStreamEvent.START_INTERCHANGE) {
+            if (reader.next() != EDIStreamEvent.END_INTERCHANGE) {
                 standard = reader.getStandard();
-            } else {
-                try {
-                    reader.getVersion();
-                } catch (IllegalStateException e) {
-                    standardExceptions++;
-                }
+                events++;
             }
-            events++;
         }
 
         assertEquals("X12", standard, "Unexpected version");
-        assertTrue(events == standardExceptions + 1, "Unexpected number of exceptions");
+        assertTrue(events > 2, "Unexpected number of events");
     }
 
     @Test
@@ -304,23 +298,17 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
 
         String version[] = null;
         int events = 0;
-        int versionExceptions = 0;
+        assertThrows(IllegalStateException.class, () -> reader.getVersion());
 
         while (reader.hasNext()) {
-            if (reader.next() == EDIStreamEvent.START_INTERCHANGE) {
+            if (reader.next() != EDIStreamEvent.END_INTERCHANGE) {
                 version = reader.getVersion();
-            } else {
-                try {
-                    reader.getVersion();
-                } catch (IllegalStateException e) {
-                    versionExceptions++;
-                }
+                events++;
             }
-            events++;
         }
 
         assertArrayEquals(new String[] { "00501" }, version, "Unexpected version");
-        assertTrue(events == versionExceptions + 1, "Unexpected number of exceptions");
+        assertTrue(events > 2, "Unexpected number of events");
     }
 
     @Test
@@ -333,7 +321,6 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
 
         EDIStreamEvent event;
         int events = 0;
-        int versionExceptions = 0;
         String segment = null;
         Map<String, Set<EDIStreamValidationError>> errors = new HashMap<>(2);
 
@@ -367,17 +354,10 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
                 } else if (event == EDIStreamEvent.SEGMENT_ERROR) {
                     fail("Unexpected error: " + event + " => " + reader.getErrorType() + ", " + reader.getText());
                 }
-
-                try {
-                    reader.getVersion();
-                } catch (IllegalStateException e) {
-                    versionExceptions++;
-                }
             }
             events++;
         }
 
-        assertEquals(events, versionExceptions + 1, "Unexpected number of exceptions");
         assertTrue(errors.get("AK402").contains(EDIStreamValidationError.DATA_ELEMENT_TOO_LONG));
         assertTrue(errors.get("AK402").contains(EDIStreamValidationError.INVALID_CHARACTER_DATA));
 
@@ -395,7 +375,6 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
 
         EDIStreamEvent event;
         int events = 0;
-        int versionExceptions = 0;
         String segment = null;
         Map<String, Set<EDIStreamValidationError>> errors = new HashMap<>(2);
 
@@ -468,15 +447,8 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
             default:
                 break;
             }
-
-            try {
-                reader.getVersion();
-            } catch (IllegalStateException e) {
-                versionExceptions++;
-            }
         }
 
-        assertTrue(events == versionExceptions + 1, "Unexpected number of exceptions");
         assertTrue(errors.get("AK402").contains(EDIStreamValidationError.DATA_ELEMENT_TOO_LONG));
         assertTrue(errors.get("AK402").contains(EDIStreamValidationError.INVALID_CHARACTER_DATA));
     }

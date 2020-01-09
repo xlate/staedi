@@ -102,22 +102,24 @@ public interface EDIStreamReader extends Closeable, EDIStreamConstants {
 
     /**
      * Get the EDI standard name. Calls to this method are only valid when the
-     * current event type is START_INTERCHANGE.
+     * interchange type has been determined, after START_INTERCHANGE.
      *
      * @return the name of the EDI standard
      * @throws IllegalStateException
-     *             when the current event type is not START_INTERCHANGE
+     *             when the standard has not yet been determined, prior to the
+     *             start of an interchange
      */
     String getStandard();
 
     /**
      * Get the interchange version declared on the interchange begin segment.
-     * Calls to this method are only valid when the current event type is
-     * START_INTERCHANGE.
+     * Calls to this method are only valid when interchange type has been
+     * determined, after START_INTERCHANGE.
      *
      * @return the version
      * @throws IllegalStateException
-     *             when the current event type is not START_INTERCHANGE
+     *             when the version has not yet been determined, prior to the
+     *             start of an interchange
      */
     String[] getVersion();
 
@@ -131,7 +133,8 @@ public interface EDIStreamReader extends Closeable, EDIStreamConstants {
      * START_INTERCHANGE.
      *
      * @param schema
-     *             the schema instance to use for validation of control structures
+     *            the schema instance to use for validation of control
+     *            structures
      * @throws IllegalStateException
      *             when the current event type is not START_INTERCHANGE
      */
@@ -141,16 +144,19 @@ public interface EDIStreamReader extends Closeable, EDIStreamConstants {
      * <p>
      * Sets the schema to be used for validation of the business transaction for
      * this stream reader. This schema will be used to validate only the
-     * contents of a transaction/message, <em>not including</em> the begin/end control
-     * structures.
+     * contents of a transaction/message, <em>not including</em> the begin/end
+     * control structures.
      * <p>
      * Calls to this method are only valid after a START_TRANSACTION event and
-     * before the end of the segment representing the beginning of the transaction.
+     * before the end of the segment representing the beginning of the
+     * transaction.
      *
      * @param schema
-     *             the schema instance to use for validation of business transaction structures
+     *            the schema instance to use for validation of business
+     *            transaction structures
      * @throws IllegalStateException
-     *             when the reader is not positioned on the start transaction segment
+     *             when the reader is not positioned on the start transaction
+     *             segment
      */
     void setTransactionSchema(Schema schema);
 
@@ -250,7 +256,8 @@ public interface EDIStreamReader extends Closeable, EDIStreamConstants {
      * @throws IndexOutOfBoundsException
      *             if targetStart &lt; 0 or &gt; than the length of target
      * @throws IndexOutOfBoundsException
-     *             if length &lt; 0 or targetStart + length &gt; length of target
+     *             if length &lt; 0 or targetStart + length &gt; length of
+     *             target
      * @throws NullPointerException
      *             if target is null
      */

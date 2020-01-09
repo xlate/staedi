@@ -211,7 +211,7 @@ public class StaEDIStreamReader implements EDIStreamReader {
 
     @Override
     public String getStandard() {
-        if (getEventType() != EDIStreamEvent.START_INTERCHANGE) {
+        if (lexer.getDialect() == null || lexer.getDialect().getStandard() == null) {
             throw new IllegalStateException("version not accessible");
         }
 
@@ -220,7 +220,7 @@ public class StaEDIStreamReader implements EDIStreamReader {
 
     @Override
     public String[] getVersion() {
-        if (getEventType() != EDIStreamEvent.START_INTERCHANGE) {
+        if (lexer.getDialect() == null || lexer.getDialect().getVersion() == null) {
             throw new IllegalStateException("version not accessible");
         }
 

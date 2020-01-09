@@ -15,12 +15,15 @@
  ******************************************************************************/
 package io.xlate.edi.internal.stream;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.NoSuchElementException;
 
 import org.junit.jupiter.api.Test;
@@ -165,5 +168,70 @@ public class StaEDIFilteredStreamReaderTest implements ConstantsTest {
         reader.close();
 
         assertEquals(16, matches);
+    }
+
+    @Test
+    /**
+     * Test that the filtered and unfiltered readers return the same information
+     * at each event of the filtered reader.
+     *
+     * @throws EDIStreamException
+     */
+    public void testNextTagFilterParityWithUnfiltered() throws EDIStreamException {
+        EDIInputFactory factory = EDIInputFactory.newFactory();
+        InputStream stream = getClass().getResourceAsStream("/x12/simple997.edi");
+        EDIStreamFilter filter = new EDIStreamFilter() {
+            @Override
+            public boolean accept(EDIStreamReader reader) {
+                if (reader.getEventType() != EDIStreamEvent.START_SEGMENT) {
+                    return false;
+                }
+                String tag = reader.getText();
+                return tag.matches("^.{0,2}[SG5].{0,2}$");
+            }
+        };
+        final String PROP = EDIInputFactory.EDI_VALIDATE_CONTROL_STRUCTURE;
+        factory.setProperty(PROP, Boolean.TRUE);
+        EDIStreamReader unfiltered = factory.createEDIStreamReader(stream);
+        EDIStreamReader filtered = factory.createFilteredReader(unfiltered, filter);
+
+        assertThrows(IllegalArgumentException.class, () -> unfiltered.getProperty(null));
+        assertThrows(IllegalArgumentException.class, () -> filtered.getProperty(null));
+
+        assertEquals(unfiltered.getProperty(PROP), filtered.getProperty(PROP));
+
+        filtered.nextTag(); // ISA
+        assertEquals(filtered.getStandard(), unfiltered.getStandard());
+        assertArrayEquals(filtered.getVersion(), unfiltered.getVersion());
+        assertEquals(unfiltered.getDelimiters(), filtered.getDelimiters());
+        assertStatusEquals(unfiltered, filtered);
+
+        filtered.nextTag(); // GS
+        assertStatusEquals(unfiltered, filtered);
+        filtered.nextTag(); // ST
+        assertStatusEquals(unfiltered, filtered);
+        filtered.nextTag(); // AK5
+        assertStatusEquals(unfiltered, filtered);
+        filtered.nextTag(); // SE
+        assertStatusEquals(unfiltered, filtered);
+        filtered.nextTag(); // GE
+        assertStatusEquals(unfiltered, filtered);
+    }
+
+    void assertStatusEquals(EDIStreamReader unfiltered, EDIStreamReader filtered) {
+        assertEquals(unfiltered.getEventType(), filtered.getEventType());
+        assertEquals(unfiltered.getText(), filtered.getText());
+        assertEquals(unfiltered.getReferenceCode(), filtered.getReferenceCode());
+        assertArrayEquals(unfiltered.getTextCharacters(), filtered.getTextCharacters());
+        assertEquals(unfiltered.getTextStart(), filtered.getTextStart());
+        assertEquals(unfiltered.getTextLength(), filtered.getTextLength());
+
+        char[] uf_target = new char[100];
+        Arrays.fill(uf_target, '\0');
+        char[] f_target = new char[100];
+        Arrays.fill(f_target, '\0');
+        unfiltered.getTextCharacters(unfiltered.getTextStart(), uf_target, 0, unfiltered.getTextLength());
+        filtered.getTextCharacters(filtered.getTextStart(), f_target, 0, filtered.getTextLength());
+        assertArrayEquals(uf_target, f_target);
     }
 }
