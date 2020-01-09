@@ -41,7 +41,9 @@ import io.xlate.edi.stream.EDIStreamConstants;
 import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamException;
 import io.xlate.edi.stream.EDIStreamReader;
+import io.xlate.edi.stream.EDIStreamValidationError;
 import io.xlate.edi.stream.EDIStreamWriter;
+import io.xlate.edi.stream.EDIValidationException;
 
 @SuppressWarnings("resource")
 public class StaEDIStreamWriterTest {
@@ -72,6 +74,14 @@ public class StaEDIStreamWriterTest {
         EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
         Object segmentTerminator = writer.getProperty(EDIStreamConstants.Delimiters.SEGMENT);
         assertEquals(Character.valueOf('~'), segmentTerminator);
+    }
+
+    @Test
+    public void testGetNullProperty() {
+        EDIOutputFactory factory = EDIOutputFactory.newFactory();
+        OutputStream stream = new ByteArrayOutputStream(1);
+        EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
+        assertThrows(IllegalArgumentException.class, () -> writer.getProperty(null));
     }
 
     @Test
@@ -729,8 +739,11 @@ public class StaEDIStreamWriterTest {
 
         writer.startInterchange();
         writeHeader(writer);
-        EDIStreamException exception = assertThrows(EDIStreamException.class, () -> writer.writeStartSegment("ST"));
-        assertEquals("Segment Error: ST; UNEXPECTED_SEGMENT", exception.getMessage());
+        EDIValidationException e = assertThrows(EDIValidationException.class, () -> writer.writeStartSegment("ST"));
+        assertEquals(EDIStreamEvent.SEGMENT_ERROR, e.getEvent());
+        assertEquals(EDIStreamValidationError.UNEXPECTED_SEGMENT, e.getError());
+        assertEquals("ST", e.getData().toString());
+        assertEquals(2, e.getLocation().getSegmentPosition());
     }
 
     @Test
@@ -784,6 +797,10 @@ public class StaEDIStreamWriterTest {
                 case END_INTERCHANGE:
                     writer.endInterchange();
                     break;
+                case START_TRANSACTION:
+                    reader.setTransactionSchema(transaction);
+                    // Continue the loop to avoid segment position comparison for this event type
+                    continue;
                 case START_SEGMENT:
                     tag = reader.getText();
                     writer.writeStartSegment(tag);
@@ -856,7 +873,8 @@ public class StaEDIStreamWriterTest {
                     writer.endElement();
                     break;
                 case START_GROUP:
-                case START_TRANSACTION:
+                case START_LOOP:
+                case END_LOOP:
                 case END_TRANSACTION:
                 case END_GROUP:
                     // Ignore control loops
@@ -865,10 +883,14 @@ public class StaEDIStreamWriterTest {
                     break;
                 }
 
-                //assertEquals(reader.getLocation().getSegmentPosition(), writer.getLocation().getSegmentPosition(), "Segment position mismatch");
-                //assertEquals(reader.getLocation().getElementPosition(), writer.getLocation().getElementPosition(), "Element position mismatch");
-                //assertEquals(reader.getLocation().getElementOccurrence(), writer.getLocation().getElementOccurrence(), "Element occurrence mismatch");
-                //assertEquals(reader.getLocation().getComponentPosition(), writer.getLocation().getComponentPosition(), "Component position mismatch");
+                assertEquals(reader.getLocation().getSegmentPosition(), writer.getLocation().getSegmentPosition(), () ->
+                        "Segment position mismatch");
+                assertEquals(reader.getLocation().getElementPosition(), writer.getLocation().getElementPosition(), () ->
+                        "Element position mismatch");
+                assertEquals(reader.getLocation().getElementOccurrence(), writer.getLocation().getElementOccurrence(), () ->
+                        "Element occurrence mismatch");
+                assertEquals(reader.getLocation().getComponentPosition(), writer.getLocation().getComponentPosition(), () ->
+                        "Component position mismatch");
             }
         } finally {
             reader.close();

@@ -22,6 +22,7 @@ import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -34,7 +35,6 @@ import io.xlate.edi.internal.stream.tokenization.DialectFactory;
 import io.xlate.edi.internal.stream.tokenization.EDIException;
 import io.xlate.edi.internal.stream.tokenization.EDIFACTDialect;
 import io.xlate.edi.internal.stream.tokenization.ElementDataHandler;
-import io.xlate.edi.internal.stream.tokenization.Lexer;
 import io.xlate.edi.internal.stream.tokenization.State;
 import io.xlate.edi.internal.stream.tokenization.ValidationEventHandler;
 import io.xlate.edi.internal.stream.validation.Validator;
@@ -46,6 +46,7 @@ import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamException;
 import io.xlate.edi.stream.EDIStreamValidationError;
 import io.xlate.edi.stream.EDIStreamWriter;
+import io.xlate.edi.stream.EDIValidationException;
 import io.xlate.edi.stream.Location;
 
 public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, ValidationEventHandler {
@@ -76,7 +77,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     private CharArraySequence dataHolder = new CharArraySequence();
     private boolean atomicElementWrite = false;
     private CharBuffer elementBuffer = CharBuffer.allocate(500);
-    private List<EDIStreamException> errors = new ArrayList<>();
+    private List<EDIValidationException> errors = new ArrayList<>();
 
     private char segmentTerminator;
     private char dataElementSeparator;
@@ -176,7 +177,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         try {
             stream.flush();
         } catch (IOException e) {
-            throw new EDIStreamException(e);
+            throw new EDIStreamException("Exception flushing output stream", location, e);
         }
     }
 
@@ -253,12 +254,11 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         }
 
         try {
+            location.incrementOffset(output);
             stream.write(output);
         } catch (IOException e) {
-            throw new EDIStreamException(e);
+            throw new EDIStreamException("Exception to output stream", location, e);
         }
-
-        location.incrementOffset(output);
     }
 
     @Override
@@ -280,6 +280,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     @Override
     public EDIStreamWriter writeStartSegment(String name) throws EDIStreamException {
         ensureLevel(LEVEL_INTERCHANGE);
+        location.incrementSegmentPosition();
         validate(validator -> validator.validateSegment(this, name));
 
         if (state == State.INITIAL) {
@@ -299,7 +300,6 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         }
 
         level = LEVEL_SEGMENT;
-        location.incrementSegmentPosition();
 
         return this;
     }
@@ -313,7 +313,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     @Override
     public EDIStreamWriter writeEndSegment() throws EDIStreamException {
         ensureLevelAtLeast(LEVEL_SEGMENT);
-        if (!atomicElementWrite && level > LEVEL_SEGMENT) {
+        if (level > LEVEL_SEGMENT) {
             validate(validator -> validator.validateElement(dialect, location, this.elementBuffer));
         }
         validate(validator -> validator.validateSyntax(this, this, location, false));
@@ -337,8 +337,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         ensureLevel(LEVEL_SEGMENT);
         write(this.dataElementSeparator);
         level = LEVEL_ELEMENT;
-        // FIXME: Move this into the 'write' methods and fix
-        Lexer.updateLocation(state, location);
+        location.incrementElementPosition();
         elementBuffer.clear();
         return this;
     }
@@ -351,11 +350,23 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     }
 
     @Override
+    public EDIStreamWriter writeRepeatElement() throws EDIStreamException {
+        ensureLevelAtLeast(LEVEL_SEGMENT);
+        write(this.repetitionSeparator);
+        level = LEVEL_ELEMENT;
+        location.incrementElementOccurrence();
+        return this;
+    }
+
+    @Override
     public EDIStreamWriter endElement() throws EDIStreamException {
         ensureLevelAtLeast(LEVEL_ELEMENT);
+
         if (!atomicElementWrite) {
             validate(validator -> validator.validateElement(dialect, location, this.elementBuffer));
         }
+
+        location.clearComponentPosition();
         level = LEVEL_SEGMENT;
 
         if (state == State.ELEMENT_DATA_BINARY) {
@@ -378,8 +389,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         }
 
         level = LEVEL_COMPONENT;
-        // FIXME: Move this into the 'write' methods and fix
-        Lexer.updateLocation(state, location);
+        location.incrementComponentPosition();
         elementBuffer.clear();
         return this;
     }
@@ -391,17 +401,6 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
             validate(validator -> validator.validateElement(dialect, location, this.elementBuffer));
         }
         level = LEVEL_COMPOSITE;
-        location.clearComponentPosition();
-        return this;
-    }
-
-    @Override
-    public EDIStreamWriter writeRepeatElement() throws EDIStreamException {
-        ensureLevelAtLeast(LEVEL_SEGMENT);
-        write(this.repetitionSeparator);
-        level = LEVEL_ELEMENT;
-        // FIXME: Move this into the 'write' methods and fix
-        Lexer.updateLocation(state, location);
         return this;
     }
 
@@ -524,14 +523,15 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     public EDIStreamWriter writeBinaryData(InputStream binaryStream) throws EDIStreamException {
         ensureLevel(LEVEL_ELEMENT);
         ensureState(State.ELEMENT_DATA_BINARY);
-        int input;
+        int output;
 
         try {
-            while ((input = binaryStream.read()) != -1) {
-                stream.write(input);
+            while ((output = binaryStream.read()) != -1) {
+                location.incrementOffset(output);
+                stream.write(output);
             }
         } catch (IOException e) {
-            throw new EDIStreamException(e);
+            throw new EDIStreamException("Exception writing binary element data", location, e);
         }
 
         return this;
@@ -592,26 +592,38 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
                              int element,
                              int component,
                              int repetition) {
-        //TODO: add validation information to exception
-        errors.add(new EDIStreamException("Element Error"));
+
+        StaEDIStreamLocation copy = location.copy();
+        copy.setElementPosition(element);
+        copy.setElementOccurrence(repetition);
+        copy.setComponentPosition(component);
+
+        errors.add(new EDIValidationException(event, error, copy, null));
     }
 
     @Override
     public void segmentError(CharSequence token, EDIStreamValidationError error) {
-        //TODO: add validation information to exception
-        errors.add(new EDIStreamException("Segment Error: " + token + "; " + error));
+        errors.add(new EDIValidationException(EDIStreamEvent.SEGMENT_ERROR, error, location, token));
     }
 
-    private void validate(Consumer<Validator> command) throws EDIStreamException {
+    private void validate(Consumer<Validator> command) {
         Validator validator = validator();
 
         if (validator != null) {
             command.accept(validator);
 
             if (!errors.isEmpty()) {
-                EDIStreamException e = errors.get(0);
-                errors.clear();
-                throw e;
+                Iterator<EDIValidationException> iter = errors.iterator();
+                EDIValidationException first = iter.next();
+                EDIValidationException e = first;
+
+                while (iter.hasNext()) {
+                    EDIValidationException next = iter.next();
+                    e.setNextException(next);
+                    e = next;
+                }
+
+                throw first;
             }
         }
     }

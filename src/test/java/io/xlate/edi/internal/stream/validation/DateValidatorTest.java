@@ -1,8 +1,7 @@
 package io.xlate.edi.internal.stream.validation;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -19,6 +18,7 @@ import io.xlate.edi.internal.stream.tokenization.DialectFactory;
 import io.xlate.edi.internal.stream.tokenization.EDIException;
 import io.xlate.edi.schema.EDISimpleType;
 import io.xlate.edi.stream.EDIStreamValidationError;
+import io.xlate.edi.stream.EDIValidationException;
 
 public class DateValidatorTest implements ValueSetTester {
 
@@ -160,12 +160,8 @@ public class DateValidatorTest implements ValueSetTester {
         when(element.getMaxLength()).thenReturn(8L);
         ElementValidator v = DateValidator.getInstance();
         StringBuilder output = new StringBuilder();
-        try {
-            v.format(dialect, element, "20000", output);
-            fail("Exception was expected");
-        } catch (EDIException e) {
-            assertTrue(e.getMessage().startsWith("EDIE008"));
-        }
+        EDIValidationException e = assertThrows(EDIValidationException.class, () -> v.format(dialect, element, "20000", output));
+        assertEquals(EDIStreamValidationError.DATA_ELEMENT_TOO_SHORT, e.getError());
     }
 
     @Test
@@ -175,12 +171,8 @@ public class DateValidatorTest implements ValueSetTester {
         when(element.getMaxLength()).thenReturn(8L);
         ElementValidator v = DateValidator.getInstance();
         StringBuilder output = new StringBuilder();
-        try {
-            v.format(dialect, element, "200001011", output);
-            fail("Exception was expected");
-        } catch (EDIException e) {
-            assertTrue(e.getMessage().startsWith("EDIE005"));
-        }
+        EDIValidationException e = assertThrows(EDIValidationException.class, () -> v.format(dialect, element, "200001011", output));
+        assertEquals(EDIStreamValidationError.DATA_ELEMENT_TOO_LONG, e.getError());
     }
 
     @Test
@@ -190,12 +182,8 @@ public class DateValidatorTest implements ValueSetTester {
         when(element.getMaxLength()).thenReturn(8L);
         ElementValidator v = DateValidator.getInstance();
         StringBuilder output = new StringBuilder();
-        try {
-            v.format(dialect, element, "20000100", output);
-            fail("Exception was expected");
-        } catch (EDIException e) {
-            assertTrue(e.getMessage().startsWith("EDIE007"));
-        }
+        EDIValidationException e = assertThrows(EDIValidationException.class, () -> v.format(dialect, element, "20000100", output));
+        assertEquals(EDIStreamValidationError.INVALID_DATE, e.getError());
     }
 
     @Test

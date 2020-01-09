@@ -23,7 +23,9 @@ import io.xlate.edi.internal.stream.tokenization.CharacterSet;
 import io.xlate.edi.internal.stream.tokenization.Dialect;
 import io.xlate.edi.internal.stream.tokenization.EDIException;
 import io.xlate.edi.schema.EDISimpleType;
+import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamValidationError;
+import io.xlate.edi.stream.EDIValidationException;
 
 class AlphaNumericValidator extends ElementValidator {
 
@@ -64,12 +66,12 @@ class AlphaNumericValidator extends ElementValidator {
     @Override
     void format(Dialect dialect, EDISimpleType element, CharSequence value, Appendable result) throws EDIException {
         int length = value.length();
-        assertMaxLength(element, length);
+        assertMaxLength(element, value);
 
         Set<String> valueSet = element.getValueSet();
 
         if (!valueSet.isEmpty() && !valueSet.contains(value.toString())) {
-            throw new EDIException(EDIException.INVALID_CODE_VALUE);
+            throw new EDIValidationException(EDIStreamEvent.ELEMENT_DATA, EDIStreamValidationError.INVALID_CODE_VALUE, null, value);
         }
 
         try {

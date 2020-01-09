@@ -21,7 +21,9 @@ import java.util.List;
 import io.xlate.edi.internal.stream.tokenization.Dialect;
 import io.xlate.edi.internal.stream.tokenization.EDIException;
 import io.xlate.edi.schema.EDISimpleType;
+import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamValidationError;
+import io.xlate.edi.stream.EDIValidationException;
 
 class TimeValidator extends ElementValidator {
 
@@ -49,10 +51,10 @@ class TimeValidator extends ElementValidator {
     @Override
     void format(Dialect dialect, EDISimpleType element, CharSequence value, Appendable result) throws EDIException {
         int length = value.length();
-        assertMaxLength(element, length);
+        assertMaxLength(element, value);
 
         if (!validValue(value)) {
-            throw new EDIException(EDIException.INVALID_TIME);
+            throw new EDIValidationException(EDIStreamEvent.ELEMENT_DATA, EDIStreamValidationError.INVALID_TIME, null, value);
         }
 
         try {

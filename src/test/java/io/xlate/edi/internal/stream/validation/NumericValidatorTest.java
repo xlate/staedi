@@ -1,7 +1,7 @@
 package io.xlate.edi.internal.stream.validation;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -17,6 +17,7 @@ import io.xlate.edi.internal.stream.tokenization.DialectFactory;
 import io.xlate.edi.internal.stream.tokenization.EDIException;
 import io.xlate.edi.schema.EDISimpleType;
 import io.xlate.edi.stream.EDIStreamValidationError;
+import io.xlate.edi.stream.EDIValidationException;
 
 public class NumericValidatorTest implements ValueSetTester {
 
@@ -85,12 +86,8 @@ public class NumericValidatorTest implements ValueSetTester {
         when(element.getMaxLength()).thenReturn(5L);
         ElementValidator v = NumericValidator.getInstance();
         StringBuilder output = new StringBuilder();
-        try {
-            v.format(dialect, element, "123456", output);
-            fail("Exception was expected:" + output.toString());
-        } catch (EDIException e) {
-            assertEquals("EDIE005", e.getMessage().subSequence(0, 7));
-        }
+        EDIValidationException e = assertThrows(EDIValidationException.class, () -> v.format(dialect, element, "123456", output));
+        assertEquals(EDIStreamValidationError.DATA_ELEMENT_TOO_LONG, e.getError());
     }
 
     @Test
@@ -100,12 +97,8 @@ public class NumericValidatorTest implements ValueSetTester {
         when(element.getMaxLength()).thenReturn(5L);
         ElementValidator v = NumericValidator.getInstance();
         StringBuilder output = new StringBuilder();
-        try {
-            v.format(dialect, element, "1234F", output);
-            fail("Exception was expected: " + output.toString());
-        } catch (EDIException e) {
-            assertEquals("EDIE004", e.getMessage().subSequence(0, 7));
-        }
+        EDIValidationException e = assertThrows(EDIValidationException.class, () -> v.format(dialect, element, "1234F", output));
+        assertEquals(EDIStreamValidationError.INVALID_CHARACTER_DATA, e.getError());
     }
 
     @Test

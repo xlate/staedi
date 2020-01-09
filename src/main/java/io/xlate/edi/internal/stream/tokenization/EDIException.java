@@ -29,11 +29,6 @@ public class EDIException extends EDIStreamException {
     public static final Integer UNSUPPORTED_DIALECT = 2;
     public static final Integer INVALID_STATE = 3;
     public static final Integer INVALID_CHARACTER = 4;
-    public static final Integer DATA_ELEMENT_TOO_LONG = 5;
-    public static final Integer INVALID_CODE_VALUE = 6;
-    public static final Integer INVALID_DATE = 7;
-    public static final Integer DATA_ELEMENT_TOO_SHORT = 8;
-    public static final Integer INVALID_TIME = 9;
 
     private static final Map<Integer, String> exceptionMessages = new HashMap<>();
 
@@ -46,24 +41,10 @@ public class EDIException extends EDIStreamException {
                               "EDIE003 - Invalid processing state");
         exceptionMessages.put(INVALID_CHARACTER,
                               "EDIE004 - Invalid input character");
-        exceptionMessages.put(DATA_ELEMENT_TOO_LONG,
-                              "EDIE005 - Element exceeds maximum allowed length");
-        exceptionMessages.put(INVALID_CODE_VALUE,
-                              "EDIE006 - Value not present in code list");
-        exceptionMessages.put(INVALID_DATE,
-                              "EDIE007 - Invalid date");
-        exceptionMessages.put(DATA_ELEMENT_TOO_SHORT,
-                              "EDIE008 - Element value less than minimum length");
-        exceptionMessages.put(INVALID_TIME,
-                              "EDIE009 - Invalid time");
     }
 
     public EDIException(String message) {
         super(message);
-    }
-
-    public EDIException(Integer id) {
-        super(exceptionMessages.get(id));
     }
 
     EDIException(Integer id, Location location) {

@@ -15,6 +15,7 @@
  ******************************************************************************/
 package io.xlate.edi.internal.stream;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -42,7 +43,7 @@ public class StaEDIInputFactoryTest {
     }
 
     @Test
-    public void testCreateEDIStreamReader() throws EDIStreamException {
+    public void testCreateEDIStreamReader() {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = getClass().getResourceAsStream("/x12/simple997.edi");
         EDIStreamReader reader = factory.createEDIStreamReader(stream);
@@ -59,7 +60,16 @@ public class StaEDIInputFactoryTest {
     }
 
     @Test
-    public void testCreateEDIStreamReaderValidated() throws EDIStreamException, EDISchemaException {
+    public void testCreateEDIStreamReaderInvalidEncoding() {
+        EDIInputFactory factory = EDIInputFactory.newFactory();
+        InputStream stream = getClass().getResourceAsStream("/x12/simple997.edi");
+        String encoding = "EBCDIC";
+        EDIStreamException e = assertThrows(EDIStreamException.class, () -> factory.createEDIStreamReader(stream, encoding));
+        assertEquals("Unsupported encoding: EBCDIC", e.getMessage());
+    }
+
+    @Test
+    public void testCreateEDIStreamReaderValidated() throws EDISchemaException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = getClass().getResourceAsStream("/x12/simple997.edi");
         SchemaFactory schemaFactory = SchemaFactory.newFactory();
@@ -80,7 +90,7 @@ public class StaEDIInputFactoryTest {
     }
 
     @Test
-    public void testCreateFilteredReader() throws EDIStreamException {
+    public void testCreateFilteredReader() {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         EDIStreamReader reader = null;
         // EDIStreamFilter is a functional interface

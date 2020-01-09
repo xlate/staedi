@@ -1,6 +1,7 @@
 package io.xlate.edi.internal.stream.validation;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.mock;
@@ -18,6 +19,7 @@ import io.xlate.edi.internal.stream.tokenization.DialectFactory;
 import io.xlate.edi.internal.stream.tokenization.EDIException;
 import io.xlate.edi.schema.EDISimpleType;
 import io.xlate.edi.stream.EDIStreamValidationError;
+import io.xlate.edi.stream.EDIValidationException;
 
 public class AlphaNumericValidatorTest implements ValueSetTester {
 
@@ -89,12 +91,8 @@ public class AlphaNumericValidatorTest implements ValueSetTester {
         when(element.getMaxLength()).thenReturn(5L);
         ElementValidator v = AlphaNumericValidator.getInstance();
         StringBuilder output = new StringBuilder();
-        try {
-            v.format(dialect, element, "TESTTEST", output);
-            fail("Exception was expected");
-        } catch (EDIException e) {
-            assertTrue(e.getMessage().startsWith("EDIE005"));
-        }
+        EDIValidationException e = assertThrows(EDIValidationException.class, () -> v.format(dialect, element, "TESTTEST", output));
+        assertEquals(EDIStreamValidationError.DATA_ELEMENT_TOO_LONG, e.getError());
     }
 
     @Test
@@ -105,12 +103,8 @@ public class AlphaNumericValidatorTest implements ValueSetTester {
         when(element.getValueSet()).thenReturn(setOf("VAL1", "VAL2"));
         ElementValidator v = AlphaNumericValidator.getInstance();
         StringBuilder output = new StringBuilder();
-        try {
-            v.format(dialect, element, "TESTTEST", output);
-            fail("Exception was expected");
-        } catch (EDIException e) {
-            assertTrue(e.getMessage().startsWith("EDIE006"));
-        }
+        EDIValidationException e = assertThrows(EDIValidationException.class, () -> v.format(dialect, element, "TESTTEST", output));
+        assertEquals(EDIStreamValidationError.INVALID_CODE_VALUE, e.getError());
     }
 
     @Test

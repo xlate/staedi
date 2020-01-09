@@ -47,12 +47,7 @@ public class StaEDIOutputFactory extends EDIOutputFactory {
 
     @Override
     public EDIStreamWriter createEDIStreamWriter(OutputStream stream) {
-        try {
-            return createEDIStreamWriter(stream, DEFAULT_ENCODING);
-        } catch (EDIStreamException e) {
-            // Unexpected - DEFAULT_ENCODING will not cause this.
-            throw new RuntimeException(e);
-        }
+        return new StaEDIStreamWriter(stream, DEFAULT_ENCODING, properties);
     }
 
     @Override

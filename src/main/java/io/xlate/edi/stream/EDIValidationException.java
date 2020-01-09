@@ -1,0 +1,78 @@
+package io.xlate.edi.stream;
+
+public class EDIValidationException extends RuntimeException {
+
+    private static final long serialVersionUID = 5811097042070037687L;
+
+    protected final EDIStreamEvent event;
+    protected final EDIStreamValidationError error;
+    protected final transient Location location;
+    protected final transient CharSequence data;
+
+    private EDIValidationException next;
+
+    public EDIValidationException(EDIStreamEvent event,
+            EDIStreamValidationError error,
+            Location location,
+            CharSequence data) {
+        super();
+        this.event = event;
+        this.error = error;
+        this.location = location;
+        this.data = data;
+    }
+
+    public EDIStreamEvent getEvent() {
+        return event;
+    }
+
+    public EDIStreamValidationError getError() {
+        return error;
+    }
+
+    public Location getLocation() {
+        return location;
+    }
+
+    public CharSequence getData() {
+        return data;
+    }
+
+    /**
+     * Retrieves the exception chained to this
+     * <code>EDIValidationException</code> object by setNextException(EDIValidationException ex).
+     *
+     * @return the next <code>EDIValidationException</code> object in the chain;
+     *         <code>null</code> if there are none
+     * @see #setNextException
+     */
+    public EDIValidationException getNextException() {
+        return (next);
+    }
+
+    /**
+     * Adds an <code>EDIValidationException</code> object to the end of the chain.
+     *
+     * @param ex the new exception that will be added to the end of
+     *            the <code>EDIValidationException</code> chain
+     * @see #getNextException
+     */
+    public void setNextException(EDIValidationException ex) {
+
+        EDIValidationException current = this;
+        for(;;) {
+            EDIValidationException next = current.next;
+            if (next != null) {
+                current = next;
+                continue;
+            }
+
+            if (current.next == null) {
+                current.next = ex;
+                return;
+            }
+
+            current=current.next;
+        }
+    }
+}

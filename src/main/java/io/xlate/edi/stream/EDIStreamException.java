@@ -43,19 +43,6 @@ public class EDIStreamException extends Exception {
         location = null;
     }
 
-    /**
-     * Construct an exception with the associated message and exception
-     *
-     * @param cause
-     *            a nested exception
-     * @param message
-     *            the message to report
-     */
-    public EDIStreamException(String message, Throwable cause) {
-        super(message, cause);
-        location = null;
-    }
-
     private static String displayLocation(Location location) {
         return location.getSegmentPosition() + " : " + location.getElementPosition();
     }

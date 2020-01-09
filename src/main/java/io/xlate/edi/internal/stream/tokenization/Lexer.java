@@ -335,7 +335,13 @@ public class Lexer {
     public static void updateLocation(State state, StaEDIStreamLocation location) {
         if (state == State.ELEMENT_REPEAT) {
             if (location.isRepeated()) {
-                location.incrementElementOccurrence();
+                /*
+                 * Only increment the position if we have not yet started
+                 * the composite - i.e, only a single component is present.
+                 */
+                if (location.getComponentPosition() < 1) {
+                    location.incrementElementOccurrence();
+                }
             } else {
                 location.setElementOccurrence(1);
             }

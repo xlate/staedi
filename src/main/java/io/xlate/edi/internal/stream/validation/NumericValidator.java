@@ -21,7 +21,9 @@ import java.util.List;
 import io.xlate.edi.internal.stream.tokenization.Dialect;
 import io.xlate.edi.internal.stream.tokenization.EDIException;
 import io.xlate.edi.schema.EDISimpleType;
+import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamValidationError;
+import io.xlate.edi.stream.EDIValidationException;
 
 class NumericValidator extends ElementValidator {
 
@@ -47,10 +49,10 @@ class NumericValidator extends ElementValidator {
     @Override
     void format(Dialect dialect, EDISimpleType element, CharSequence value, Appendable result) throws EDIException {
         int length = validate(dialect, value);
-        assertMaxLength(element, Math.abs(length));
+        assertMaxLength(element, Math.abs(length), value);
 
         if (length < 0) {
-            throw new EDIException(EDIException.INVALID_CHARACTER);
+            throw new EDIValidationException(EDIStreamEvent.ELEMENT_DATA, EDIStreamValidationError.INVALID_CHARACTER_DATA, null, value);
         }
 
         try {

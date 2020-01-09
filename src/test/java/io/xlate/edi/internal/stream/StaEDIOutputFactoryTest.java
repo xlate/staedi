@@ -56,6 +56,15 @@ public class StaEDIOutputFactoryTest {
     }
 
     @Test
+    public void testCreateEDIStreamWriterInvalidEncoding() {
+        EDIOutputFactory factory = EDIOutputFactory.newFactory();
+        OutputStream stream = System.out;
+        String encoding = "EBCDIC";
+        EDIStreamException e = assertThrows(EDIStreamException.class, () -> factory.createEDIStreamWriter(stream, encoding));
+        assertEquals("Unsupported encoding: EBCDIC", e.getMessage());
+    }
+
+    @Test
     public void testIsPropertySupported() {
         EDIOutputFactory factory = EDIOutputFactory.newFactory();
         assertTrue(!factory.isPropertySupported("FOO"), "FOO supported");
