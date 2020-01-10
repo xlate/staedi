@@ -332,30 +332,17 @@ public class Lexer {
         throw new EDIException(code, where);
     }
 
-    public static void updateLocation(State state, StaEDIStreamLocation location) {
+    private static void updateLocation(State state, StaEDIStreamLocation location) {
         if (state == State.ELEMENT_REPEAT) {
             if (location.isRepeated()) {
-                /*
-                 * Only increment the position if we have not yet started
-                 * the composite - i.e, only a single component is present.
-                 */
-                if (location.getComponentPosition() < 1) {
-                    location.incrementElementOccurrence();
-                }
+                updateElementOccurrence(location);
             } else {
                 location.setElementOccurrence(1);
             }
             location.setRepeated(true);
         } else if (location.isRepeated()) {
             if (state != State.COMPONENT_END) {
-                /*
-                 * Only increment the position if we have not yet started
-                 * the composite - i.e, only a single component is present.
-                 */
-                if (location.getComponentPosition() < 1) {
-                    location.incrementElementOccurrence();
-                }
-
+                updateElementOccurrence(location);
                 location.setRepeated(false);
             }
         } else {
@@ -375,6 +362,16 @@ public class Lexer {
                 location.incrementElementPosition();
             }
             break;
+        }
+    }
+
+    static void updateElementOccurrence(StaEDIStreamLocation location) {
+        /*
+         * Only increment the position if we have not yet started
+         * the composite - i.e, only a single component is present.
+         */
+        if (location.getComponentPosition() < 1) {
+            location.incrementElementOccurrence();
         }
     }
 

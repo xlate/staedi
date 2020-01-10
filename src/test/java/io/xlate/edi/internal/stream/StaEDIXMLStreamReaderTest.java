@@ -50,7 +50,6 @@ import org.xmlunit.diff.Diff;
 import io.xlate.edi.schema.Schema;
 import io.xlate.edi.schema.SchemaFactory;
 import io.xlate.edi.stream.EDIInputFactory;
-import io.xlate.edi.stream.EDIStreamException;
 import io.xlate.edi.stream.EDIStreamFilter;
 import io.xlate.edi.stream.EDIStreamReader;
 
@@ -68,14 +67,14 @@ public class StaEDIXMLStreamReaderTest {
     static byte[] TINY_X12 = ("ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~"
             + "IEA*1*508121953~").getBytes();
 
-    XMLStreamReader getXmlReader(String resource) throws EDIStreamException, XMLStreamException {
+    XMLStreamReader getXmlReader(String resource) throws XMLStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = getClass().getResourceAsStream(resource);
         EDIStreamReader ediReader = factory.createEDIStreamReader(stream);
         return new StaEDIXMLStreamReader(ediReader);
     }
 
-    XMLStreamReader getXmlReader(byte[] bytes) throws EDIStreamException, XMLStreamException {
+    XMLStreamReader getXmlReader(byte[] bytes) throws XMLStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         factory.setProperty(EDIInputFactory.EDI_VALIDATE_CONTROL_STRUCTURE, "false");
         InputStream stream = new ByteArrayInputStream(bytes);
@@ -90,7 +89,7 @@ public class StaEDIXMLStreamReaderTest {
     }
 
     @Test
-    public void testCreateEDIXMLStreamReader() throws EDIStreamException, XMLStreamException {
+    public void testCreateEDIXMLStreamReader() throws XMLStreamException {
         XMLStreamReader xmlReader = getXmlReader("/x12/simple997.edi");
         assertNotNull(xmlReader, "xmlReader was null");
     }

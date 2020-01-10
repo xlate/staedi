@@ -9,7 +9,7 @@ public class EDIValidationException extends RuntimeException {
     protected final transient Location location;
     protected final transient CharSequence data;
 
-    private EDIValidationException next;
+    private EDIValidationException nextException;
 
     public EDIValidationException(EDIStreamEvent event,
             EDIStreamValidationError error,
@@ -47,7 +47,7 @@ public class EDIValidationException extends RuntimeException {
      * @see #setNextException
      */
     public EDIValidationException getNextException() {
-        return (next);
+        return nextException;
     }
 
     /**
@@ -61,18 +61,18 @@ public class EDIValidationException extends RuntimeException {
 
         EDIValidationException current = this;
         for(;;) {
-            EDIValidationException next = current.next;
+            EDIValidationException next = current.nextException;
             if (next != null) {
                 current = next;
                 continue;
             }
 
-            if (current.next == null) {
-                current.next = ex;
+            if (current.nextException == null) {
+                current.nextException = ex;
                 return;
             }
 
-            current=current.next;
+            current = current.nextException;
         }
     }
 }
