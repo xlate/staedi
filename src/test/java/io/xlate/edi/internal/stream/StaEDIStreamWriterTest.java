@@ -16,6 +16,7 @@
 package io.xlate.edi.internal.stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -744,6 +745,39 @@ public class StaEDIStreamWriterTest {
         assertEquals(EDIStreamValidationError.UNEXPECTED_SEGMENT, e.getError());
         assertEquals("ST", e.getData().toString());
         assertEquals(2, e.getLocation().getSegmentPosition());
+    }
+
+    @Test
+    public void testElementValidationThrown() throws EDISchemaException, EDIStreamException {
+        EDIOutputFactory outputFactory = EDIOutputFactory.newFactory();
+        outputFactory.setProperty(StaEDIOutputFactory.PRETTY_PRINT, true);
+        ByteArrayOutputStream result = new ByteArrayOutputStream(16384);
+        EDIStreamWriter writer = outputFactory.createEDIStreamWriter(result);
+
+        Schema control = SchemaUtils.getControlSchema("X12", new String[] { "00501" });
+        writer.setControlSchema(control);
+
+        /*SchemaFactory schemaFactory = SchemaFactory.newFactory();
+        Schema transaction = schemaFactory.createSchema(getClass().getResource("/x12/EDISchema997.xml"));
+        writer.setTransactionSchema(transaction);*/
+
+        writer.startInterchange();
+        writeHeader(writer);
+        writer.writeStartSegment("GS");
+        EDIValidationException e = assertThrows(EDIValidationException.class, () -> writer.writeElement("AAA"));
+
+        assertEquals(EDIStreamEvent.ELEMENT_DATA_ERROR, e.getEvent());
+        assertEquals(EDIStreamValidationError.DATA_ELEMENT_TOO_LONG, e.getError());
+        //assertEquals("AAA", e.getData().toString());
+        assertEquals(2, e.getLocation().getSegmentPosition());
+        assertEquals(1, e.getLocation().getElementPosition());
+
+        assertNotNull(e = e.getNextException());
+        assertEquals(EDIStreamEvent.ELEMENT_DATA_ERROR, e.getEvent());
+        assertEquals(EDIStreamValidationError.INVALID_CODE_VALUE, e.getError());
+        //assertEquals("AAA", e.getData().toString());
+        assertEquals(2, e.getLocation().getSegmentPosition());
+        assertEquals(1, e.getLocation().getElementPosition());
     }
 
     @Test
