@@ -28,12 +28,12 @@
         </sequence>
       </segment>
 
-      <loop type="L0001" code="AK2">
+      <loop type="L0001" code="AK2" title="Transaction Set Response Header">
         <segment type="AK2">
           <!-- Unchanged from standard -->
         </segment>
 
-        <loop type="L0002" code="IK3">
+        <loop type="L0002" code="IK3" title="Error Identification">
           <segment type="IK3">
             <sequence>
               <element position="1" minOccurs="1" />
@@ -75,7 +75,7 @@
               <!-- Remaining elements are not used. -->
             </sequence>
           </segment>
-          <loop type="L0003" code="IK4">
+          <loop type="L0003" code="IK4" title="Implementation Data Element Note">
             <segment type="IK4">
               <!-- Unchanged from standard -->
             </segment>

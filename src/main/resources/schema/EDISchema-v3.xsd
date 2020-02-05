@@ -105,133 +105,114 @@
     </complexContent>
   </complexType>
 
-
-  <complexType name="referenceType" abstract="true">
-  <!-- FIXME: Move type and ref into extension elements, rename to occurrenceType -->
+  <attributeGroup name="referenceAttributeGroup">
     <attribute name="type" type="IDREF" />
     <attribute name="ref" type="IDREF">
       <annotation>
-        <documentation>Deprecated, use 'type' attribute instead. This attribute will be removed in a future version of this schema.</documentation>
+        <documentation>
+          *DEPRECATED*
+          Use 'type' attribute instead. This attribute will be removed in a future version of this schema.
+        </documentation>
       </annotation>
     </attribute>
     <attribute name="minOccurs" type="nonNegativeInteger" default="0">
       <annotation>
-        <documentation>The minimum number of times a reference may occur at the declared location in the EDI structure.</documentation>
+        <documentation>The minimum number of times a type may occur at the declared location in the EDI structure.</documentation>
       </annotation>
     </attribute>
     <attribute name="maxOccurs" type="nonNegativeInteger" default="1">
       <annotation>
-        <documentation>The maximum number of times a reference may occur at the declared location in the EDI structure.</documentation>
+        <documentation>The maximum number of times a type may occur at the declared location in the EDI structure.</documentation>
       </annotation>
     </attribute>
-  </complexType>
+  </attributeGroup>
+
+  <attributeGroup name="implementationAttributeGroup">
+    <attribute name="minOccurs" type="nonNegativeInteger">
+      <annotation>
+        <documentation>The minimum number of times a type may occur at the declared location in the EDI structure.</documentation>
+      </annotation>
+    </attribute>
+    <attribute name="maxOccurs" type="nonNegativeInteger">
+      <annotation>
+        <documentation>The maximum number of times a type may occur at the declared location in the EDI structure.</documentation>
+      </annotation>
+    </attribute>
+  </attributeGroup>
 
   <!-- Element Types -->
-  <complexType name="elementBase">
-    <complexContent>
-      <extension base="tns:referenceType" />
-    </complexContent>
-  </complexType>
-
   <complexType name="elementStandard">
-    <complexContent>
-      <extension base="tns:elementBase">
-      </extension>
-    </complexContent>
+    <attributeGroup ref="tns:referenceAttributeGroup" />
   </complexType>
 
   <complexType name="elementImpl">
-    <complexContent>
-      <extension base="tns:elementBase">
-        <sequence>
-          <element ref="tns:enumeration" minOccurs="0" />
-        </sequence>
-        <attribute name="position" type="tns:positionType" />
-      </extension>
-    </complexContent>
+    <sequence>
+      <element ref="tns:enumeration" minOccurs="0" />
+    </sequence>
+    <attribute name="position" type="tns:positionType" />
+    <attributeGroup ref="tns:implementationAttributeGroup" />
   </complexType>
 
   <!-- Composite Types -->
-  <complexType name="compositeBase">
-    <complexContent>
-      <extension base="tns:referenceType" />
-    </complexContent>
-  </complexType>
-
   <complexType name="compositeStandard">
-    <complexContent>
-      <extension base="tns:compositeBase" />
-    </complexContent>
+    <attributeGroup ref="tns:referenceAttributeGroup" />
   </complexType>
 
   <complexType name="compositeImpl">
-    <complexContent>
-      <extension base="tns:compositeBase">
-        <sequence>
-          <element name="sequence">
-            <annotation>
-              <documentation>
-                The ordered elements for a composite element implementation.
-              </documentation>
-            </annotation>
-            <complexType>
-              <sequence>
-                <element name="element" type="tns:elementImpl" minOccurs="1" maxOccurs="unbounded" />
-              </sequence>
-            </complexType>
-          </element>
-        </sequence>
-        <attribute name="position" type="tns:positionType" />
-      </extension>
-    </complexContent>
+    <sequence>
+      <element name="sequence">
+        <annotation>
+          <documentation>
+            The ordered elements for a composite element implementation.
+          </documentation>
+        </annotation>
+        <complexType>
+          <sequence>
+            <element name="element" type="tns:elementImpl" minOccurs="1" maxOccurs="unbounded" />
+          </sequence>
+        </complexType>
+      </element>
+    </sequence>
+    <attribute name="position" type="tns:positionType" />
+    <attributeGroup ref="tns:implementationAttributeGroup" />
   </complexType>
 
   <!-- Segment Types -->
-  <complexType name="segmentBase" abstract="true">
-    <complexContent>
-      <extension base="tns:referenceType" />
-    </complexContent>
-  </complexType>
-
   <complexType name="segmentStandard">
-    <complexContent>
-      <extension base="tns:segmentBase" />
-    </complexContent>
+    <attributeGroup ref="tns:referenceAttributeGroup" />
   </complexType>
 
   <complexType name="segmentImpl">
-    <complexContent>
-      <extension base="tns:segmentBase">
-        <sequence>
-          <element name="sequence" minOccurs="0">
-            <annotation>
-              <documentation>
-                The ordered elements and components for a segment implementation.
-              </documentation>
-            </annotation>
-            <complexType>
-              <sequence>
-                <choice maxOccurs="unbounded">
-                  <element name="element" type="tns:elementImpl" />
-                  <element name="composite" type="tns:compositeImpl" />
-                </choice>
-              </sequence>
-            </complexType>
-          </element>
-        </sequence>
-        <attribute name="discriminator" type="tns:discriminatorType" use="optional">
-          <annotation>
-            <documentation>
-              The element position in the segment used to identify an occurrence
-              of a standard segment from other implementation occurrences. The
-              element identified by the position given in this attribute must also specify an
-              enumeration of values used only by this implementation and not used
-              by any other implementations of the standard segment in the same implementation loop.
-            </documentation>
-          </annotation>
-        </attribute>
-      </extension>
-    </complexContent>
+    <sequence>
+      <element name="sequence" minOccurs="0">
+        <annotation>
+          <documentation>
+            The ordered elements and components for a segment implementation.
+          </documentation>
+        </annotation>
+        <complexType>
+          <sequence>
+            <choice maxOccurs="unbounded">
+              <element name="element" type="tns:elementImpl" />
+              <element name="composite" type="tns:compositeImpl" />
+            </choice>
+          </sequence>
+        </complexType>
+      </element>
+    </sequence>
+    <attribute name="type" type="IDREF" use="required" />
+    <attributeGroup ref="tns:implementationAttributeGroup" />
+    <attribute name="discriminator" type="tns:discriminatorType" use="optional">
+      <annotation>
+        <documentation>
+          The element position in the segment used to identify an occurrence
+          of a standard segment from other implementation occurrences. The
+          element identified by the position given in this attribute must also specify an
+          enumeration of values used only by this implementation and not used
+          by any other implementations of the standard segment in the same implementation loop.
+        </documentation>
+      </annotation>
+    </attribute>
   </complexType>
 
   <!-- Loop Types -->
@@ -293,6 +274,7 @@
           </choice>
         </choice>
 
+        <attribute name="type" type="IDREF" />
         <attribute name="code" use="required">
           <annotation>
             <documentation>Code used to uniquely a loop within the transaction/message.</documentation>
@@ -321,7 +303,7 @@
         </attribute>
         <attribute name="code" use="required">
           <annotation>
-            <documentation>Code used to uniquely a loop within the transaction/message.</documentation>
+            <documentation>Code used to uniquely a loop within the transaction/message implementation.</documentation>
           </annotation>
           <simpleType>
             <restriction base="NMTOKEN">
