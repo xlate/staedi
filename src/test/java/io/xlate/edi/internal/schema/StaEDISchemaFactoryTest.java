@@ -40,7 +40,7 @@ public class StaEDISchemaFactoryTest {
         assertTrue(factory instanceof StaEDISchemaFactory, "Not an instance");
         URL schemaURL = getClass().getResource("/x12/EDISchema997.xml");
         Schema schema = factory.createSchema(schemaURL);
-        assertEquals(StaEDISchema.TRANSACTION, schema.getMainLoop().getId(), "Incorrect root id");
+        assertEquals(StaEDISchema.TRANSACTION, schema.getStandard().getId(), "Incorrect root id");
         assertTrue(schema.containsSegment("AK9"), "Missing AK9 segment");
     }
 
@@ -50,7 +50,7 @@ public class StaEDISchemaFactoryTest {
         assertTrue(factory instanceof StaEDISchemaFactory, "Not an instance");
         InputStream schemaStream = getClass().getResourceAsStream("/x12/EDISchema997.xml");
         Schema schema = factory.createSchema(schemaStream);
-        assertEquals(StaEDISchema.TRANSACTION, schema.getMainLoop().getId(), "Incorrect root id");
+        assertEquals(StaEDISchema.TRANSACTION, schema.getStandard().getId(), "Incorrect root id");
         assertTrue(schema.containsSegment("AK9"), "Missing AK9 segment");
     }
 
@@ -58,7 +58,7 @@ public class StaEDISchemaFactoryTest {
     public void testCreateEdifactInterchangeSchema() throws EDISchemaException {
         Schema schema = SchemaUtils.getControlSchema(Standards.EDIFACT, new String[] { "UNOA", "4", "", "", "02" });
         assertNotNull(schema, "schema was null");
-        assertEquals(StaEDISchema.INTERCHANGE, schema.getMainLoop().getId(), "Incorrect root id");
+        assertEquals(StaEDISchema.INTERCHANGE, schema.getStandard().getId(), "Incorrect root id");
     }
 
     //TODO: no supported properties for now

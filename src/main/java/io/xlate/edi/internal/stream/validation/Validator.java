@@ -52,7 +52,7 @@ public class Validator {
     public Validator(Schema schema, Schema containerSchema) {
         this.schema = schema;
         this.containerSchema = containerSchema;
-        root = buildTree(schema.getMainLoop());
+        root = buildTree(schema.getStandard());
         correctSegment = segment = root.getFirstChild();
     }
 
@@ -161,11 +161,12 @@ public class Validator {
         mandatory.clear();
         complete = false;
 
-        scan: while (current != null) {
+        while (current != null) {
             switch (current.getNodeType()) {
             case SEGMENT:
                 if (this.handleSegment(tag, current, startDepth, startNode, handler)) {
-                    break scan;
+                    handleMissingMandatory(handler);
+                    return;
                 }
                 break;
 
@@ -173,7 +174,8 @@ public class Validator {
             case TRANSACTION:
             case LOOP:
                 if (this.handleLoop(tag, current, startDepth, startNode, handler)) {
-                    break scan;
+                    handleMissingMandatory(handler);
+                    return;
                 }
                 break;
 
@@ -204,7 +206,7 @@ public class Validator {
 
             if (next != null) {
                 current = next;
-                continue scan;
+                continue;
             }
 
             if (this.depth == startDepth && current != startNode) {
@@ -230,7 +232,7 @@ public class Validator {
                     }
 
                     segment = next;
-                    break scan;
+                    break;
                 }
             }
 
@@ -264,7 +266,7 @@ public class Validator {
                         }
                     }
 
-                    break scan; // Wasn't found; cut our losses and go back.
+                    break; // Wasn't found; cut our losses and go back.
                 }
             }
         }

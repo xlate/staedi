@@ -33,11 +33,21 @@ class StaEDISchema implements Schema {
     static final String TRANSACTION = QN_TRANSACTION.toString();
 
     private Map<String, EDIType> types = Collections.emptyMap();
-    private EDIComplexType mainLoop = null;
+    private EDIComplexType standardLoop = null;
 
     @Override
     public EDIComplexType getMainLoop() {
-        return mainLoop;
+        return getStandard();
+    }
+
+    @Override
+    public EDIComplexType getStandard() {
+        return standardLoop;
+    }
+
+    @Override
+    public EDIComplexType getImplementation() {
+        return null;
     }
 
     void setTypes(Map<String, EDIType> types) throws EDISchemaException {
@@ -48,9 +58,9 @@ class StaEDISchema implements Schema {
         this.types = Collections.unmodifiableMap(types);
 
         if (types.containsKey(QN_INTERCHANGE.toString())) {
-            this.mainLoop = (EDIComplexType) types.get(QN_INTERCHANGE.toString());
+            this.standardLoop = (EDIComplexType) types.get(QN_INTERCHANGE.toString());
         } else if (types.containsKey(QN_TRANSACTION.toString())) {
-            this.mainLoop = (EDIComplexType) types.get(QN_TRANSACTION.toString());
+            this.standardLoop = (EDIComplexType) types.get(QN_TRANSACTION.toString());
         } else {
             throw new EDISchemaException("Schema must contain either " +
                     QN_INTERCHANGE + " or " + QN_TRANSACTION);

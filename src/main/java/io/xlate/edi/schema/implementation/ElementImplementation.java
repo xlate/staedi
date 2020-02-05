@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2017 xlate.io LLC, http://www.xlate.io
+ * Copyright 2020 xlate.io LLC, http://www.xlate.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -13,18 +13,14 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  ******************************************************************************/
-package io.xlate.edi.schema;
+package io.xlate.edi.schema.implementation;
 
-public interface Schema extends Iterable<EDIType> {
+import java.util.Set;
 
-    @Deprecated /*(forRemoval = true, since = "1.2")*/
-    public abstract EDIComplexType getMainLoop();
+import io.xlate.edi.schema.EDISimpleType;
 
-    public abstract EDIComplexType getStandard();
+public interface ElementImplementation extends EDITypeImplementation<EDISimpleType> {
 
-    public abstract EDIComplexType getImplementation();
+    Set<String> getValueSet();
 
-    public abstract EDIType getType(String name);
-
-    public abstract boolean containsSegment(String name);
 }
