@@ -24,6 +24,6 @@ public interface SegmentImplementation extends EDITypeImplementation<EDIComplexT
 
     Discriminator getDiscriminator();
 
-    List<EDITypeImplementation<? extends EDIType>> getSequence();
+    List<EDITypeImplementation<EDIType>> getSequence();
 
 }

@@ -142,77 +142,102 @@
 
   <!-- Element Types -->
   <complexType name="elementStandard">
-    <attributeGroup ref="tns:referenceAttributeGroup" />
+    <complexContent>
+      <extension base="tns:baseType">
+        <attributeGroup ref="tns:referenceAttributeGroup" />
+      </extension>
+    </complexContent>
   </complexType>
 
   <complexType name="elementImpl">
-    <sequence>
-      <element ref="tns:enumeration" minOccurs="0" />
-    </sequence>
-    <attribute name="position" type="tns:positionType" />
-    <attributeGroup ref="tns:implementationAttributeGroup" />
+    <complexContent>
+      <extension base="tns:baseType">
+        <sequence>
+          <element ref="tns:enumeration" minOccurs="0" />
+        </sequence>
+        <attribute name="position" type="tns:positionType" />
+        <attributeGroup ref="tns:implementationAttributeGroup" />
+      </extension>
+    </complexContent>
   </complexType>
 
   <!-- Composite Types -->
   <complexType name="compositeStandard">
-    <attributeGroup ref="tns:referenceAttributeGroup" />
+    <complexContent>
+      <extension base="tns:baseType">
+        <attributeGroup ref="tns:referenceAttributeGroup" />
+      </extension>
+    </complexContent>
   </complexType>
 
   <complexType name="compositeImpl">
-    <sequence>
-      <element name="sequence">
-        <annotation>
-          <documentation>
-            The ordered elements for a composite element implementation.
-          </documentation>
-        </annotation>
-        <complexType>
-          <sequence>
-            <element name="element" type="tns:elementImpl" minOccurs="1" maxOccurs="unbounded" />
-          </sequence>
-        </complexType>
-      </element>
-    </sequence>
-    <attribute name="position" type="tns:positionType" />
-    <attributeGroup ref="tns:implementationAttributeGroup" />
+    <complexContent>
+      <extension base="tns:baseType">
+        <sequence>
+          <element name="sequence">
+            <annotation>
+              <documentation>
+                The ordered elements for a composite element implementation.
+              </documentation>
+            </annotation>
+            <complexType>
+              <sequence>
+                <element name="element" type="tns:elementImpl" minOccurs="1" maxOccurs="unbounded" />
+              </sequence>
+            </complexType>
+          </element>
+        </sequence>
+        <attribute name="position" type="tns:positionType" />
+        <attributeGroup ref="tns:implementationAttributeGroup" />
+      </extension>
+    </complexContent>
   </complexType>
 
   <!-- Segment Types -->
   <complexType name="segmentStandard">
-    <attributeGroup ref="tns:referenceAttributeGroup" />
+    <complexContent>
+      <extension base="tns:baseType">
+        <attributeGroup ref="tns:referenceAttributeGroup" />
+      </extension>
+    </complexContent>
   </complexType>
 
   <complexType name="segmentImpl">
-    <sequence>
-      <element name="sequence" minOccurs="0">
-        <annotation>
-          <documentation>
-            The ordered elements and components for a segment implementation.
-          </documentation>
-        </annotation>
-        <complexType>
-          <sequence>
-            <choice maxOccurs="unbounded">
-              <element name="element" type="tns:elementImpl" />
-              <element name="composite" type="tns:compositeImpl" />
-            </choice>
-          </sequence>
-        </complexType>
-      </element>
-    </sequence>
-    <attribute name="type" type="IDREF" use="required" />
-    <attributeGroup ref="tns:implementationAttributeGroup" />
-    <attribute name="discriminator" type="tns:discriminatorType" use="optional">
-      <annotation>
-        <documentation>
-          The element position in the segment used to identify an occurrence
-          of a standard segment from other implementation occurrences. The
-          element identified by the position given in this attribute must also specify an
-          enumeration of values used only by this implementation and not used
-          by any other implementations of the standard segment in the same implementation loop.
-        </documentation>
-      </annotation>
-    </attribute>
+    <complexContent>
+      <extension base="tns:baseType">
+        <sequence>
+          <element name="sequence" minOccurs="0">
+            <annotation>
+              <documentation>
+                The ordered elements and components for a segment implementation.
+              </documentation>
+            </annotation>
+            <complexType>
+              <sequence>
+                <choice maxOccurs="unbounded">
+                  <element name="element" type="tns:elementImpl" />
+                  <element name="composite" type="tns:compositeImpl" />
+                </choice>
+              </sequence>
+            </complexType>
+          </element>
+        </sequence>
+        <attribute name="type" type="IDREF" use="required" />
+        <attributeGroup ref="tns:implementationAttributeGroup" />
+        <attribute name="discriminator" type="tns:discriminatorType" use="optional">
+          <annotation>
+            <documentation>
+              The element position in the segment used to identify an occurrence
+              of a standard segment from other implementation occurrences. The
+              element identified by the position given in this attribute must also specify an
+              enumeration of values used only by this implementation and not used
+              by
+              any other implementations of the standard segment in the same implementation loop.
+            </documentation>
+          </annotation>
+        </attribute>
+      </extension>
+    </complexContent>
   </complexType>
 
   <!-- Loop Types -->
@@ -251,11 +276,10 @@
   <complexType name="loopStandard">
     <complexContent>
       <extension base="tns:loopBase">
-        <choice>
+        <sequence>
           <element name="sequence">
             <annotation>
               <documentation>
-                Deprecated - place segments and loops directly within parent loop.
                 The ordered list of segments and sub-loops contained in this
                 loop.
               </documentation>
@@ -267,17 +291,11 @@
               </choice>
             </complexType>
           </element>
+        </sequence>
 
-          <choice maxOccurs="unbounded">
-            <element name="segment" type="tns:segmentStandard" />
-            <element name="loop" type="tns:loopStandard" minOccurs="0" />
-          </choice>
-        </choice>
-
-        <attribute name="type" type="IDREF" />
         <attribute name="code" use="required">
           <annotation>
-            <documentation>Code used to uniquely a loop within the transaction/message.</documentation>
+            <documentation>Code used to uniquely identify a loop within the transaction/message.</documentation>
           </annotation>
           <simpleType>
             <restriction base="ID">
@@ -292,18 +310,32 @@
   <complexType name="loopImpl">
     <complexContent>
       <extension base="tns:loopBase">
-        <choice maxOccurs="unbounded">
-          <element name="segment" type="tns:segmentImpl" />
-          <element name="loop" type="tns:loopImpl" minOccurs="0" />
-        </choice>
+        <sequence>
+          <element name="sequence">
+            <annotation>
+              <documentation>
+                The ordered list of segments and sub-loops contained in this
+                loop.
+              </documentation>
+            </annotation>
+            <complexType>
+              <choice maxOccurs="unbounded">
+                <element name="segment" type="tns:segmentImpl" />
+                <element name="loop" type="tns:loopImpl" minOccurs="0" />
+              </choice>
+            </complexType>
+          </element>
+        </sequence>
+
         <attribute name="type" type="IDREF" use="required">
           <annotation>
             <documentation>The identifier of the standard loop this loop implements.</documentation>
           </annotation>
         </attribute>
+
         <attribute name="code" use="required">
           <annotation>
-            <documentation>Code used to uniquely a loop within the transaction/message implementation.</documentation>
+            <documentation>Code used to uniquely identify a loop within the transaction/message implementation.</documentation>
           </annotation>
           <simpleType>
             <restriction base="NMTOKEN">
@@ -311,6 +343,7 @@
             </restriction>
           </simpleType>
         </attribute>
+
         <attribute name="discriminator" type="tns:discriminatorType">
           <annotation>
             <documentation>
@@ -335,10 +368,16 @@
       <sequence>
         <choice>
           <element ref="tns:interchange" />
-          <element ref="tns:transaction" />
+          <sequence>
+            <annotation>
+              <documentation>The transaction standard and optional implementation details</documentation>
+            </annotation>
+            <element ref="tns:transaction" />
+            <element ref="tns:implementation" minOccurs="0" />
+          </sequence>
         </choice>
 
-        <choice maxOccurs="unbounded">
+        <choice id="typeChoice" maxOccurs="unbounded">
           <element ref="tns:elementType" maxOccurs="unbounded" />
           <element ref="tns:compositeType" minOccurs="0" maxOccurs="unbounded" />
           <element ref="tns:segmentType" maxOccurs="unbounded" />
@@ -369,42 +408,51 @@
 
   <element name="transaction">
     <complexType>
-      <choice>
-        <element name="sequence">
-          <annotation>
-            <documentation>
-              Deprecated - place segments and loops directly within transaction.
-              The ordered list of segments and sub-loops contained at the
-              top-level of this transaction.
-            </documentation>
-          </annotation>
-          <complexType>
-            <choice maxOccurs="unbounded">
-              <element name="segment" type="tns:segmentStandard" />
-              <element name="loop" type="tns:loopStandard" minOccurs="0" />
-            </choice>
-          </complexType>
-        </element>
+      <complexContent>
+        <extension base="tns:baseType">
+          <sequence>
+            <element name="sequence">
+              <annotation>
+                <documentation>
+                  The ordered list of segments and sub-loops contained at the
+                  top-level of this transaction.
+                </documentation>
+              </annotation>
+              <complexType>
+                <choice maxOccurs="unbounded">
+                  <element name="segment" type="tns:segmentStandard" />
+                  <element name="loop" type="tns:loopStandard" minOccurs="0" />
+                </choice>
+              </complexType>
+            </element>
+          </sequence>
+        </extension>
+      </complexContent>
+    </complexType>
+  </element>
 
-        <sequence>
-          <element name="standard">
-            <complexType>
-              <choice maxOccurs="unbounded">
-                <element name="segment" type="tns:segmentStandard" />
-                <element name="loop" type="tns:loopStandard" minOccurs="0" />
-              </choice>
-            </complexType>
-          </element>
-          <element name="implementation" minOccurs="0">
-            <complexType>
-              <choice maxOccurs="unbounded">
-                <element name="segment" type="tns:segmentImpl" />
-                <element name="loop" type="tns:loopImpl" minOccurs="0" />
-              </choice>
-            </complexType>
-          </element>
-        </sequence>
-      </choice>
+  <element name="implementation">
+    <complexType>
+      <complexContent>
+        <extension base="tns:baseType">
+          <sequence>
+            <element name="sequence">
+              <annotation>
+                <documentation>
+                  The ordered list of segments and sub-loops contained at the
+                  top-level of a transaction implementation.
+                </documentation>
+              </annotation>
+              <complexType>
+                <choice maxOccurs="unbounded">
+                  <element name="segment" type="tns:segmentImpl" />
+                  <element name="loop" type="tns:loopImpl" minOccurs="0" />
+                </choice>
+              </complexType>
+            </element>
+          </sequence>
+        </extension>
+      </complexContent>
     </complexType>
   </element>
 

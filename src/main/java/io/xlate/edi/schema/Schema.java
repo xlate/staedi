@@ -15,6 +15,8 @@
  ******************************************************************************/
 package io.xlate.edi.schema;
 
+import io.xlate.edi.schema.implementation.LoopImplementation;
+
 public interface Schema extends Iterable<EDIType> {
 
     @Deprecated /*(forRemoval = true, since = "1.2")*/
@@ -22,7 +24,7 @@ public interface Schema extends Iterable<EDIType> {
 
     public abstract EDIComplexType getStandard();
 
-    public abstract EDIComplexType getImplementation();
+    public abstract LoopImplementation getImplementation();
 
     public abstract EDIType getType(String name);
 

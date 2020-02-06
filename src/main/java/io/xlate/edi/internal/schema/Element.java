@@ -30,10 +30,6 @@ class Element extends BasicType implements EDISimpleType {
     private long maxLength;
     private Set<String> values;
 
-    Element(String id, Base base, int number, long minLength, long maxLength) {
-        this(id, base, number, minLength, maxLength, Collections.emptySet());
-    }
-
     Element(String id, Base base, int number, long minLength, long maxLength, Set<String> values) {
         super(id, Type.ELEMENT);
         this.base = base;

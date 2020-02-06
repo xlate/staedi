@@ -14,7 +14,7 @@
   License for the specific language governing permissions and limitations under
   the License.
 -->
-<schema xmlns="http://xlate.io/EDISchema/v2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://xlate.io/EDISchema/v2 ../schema/EDISchema-v2.xsd">
+<schema xmlns="http://xlate.io/EDISchema/v3">
 
   <interchange header="ISA" trailer="IEA">
     <sequence>
