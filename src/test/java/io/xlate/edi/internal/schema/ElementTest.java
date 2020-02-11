@@ -14,13 +14,13 @@ class ElementTest {
 
     @Test
     void testElementContructorNoValues() {
-        Element e = new Element("E1", Base.STRING, 1, 0L, 5L, Collections.emptySet());
+        ElementType e = new ElementType("E1", Base.STRING, 1, 0L, 5L, Collections.emptySet());
         assertEquals("id: E1, type: ELEMENT, base: STRING, number: 1, minLength: 0, maxLength: 5, values: []", e.toString());
     }
 
     @Test
     void testElementContructorWithValues() {
-        Element e = new Element("E1", Base.STRING, 1, 0L, 5L, new HashSet<>(Arrays.asList("ABCDE", "FGHIJ")));
+        ElementType e = new ElementType("E1", Base.STRING, 1, 0L, 5L, new HashSet<>(Arrays.asList("ABCDE", "FGHIJ")));
         assertEquals("id: E1, type: ELEMENT, base: STRING, number: 1, minLength: 0, maxLength: 5, values: [ABCDE, FGHIJ]", e.toString());
     }
 

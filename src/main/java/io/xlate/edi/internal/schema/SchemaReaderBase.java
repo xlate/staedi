@@ -190,7 +190,7 @@ class SchemaReaderBase implements SchemaReader {
 
         refs.add(trailerRef);
 
-        Structure interchange = new Structure(QN_INTERCHANGE.toString(),
+        StructureType interchange = new StructureType(QN_INTERCHANGE.toString(),
                                               EDIType.Type.INTERCHANGE,
                                               "INTERCHANGE",
                                               refs,
@@ -240,7 +240,7 @@ class SchemaReaderBase implements SchemaReader {
         }
         refs.add(trailerRef);
 
-        Structure struct = new Structure(element.toString(),
+        StructureType struct = new StructureType(element.toString(),
                                          complex.get(element),
                                          complex.get(element).toString(),
                                          refs,
@@ -317,7 +317,7 @@ class SchemaReaderBase implements SchemaReader {
         }
     }
 
-    Structure readComplexType(XMLStreamReader reader,
+    StructureType readComplexType(XMLStreamReader reader,
                                QName complexType,
                                Map<String, EDIType> types) throws XMLStreamException {
         final EDIType.Type type = complex.get(complexType);
@@ -383,7 +383,7 @@ class SchemaReaderBase implements SchemaReader {
             }
         }
 
-        return new Structure(name, type, code, refs, rules);
+        return new StructureType(name, type, code, refs, rules);
     }
 
     void readReferences(XMLStreamReader reader,
@@ -429,7 +429,7 @@ class SchemaReaderBase implements SchemaReader {
         Reference ref;
 
         if (QN_LOOP.equals(element)) {
-            Structure loop = readComplexType(reader, element, types);
+            StructureType loop = readComplexType(reader, element, types);
             String loopRefId = QN_LOOP.toString() + '.' + refId;
             types.put(loopRefId, loop);
             ref = new Reference(loopRefId, refTag, minOccurs, maxOccurs);
@@ -493,7 +493,7 @@ class SchemaReaderBase implements SchemaReader {
         throw schemaException("missing end element " + QN_SYNTAX, reader);
     }
 
-    Element readSimpleType(XMLStreamReader reader) throws XMLStreamException {
+    ElementType readSimpleType(XMLStreamReader reader) throws XMLStreamException {
         String name = reader.getAttributeValue(null, "name");
 
         String base = reader.getAttributeValue(null, "base");
@@ -517,7 +517,7 @@ class SchemaReaderBase implements SchemaReader {
             values = Collections.emptySet();
         }
 
-        return new Element(name, intBase, number, minLength, maxLength, values);
+        return new ElementType(name, intBase, number, minLength, maxLength, values);
     }
 
     Set<String> readEnumerationValues(XMLStreamReader reader) throws XMLStreamException {

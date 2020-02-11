@@ -136,11 +136,11 @@ public class StaEDISchemaFactory implements SchemaFactory {
         types.values()
              .stream()
              .filter(type -> !type.isType(EDIType.Type.ELEMENT))
-             .map(type -> (Structure) type)
+             .map(type -> (StructureType) type)
              .forEach(struct -> validateReferences(struct, types));
     }
 
-    void validateReferences(Structure struct, Map<String, EDIType> types) {
+    void validateReferences(StructureType struct, Map<String, EDIType> types) {
         for (EDIReference ref : struct.getReferences()) {
             Reference impl = (Reference) ref;
             EDIType target = types.get(impl.getRefId());
@@ -193,7 +193,7 @@ public class StaEDISchemaFactory implements SchemaFactory {
         throw new IllegalArgumentException("Unexpected element: " + tag);
     }
 
-    void setReference(Structure struct, Reference reference, EDIType target, EDIType.Type... allowedTargets) {
+    void setReference(StructureType struct, Reference reference, EDIType target, EDIType.Type... allowedTargets) {
         boolean isAllowed = Arrays.stream(allowedTargets).anyMatch(target.getType()::equals);
 
         if (isAllowed) {
