@@ -25,7 +25,7 @@ import io.xlate.edi.schema.EDISimpleType;
 import io.xlate.edi.schema.EDISyntaxRule;
 import io.xlate.edi.schema.EDIType;
 
-class SchemaReaderBase implements SchemaReader {
+abstract class SchemaReaderBase implements SchemaReader {
 
     final String XMLNS;
 
@@ -413,8 +413,8 @@ class SchemaReaderBase implements SchemaReader {
         String refId = null;
 
         if (references.contains(element)) {
-            refId = reader.getAttributeValue(null, "ref");
-            Objects.nonNull(refId);
+            refId = readReferencedId(reader);
+            Objects.requireNonNull(refId);
         } else if (QN_LOOP.equals(element)) {
             refId = reader.getAttributeValue(null, "code");
             //TODO: ensure not null
@@ -591,4 +591,6 @@ class SchemaReaderBase implements SchemaReader {
             throw schemaException("Unexpected XML event [" + event + ']', reader);
         }
     }
+
+    protected abstract String readReferencedId(XMLStreamReader reader);
 }

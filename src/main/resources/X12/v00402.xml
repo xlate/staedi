@@ -18,7 +18,7 @@
 
   <interchange header="ISA" trailer="IEA">
     <sequence>
-      <segment ref="TA1" maxOccurs="1" />
+      <segment type="TA1" maxOccurs="1" />
 
       <group header="GS" trailer="GE">
         <transaction header="ST" trailer="SE" />
@@ -467,74 +467,74 @@
 
   <segmentType name="ST">
     <sequence>
-      <element ref="E143" minOccurs="1" />
-      <element ref="E329" minOccurs="1" />
-      <element ref="E1705" />
+      <element type="E143" minOccurs="1" />
+      <element type="E329" minOccurs="1" />
+      <element type="E1705" />
     </sequence>
   </segmentType>
 
   <segmentType name="SE">
     <sequence>
-      <element ref="E96" minOccurs="1" />
-      <element ref="E329" minOccurs="1" />
+      <element type="E96" minOccurs="1" />
+      <element type="E329" minOccurs="1" />
     </sequence>
   </segmentType>
 
   <segmentType name="GS">
     <sequence>
-      <element ref="E479" minOccurs="1" />
-      <element ref="E142" minOccurs="1" />
-      <element ref="E124" minOccurs="1" />
-      <element ref="E373" minOccurs="1" />
-      <element ref="E337" minOccurs="1" />
-      <element ref="E28" minOccurs="1" />
-      <element ref="E455" minOccurs="1" />
-      <element ref="E480" minOccurs="1" />
+      <element type="E479" minOccurs="1" />
+      <element type="E142" minOccurs="1" />
+      <element type="E124" minOccurs="1" />
+      <element type="E373" minOccurs="1" />
+      <element type="E337" minOccurs="1" />
+      <element type="E28" minOccurs="1" />
+      <element type="E455" minOccurs="1" />
+      <element type="E480" minOccurs="1" />
     </sequence>
   </segmentType>
 
   <segmentType name="GE">
     <sequence>
-      <element ref="E28" minOccurs="1" />
-      <element ref="E97" minOccurs="1" />
+      <element type="E28" minOccurs="1" />
+      <element type="E97" minOccurs="1" />
     </sequence>
   </segmentType>
 
   <segmentType name="ISA">
     <sequence>
-      <element ref="I01" minOccurs="1" />
-      <element ref="I02" minOccurs="1" />
-      <element ref="I03" minOccurs="1" />
-      <element ref="I04" minOccurs="1" />
-      <element ref="I05" minOccurs="1" />
-      <element ref="I06" minOccurs="1" />
-      <element ref="I05" minOccurs="1" />
-      <element ref="I07" minOccurs="1" />
-      <element ref="I08" minOccurs="1" />
-      <element ref="I09" minOccurs="1" />
-      <element ref="I65" minOccurs="1" />
-      <element ref="I11" minOccurs="1" />
-      <element ref="I12" minOccurs="1" />
-      <element ref="I13" minOccurs="1" />
-      <element ref="I14" minOccurs="1" />
-      <element ref="I15" minOccurs="1" />
+      <element type="I01" minOccurs="1" />
+      <element type="I02" minOccurs="1" />
+      <element type="I03" minOccurs="1" />
+      <element type="I04" minOccurs="1" />
+      <element type="I05" minOccurs="1" />
+      <element type="I06" minOccurs="1" />
+      <element type="I05" minOccurs="1" />
+      <element type="I07" minOccurs="1" />
+      <element type="I08" minOccurs="1" />
+      <element type="I09" minOccurs="1" />
+      <element type="I65" minOccurs="1" />
+      <element type="I11" minOccurs="1" />
+      <element type="I12" minOccurs="1" />
+      <element type="I13" minOccurs="1" />
+      <element type="I14" minOccurs="1" />
+      <element type="I15" minOccurs="1" />
     </sequence>
   </segmentType>
 
   <segmentType name="TA1">
     <sequence>
-      <element ref="I12" minOccurs="1" />
-      <element ref="I08" minOccurs="1" />
-      <element ref="I09" minOccurs="1" />
-      <element ref="I17" minOccurs="1" />
-      <element ref="I18" minOccurs="1" />
+      <element type="I12" minOccurs="1" />
+      <element type="I08" minOccurs="1" />
+      <element type="I09" minOccurs="1" />
+      <element type="I17" minOccurs="1" />
+      <element type="I18" minOccurs="1" />
     </sequence>
   </segmentType>
 
   <segmentType name="IEA">
     <sequence>
-      <element ref="I16" minOccurs="1" />
-      <element ref="I12" minOccurs="1" />
+      <element type="I16" minOccurs="1" />
+      <element type="I12" minOccurs="1" />
     </sequence>
   </segmentType>
 </schema>

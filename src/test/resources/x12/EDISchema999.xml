@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<schema xmlns="http://xlate.io/EDISchema/v2">
+<schema xmlns="http://xlate.io/EDISchema/v3">
     <transaction>
         <sequence>
             <segment ref="AK1" minOccurs="1"/>
