@@ -24,4 +24,8 @@ public interface CompositeImplementation extends EDITypeImplementation<EDIComple
 
     List<EDITypeImplementation<EDISimpleType>> getSequence();
 
+    @Override
+    default Type getType() {
+        return Type.COMPOSITE;
+    }
 }

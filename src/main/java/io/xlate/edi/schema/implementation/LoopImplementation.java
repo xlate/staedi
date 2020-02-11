@@ -25,4 +25,9 @@ public interface LoopImplementation extends EDITypeImplementation<EDIComplexType
 
     List<EDITypeImplementation<EDIComplexType>> getSequence();
 
+    @Override
+    default Type getType() {
+        return Type.LOOP;
+    }
+
 }

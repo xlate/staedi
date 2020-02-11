@@ -23,4 +23,9 @@ public interface ElementImplementation extends EDITypeImplementation<EDISimpleTy
 
     Set<String> getValueSet();
 
+    @Override
+    default Type getType() {
+        return Type.ELEMENT;
+    }
+
 }

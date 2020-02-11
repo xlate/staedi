@@ -26,4 +26,9 @@ public interface SegmentImplementation extends EDITypeImplementation<EDIComplexT
 
     List<EDITypeImplementation<EDIType>> getSequence();
 
+    @Override
+    default Type getType() {
+        return Type.SEGMENT;
+    }
+
 }
