@@ -13,4 +13,6 @@ public interface SchemaReader {
 
     String getTransactionName();
 
+    String getImplementationName();
+
 }

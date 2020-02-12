@@ -2,6 +2,7 @@ package io.xlate.edi.internal.schema;
 
 import static io.xlate.edi.internal.schema.StaEDISchemaFactory.schemaException;
 import static io.xlate.edi.internal.schema.StaEDISchemaFactory.unexpectedElement;
+import static io.xlate.edi.internal.schema.StaEDISchemaFactory.unexpectedEvent;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,7 +28,7 @@ import io.xlate.edi.schema.EDIType;
 
 abstract class SchemaReaderBase implements SchemaReader {
 
-    final String XMLNS;
+    final String xmlns;
 
     final QName QN_SCHEMA;
     final QName QN_DESCRIPTION;
@@ -49,12 +50,13 @@ abstract class SchemaReaderBase implements SchemaReader {
     final QName QN_SEGMENT_T;
 
     final Map<QName, EDIType.Type> complex;
+    final Map<QName, EDIType.Type> typeDefinitions;
     final Set<QName> references;
 
     protected XMLStreamReader reader;
 
     public SchemaReaderBase(String xmlns, XMLStreamReader reader) {
-        XMLNS = xmlns;
+        this.xmlns = xmlns;
         QN_SCHEMA = new QName(xmlns, "schema");
         QN_DESCRIPTION = new QName(xmlns, "description");
         QN_INTERCHANGE = new QName(xmlns, "interchange");
@@ -81,6 +83,11 @@ abstract class SchemaReaderBase implements SchemaReader {
         complex.put(QN_LOOP, EDIType.Type.LOOP);
         complex.put(QN_SEGMENT_T, EDIType.Type.SEGMENT);
         complex.put(QN_COMPOSITE_T, EDIType.Type.COMPOSITE);
+
+        typeDefinitions = new HashMap<>(3);
+        typeDefinitions.put(QN_SEGMENT_T, EDIType.Type.SEGMENT);
+        typeDefinitions.put(QN_COMPOSITE_T, EDIType.Type.COMPOSITE);
+        typeDefinitions.put(QN_ELEMENT_T, EDIType.Type.ELEMENT);
 
         references = new HashSet<>(4);
         references.add(QN_SEGMENT);
@@ -272,6 +279,12 @@ abstract class SchemaReaderBase implements SchemaReader {
     void readTypeDefinitions(XMLStreamReader reader, Map<String, EDIType> types) throws XMLStreamException {
         boolean schemaEnd = false;
 
+        // Cursor is already positioned on a type definition (e.g. from an earlier look-ahead)
+        if (typeDefinitions.containsKey(reader.getName())
+                && reader.getEventType() == XMLStreamConstants.START_ELEMENT) {
+            readTypeDefinition(types, reader);
+        }
+
         while (reader.hasNext() && !schemaEnd) {
             switch (reader.next()) {
             case XMLStreamConstants.START_ELEMENT:
@@ -303,7 +316,7 @@ abstract class SchemaReaderBase implements SchemaReader {
             nameCheck(name, types, reader);
             types.put(name, readSimpleType(reader));
         } else {
-            throw schemaException("Unexpected element: " + element, reader);
+            throw unexpectedElement(element, reader);
         }
     }
 
@@ -533,7 +546,7 @@ abstract class SchemaReaderBase implements SchemaReader {
                 if (element.equals(QN_VALUE)) {
                     values.add(reader.getElementText());
                 } else if (!element.equals(QN_ENUMERATION)) {
-                    throw schemaException("unexpected element " + element, reader);
+                    throw unexpectedElement(element, reader);
                 }
 
                 break;
@@ -560,11 +573,25 @@ abstract class SchemaReaderBase implements SchemaReader {
         }
     }
 
+    <T> T parseAttribute(XMLStreamReader reader, String attrName, Function<String, T> converter) {
+        String attr = reader.getAttributeValue(null, attrName);
+
+        if (attr != null) {
+            try {
+                return converter.apply(attr);
+            } catch (Exception e) {
+                throw schemaException("Invalid " + attrName, reader, e);
+            }
+        } else {
+            throw schemaException("Missing required attribute: [" + attrName + ']', reader);
+        }
+    }
+
     void requireEvent(int eventId, XMLStreamReader reader) {
         Integer event = reader.getEventType();
 
         if (event != eventId) {
-            throw schemaException("Unexpected XML event [" + event + ']', reader);
+            throw unexpectedEvent(reader);
         }
     }
 

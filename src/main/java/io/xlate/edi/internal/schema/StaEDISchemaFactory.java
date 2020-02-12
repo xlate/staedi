@@ -63,7 +63,7 @@ public class StaEDISchemaFactory implements SchemaFactory {
             XMLStreamReader reader = FACTORY.createXMLStreamReader(stream);
 
             if (reader.getEventType() != XMLStreamConstants.START_DOCUMENT) {
-                throw schemaException("Unexpected XML event [" + reader.getEventType() + ']', reader);
+                throw unexpectedEvent(reader);
             }
 
             reader.nextTag();
@@ -83,11 +83,14 @@ public class StaEDISchemaFactory implements SchemaFactory {
                 throw unexpectedElement(schemaElement, reader);
             }
 
-            StaEDISchema schema = new StaEDISchema(schemaReader.getInterchangeName(),
-                                                   schemaReader.getTransactionName());
 
             Map<String, EDIType> types = schemaReader.readTypes();
             validateReferences(types);
+
+            StaEDISchema schema = new StaEDISchema(schemaReader.getInterchangeName(),
+                                                   schemaReader.getTransactionName(),
+                                                   schemaReader.getImplementationName());
+
             schema.setTypes(types);
 
             return schema;
@@ -221,6 +224,10 @@ public class StaEDISchemaFactory implements SchemaFactory {
 
     static StaEDISchemaReadException unexpectedElement(QName element, XMLStreamReader reader) {
         return schemaException("Unexpected XML element [" + element.toString() + ']', reader);
+    }
+
+    static StaEDISchemaReadException unexpectedEvent(XMLStreamReader reader) {
+        return schemaException("Unexpected XML event [" + reader.getEventType() + ']', reader);
     }
 
     static StaEDISchemaReadException schemaException(String message, XMLStreamReader reader, Throwable cause) {
