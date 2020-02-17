@@ -66,7 +66,7 @@
                   <element position="2" minOccurs="1" />
                   <element position="3" minOccurs="1" />
                   <element position="4" />
-                  <element position="5" />
+                  <composite position="5" />
                   <composite position="6">
                     <sequence>
                       <element position="1" />
@@ -104,7 +104,7 @@
                       <element position="2" minOccurs="1" />
                       <element position="3" minOccurs="1" />
                       <element position="4" />
-                      <element position="5" minOccurs="1" />
+                      <composite position="5" minOccurs="1" />
                       <composite position="6">
                         <sequence>
                           <element position="1" />

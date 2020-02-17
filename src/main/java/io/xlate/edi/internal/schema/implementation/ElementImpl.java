@@ -5,20 +5,25 @@ import java.util.Set;
 import io.xlate.edi.schema.EDISimpleType;
 import io.xlate.edi.schema.implementation.ElementImplementation;
 
-public class ElementImpl implements ElementImplementation {
+public class ElementImpl implements ElementImplementation, Positioned {
 
-    private final EDISimpleType standard;
     private final int minOccurs;
     private final int maxOccurs;
     private final String id;
+    private final int position;
     private final Set<String> values;
 
-    public ElementImpl(EDISimpleType standard, int minOccurs, int maxOccurs, String id, Set<String> values) {
-        super();
-        this.standard = standard;
+    private EDISimpleType standard;
+
+    public ElementImpl(int minOccurs,
+            int maxOccurs,
+            String id,
+            int position,
+            Set<String> values) {
         this.minOccurs = minOccurs;
         this.maxOccurs = maxOccurs;
         this.id = id;
+        this.position = position;
         this.values = values;
     }
 
@@ -47,4 +52,12 @@ public class ElementImpl implements ElementImplementation {
         return values;
     }
 
+    @Override
+    public int getPosition() {
+        return position;
+    }
+
+    public void setStandard(EDISimpleType standard) {
+        this.standard = standard;
+    }
 }

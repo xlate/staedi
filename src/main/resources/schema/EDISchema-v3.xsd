@@ -155,7 +155,7 @@
         <sequence>
           <element ref="tns:enumeration" minOccurs="0" />
         </sequence>
-        <attribute name="position" type="tns:positionType" />
+        <attribute name="position" type="tns:positionType" use="required" />
         <attributeGroup ref="tns:implementationAttributeGroup" />
       </extension>
     </complexContent>
@@ -174,7 +174,7 @@
     <complexContent>
       <extension base="tns:baseType">
         <sequence>
-          <element name="sequence">
+          <element name="sequence" minOccurs="0">
             <annotation>
               <documentation>
                 The ordered elements for a composite element implementation.
@@ -187,7 +187,7 @@
             </complexType>
           </element>
         </sequence>
-        <attribute name="position" type="tns:positionType" />
+        <attribute name="position" type="tns:positionType" use="required" />
         <attributeGroup ref="tns:implementationAttributeGroup" />
       </extension>
     </complexContent>

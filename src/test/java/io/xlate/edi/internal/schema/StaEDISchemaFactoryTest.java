@@ -37,7 +37,7 @@ public class StaEDISchemaFactoryTest {
     final String INTERCHANGE_V2 = "{http://xlate.io/EDISchema/v2}interchange";
     final String TRANSACTION_V2 = "{http://xlate.io/EDISchema/v2}transaction";
 
-    final String STANDARD_V3 = "{http://xlate.io/EDISchema/v3}standard";
+    final String STANDARD_V3 = "{http://xlate.io/EDISchema/v3}transaction";
 
     @Test
     public void testCreateSchemaByURL() throws EDISchemaException {

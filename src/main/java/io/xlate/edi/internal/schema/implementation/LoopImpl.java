@@ -9,24 +9,25 @@ import io.xlate.edi.schema.implementation.LoopImplementation;
 
 public class LoopImpl implements LoopImplementation {
 
-    private final EDIComplexType standard;
     private final int minOccurs;
     private final int maxOccurs;
     private final String id;
+    private final String typeId;
     private final Discriminator discriminator;
     private final List<EDITypeImplementation<EDIComplexType>> sequence;
 
-    public LoopImpl(EDIComplexType standard,
-            int minOccurs,
+    private EDIComplexType standard;
+
+    public LoopImpl(int minOccurs,
             int maxOccurs,
             String id,
+            String typeId,
             Discriminator discriminator,
             List<EDITypeImplementation<EDIComplexType>> sequence) {
-        super();
-        this.standard = standard;
         this.minOccurs = minOccurs;
         this.maxOccurs = maxOccurs;
         this.id = id;
+        this.typeId = typeId;
         this.discriminator = discriminator;
         this.sequence = sequence;
     }
@@ -61,4 +62,11 @@ public class LoopImpl implements LoopImplementation {
         return sequence;
     }
 
+    public String getTypeId() {
+        return typeId;
+    }
+
+    public void setStandard(EDIComplexType standard) {
+        this.standard = standard;
+    }
 }

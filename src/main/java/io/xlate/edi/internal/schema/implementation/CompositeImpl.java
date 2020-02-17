@@ -7,24 +7,25 @@ import io.xlate.edi.schema.EDISimpleType;
 import io.xlate.edi.schema.implementation.CompositeImplementation;
 import io.xlate.edi.schema.implementation.EDITypeImplementation;
 
-public class CompositeImpl implements CompositeImplementation {
+public class CompositeImpl implements CompositeImplementation, Positioned {
 
-    private final EDIComplexType standard;
     private final int minOccurs;
     private final int maxOccurs;
     private final String id;
+    private final int position;
     private final List<EDITypeImplementation<EDISimpleType>> sequence;
 
-    public CompositeImpl(EDIComplexType standard,
-            int minOccurs,
+    private EDIComplexType standard;
+
+    public CompositeImpl(int minOccurs,
             int maxOccurs,
             String id,
+            int position,
             List<EDITypeImplementation<EDISimpleType>> sequence) {
-        super();
-        this.standard = standard;
         this.minOccurs = minOccurs;
         this.maxOccurs = maxOccurs;
         this.id = id;
+        this.position = position;
         this.sequence = sequence;
     }
 
@@ -53,4 +54,12 @@ public class CompositeImpl implements CompositeImplementation {
         return sequence;
     }
 
+    @Override
+    public int getPosition() {
+        return position;
+    }
+
+    public void setStandard(EDIComplexType standard) {
+        this.standard = standard;
+    }
 }

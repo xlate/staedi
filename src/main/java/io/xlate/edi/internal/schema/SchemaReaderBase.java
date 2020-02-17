@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLStreamConstants;
@@ -27,6 +28,9 @@ import io.xlate.edi.schema.EDISyntaxRule;
 import io.xlate.edi.schema.EDIType;
 
 abstract class SchemaReaderBase implements SchemaReader {
+
+    static final String REFERR_UNDECLARED = "Type %s references undeclared %s with ref='%s'";
+    static final String REFERR_ILLEGAL = "Type '%s' must not be referenced as '%s' in definition of type '%s'";
 
     final String xmlns;
 
@@ -119,6 +123,7 @@ abstract class SchemaReaderBase implements SchemaReader {
             }
 
             readTypeDefinitions(reader, types);
+            setReferences(types);
             reader.next();
             requireEvent(XMLStreamConstants.END_DOCUMENT, reader);
         } catch (XMLStreamException e) {
@@ -616,6 +621,84 @@ abstract class SchemaReaderBase implements SchemaReader {
             break;
         default:
             throw schemaException("Unexpected XML event [" + event + ']', reader);
+        }
+    }
+
+    void setReferences(Map<String, EDIType> types) {
+        types.values()
+             .stream()
+             .filter(type -> type instanceof StructureType)
+             .forEach(struct -> setReferences((StructureType) struct, types));
+    }
+
+    void setReferences(StructureType struct, Map<String, EDIType> types) {
+        for (EDIReference ref : struct.getReferences()) {
+            Reference impl = (Reference) ref;
+            EDIType target = types.get(impl.getRefId());
+
+            if (target == null) {
+                throw schemaException(String.format(REFERR_UNDECLARED, struct.getId(), impl.getRefTag(), impl.getRefId()));
+            }
+
+            final EDIType.Type refType = target.getType();
+
+            if (refType != refTypeId(impl.getRefTag())) {
+                throw schemaException(String.format(REFERR_ILLEGAL, impl.getRefId(), impl.getRefTag(), struct.getId()));
+            }
+
+            switch (struct.getType()) {
+            case INTERCHANGE:
+                // Transactions may be located directly within the interchange in EDIFACT.
+                setReference(struct,
+                             (Reference) ref,
+                             target,
+                             EDIType.Type.GROUP,
+                             EDIType.Type.TRANSACTION,
+                             EDIType.Type.SEGMENT);
+                break;
+            case GROUP:
+                setReference(struct, (Reference) ref, target, EDIType.Type.TRANSACTION, EDIType.Type.SEGMENT);
+                break;
+            case TRANSACTION:
+                setReference(struct, (Reference) ref, target, EDIType.Type.LOOP, EDIType.Type.SEGMENT);
+                break;
+            case LOOP:
+                setReference(struct, (Reference) ref, target, EDIType.Type.LOOP, EDIType.Type.SEGMENT);
+                break;
+            case SEGMENT:
+                setReference(struct, (Reference) ref, target, EDIType.Type.COMPOSITE, EDIType.Type.ELEMENT);
+                break;
+            case COMPOSITE:
+                setReference(struct, (Reference) ref, target, EDIType.Type.ELEMENT);
+                break;
+            default:
+                break;
+            }
+        }
+    }
+
+    EDIType.Type refTypeId(String tag) {
+        if (tag != null) {
+            return EDIType.Type.valueOf(tag.toUpperCase());
+        }
+        throw new IllegalArgumentException("Unexpected element: " + tag);
+    }
+
+    void setReference(StructureType struct, Reference reference, EDIType target, EDIType.Type... allowedTargets) {
+        boolean isAllowed = Arrays.stream(allowedTargets).anyMatch(target.getType()::equals);
+
+        if (isAllowed) {
+            reference.setReferencedType(target);
+        } else {
+            StringBuilder excp = new StringBuilder();
+            excp.append("Structure ");
+            excp.append(struct.getId());
+            excp.append(" attempts to reference type with id = ");
+            excp.append(reference.getRefId());
+            excp.append(". Allowed types: " + Arrays.stream(allowedTargets)
+                                                    .map(Object::toString)
+                                                    .collect(Collectors.joining(", ")));
+            throw schemaException(excp.toString());
         }
     }
 
