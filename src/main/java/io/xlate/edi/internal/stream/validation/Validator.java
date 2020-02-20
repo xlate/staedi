@@ -36,6 +36,8 @@ public class Validator {
     private Schema containerSchema;
     private Schema schema;
     private final UsageNode root;
+    @SuppressWarnings("unused")
+    private final UsageNode implRoot;
 
     private boolean segmentExpected;
     private UsageNode segment;
@@ -53,6 +55,11 @@ public class Validator {
         this.schema = schema;
         this.containerSchema = containerSchema;
         root = buildTree(schema.getStandard());
+        if (schema.getImplementation() != null) {
+            implRoot = buildTree(null, schema.getImplementation(), -1);
+        } else {
+            implRoot = null;
+        }
         correctSegment = segment = root.getFirstChild();
     }
 
@@ -183,24 +190,7 @@ public class Validator {
                 break;
             }
 
-            if (!current.hasMinimumUsage()) {
-                /*
-                 * The schema segment has not met it's minimum usage
-                 * requirement.
-                 */
-                switch (current.getNodeType()) {
-                case SEGMENT:
-                    mandatory.add(current.getId());
-                    break;
-                case GROUP:
-                case TRANSACTION:
-                case LOOP:
-                    mandatory.add(current.getFirstChild().getId());
-                    break;
-                default:
-                    break;
-                }
-            }
+            checkMinimumUsage(current);
 
             UsageNode next = current.getNextSibling();
 
@@ -293,10 +283,7 @@ public class Validator {
             UsageNode parent = current.getParent();
 
             for (UsageNode sibling : parent.getChildren()) {
-                if (!sibling.hasMinimumUsage()) {
-                    mandatory.add(sibling.getId());
-                }
-
+                checkMinimumUsage(sibling);
                 sibling.reset();
             }
 
@@ -320,6 +307,27 @@ public class Validator {
 
         correctSegment = segment = current;
         return true;
+    }
+
+    void checkMinimumUsage(UsageNode node) {
+        if (!node.hasMinimumUsage()) {
+            /*
+             * The schema segment has not met it's minimum usage
+             * requirement.
+             */
+            switch (node.getNodeType()) {
+            case SEGMENT:
+                mandatory.add(node.getId());
+                break;
+            case GROUP:
+            case TRANSACTION:
+            case LOOP:
+                mandatory.add(node.getFirstChild().getId());
+                break;
+            default:
+                break;
+            }
+        }
     }
 
     boolean handleLoop(CharSequence tag, UsageNode current, int startDepth, UsageNode startNode, ValidationEventHandler handler) {

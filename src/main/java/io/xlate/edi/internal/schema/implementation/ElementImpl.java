@@ -3,6 +3,7 @@ package io.xlate.edi.internal.schema.implementation;
 import java.util.Set;
 
 import io.xlate.edi.schema.EDISimpleType;
+import io.xlate.edi.schema.EDIType;
 import io.xlate.edi.schema.implementation.ElementImplementation;
 
 public class ElementImpl implements ElementImplementation, Positioned {
@@ -28,7 +29,7 @@ public class ElementImpl implements ElementImplementation, Positioned {
     }
 
     @Override
-    public EDISimpleType getStandard() {
+    public EDIType getReferencedType() {
         return standard;
     }
 

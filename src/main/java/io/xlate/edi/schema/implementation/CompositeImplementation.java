@@ -17,12 +17,9 @@ package io.xlate.edi.schema.implementation;
 
 import java.util.List;
 
-import io.xlate.edi.schema.EDIComplexType;
-import io.xlate.edi.schema.EDISimpleType;
+public interface CompositeImplementation extends EDITypeImplementation {
 
-public interface CompositeImplementation extends EDITypeImplementation<EDIComplexType> {
-
-    List<EDITypeImplementation<EDISimpleType>> getSequence();
+    List<EDITypeImplementation> getSequence();
 
     @Override
     default Type getType() {

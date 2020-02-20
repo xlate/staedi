@@ -3,7 +3,7 @@ package io.xlate.edi.internal.schema.implementation;
 import java.util.List;
 
 import io.xlate.edi.schema.EDIComplexType;
-import io.xlate.edi.schema.EDISimpleType;
+import io.xlate.edi.schema.EDIType;
 import io.xlate.edi.schema.implementation.CompositeImplementation;
 import io.xlate.edi.schema.implementation.EDITypeImplementation;
 
@@ -13,7 +13,7 @@ public class CompositeImpl implements CompositeImplementation, Positioned {
     private final int maxOccurs;
     private final String id;
     private final int position;
-    private final List<EDITypeImplementation<EDISimpleType>> sequence;
+    private final List<EDITypeImplementation> sequence;
 
     private EDIComplexType standard;
 
@@ -21,7 +21,7 @@ public class CompositeImpl implements CompositeImplementation, Positioned {
             int maxOccurs,
             String id,
             int position,
-            List<EDITypeImplementation<EDISimpleType>> sequence) {
+            List<EDITypeImplementation> sequence) {
         this.minOccurs = minOccurs;
         this.maxOccurs = maxOccurs;
         this.id = id;
@@ -30,7 +30,7 @@ public class CompositeImpl implements CompositeImplementation, Positioned {
     }
 
     @Override
-    public EDIComplexType getStandard() {
+    public EDIType getReferencedType() {
         return standard;
     }
 
@@ -50,7 +50,7 @@ public class CompositeImpl implements CompositeImplementation, Positioned {
     }
 
     @Override
-    public List<EDITypeImplementation<EDISimpleType>> getSequence() {
+    public List<EDITypeImplementation> getSequence() {
         return sequence;
     }
 

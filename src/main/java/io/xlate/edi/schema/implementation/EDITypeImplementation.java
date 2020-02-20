@@ -1,13 +1,9 @@
 package io.xlate.edi.schema.implementation;
 
+import io.xlate.edi.schema.EDIReference;
 import io.xlate.edi.schema.EDIType;
 
-public interface EDITypeImplementation<T extends EDIType> extends EDIType {
+public interface EDITypeImplementation extends EDIReference, EDIType {
 
-    T getStandard();
-
-    int getMinOccurs();
-
-    int getMaxOccurs();
 
 }

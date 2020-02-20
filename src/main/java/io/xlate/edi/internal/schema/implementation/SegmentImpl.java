@@ -1,6 +1,5 @@
 package io.xlate.edi.internal.schema.implementation;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import io.xlate.edi.schema.EDIComplexType;
@@ -16,28 +15,26 @@ public class SegmentImpl implements SegmentImplementation {
     private final String id;
     private final String typeId;
     private final Discriminator discriminator;
-    private final List<EDITypeImplementation<EDIType>> sequence;
+    private final List<EDITypeImplementation> sequence;
 
     private EDIComplexType standard;
 
-    @SuppressWarnings("unchecked")
     public SegmentImpl(int minOccurs,
             int maxOccurs,
             String id,
             String typeId,
             Discriminator discriminator,
-            List<EDITypeImplementation<? extends EDIType>> sequence) {
+            List<EDITypeImplementation> sequence) {
         this.minOccurs = minOccurs;
         this.maxOccurs = maxOccurs;
         this.id = id;
         this.typeId = typeId;
         this.discriminator = discriminator;
-        this.sequence = new ArrayList<>(sequence.size());
-        sequence.forEach(e -> this.sequence.add((EDITypeImplementation<EDIType>) e));
+        this.sequence = sequence;
     }
 
     @Override
-    public EDIComplexType getStandard() {
+    public EDIType getReferencedType() {
         return standard;
     }
 
@@ -62,7 +59,7 @@ public class SegmentImpl implements SegmentImplementation {
     }
 
     @Override
-    public List<EDITypeImplementation<EDIType>> getSequence() {
+    public List<EDITypeImplementation> getSequence() {
         return sequence;
     }
 

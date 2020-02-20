@@ -38,6 +38,7 @@ public class StaEDISchemaFactoryTest {
     final String TRANSACTION_V2 = "{http://xlate.io/EDISchema/v2}transaction";
 
     final String STANDARD_V3 = "{http://xlate.io/EDISchema/v3}transaction";
+    final String IMPL_V3 = "{http://xlate.io/EDISchema/v3}implementation";
 
     @Test
     public void testCreateSchemaByURL() throws EDISchemaException {
@@ -142,6 +143,7 @@ public class StaEDISchemaFactoryTest {
         InputStream schemaStream = getClass().getResourceAsStream("/x12/IG-999.xml");
         Schema schema = factory.createSchema(schemaStream);
         assertEquals(STANDARD_V3, schema.getStandard().getId(), "Incorrect root id");
+        assertEquals(IMPL_V3, schema.getImplementation().getId(), "Incorrect impl id");
         assertTrue(schema.containsSegment("AK9"), "Missing AK9 segment");
     }
 }

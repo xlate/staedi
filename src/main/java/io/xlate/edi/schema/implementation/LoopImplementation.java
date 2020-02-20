@@ -17,13 +17,11 @@ package io.xlate.edi.schema.implementation;
 
 import java.util.List;
 
-import io.xlate.edi.schema.EDIComplexType;
-
-public interface LoopImplementation extends EDITypeImplementation<EDIComplexType> {
+public interface LoopImplementation extends EDITypeImplementation {
 
     Discriminator getDiscriminator();
 
-    List<EDITypeImplementation<EDIComplexType>> getSequence();
+    List<EDITypeImplementation> getSequence();
 
     @Override
     default Type getType() {
