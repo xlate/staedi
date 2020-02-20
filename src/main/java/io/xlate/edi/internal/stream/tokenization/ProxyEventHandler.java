@@ -49,7 +49,7 @@ public class ProxyEventHandler implements EventHandler {
     private EDIStreamEvent[] events = new EDIStreamEvent[99];
     private EDIStreamValidationError[] errorTypes = new EDIStreamValidationError[99];
     private CharBuffer[] eventData = new CharBuffer[99];
-    private String[] referenceCodes = new String[99];
+    private CharSequence[] referenceCodes = new CharSequence[99];
     private Location[] locations = new Location[99];
     private int eventCount = 0;
     private int eventIndex = 0;
@@ -112,7 +112,7 @@ public class ProxyEventHandler implements EventHandler {
     }
 
     public String getReferenceCode() {
-        return referenceCodes[eventIndex];
+        return referenceCodes[eventIndex] != null ? referenceCodes[eventIndex].toString() : null;
     }
 
     public Location getLocation() {
@@ -150,7 +150,7 @@ public class ProxyEventHandler implements EventHandler {
         } else if (EDIType.Type.GROUP.toString().equals(id)) {
             enqueueEvent(EDIStreamEvent.START_GROUP, EDIStreamValidationError.NONE, id, null);
         } else {
-            enqueueEvent(EDIStreamEvent.START_LOOP, EDIStreamValidationError.NONE, id, null);
+            enqueueEvent(EDIStreamEvent.START_LOOP, EDIStreamValidationError.NONE, id, id);
         }
     }
 
@@ -162,7 +162,7 @@ public class ProxyEventHandler implements EventHandler {
         } else if (EDIType.Type.GROUP.toString().equals(id)) {
             enqueueEvent(EDIStreamEvent.END_GROUP, EDIStreamValidationError.NONE, id, null);
         } else {
-            enqueueEvent(EDIStreamEvent.END_LOOP, EDIStreamValidationError.NONE, id, null);
+            enqueueEvent(EDIStreamEvent.END_LOOP, EDIStreamValidationError.NONE, id, id);
         }
     }
 
@@ -346,7 +346,7 @@ public class ProxyEventHandler implements EventHandler {
     private void enqueueEvent(EDIStreamEvent event,
                               EDIStreamValidationError error,
                               CharArraySequence holder,
-                              String code,
+                              CharSequence code,
                               Location savedLocation) {
 
         if (event == EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR && eventCount > 0
@@ -397,7 +397,7 @@ public class ProxyEventHandler implements EventHandler {
         eventCount++;
     }
 
-    private void enqueueEvent(EDIStreamEvent event, EDIStreamValidationError error, CharSequence text, String code) {
+    private void enqueueEvent(EDIStreamEvent event, EDIStreamValidationError error, CharSequence text, CharSequence code) {
         events[eventCount] = event;
         errorTypes[eventCount] = error;
         eventData[eventCount] = put(eventData[eventCount], text);

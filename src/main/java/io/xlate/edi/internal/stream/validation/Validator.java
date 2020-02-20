@@ -16,6 +16,7 @@
 package io.xlate.edi.internal.stream.validation;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import io.xlate.edi.internal.stream.StaEDIStreamLocation;
@@ -28,6 +29,10 @@ import io.xlate.edi.schema.EDISimpleType;
 import io.xlate.edi.schema.EDISyntaxRule;
 import io.xlate.edi.schema.EDIType;
 import io.xlate.edi.schema.Schema;
+import io.xlate.edi.schema.implementation.CompositeImplementation;
+import io.xlate.edi.schema.implementation.EDITypeImplementation;
+import io.xlate.edi.schema.implementation.LoopImplementation;
+import io.xlate.edi.schema.implementation.SegmentImplementation;
 import io.xlate.edi.stream.EDIStreamValidationError;
 import io.xlate.edi.stream.Location;
 
@@ -36,8 +41,6 @@ public class Validator {
     private Schema containerSchema;
     private Schema schema;
     private final UsageNode root;
-    @SuppressWarnings("unused")
-    private final UsageNode implRoot;
 
     private boolean segmentExpected;
     private UsageNode segment;
@@ -51,20 +54,38 @@ public class Validator {
     private int depth = 1;
     private boolean complete = false;
 
+    private final UsageNode implRoot;
+    private UsageNode implSegment;
+    private UsageNode implCorrectSegment;
+    private List<UsageNode> implSegmentCandidates = new ArrayList<>();
+    private boolean pendingDiscrimination;
+
     public Validator(Schema schema, Schema containerSchema) {
         this.schema = schema;
         this.containerSchema = containerSchema;
+
         root = buildTree(schema.getStandard());
+        correctSegment = segment = root.getFirstChild();
+
         if (schema.getImplementation() != null) {
             implRoot = buildTree(null, schema.getImplementation(), -1);
+            implCorrectSegment = implSegment = implRoot.getFirstChild();
         } else {
             implRoot = null;
+            implCorrectSegment = implSegment = null;
         }
-        correctSegment = segment = root.getFirstChild();
     }
 
     public boolean isComplete() {
         return complete;
+    }
+
+    public boolean isImplementation() {
+        return implRoot != null;
+    }
+
+    public boolean isPendingDiscrimination() {
+        return pendingDiscrimination;
     }
 
     public String getCompositeReferenceCode() {
@@ -113,7 +134,6 @@ public class Validator {
     }
 
     private static UsageNode buildTree(UsageNode parent, EDIReference link, int index) {
-
         EDIType referencedNode = link.getReferencedType();
 
         UsageNode node = new UsageNode(parent, link, index);
@@ -136,8 +156,40 @@ public class Validator {
         return node;
     }
 
-    private UsageNode startLoop(UsageNode loop) {
+    private static UsageNode buildTree(UsageNode parent, EDITypeImplementation impl, int index) {
+        final UsageNode node = new UsageNode(parent, impl, index);
+        final List<EDITypeImplementation> children;
 
+        switch (impl.getType()) {
+        case COMPOSITE:
+            children = CompositeImplementation.class.cast(impl).getSequence();
+            break;
+        case ELEMENT:
+            children = Collections.emptyList();
+            break;
+        case TRANSACTION:
+        case LOOP:
+            children = LoopImplementation.class.cast(impl).getSequence();
+            break;
+        case SEGMENT:
+            children = SegmentImplementation.class.cast(impl).getSequence();
+            break;
+        default:
+            throw new IllegalArgumentException("Illegal type of EDITypeImplementation: " + impl.getType());
+        }
+
+        List<UsageNode> childUsages = node.getChildren();
+
+        int childIndex = -1;
+
+        for (EDITypeImplementation child : children) {
+            childUsages.add(buildTree(node, child, ++childIndex));
+        }
+
+        return node;
+    }
+
+    private UsageNode startLoop(UsageNode loop) {
         loop.incrementUsage();
         loop.resetChildren();
 
@@ -151,112 +203,62 @@ public class Validator {
         return startSegment;
     }
 
-    private void completeLoops(ValidationEventHandler handler, int d, UsageNode node) {
+    private void completeLoops(ValidationEventHandler handler, int d) {
+        UsageNode node = correctSegment;
+        UsageNode implNode = implCorrectSegment;
+
         while (this.depth < d--) {
-            node = node.getParent();
-            handler.loopEnd(node.getCode());
+            if (implNode != null) {
+                implNode = completeLoop(handler, implNode);
+            }
+            node = completeLoop(handler, node);
         }
+    }
+
+    UsageNode completeLoop(ValidationEventHandler handler, UsageNode node) {
+        node = node.getParent();
+        handler.loopEnd(node.getCode());
+        return node;
     }
 
     public void validateSegment(ValidationEventHandler handler, CharSequence tag) {
         segmentExpected = true;
 
         final int startDepth = this.depth;
-        final UsageNode startNode = correctSegment;
 
-        UsageNode current = startNode;
+        UsageNode current = correctSegment;
         mandatory.clear();
         complete = false;
+        boolean handled = false;
 
-        while (current != null) {
-            switch (current.getNodeType()) {
-            case SEGMENT:
-                if (this.handleSegment(tag, current, startDepth, startNode, handler)) {
-                    handleMissingMandatory(handler);
-                    return;
-                }
-                break;
+        while (!handled && current != null) {
+            handled = handleNode(tag, current, startDepth, handler);
 
-            case GROUP:
-            case TRANSACTION:
-            case LOOP:
-                if (this.handleLoop(tag, current, startDepth, startNode, handler)) {
-                    handleMissingMandatory(handler);
-                    return;
-                }
-                break;
-
-            default:
-                break;
-            }
-
-            checkMinimumUsage(current);
-
-            UsageNode next = current.getNextSibling();
-
-            if (next != null) {
-                current = next;
-                continue;
-            }
-
-            if (this.depth == startDepth && current != startNode) {
+            if (!handled) {
                 /*
-                 * End of the loop; try to see if we can find the segment among
-                 * the siblings of the last good segment. If the last good
-                 * segment was the final segment of the loop, do not search
-                 * here. Rather, go up a level and continue searching from
-                 * there.
+                 * The segment doesn't match the current node, ensure
+                 * requirements for the current node are met.
                  */
-                next = current.getSiblingById(tag);
+                checkMinimumUsage(current);
 
-                if (next != null && !next.isFirstChild()) {
-                    mandatory.clear();
-                    handler.segmentError(next.getId(),
-                                         EDIStreamValidationError.SEGMENT_NOT_IN_PROPER_SEQUENCE);
+                UsageNode next = current.getNextSibling();
 
-                    next.incrementUsage();
+                if (next != null) {
+                    // Advance to the next segment in the loop
+                    current = next;
+                } else {
+                    // End of the loop - check if the segment appears earlier in the loop
+                    handled = checkPeerSegments(tag, current, startDepth, handler);
 
-                    if (next.exceedsMaximumUsage()) {
-                        handler.segmentError(next.getId(),
-                                             EDIStreamValidationError.SEGMENT_EXCEEDS_MAXIMUM_USE);
-                    }
-
-                    segment = next;
-                    break;
-                }
-            }
-
-            if (this.depth > 1) {
-                current = current.getParent();
-                this.depth--;
-            } else {
-                current = this.root.getFirstChild();
-
-                if (!current.getId().contentEquals(tag)) {
-                    final String tagString = tag.toString();
-
-                    if (containerSchema != null && containerSchema.containsSegment(tagString)) {
-                        // The segment is defined in the containing schema. Handle missing mandatory
-                        // segments and complete any open loops.
-                        handleMissingMandatory(handler);
-                        completeLoops(handler, startDepth, startNode);
-                        complete = true;
-                    } else {
-                        // Unexpected segment... must reset our position!
-                        segmentExpected = false;
-                        this.depth = startDepth;
-                        mandatory.clear();
-
-                        if (schema.containsSegment(tagString)) {
-                            handler.segmentError(tag,
-                                                 EDIStreamValidationError.UNEXPECTED_SEGMENT);
+                    if (!handled) {
+                        if (this.depth > 1) {
+                            current = current.getParent();
+                            this.depth--;
                         } else {
-                            handler.segmentError(tag,
-                                                 EDIStreamValidationError.SEGMENT_NOT_IN_DEFINED_TRANSACTION_SET);
+                            current = this.root.getFirstChild();
+                            handled = checkUnexpectedSegment(tag, current, startDepth, handler);
                         }
                     }
-
-                    break; // Wasn't found; cut our losses and go back.
                 }
             }
         }
@@ -264,7 +266,34 @@ public class Validator {
         handleMissingMandatory(handler);
     }
 
-    boolean handleSegment(CharSequence tag, UsageNode current, int startDepth, UsageNode startNode, ValidationEventHandler handler) {
+    boolean handleNode(CharSequence tag, UsageNode current, int startDepth, ValidationEventHandler handler) {
+        boolean handled = false;
+
+        switch (current.getNodeType()) {
+        case SEGMENT:
+            if (this.handleSegment(tag, current, startDepth, handler)) {
+                handleMissingMandatory(handler);
+                handled = true;
+            }
+            break;
+
+        case GROUP:
+        case TRANSACTION:
+        case LOOP:
+            if (this.handleLoop(tag, current, startDepth, handler)) {
+                handleMissingMandatory(handler);
+                handled = true;
+            }
+            break;
+
+        default:
+            break;
+        }
+
+        return handled;
+    }
+
+    boolean handleSegment(CharSequence tag, UsageNode current, int startDepth, ValidationEventHandler handler) {
         if (!current.getId().contentEquals(tag)) {
             /*
              * The schema segment does not match the segment tag found
@@ -288,24 +317,26 @@ public class Validator {
             }
 
             if (parent.isNodeType(EDIType.Type.LOOP)) {
-                String loopId = parent.getCode();
-                handler.loopEnd(loopId);
-                handler.loopBegin(loopId);
+                if (implCorrectSegment != null) {
+                    completeLoop(handler, implCorrectSegment);
+                }
+                completeLoop(handler, correctSegment);
+                handler.loopBegin(parent.getCode());
             }
         }
 
-        completeLoops(handler, startDepth, startNode);
+        completeLoops(handler, startDepth);
         current.incrementUsage();
         current.resetChildren();
 
         if (current.exceedsMaximumUsage()) {
             handleMissingMandatory(handler);
-            handler.segmentError(
-                                 current.getId(),
+            handler.segmentError(current.getId(),
                                  EDIStreamValidationError.SEGMENT_EXCEEDS_MAXIMUM_USE);
         }
 
         correctSegment = segment = current;
+        selectImplementationCandidates(correctSegment);
         return true;
     }
 
@@ -330,12 +361,12 @@ public class Validator {
         }
     }
 
-    boolean handleLoop(CharSequence tag, UsageNode current, int startDepth, UsageNode startNode, ValidationEventHandler handler) {
+    boolean handleLoop(CharSequence tag, UsageNode current, int startDepth, ValidationEventHandler handler) {
         if (!current.getFirstChild().getId().contentEquals(tag)) {
             return false;
         }
 
-        completeLoops(handler, startDepth, startNode);
+        completeLoops(handler, startDepth);
         handler.loopBegin(current.getCode());
         current.incrementUsage();
 
@@ -345,7 +376,74 @@ public class Validator {
         }
 
         correctSegment = segment = startLoop(current);
+        selectImplementationCandidates(correctSegment);
         return true;
+    }
+
+    boolean checkPeerSegments(CharSequence tag, UsageNode current, int startDepth, ValidationEventHandler handler) {
+        boolean handled = false;
+
+        if (this.depth == startDepth && current != correctSegment) {
+            /*
+             * End of the loop; try to see if we can find the segment among
+             * the siblings of the last good segment. If the last good
+             * segment was the final segment of the loop, do not search
+             * here. Rather, go up a level and continue searching from
+             * there.
+             */
+            UsageNode next = current.getSiblingById(tag);
+
+            if (next != null && !next.isFirstChild()) {
+                mandatory.clear();
+                handler.segmentError(next.getId(),
+                                     EDIStreamValidationError.SEGMENT_NOT_IN_PROPER_SEQUENCE);
+
+                next.incrementUsage();
+
+                if (next.exceedsMaximumUsage()) {
+                    handler.segmentError(next.getId(),
+                                         EDIStreamValidationError.SEGMENT_EXCEEDS_MAXIMUM_USE);
+                }
+
+                segment = next;
+                handled = true;
+            }
+        }
+
+        return handled;
+    }
+
+    boolean checkUnexpectedSegment(CharSequence tag, UsageNode current, int startDepth, ValidationEventHandler handler) {
+        boolean handled = false;
+
+        if (!current.getId().contentEquals(tag)) {
+            final String tagString = tag.toString();
+
+            if (containerSchema != null && containerSchema.containsSegment(tagString)) {
+                // The segment is defined in the containing schema. Handle missing mandatory
+                // segments and complete any open loops.
+                handleMissingMandatory(handler);
+                completeLoops(handler, startDepth);
+                complete = true;
+            } else {
+                // Unexpected segment... must reset our position!
+                segmentExpected = false;
+                this.depth = startDepth;
+                mandatory.clear();
+
+                if (schema.containsSegment(tagString)) {
+                    handler.segmentError(tag,
+                                         EDIStreamValidationError.UNEXPECTED_SEGMENT);
+                } else {
+                    handler.segmentError(tag,
+                                         EDIStreamValidationError.SEGMENT_NOT_IN_DEFINED_TRANSACTION_SET);
+                }
+            }
+
+            handled = true; // Wasn't found or it's in the control schema; cut our losses and go back.
+        }
+
+        return handled;
     }
 
     private void handleMissingMandatory(ValidationEventHandler handler) {
@@ -353,6 +451,45 @@ public class Validator {
             handler.segmentError(id, EDIStreamValidationError.MANDATORY_SEGMENT_MISSING);
         }
         mandatory.clear();
+    }
+
+    void selectImplementationCandidates(UsageNode correctSegment) {
+        if (correctSegment != null && isImplementation()) {
+            implSegmentCandidates.clear();
+            EDIType standardType = correctSegment.getReferencedType();
+            UsageNode implNode = implCorrectSegment;
+            EDIType implType;
+
+            while (implNode != null) {
+                switch (implNode.getNodeType()) {
+                case SEGMENT:
+                    implType = implNode.getReferencedType();
+
+                    if (implType != standardType) {
+                        // TODO: Check impl rules
+                    } else {
+                        implSegmentCandidates.add(implNode);
+                    }
+
+                    break;
+                case TRANSACTION:
+                case LOOP:
+                    implType = implNode.getFirstChild().getReferencedType();
+
+                    if (implType != standardType) {
+                        // TODO: Check impl rules
+                    } else {
+                        implSegmentCandidates.add(implNode);
+                    }
+
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected impl node type: " + implCorrectSegment.getNodeType());
+                }
+
+                implNode = implNode.getNextSibling();
+            }
+        }
     }
 
     public List<EDIStreamValidationError> getElementErrors() {
