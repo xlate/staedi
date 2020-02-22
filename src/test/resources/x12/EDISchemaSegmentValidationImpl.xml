@@ -22,7 +22,7 @@
       <loop code="L0000">
         <sequence>
           <segment ref="S11" minOccurs="1" />
-          <segment ref="S12" />
+          <segment ref="S12" maxOccurs="5" />
           <segment ref="S13" />
           <segment ref="S14" />
         </sequence>
@@ -39,7 +39,7 @@
   <implementation>
     <sequence>
       <segment type="S0A" />
-      <loop type="L0000" code="0000A" minOccurs="1">
+      <loop type="L0000" code="0000A" minOccurs="1" discriminator="1">
         <sequence>
           <segment type="S11">
             <sequence>
@@ -52,7 +52,7 @@
           </segment>
         </sequence>
       </loop>
-      <loop type="L0000" code="0000B" minOccurs="1">
+      <loop type="L0000" code="0000B" minOccurs="1" discriminator="1">
         <sequence>
           <segment type="S11">
             <sequence>

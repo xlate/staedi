@@ -46,11 +46,7 @@ public class ProxyEventHandler implements EventHandler {
     private CharArraySequence segmentHolder = new CharArraySequence();
     private CharArraySequence elementHolder = new CharArraySequence();
 
-    private EDIStreamEvent[] events = new EDIStreamEvent[99];
-    private EDIStreamValidationError[] errorTypes = new EDIStreamValidationError[99];
-    private CharBuffer[] eventData = new CharBuffer[99];
-    private CharSequence[] referenceCodes = new CharSequence[99];
-    private Location[] locations = new Location[99];
+    private StreamEvent[] events = new StreamEvent[99];
     private int eventCount = 0;
     private int eventIndex = 0;
     private Dialect dialect;
@@ -58,6 +54,9 @@ public class ProxyEventHandler implements EventHandler {
     public ProxyEventHandler(StaEDIStreamLocation location, Schema controlSchema) {
         this.location = location;
         setControlSchema(controlSchema);
+        for (int i = 0; i < 99; i++) {
+            events[i] = new StreamEvent();
+        }
     }
 
     public void setControlSchema(Schema controlSchema) {
@@ -84,14 +83,14 @@ public class ProxyEventHandler implements EventHandler {
 
     public EDIStreamEvent getEvent() {
         if (hasEvents()) {
-            return events[eventIndex];
+            return events[eventIndex].type;
         }
         return null;
     }
 
     public CharBuffer getCharacters() {
         if (hasEvents()) {
-            return eventData[eventIndex];
+            return events[eventIndex].data;
         }
         throw new IllegalStateException();
     }
@@ -108,16 +107,17 @@ public class ProxyEventHandler implements EventHandler {
     }
 
     public EDIStreamValidationError getErrorType() {
-        return errorTypes[eventIndex];
+        return events[eventIndex].errorType;
     }
 
     public String getReferenceCode() {
-        return referenceCodes[eventIndex] != null ? referenceCodes[eventIndex].toString() : null;
+        CharSequence refCode = events[eventIndex].referenceCode;
+        return refCode != null ? refCode.toString() : null;
     }
 
     public Location getLocation() {
-        if (hasEvents() && locations[eventIndex] != null) {
-            return locations[eventIndex];
+        if (hasEvents() && events[eventIndex].location != null) {
+            return events[eventIndex].location;
         }
         return location;
     }
@@ -167,13 +167,15 @@ public class ProxyEventHandler implements EventHandler {
     }
 
     @Override
-    public void segmentBegin(char[] text, int start, int length) {
+    public boolean segmentBegin(char[] text, int start, int length) {
         segmentHolder.set(text, start, length);
 
         Validator validator = validator();
+        boolean eventsReady = true;
 
         if (validator != null) {
             validator.validateSegment(this, segmentHolder);
+            eventsReady = !validator.isPendingDiscrimination();
         }
 
         if (exitTransaction(segmentHolder)) {
@@ -182,6 +184,7 @@ public class ProxyEventHandler implements EventHandler {
         }
 
         enqueueEvent(EDIStreamEvent.START_SEGMENT, EDIStreamValidationError.NONE, segmentHolder, null, null);
+        return eventsReady;
     }
 
     boolean exitTransaction(CharSequence tag) {
@@ -190,18 +193,20 @@ public class ProxyEventHandler implements EventHandler {
     }
 
     @Override
-    public void segmentEnd() {
+    public boolean segmentEnd() {
         if (validator() != null) {
             validator().validateSyntax(this, this, location, false);
         }
 
         enqueueEvent(EDIStreamEvent.END_SEGMENT, EDIStreamValidationError.NONE, segmentHolder, null, null);
         transactionSchemaAllowed = false;
+        return true;
     }
 
     @Override
-    public void compositeBegin(boolean isNil) {
+    public boolean compositeBegin(boolean isNil) {
         String code = null;
+        boolean eventsReady = true;
 
         if (validator() != null && !isNil) {
             boolean invalid = !validator().validCompositeOccurrences(location);
@@ -215,24 +220,32 @@ public class ProxyEventHandler implements EventHandler {
             } else {
                 code = validator().getCompositeReferenceCode();
             }
+            eventsReady = !validator().isPendingDiscrimination();
         }
 
         enqueueEvent(EDIStreamEvent.START_COMPOSITE, EDIStreamValidationError.NONE, "", code);
+        return eventsReady;
     }
 
     @Override
-    public void compositeEnd(boolean isNil) {
+    public boolean compositeEnd(boolean isNil) {
+        boolean eventsReady = true;
+
         if (validator() != null && !isNil) {
             validator().validateSyntax(this, this, location, true);
+            eventsReady = !validator().isPendingDiscrimination();
         }
+
         enqueueEvent(EDIStreamEvent.END_COMPOSITE, EDIStreamValidationError.NONE, "", null);
+        return eventsReady;
     }
 
     @Override
-    public void elementData(char[] text, int start, int length) {
+    public boolean elementData(char[] text, int start, int length) {
         boolean derivedComposite = false;
         Location savedLocation = null;
         String code = null;
+        boolean eventsReady = true;
 
         elementHolder.set(text, start, length);
 
@@ -300,12 +313,18 @@ public class ProxyEventHandler implements EventHandler {
                          elementHolder,
                          code,
                          savedLocation);
+
+            if (validator() != null && validator().isPendingDiscrimination()) {
+                eventsReady = validator().selectImplementation(events, eventIndex, eventCount, location);
+            }
         }
 
         if (derivedComposite && text != null /* Not an empty composite */) {
             this.compositeEnd(length == 0);
             location.clearComponentPosition();
         }
+
+        return eventsReady;
     }
 
     public boolean isBinaryElementLength() {
@@ -313,9 +332,10 @@ public class ProxyEventHandler implements EventHandler {
     }
 
     @Override
-    public void binaryData(InputStream binaryStream) {
+    public boolean binaryData(InputStream binaryStream) {
         enqueueEvent(EDIStreamEvent.ELEMENT_DATA_BINARY, EDIStreamValidationError.NONE, "", null);
         setBinary(binaryStream);
+        return true;
     }
 
     @Override
@@ -350,7 +370,7 @@ public class ProxyEventHandler implements EventHandler {
                               Location savedLocation) {
 
         if (event == EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR && eventCount > 0
-                && events[eventCount] == EDIStreamEvent.START_COMPOSITE) {
+                && events[eventCount].type == EDIStreamEvent.START_COMPOSITE) {
             switch (error) {
             case TOO_MANY_DATA_ELEMENTS:
             case TOO_MANY_REPETITIONS:
@@ -359,23 +379,11 @@ public class ProxyEventHandler implements EventHandler {
                  * composite event. Move the element error before the start
                  * of the composite.
                  */
+                StreamEvent current = events[eventCount];
                 events[eventCount] = events[eventCount - 1];
-                eventData[eventCount] = eventData[eventCount - 1];
-                errorTypes[eventCount] = errorTypes[eventCount - 1];
-                referenceCodes[eventCount] = referenceCodes[eventCount - 1];
-                locations[eventCount] = locations[eventCount - 1];
+                events[eventCount - 1] = current;
 
-                events[eventCount - 1] = event;
-                errorTypes[eventCount - 1] = error;
-                eventData[eventCount - 1] = put(eventData[eventCount], holder);
-                referenceCodes[eventCount - 1] = code;
-
-                if (savedLocation != null) {
-                    locations[eventCount - 1] = savedLocation;
-                } else {
-                    locations[eventCount - 1] = null;
-                }
-
+                enqueueEvent(eventCount - 1, event, error, holder, code, savedLocation);
                 eventCount++;
                 return;
             default:
@@ -383,26 +391,35 @@ public class ProxyEventHandler implements EventHandler {
             }
         }
 
-        events[eventCount] = event;
-        errorTypes[eventCount] = error;
-        eventData[eventCount] = put(eventData[eventCount], holder);
-        referenceCodes[eventCount] = code;
-
-        if (savedLocation != null) {
-            locations[eventCount] = savedLocation;
-        } else {
-            locations[eventCount] = null;
-        }
-
+        enqueueEvent(eventCount, event, error, holder, code, savedLocation);
         eventCount++;
     }
 
     private void enqueueEvent(EDIStreamEvent event, EDIStreamValidationError error, CharSequence text, CharSequence code) {
-        events[eventCount] = event;
-        errorTypes[eventCount] = error;
-        eventData[eventCount] = put(eventData[eventCount], text);
-        referenceCodes[eventCount] = code;
+        enqueueEvent(eventCount, event, error, text, code, (Location) null);
         eventCount++;
+    }
+
+    private void enqueueEvent(int index,
+                              EDIStreamEvent event,
+                              EDIStreamValidationError error,
+                              CharSequence data,
+                              CharSequence code,
+                              Location location) {
+
+        events[index].type = event;
+        events[index].errorType = error;
+
+        if (data instanceof CharArraySequence) {
+            events[index].data = put(events[index].data, (CharArraySequence) data);
+        } else if (data != null) {
+            events[index].data = put(events[index].data, data);
+        } else {
+            events[index].data = null;
+        }
+
+        events[index].referenceCode = code;
+        events[index].location = location;
     }
 
     private static CharBuffer put(CharBuffer buffer, CharArraySequence holder) {

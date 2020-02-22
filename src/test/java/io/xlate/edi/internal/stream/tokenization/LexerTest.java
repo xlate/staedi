@@ -59,34 +59,40 @@ public class LexerTest {
         }
 
         @Override
-        public void segmentBegin(char[] text, int start, int length) {
+        public boolean segmentBegin(char[] text, int start, int length) {
             content.put("LAST", "segmentBegin");
             content.put("SEGMENT", new String(text, start, length));
+            return true;
         }
 
         @Override
-        public void segmentEnd() {
+        public boolean segmentEnd() {
             content.put("LAST", "segmentEnd");
+            return true;
         }
 
         @Override
-        public void compositeBegin(boolean isNil) {
+        public boolean compositeBegin(boolean isNil) {
             content.put("LAST", "compositeBegin");
+            return true;
         }
 
         @Override
-        public void compositeEnd(boolean isNil) {
+        public boolean compositeEnd(boolean isNil) {
             content.put("LAST", "compositeEnd");
+            return true;
         }
 
         @Override
-        public void elementData(char[] text, int start, int length) {
+        public boolean elementData(char[] text, int start, int length) {
             content.put("LAST", "elementData");
             content.put("ELEMENT", new String(text, start, length));
+            return true;
         }
 
         @Override
-        public void binaryData(InputStream binary) {
+        public boolean binaryData(InputStream binary) {
+            return true;
         }
 
         @Override
@@ -123,31 +129,37 @@ public class LexerTest {
         }
 
         @Override
-        public void segmentBegin(char[] text, int start, int length) {
+        public boolean segmentBegin(char[] text, int start, int length) {
             segment = new String(text, start, length);
+            return true;
         }
 
         @Override
-        public void segmentEnd() {
+        public boolean segmentEnd() {
+            return true;
         }
 
         @Override
-        public void compositeBegin(boolean isNil) {
+        public boolean compositeBegin(boolean isNil) {
             compositeStarted = true;
+            return true;
         }
 
         @Override
-        public void compositeEnd(boolean isNil) {
+        public boolean compositeEnd(boolean isNil) {
             compositeEnded = true;
+            return true;
         }
 
         @Override
-        public void elementData(char[] text, int start, int length) {
+        public boolean elementData(char[] text, int start, int length) {
             element = new String(text, start, length);
+            return true;
         }
 
         @Override
-        public void binaryData(InputStream binary) {
+        public boolean binaryData(InputStream binary) {
+            return true;
         }
 
         @Override

@@ -9,6 +9,7 @@ import io.xlate.edi.schema.implementation.EDITypeImplementation;
 
 public class CompositeImpl implements CompositeImplementation, Positioned {
 
+    private static final String TOSTRING_FORMAT = "id: %s, minOccurs: %d, maxOccurs: %d, position: %d, standard: { %s }";
     private final int minOccurs;
     private final int maxOccurs;
     private final String id;
@@ -27,6 +28,11 @@ public class CompositeImpl implements CompositeImplementation, Positioned {
         this.id = id;
         this.position = position;
         this.sequence = sequence;
+    }
+
+    @Override
+    public String toString() {
+        return String.format(TOSTRING_FORMAT, id, minOccurs, maxOccurs, position, standard);
     }
 
     @Override

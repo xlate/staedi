@@ -329,7 +329,7 @@
 
         <attribute name="type" type="IDREF" use="required">
           <annotation>
-            <documentation>The identifier of the standard loop this loop implements.</documentation>
+            <documentation>The identifier (code attribute) of the standard loop this loop implements.</documentation>
           </annotation>
         </attribute>
 
@@ -520,14 +520,6 @@
           </sequence>
 
           <attribute name="name" type="tns:nameType" use="required" />
-
-          <attribute name="code">
-            <simpleType>
-              <restriction base="string">
-                <pattern value="[A-Z0-9]{1,4}" />
-              </restriction>
-            </simpleType>
-          </attribute>
         </extension>
       </complexContent>
     </complexType>

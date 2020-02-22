@@ -22,6 +22,7 @@ import java.util.List;
 import io.xlate.edi.internal.stream.StaEDIStreamLocation;
 import io.xlate.edi.internal.stream.tokenization.Dialect;
 import io.xlate.edi.internal.stream.tokenization.ElementDataHandler;
+import io.xlate.edi.internal.stream.tokenization.StreamEvent;
 import io.xlate.edi.internal.stream.tokenization.ValidationEventHandler;
 import io.xlate.edi.schema.EDIComplexType;
 import io.xlate.edi.schema.EDIReference;
@@ -29,10 +30,14 @@ import io.xlate.edi.schema.EDISimpleType;
 import io.xlate.edi.schema.EDISyntaxRule;
 import io.xlate.edi.schema.EDIType;
 import io.xlate.edi.schema.Schema;
+import io.xlate.edi.schema.EDIType.Type;
 import io.xlate.edi.schema.implementation.CompositeImplementation;
+import io.xlate.edi.schema.implementation.Discriminator;
 import io.xlate.edi.schema.implementation.EDITypeImplementation;
 import io.xlate.edi.schema.implementation.LoopImplementation;
+import io.xlate.edi.schema.implementation.PolymorphicImplementation;
 import io.xlate.edi.schema.implementation.SegmentImplementation;
+import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamValidationError;
 import io.xlate.edi.stream.Location;
 
@@ -55,10 +60,8 @@ public class Validator {
     private boolean complete = false;
 
     private final UsageNode implRoot;
-    private UsageNode implSegment;
-    private UsageNode implCorrectSegment;
+    private UsageNode implNode;
     private List<UsageNode> implSegmentCandidates = new ArrayList<>();
-    private boolean pendingDiscrimination;
 
     public Validator(Schema schema, Schema containerSchema) {
         this.schema = schema;
@@ -69,10 +72,10 @@ public class Validator {
 
         if (schema.getImplementation() != null) {
             implRoot = buildTree(null, schema.getImplementation(), -1);
-            implCorrectSegment = implSegment = implRoot.getFirstChild();
+            implNode = implRoot.getFirstChild();
         } else {
             implRoot = null;
-            implCorrectSegment = implSegment = null;
+            implNode = null;
         }
     }
 
@@ -85,7 +88,7 @@ public class Validator {
     }
 
     public boolean isPendingDiscrimination() {
-        return pendingDiscrimination;
+        return implSegmentCandidates.size() > 1;
     }
 
     public String getCompositeReferenceCode() {
@@ -203,16 +206,20 @@ public class Validator {
         return startSegment;
     }
 
-    private void completeLoops(ValidationEventHandler handler, int d) {
-        UsageNode node = correctSegment;
-        UsageNode implNode = implCorrectSegment;
+    private UsageNode completeLoops(ValidationEventHandler handler, int d) {
+        UsageNode node;
+
+        if (implNode != null) {
+            node = implNode;
+        } else {
+            node = correctSegment;
+        }
 
         while (this.depth < d--) {
-            if (implNode != null) {
-                implNode = completeLoop(handler, implNode);
-            }
             node = completeLoop(handler, node);
         }
+
+        return node;
     }
 
     UsageNode completeLoop(ValidationEventHandler handler, UsageNode node) {
@@ -317,10 +324,11 @@ public class Validator {
             }
 
             if (parent.isNodeType(EDIType.Type.LOOP)) {
-                if (implCorrectSegment != null) {
-                    completeLoop(handler, implCorrectSegment);
+                if (implNode != null) {
+                    implNode = completeLoop(handler, implNode);
+                } else {
+                    completeLoop(handler, correctSegment);
                 }
-                completeLoop(handler, correctSegment);
                 handler.loopBegin(parent.getCode());
             }
         }
@@ -336,7 +344,7 @@ public class Validator {
         }
 
         correctSegment = segment = current;
-        selectImplementationCandidates(correctSegment);
+        selectImplementationCandidates(segment);
         return true;
     }
 
@@ -376,7 +384,7 @@ public class Validator {
         }
 
         correctSegment = segment = startLoop(current);
-        selectImplementationCandidates(correctSegment);
+        selectImplementationCandidates(segment);
         return true;
     }
 
@@ -453,43 +461,111 @@ public class Validator {
         mandatory.clear();
     }
 
-    void selectImplementationCandidates(UsageNode correctSegment) {
-        if (correctSegment != null && isImplementation()) {
+    void selectImplementationCandidates(UsageNode currentNode) {
+        if (currentNode != null && isImplementation()) {
             implSegmentCandidates.clear();
-            EDIType standardType = correctSegment.getReferencedType();
-            UsageNode implNode = implCorrectSegment;
+            EDIType standardType = currentNode.getReferencedType();
+            UsageNode implNode = this.implNode;
+
             EDIType implType;
 
             while (implNode != null) {
                 switch (implNode.getNodeType()) {
                 case SEGMENT:
                     implType = implNode.getReferencedType();
-
-                    if (implType != standardType) {
-                        // TODO: Check impl rules
-                    } else {
-                        implSegmentCandidates.add(implNode);
-                    }
-
                     break;
                 case TRANSACTION:
                 case LOOP:
                     implType = implNode.getFirstChild().getReferencedType();
-
-                    if (implType != standardType) {
-                        // TODO: Check impl rules
-                    } else {
-                        implSegmentCandidates.add(implNode);
-                    }
-
                     break;
                 default:
-                    throw new IllegalStateException("Unexpected impl node type: " + implCorrectSegment.getNodeType());
+                    throw new IllegalStateException("Unexpected impl node type: " + implNode.getNodeType());
                 }
 
-                implNode = implNode.getNextSibling();
+                if (implType != standardType) {
+                    // TODO: Check impl rules (less than min occurs, etc)
+                } else {
+                    implSegmentCandidates.add(implNode);
+                }
+
+                UsageNode nextImpl = implNode.getNextSibling();
+
+                if (nextImpl != null) {
+                    implNode = nextImpl;
+                } else {
+                    implNode = implNode.getParent();
+
+                    if (currentNode.isFirstChild() && currentNode.isNodeType(Type.SEGMENT)) {
+                        // Only navigate up if the current standard node is a loop start
+                        implNode = null;
+                    }
+                }
             }
         }
+
+        if (implSegmentCandidates.size() == 1) {
+            // TODO: validate min/max counts
+            this.implNode = implSegmentCandidates.get(0);
+            implSegmentCandidates.clear();
+        }
+    }
+
+    public boolean selectImplementation(StreamEvent[] events, int index, int count, Location location) {
+        StreamEvent currentEvent = events[index + count - 1];
+
+        if (currentEvent.getType() != EDIStreamEvent.ELEMENT_DATA) {
+            return false;
+        }
+
+        // TODO: update reference codes of earlier pending events.
+        // TODO: validate min/max counts
+
+        for (UsageNode candidate : implSegmentCandidates) {
+            PolymorphicImplementation implType;
+            UsageNode implSeg;
+
+            switch (candidate.getNodeType()) {
+            case SEGMENT:
+                implSeg = candidate;
+                break;
+            case TRANSACTION:
+            case LOOP:
+                implSeg = candidate.getFirstChild();
+                break;
+            default:
+                throw new IllegalStateException("Unexpected impl node type: " + candidate.getNodeType());
+            }
+
+            implType = (PolymorphicImplementation) candidate.getLink();
+
+            Discriminator discr = implType.getDiscriminator();
+
+            if (discr.getValueSet().contains(currentEvent.getData().toString())) {
+                int eleLoc = discr.getElementPosition();
+                if (eleLoc == location.getElementPosition()) {
+                    int comLoc = discr.getComponentPosition() == 0 ? -1 : discr.getComponentPosition();
+                    if (comLoc == location.getComponentPosition()) {
+                        implNode = implSeg;
+                        implSegmentCandidates.clear();
+
+                        if (implNode.isFirstChild()) {
+                            //start of loop
+                            for (int i = index; i < count; i++) {
+                                if (events[i].getType() == EDIStreamEvent.START_LOOP) {
+                                    if (events[i].getReferenceCode().equals(((EDIComplexType) candidate.getReferencedType()).getCode())) {
+                                        events[i].setReferenceCode(implType.getId());
+                                    }
+                                }
+                            }
+                        }
+
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
     }
 
     public List<EDIStreamValidationError> getElementErrors() {

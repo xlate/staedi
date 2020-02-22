@@ -10,6 +10,7 @@ import io.xlate.edi.schema.implementation.SegmentImplementation;
 
 public class SegmentImpl implements SegmentImplementation {
 
+    private static final String TOSTRING_FORMAT = "id: %s, minOccurs: %d, maxOccurs: %d, discriminator: { %s }, standard: { %s }";
     private final int minOccurs;
     private final int maxOccurs;
     private final String id;
@@ -31,6 +32,11 @@ public class SegmentImpl implements SegmentImplementation {
         this.typeId = typeId;
         this.discriminator = discriminator;
         this.sequence = sequence;
+    }
+
+    @Override
+    public String toString() {
+        return String.format(TOSTRING_FORMAT, id, minOccurs, maxOccurs, discriminator, standard);
     }
 
     @Override

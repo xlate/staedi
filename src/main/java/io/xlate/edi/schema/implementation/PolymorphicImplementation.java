@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2017 xlate.io LLC, http://www.xlate.io
+ * Copyright 2020 xlate.io LLC, http://www.xlate.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -13,20 +13,14 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  ******************************************************************************/
-package io.xlate.edi.internal.stream.tokenization;
+package io.xlate.edi.schema.implementation;
 
-public interface EventHandler extends ElementDataHandler, ValidationEventHandler {
+import java.util.List;
 
-    void interchangeBegin(Dialect dialect);
+public interface PolymorphicImplementation extends EDITypeImplementation {
 
-    void interchangeEnd();
+    Discriminator getDiscriminator();
 
-    boolean segmentBegin(char[] text, int start, int length);
-
-    boolean segmentEnd();
-
-    boolean compositeBegin(boolean isNil);
-
-    boolean compositeEnd(boolean isNil);
+    List<EDITypeImplementation> getSequence();
 
 }

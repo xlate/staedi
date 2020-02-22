@@ -15,19 +15,22 @@
  ******************************************************************************/
 package io.xlate.edi.internal.stream.validation;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import io.xlate.edi.internal.stream.tokenization.Dialect;
 import io.xlate.edi.schema.EDIComplexType;
 import io.xlate.edi.schema.EDIReference;
 import io.xlate.edi.schema.EDISimpleType;
 import io.xlate.edi.schema.EDISyntaxRule;
 import io.xlate.edi.schema.EDIType;
+import io.xlate.edi.schema.implementation.EDITypeImplementation;
 import io.xlate.edi.stream.EDIStreamValidationError;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 class UsageNode {
+
+    private static final String TOSTRING_FORMAT = "usageCount: %d, link: { %s }";
 
     private final EDIReference link;
     private final ElementValidator validator;
@@ -56,6 +59,15 @@ class UsageNode {
         this.siblingIndex = siblingIndex;
     }
 
+    @Override
+    public String toString() {
+        return String.format(TOSTRING_FORMAT, usageCount, link);
+    }
+
+    EDIReference getLink() {
+        return link;
+    }
+
     EDIType getReferencedType() {
         return link.getReferencedType();
     }
@@ -73,10 +85,18 @@ class UsageNode {
     }
 
     String getId() {
+        if (link instanceof EDITypeImplementation) {
+            return ((EDITypeImplementation) link).getId();
+        }
+
         return link.getReferencedType().getId();
     }
 
     String getCode() {
+        if (link instanceof EDITypeImplementation) {
+            return ((EDITypeImplementation) link).getId();
+        }
+
         EDIType referencedNode = link.getReferencedType();
 
         if (referencedNode instanceof EDIComplexType) {

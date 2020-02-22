@@ -559,13 +559,15 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     }
 
     @Override
-    public void binaryData(InputStream binary) {
+    public boolean binaryData(InputStream binary) {
         // No operation
+        return true;
     }
 
     @Override
-    public void elementData(char[] text, int start, int length) {
+    public boolean elementData(char[] text, int start, int length) {
         // No operation
+        return true;
     }
 
     @Override

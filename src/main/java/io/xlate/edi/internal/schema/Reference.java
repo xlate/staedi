@@ -20,7 +20,7 @@ import io.xlate.edi.schema.EDIType;
 
 class Reference implements EDIReference {
 
-    private static final String TOSTRING_FORMAT = "refId: %s, minOccurs: %d, maxOccurs: %d";
+    private static final String TOSTRING_FORMAT = "refId: %s, minOccurs: %d, maxOccurs: %d, type: { %s }";
     private String refId;
     private String refTag;
     private EDIType referencedType;
@@ -36,7 +36,7 @@ class Reference implements EDIReference {
 
     @Override
     public String toString() {
-        return String.format(TOSTRING_FORMAT, refId, minOccurs, maxOccurs);
+        return String.format(TOSTRING_FORMAT, refId, minOccurs, maxOccurs, referencedType);
     }
 
     String getRefId() {

@@ -15,13 +15,7 @@
  ******************************************************************************/
 package io.xlate.edi.schema.implementation;
 
-import java.util.List;
-
-public interface SegmentImplementation extends EDITypeImplementation {
-
-    Discriminator getDiscriminator();
-
-    List<EDITypeImplementation> getSequence();
+public interface SegmentImplementation extends PolymorphicImplementation {
 
     @Override
     default Type getType() {

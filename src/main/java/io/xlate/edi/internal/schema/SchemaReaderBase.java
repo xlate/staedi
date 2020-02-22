@@ -339,23 +339,23 @@ abstract class SchemaReaderBase implements SchemaReader {
                                QName complexType,
                                Map<String, EDIType> types) throws XMLStreamException {
         final EDIType.Type type = complex.get(complexType);
-        final String name;
+        final String id;
         String code = reader.getAttributeValue(null, "code");
 
         if (QN_TRANSACTION.equals(complexType)) {
-            name = QN_TRANSACTION.toString();
+            id = QN_TRANSACTION.toString();
         } else if (QN_LOOP.equals(complexType)) {
-            name = code;
+            id = code;
         } else {
-            name = reader.getAttributeValue(null, "name");
+            id = reader.getAttributeValue(null, "name");
 
-            if (type == EDIType.Type.SEGMENT && !name.matches("^[A-Z][A-Z0-9]{1,2}$")) {
-                throw schemaException("Invalid segment name [" + name + ']', reader);
+            if (type == EDIType.Type.SEGMENT && !id.matches("^[A-Z][A-Z0-9]{1,2}$")) {
+                throw schemaException("Invalid segment name [" + id + ']', reader);
             }
         }
 
         if (code == null) {
-            code = name;
+            code = id;
         }
 
         final List<EDIReference> refs = new ArrayList<>(8);
@@ -401,7 +401,7 @@ abstract class SchemaReaderBase implements SchemaReader {
             }
         }
 
-        return new StructureType(name, type, code, refs, rules);
+        return new StructureType(id, type, code, refs, rules);
     }
 
     void readReferences(XMLStreamReader reader,

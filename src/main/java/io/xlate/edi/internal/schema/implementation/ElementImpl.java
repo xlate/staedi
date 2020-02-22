@@ -8,6 +8,7 @@ import io.xlate.edi.schema.implementation.ElementImplementation;
 
 public class ElementImpl implements ElementImplementation, Positioned {
 
+    private static final String TOSTRING_FORMAT = "id: %s, minOccurs: %d, maxOccurs: %d, position: %d, values: %s, standard: { %s }";
     private final int minOccurs;
     private final int maxOccurs;
     private final String id;
@@ -26,6 +27,11 @@ public class ElementImpl implements ElementImplementation, Positioned {
         this.id = id;
         this.position = position;
         this.values = values;
+    }
+
+    @Override
+    public String toString() {
+        return String.format(TOSTRING_FORMAT, id, minOccurs, maxOccurs, position, values, standard);
     }
 
     @Override
