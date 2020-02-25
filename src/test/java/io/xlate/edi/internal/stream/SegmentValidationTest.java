@@ -400,9 +400,12 @@ public class SegmentValidationTest {
                 + "S01*X~"
                 + "S0A*X~"
                 + "S11*A~"
+                + "S12*X~" // IMPLEMENTATION_UNUSED_SEGMENT_PRESENT
                 + "S11*B~"
                 + "S12*X~"
                 + "S12*X~"
+                + "S12*X~" // SEGMENT_EXCEEDS_MAXIMUM_USE
+                + "S11*B~"
                 + "S09*X~"
                 + "IEA*1*508121953~").getBytes());
 
@@ -431,8 +434,25 @@ public class SegmentValidationTest {
 
         assertEquals(EDIStreamEvent.START_LOOP, reader.next());
         assertEquals("0000A", reader.getReferenceCode());
+
+        assertEquals(EDIStreamEvent.SEGMENT_ERROR, reader.next());
+        assertEquals(EDIStreamValidationError.IMPLEMENTATION_UNUSED_SEGMENT_PRESENT, reader.getErrorType());
+        assertEquals("S12", reader.getReferenceCode());
+
+        // FIXME: S13 has min use = 1, check for segment error
+
         assertEquals(EDIStreamEvent.END_LOOP, reader.next());
         assertEquals("0000A", reader.getReferenceCode());
+
+        assertEquals(EDIStreamEvent.START_LOOP, reader.next());
+        assertEquals("0000B", reader.getReferenceCode());
+
+        assertEquals(EDIStreamEvent.SEGMENT_ERROR, reader.next());
+        assertEquals(EDIStreamValidationError.SEGMENT_EXCEEDS_MAXIMUM_USE, reader.getErrorType());
+        assertEquals("S12", reader.getReferenceCode());
+
+        assertEquals(EDIStreamEvent.END_LOOP, reader.next());
+        assertEquals("0000B", reader.getReferenceCode());
 
         assertEquals(EDIStreamEvent.START_LOOP, reader.next());
         assertEquals("0000B", reader.getReferenceCode());

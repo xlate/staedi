@@ -19,7 +19,7 @@
   <transaction>
     <sequence>
       <segment ref="S0A" />
-      <loop code="L0000">
+      <loop code="L0000" maxOccurs="3">
         <sequence>
           <segment ref="S11" minOccurs="1" />
           <segment ref="S12" maxOccurs="5" />
@@ -50,9 +50,10 @@
               </element>
             </sequence>
           </segment>
+          <segment type="S13" minOccurs="1" />
         </sequence>
       </loop>
-      <loop type="L0000" code="0000B" minOccurs="1" discriminator="1">
+      <loop type="L0000" code="0000B" minOccurs="1" maxOccurs="2" discriminator="1">
         <sequence>
           <segment type="S11">
             <sequence>

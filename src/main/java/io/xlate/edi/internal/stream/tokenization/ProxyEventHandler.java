@@ -317,7 +317,7 @@ public class ProxyEventHandler implements EventHandler {
                          savedLocation != null ? savedLocation : location);
 
             if (validator() != null && validator().isPendingDiscrimination()) {
-                eventsReady = validator().selectImplementation(events, eventIndex, eventCount);
+                eventsReady = validator().selectImplementation(events, eventIndex, eventCount, this);
             }
         }
 
@@ -342,7 +342,7 @@ public class ProxyEventHandler implements EventHandler {
 
     @Override
     public void segmentError(CharSequence token, EDIStreamValidationError error) {
-        enqueueEvent(EDIStreamEvent.SEGMENT_ERROR, error, token, null);
+        enqueueEvent(EDIStreamEvent.SEGMENT_ERROR, error, token, token);
     }
 
     @Override

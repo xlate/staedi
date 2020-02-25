@@ -3,6 +3,7 @@ package io.xlate.edi.internal.schema.implementation;
 import java.util.List;
 
 import io.xlate.edi.schema.EDIComplexType;
+import io.xlate.edi.schema.EDIReference;
 import io.xlate.edi.schema.EDIType;
 import io.xlate.edi.schema.implementation.Discriminator;
 import io.xlate.edi.schema.implementation.EDITypeImplementation;
@@ -11,14 +12,14 @@ import io.xlate.edi.schema.implementation.LoopImplementation;
 public class LoopImpl implements LoopImplementation {
 
     private static final String TOSTRING_FORMAT = "id: %s, minOccurs: %d, maxOccurs: %d, discriminator: { %s }, standard: { %s }";
-    private final int minOccurs;
-    private final int maxOccurs;
     private final String id;
     private final String typeId;
     private final Discriminator discriminator;
     private final List<EDITypeImplementation> sequence;
 
     private EDIComplexType standard;
+    private int minOccurs;
+    private int maxOccurs;
 
     public LoopImpl(int minOccurs,
             int maxOccurs,
@@ -73,7 +74,13 @@ public class LoopImpl implements LoopImplementation {
         return typeId;
     }
 
-    public void setStandard(EDIComplexType standard) {
-        this.standard = standard;
+    public void setStandard(EDIReference standard) {
+        this.standard = (EDIComplexType) standard.getReferencedType();
+        if (this.minOccurs < 0) {
+            this.minOccurs = standard.getMinOccurs();
+        }
+        if (this.maxOccurs < 0) {
+            this.maxOccurs = standard.getMaxOccurs();
+        }
     }
 }

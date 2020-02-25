@@ -29,6 +29,7 @@ import io.xlate.edi.internal.schema.implementation.Positioned;
 import io.xlate.edi.internal.schema.implementation.SegmentImpl;
 import io.xlate.edi.internal.schema.implementation.TransactionImpl;
 import io.xlate.edi.schema.EDIComplexType;
+import io.xlate.edi.schema.EDIReference;
 import io.xlate.edi.schema.EDISimpleType;
 import io.xlate.edi.schema.EDIType;
 import io.xlate.edi.schema.implementation.Discriminator;
@@ -109,18 +110,40 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
                 }
                 break;
             }
+            case TRANSACTION:
             case LOOP: {
                 LoopImpl impl = (LoopImpl) i;
-                String typeId = QN_LOOP.toString() + '.' + impl.getTypeId();
+                String typeId;
+                if (impl instanceof TransactionImpl) {
+                    typeId = impl.getTypeId();
+                } else {
+                    typeId = QN_LOOP.toString() + '.' + impl.getTypeId();
+                }
                 EDIComplexType standard = (EDIComplexType) types.get(typeId);
-                impl.setStandard(standard);
+                //impl.setStandard(standard);
+
+                for (EDITypeImplementation t : impl.getSequence()) {
+                    EDIReference stdRef;
+
+                    if (t instanceof SegmentImpl) {
+                        SegmentImpl s = (SegmentImpl) t;
+                        String refTypeId = s.getTypeId();
+                        stdRef = standard.getReferences().stream().filter(r -> r.getReferencedType().getId().equals(refTypeId)).findFirst().orElse(null);
+                        s.setStandard(stdRef);
+                    } else {
+                        LoopImpl l = (LoopImpl) t;
+                        String refTypeId = l.getTypeId();
+                        stdRef = standard.getReferences().stream().filter(r -> r.getReferencedType().getId().equals(refTypeId)).findFirst().orElse(null);
+                        l.setStandard(stdRef);
+                    }
+                }
                 break;
             }
             case SEGMENT: {
                 SegmentImpl impl = (SegmentImpl) i;
                 String typeId = impl.getTypeId();
                 EDIComplexType standard = (EDIComplexType) types.get(typeId);
-                impl.setStandard(standard);
+                //impl.setStandard(standard);
                 for (EDITypeImplementation t : impl.getSequence()) {
                     if (t instanceof Positioned) {
                         Positioned p = (Positioned) t;
@@ -154,7 +177,8 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
         String typeId = QN_TRANSACTION.toString();
         EDIComplexType standard = (EDIComplexType) types.get(typeId);
         LoopImpl impl = new TransactionImpl(qnImplementation.toString(), typeId, loop.getSequence());
-        impl.setStandard(standard);
+        impl.setStandard(new Reference(standard, 1, 1));
+        implementedTypes.add(impl);
         return impl;
     }
 
@@ -175,8 +199,8 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
         } else {
             id = parseAttribute(reader, "code", String::valueOf);
             typeId = parseAttribute(reader, "type", String::valueOf);
-            minOccurs = parseAttribute(reader, ATTR_MIN_OCCURS, Integer::parseInt, 0);
-            maxOccurs = parseAttribute(reader, ATTR_MAX_OCCURS, Integer::parseInt, 0);
+            minOccurs = parseAttribute(reader, ATTR_MIN_OCCURS, Integer::parseInt, -1);
+            maxOccurs = parseAttribute(reader, ATTR_MAX_OCCURS, Integer::parseInt, -1);
             discriminatorAttr = parseAttribute(reader, ATTR_DISCRIMINATOR, BigDecimal::new, null);
         }
 
@@ -198,9 +222,7 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
                     disc = buildDiscriminator(discriminatorAttr, segImpl.getSequence());
                 }
 
-                LoopImpl loop = new LoopImpl(minOccurs, maxOccurs, id, typeId, disc, sequence);
-                implementedTypes.add(loop);
-                return loop;
+                return new LoopImpl(minOccurs, maxOccurs, id, typeId, disc, sequence);
             } else {
                 throw unexpectedElement(element, reader);
             }
@@ -215,7 +237,9 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
                 if (sequence.isEmpty()) {
                     throw schemaException("segment element must be first child of loop sequence", reader);
                 }
-                sequence.add(readLoopImplementation(reader, entryName, false));
+                LoopImplementation loop = readLoopImplementation(reader, entryName, false);
+                implementedTypes.add(loop);
+                sequence.add(loop);
             } else if (entryName.equals(QN_SEGMENT)) {
                 sequence.add(readSegmentImplementation(reader));
             } else {
@@ -231,8 +255,8 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
         //TODO: Read title attribute and description element
         List<EDITypeImplementation> sequence = new ArrayList<>();
         String typeId = parseAttribute(reader, "type", String::valueOf);
-        int minOccurs = parseAttribute(reader, ATTR_MIN_OCCURS, Integer::parseInt, 0);
-        int maxOccurs = parseAttribute(reader, ATTR_MAX_OCCURS, Integer::parseInt, 0);
+        int minOccurs = parseAttribute(reader, ATTR_MIN_OCCURS, Integer::parseInt, -1);
+        int maxOccurs = parseAttribute(reader, ATTR_MAX_OCCURS, Integer::parseInt, -1);
         BigDecimal discriminatorAttr = parseAttribute(reader, ATTR_DISCRIMINATOR, BigDecimal::new, null);
 
         int event = reader.nextTag();

@@ -30,21 +30,24 @@ import io.xlate.edi.stream.EDIStreamValidationError;
 
 class UsageNode {
 
-    private static final String TOSTRING_FORMAT = "usageCount: %d, link: { %s }";
+    private static final String TOSTRING_FORMAT = "usageCount: %d, depth: %d, link: { %s }";
 
-    private final EDIReference link;
-    private final ElementValidator validator;
     private final UsageNode parent;
-    private int siblingIndex;
+    private final int depth;
+    private final EDIReference link;
+    private final int siblingIndex;
+
+    private final ElementValidator validator;
     private final List<UsageNode> children = new ArrayList<>();
     private int usageCount;
 
-    UsageNode(UsageNode parent, EDIReference link, int siblingIndex) {
+    UsageNode(UsageNode parent, int depth, EDIReference link, int siblingIndex) {
         if (link == null) {
             throw new NullPointerException();
         }
 
         this.parent = parent;
+        this.depth = depth;
         this.link = link;
 
         EDIType referencedType = link.getReferencedType();
@@ -61,7 +64,15 @@ class UsageNode {
 
     @Override
     public String toString() {
-        return String.format(TOSTRING_FORMAT, usageCount, link);
+        return String.format(TOSTRING_FORMAT, usageCount, depth, link);
+    }
+
+    UsageNode getParent() {
+        return parent;
+    }
+
+    int getDepth() {
+        return depth;
     }
 
     EDIReference getLink() {
@@ -70,10 +81,6 @@ class UsageNode {
 
     EDIType getReferencedType() {
         return link.getReferencedType();
-    }
-
-    UsageNode getParent() {
-        return parent;
     }
 
     List<UsageNode> getChildren() {
