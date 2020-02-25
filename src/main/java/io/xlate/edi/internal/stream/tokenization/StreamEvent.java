@@ -2,6 +2,7 @@ package io.xlate.edi.internal.stream.tokenization;
 
 import java.nio.CharBuffer;
 
+import io.xlate.edi.internal.stream.StaEDIStreamLocation;
 import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamValidationError;
 import io.xlate.edi.stream.Location;
@@ -14,7 +15,7 @@ public class StreamEvent {
     EDIStreamValidationError errorType;
     CharBuffer data;
     CharSequence referenceCode;
-    Location location;
+    StaEDIStreamLocation location;
 
     @Override
     public String toString() {

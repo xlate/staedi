@@ -183,7 +183,7 @@ public class ProxyEventHandler implements EventHandler {
             validator().validateSegment(this, segmentHolder);
         }
 
-        enqueueEvent(EDIStreamEvent.START_SEGMENT, EDIStreamValidationError.NONE, segmentHolder, null, null);
+        enqueueEvent(EDIStreamEvent.START_SEGMENT, EDIStreamValidationError.NONE, segmentHolder, null, location);
         return eventsReady;
     }
 
@@ -198,7 +198,8 @@ public class ProxyEventHandler implements EventHandler {
             validator().validateSyntax(this, this, location, false);
         }
 
-        enqueueEvent(EDIStreamEvent.END_SEGMENT, EDIStreamValidationError.NONE, segmentHolder, null, null);
+        location.clearSegmentLocations();
+        enqueueEvent(EDIStreamEvent.END_SEGMENT, EDIStreamValidationError.NONE, segmentHolder, null, location);
         transactionSchemaAllowed = false;
         return true;
     }
@@ -236,6 +237,7 @@ public class ProxyEventHandler implements EventHandler {
             eventsReady = !validator().isPendingDiscrimination();
         }
 
+        location.clearComponentPosition();
         enqueueEvent(EDIStreamEvent.END_COMPOSITE, EDIStreamValidationError.NONE, "", null);
         return eventsReady;
     }
@@ -278,7 +280,7 @@ public class ProxyEventHandler implements EventHandler {
                                      error,
                                      elementHolder,
                                      code,
-                                     savedLocation);
+                                     savedLocation != null ? savedLocation : location);
                         cursor.remove();
                         //$FALL-THROUGH$
                     default:
@@ -312,10 +314,10 @@ public class ProxyEventHandler implements EventHandler {
                          EDIStreamValidationError.NONE,
                          elementHolder,
                          code,
-                         savedLocation);
+                         savedLocation != null ? savedLocation : location);
 
             if (validator() != null && validator().isPendingDiscrimination()) {
-                eventsReady = validator().selectImplementation(events, eventIndex, eventCount, location);
+                eventsReady = validator().selectImplementation(events, eventIndex, eventCount);
             }
         }
 
@@ -367,7 +369,7 @@ public class ProxyEventHandler implements EventHandler {
                               EDIStreamValidationError error,
                               CharArraySequence holder,
                               CharSequence code,
-                              Location savedLocation) {
+                              Location location) {
 
         if (event == EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR && eventCount > 0
                 && events[eventCount].type == EDIStreamEvent.START_COMPOSITE) {
@@ -383,7 +385,7 @@ public class ProxyEventHandler implements EventHandler {
                 events[eventCount] = events[eventCount - 1];
                 events[eventCount - 1] = current;
 
-                enqueueEvent(eventCount - 1, event, error, holder, code, savedLocation);
+                enqueueEvent(eventCount - 1, event, error, holder, code, location);
                 eventCount++;
                 return;
             default:
@@ -391,12 +393,12 @@ public class ProxyEventHandler implements EventHandler {
             }
         }
 
-        enqueueEvent(eventCount, event, error, holder, code, savedLocation);
+        enqueueEvent(eventCount, event, error, holder, code, location);
         eventCount++;
     }
 
     private void enqueueEvent(EDIStreamEvent event, EDIStreamValidationError error, CharSequence text, CharSequence code) {
-        enqueueEvent(eventCount, event, error, text, code, (Location) null);
+        enqueueEvent(eventCount, event, error, text, code, location);
         eventCount++;
     }
 
@@ -419,7 +421,7 @@ public class ProxyEventHandler implements EventHandler {
         }
 
         events[index].referenceCode = code;
-        events[index].location = location;
+        events[index].location = setLocation(events[index].location, location);
     }
 
     private static CharBuffer put(CharBuffer buffer, CharArraySequence holder) {
@@ -454,5 +456,14 @@ public class ProxyEventHandler implements EventHandler {
         buffer.flip();
 
         return buffer;
+    }
+
+    private static StaEDIStreamLocation setLocation(StaEDIStreamLocation target, Location source) {
+        if (target == null) {
+            return new StaEDIStreamLocation(source);
+        }
+
+        target.set(source);
+        return target;
     }
 }

@@ -18,6 +18,7 @@ package io.xlate.edi.internal.stream.validation;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 import io.xlate.edi.internal.stream.StaEDIStreamLocation;
 import io.xlate.edi.internal.stream.tokenization.Dialect;
@@ -465,39 +466,39 @@ public class Validator {
         if (currentNode != null && isImplementation()) {
             implSegmentCandidates.clear();
             EDIType standardType = currentNode.getReferencedType();
-            UsageNode implNode = this.implNode;
+            UsageNode currentImpl = this.implNode;
 
             EDIType implType;
 
-            while (implNode != null) {
-                switch (implNode.getNodeType()) {
+            while (currentImpl != null) {
+                switch (currentImpl.getNodeType()) {
                 case SEGMENT:
-                    implType = implNode.getReferencedType();
+                    implType = currentImpl.getReferencedType();
                     break;
                 case TRANSACTION:
                 case LOOP:
-                    implType = implNode.getFirstChild().getReferencedType();
+                    implType = currentImpl.getFirstChild().getReferencedType();
                     break;
                 default:
-                    throw new IllegalStateException("Unexpected impl node type: " + implNode.getNodeType());
+                    throw new IllegalStateException("Unexpected impl node type: " + currentImpl.getNodeType());
                 }
 
                 if (implType != standardType) {
                     // TODO: Check impl rules (less than min occurs, etc)
                 } else {
-                    implSegmentCandidates.add(implNode);
+                    implSegmentCandidates.add(currentImpl);
                 }
 
-                UsageNode nextImpl = implNode.getNextSibling();
+                UsageNode nextImpl = currentImpl.getNextSibling();
 
                 if (nextImpl != null) {
-                    implNode = nextImpl;
+                    currentImpl = nextImpl;
                 } else {
-                    implNode = implNode.getParent();
+                    currentImpl = currentImpl.getParent();
 
                     if (currentNode.isFirstChild() && currentNode.isNodeType(Type.SEGMENT)) {
                         // Only navigate up if the current standard node is a loop start
-                        implNode = null;
+                        currentImpl = null;
                     }
                 }
             }
@@ -510,14 +511,13 @@ public class Validator {
         }
     }
 
-    public boolean selectImplementation(StreamEvent[] events, int index, int count, Location location) {
+    public boolean selectImplementation(StreamEvent[] events, int index, int count) {
         StreamEvent currentEvent = events[index + count - 1];
 
         if (currentEvent.getType() != EDIStreamEvent.ELEMENT_DATA) {
             return false;
         }
 
-        // TODO: update reference codes of earlier pending events.
         // TODO: validate min/max counts
 
         for (UsageNode candidate : implSegmentCandidates) {
@@ -538,34 +538,48 @@ public class Validator {
 
             implType = (PolymorphicImplementation) candidate.getLink();
 
-            Discriminator discr = implType.getDiscriminator();
+            if (isMatch(implType, currentEvent)) {
+                implNode = implSeg;
+                implSegmentCandidates.clear();
 
-            if (discr.getValueSet().contains(currentEvent.getData().toString())) {
-                int eleLoc = discr.getElementPosition();
-                if (eleLoc == location.getElementPosition()) {
-                    int comLoc = discr.getComponentPosition() == 0 ? -1 : discr.getComponentPosition();
-                    if (comLoc == location.getComponentPosition()) {
-                        implNode = implSeg;
-                        implSegmentCandidates.clear();
-
-                        if (implNode.isFirstChild()) {
-                            //start of loop
-                            for (int i = index; i < count; i++) {
-                                if (events[i].getType() == EDIStreamEvent.START_LOOP) {
-                                    if (events[i].getReferenceCode().equals(((EDIComplexType) candidate.getReferencedType()).getCode())) {
-                                        events[i].setReferenceCode(implType.getId());
-                                    }
-                                }
-                            }
-                        }
-
-                        return true;
-                    }
+                if (implNode.isFirstChild()) {
+                    //start of loop
+                    setLoopReferenceCode(events, index, count - 1, implType);
                 }
+
+                return true;
             }
         }
 
         return false;
+    }
+
+    static boolean isMatch(PolymorphicImplementation implType, StreamEvent currentEvent) {
+        Discriminator discr = implType.getDiscriminator();
+
+        if (discr.getValueSet().contains(currentEvent.getData().toString())) {
+            int eleLoc = discr.getElementPosition();
+            int comLoc = discr.getComponentPosition() == 0 ? -1 : discr.getComponentPosition();
+            Location location = currentEvent.getLocation();
+
+            if (eleLoc == location.getElementPosition() && comLoc == location.getComponentPosition()) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    static void setLoopReferenceCode(StreamEvent[] events, int index, int count, PolymorphicImplementation implType) {
+        for (int i = index; i < count; i++) {
+            CharSequence eventRefCode = events[i].getReferenceCode();
+            // This is the reference code of the impl's standard type
+            CharSequence implRefCode = ((EDIComplexType) implType.getReferencedType()).getCode();
+
+            if (events[i].getType() == EDIStreamEvent.START_LOOP && Objects.equals(eventRefCode, implRefCode)) {
+                events[i].setReferenceCode(implType.getId());
+            }
+        }
     }
 
     public List<EDIStreamValidationError> getElementErrors() {
