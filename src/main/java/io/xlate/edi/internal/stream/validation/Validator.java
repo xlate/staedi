@@ -484,12 +484,11 @@ public class Validator {
                     throw new IllegalStateException("Unexpected impl node type: " + currentImpl.getNodeType());
                 }
 
-                if (implType != standardType) {
-                    // TODO: Check impl rules (less than min occurs, etc)
-                } else {
+                if (implType == standardType) {
                     if (currentImpl.isFirstChild() && currentImpl.getParent().getDepth() > 1) {
                         currentImpl = currentImpl.getParent();
                     }
+
                     implSegmentCandidates.add(currentImpl);
                 }
 
@@ -523,15 +522,18 @@ public class Validator {
         }
 
         if (implSegmentCandidates.size() == 1 && implSegmentCandidates.get(0).isNodeType(Type.SEGMENT)) {
-            // TODO: validate min/max counts of prev siblings
-            this.implNode = implSegmentCandidates.get(0);
+            UsageNode selected = implSegmentCandidates.get(0);
+            checkMinimumImplUsage(this.implNode, selected, handler);
             implSegmentCandidates.clear();
-            implNode.incrementUsage();
 
-            if (implNode.exceedsMaximumUsage()) {
-                handler.segmentError(implNode.getId(),
+            selected.incrementUsage();
+
+            if (selected.exceedsMaximumUsage()) {
+                handler.segmentError(selected.getId(),
                                      EDIStreamValidationError.SEGMENT_EXCEEDS_MAXIMUM_USE);
             }
+
+            this.implNode = selected;
         }
     }
 
@@ -541,8 +543,6 @@ public class Validator {
         if (currentEvent.getType() != EDIStreamEvent.ELEMENT_DATA) {
             return false;
         }
-
-        // TODO: validate min/max counts
 
         for (UsageNode candidate : implSegmentCandidates) {
             PolymorphicImplementation implType;
@@ -563,12 +563,14 @@ public class Validator {
             implType = (PolymorphicImplementation) candidate.getLink();
 
             if (isMatch(implType, currentEvent)) {
-                implNode = implSeg;
+                checkMinimumImplUsage(this.implNode, candidate, handler);
                 implSegmentCandidates.clear();
+                implNode = implSeg;
 
                 if (candidate.isNodeType(Type.LOOP)) {
                     candidate.incrementUsage();
                     candidate.resetChildren();
+                    implSeg.incrementUsage();
 
                     if (candidate.exceedsMaximumUsage()) {
                         handler.segmentError(implSeg.getId(),
@@ -593,6 +595,33 @@ public class Validator {
         }
 
         return false;
+    }
+
+    void checkMinimumImplUsage(UsageNode sibling, UsageNode selected, ValidationEventHandler handler) {
+        while (sibling != null && sibling != selected) {
+            if (!sibling.hasMinimumUsage()) {
+                /*
+                 * The schema segment has not met it's minimum usage
+                 * requirement.
+                 */
+                switch (sibling.getNodeType()) {
+                case SEGMENT:
+                    handler.segmentError(sibling.getId(),
+                                         EDIStreamValidationError.IMPLEMENTATION_SEGMENT_BELOW_MINIMUM_USE);
+                    break;
+                case GROUP:
+                case TRANSACTION:
+                case LOOP:
+                    handler.segmentError(sibling.getFirstChild().getId(),
+                                         EDIStreamValidationError.IMPLEMENTATION_LOOP_OCCURS_UNDER_MINIMUM_TIMES);
+                    break;
+                default:
+                    break;
+                }
+            }
+
+            sibling = sibling.getNextSibling();
+        }
     }
 
     static boolean isMatch(PolymorphicImplementation implType, StreamEvent currentEvent) {

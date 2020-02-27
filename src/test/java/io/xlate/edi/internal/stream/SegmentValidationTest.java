@@ -439,7 +439,9 @@ public class SegmentValidationTest {
         assertEquals(EDIStreamValidationError.IMPLEMENTATION_UNUSED_SEGMENT_PRESENT, reader.getErrorType());
         assertEquals("S12", reader.getReferenceCode());
 
-        // FIXME: S13 has min use = 1, check for segment error
+        assertEquals(EDIStreamEvent.SEGMENT_ERROR, reader.next());
+        assertEquals(EDIStreamValidationError.IMPLEMENTATION_SEGMENT_BELOW_MINIMUM_USE, reader.getErrorType());
+        assertEquals("S13", reader.getReferenceCode());
 
         assertEquals(EDIStreamEvent.END_LOOP, reader.next());
         assertEquals("0000A", reader.getReferenceCode());

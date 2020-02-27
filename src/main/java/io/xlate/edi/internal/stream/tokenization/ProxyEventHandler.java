@@ -409,19 +409,40 @@ public class ProxyEventHandler implements EventHandler {
                               CharSequence code,
                               Location location) {
 
-        events[index].type = event;
-        events[index].errorType = error;
+        StreamEvent target = events[index];
 
-        if (data instanceof CharArraySequence) {
-            events[index].data = put(events[index].data, (CharArraySequence) data);
-        } else if (data != null) {
-            events[index].data = put(events[index].data, data);
-        } else {
-            events[index].data = null;
+        if (index > 0 && event == EDIStreamEvent.SEGMENT_ERROR) {
+            /*
+             * Ensure segment errors occur before other event types
+             * when the array has other events already present.
+             */
+            int offset = index;
+
+            while (offset > 0) {
+                if (events[offset - 1].type != EDIStreamEvent.SEGMENT_ERROR) {
+                    events[offset] = events[offset - 1];
+                    offset--;
+                } else {
+                    break;
+                }
+            }
+
+            events[offset] = target;
         }
 
-        events[index].referenceCode = code;
-        events[index].location = setLocation(events[index].location, location);
+        target.type = event;
+        target.errorType = error;
+
+        if (data instanceof CharArraySequence) {
+            target.data = put(target.data, (CharArraySequence) data);
+        } else if (data != null) {
+            target.data = put(target.data, data);
+        } else {
+            target.data = null;
+        }
+
+        target.referenceCode = code;
+        target.location = setLocation(target.location, location);
     }
 
     private static CharBuffer put(CharBuffer buffer, CharArraySequence holder) {
