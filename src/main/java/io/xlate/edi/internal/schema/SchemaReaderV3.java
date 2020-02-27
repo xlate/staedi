@@ -12,8 +12,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Spliterator;
+import java.util.Spliterators;
 import java.util.function.Consumer;
 import java.util.logging.Logger;
+import java.util.stream.StreamSupport;
 
 import javax.xml.namespace.QName;
 import javax.xml.stream.Location;
@@ -21,6 +24,8 @@ import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
+import io.xlate.edi.internal.schema.implementation.BaseComplexImpl;
+import io.xlate.edi.internal.schema.implementation.BaseImpl;
 import io.xlate.edi.internal.schema.implementation.CompositeImpl;
 import io.xlate.edi.internal.schema.implementation.DiscriminatorImpl;
 import io.xlate.edi.internal.schema.implementation.ElementImpl;
@@ -30,8 +35,8 @@ import io.xlate.edi.internal.schema.implementation.SegmentImpl;
 import io.xlate.edi.internal.schema.implementation.TransactionImpl;
 import io.xlate.edi.schema.EDIComplexType;
 import io.xlate.edi.schema.EDIReference;
-import io.xlate.edi.schema.EDISimpleType;
 import io.xlate.edi.schema.EDIType;
+import io.xlate.edi.schema.EDIType.Type;
 import io.xlate.edi.schema.implementation.Discriminator;
 import io.xlate.edi.schema.implementation.EDITypeImplementation;
 import io.xlate.edi.schema.implementation.LoopImplementation;
@@ -91,78 +96,48 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
     void setReferences(Map<String, EDIType> types) {
         super.setReferences(types);
 
-        // FIXME: index bounds checks
-        /*
-         * throw schemaException("Position " + position + " does not correspond to an entry in " + standardParent.getId(), reader);
-         */
-        implementedTypes.descendingIterator().forEachRemaining(i -> {
-            switch (i.getType()) {
-            case COMPOSITE: {
-                CompositeImpl impl = (CompositeImpl) i;
-                EDIComplexType standard = (EDIComplexType) impl.getReferencedType();
-                for (EDITypeImplementation t : impl.getSequence()) {
-                    if (t instanceof Positioned) {
-                        Positioned p = (Positioned) t;
-                        int offset = p.getPosition() - 1;
-                        EDIType pStd = standard.getReferences().get(offset).getReferencedType();
-                        ((ElementImpl) p).setStandard((EDISimpleType) pStd);
-                    }
-                }
-                break;
-            }
-            case TRANSACTION:
-            case LOOP: {
-                LoopImpl impl = (LoopImpl) i;
-                String typeId;
-                if (impl instanceof TransactionImpl) {
-                    typeId = impl.getTypeId();
-                } else {
-                    typeId = QN_LOOP.toString() + '.' + impl.getTypeId();
-                }
-                EDIComplexType standard = (EDIComplexType) types.get(typeId);
-                //impl.setStandard(standard);
+        StreamSupport.stream(Spliterators.spliteratorUnknownSize(implementedTypes.descendingIterator(),
+                                                                 Spliterator.ORDERED),
+                             false)
+                     .filter(type -> type.getType() != Type.ELEMENT)
+                     .map(type -> (BaseComplexImpl) type)
+                     .forEach(type -> {
+                         String typeId;
 
-                for (EDITypeImplementation t : impl.getSequence()) {
-                    EDIReference stdRef;
+                         if (type.getType() == Type.LOOP) {
+                             typeId = QN_LOOP.toString() + '.' + type.getTypeId();
+                         } else {
+                             typeId = type.getTypeId();
+                         }
 
-                    if (t instanceof SegmentImpl) {
-                        SegmentImpl s = (SegmentImpl) t;
-                        String refTypeId = s.getTypeId();
-                        stdRef = standard.getReferences().stream().filter(r -> r.getReferencedType().getId().equals(refTypeId)).findFirst().orElse(null);
-                        s.setStandard(stdRef);
-                    } else {
-                        LoopImpl l = (LoopImpl) t;
-                        String refTypeId = l.getTypeId();
-                        stdRef = standard.getReferences().stream().filter(r -> r.getReferencedType().getId().equals(refTypeId)).findFirst().orElse(null);
-                        l.setStandard(stdRef);
-                    }
-                }
-                break;
-            }
-            case SEGMENT: {
-                SegmentImpl impl = (SegmentImpl) i;
-                String typeId = impl.getTypeId();
-                EDIComplexType standard = (EDIComplexType) types.get(typeId);
-                //impl.setStandard(standard);
-                for (EDITypeImplementation t : impl.getSequence()) {
-                    if (t instanceof Positioned) {
-                        Positioned p = (Positioned) t;
-                        int offset = p.getPosition() - 1;
-                        EDIType pStd = standard.getReferences().get(offset).getReferencedType();
-                        if (p instanceof ElementImpl) {
-                            ((ElementImpl) p).setStandard((EDISimpleType) pStd);
-                        } else {
-                            ((CompositeImpl) p).setStandard((EDIComplexType) pStd);
-                        }
-                    }
-                }
-                break;
-            }
-            default:
-                break;
+                         EDIComplexType standard = (EDIComplexType) types.get(typeId);
 
-            }
-        });
+                         for (EDITypeImplementation t : type.getSequence()) {
+                             EDIReference stdRef;
+                             BaseImpl<?> seqImpl = (BaseImpl<?>) t;
+
+                             if (t instanceof Positioned) {
+                                 Positioned p = (Positioned) t;
+                                 int offset = p.getPosition() - 1;
+                                 List<EDIReference> standardRefs = standard.getReferences();
+                                 if (standardRefs != null && offset > -1 && offset < standardRefs.size()) {
+                                     stdRef = standardRefs.get(offset);
+                                 } else {
+                                     throw schemaException("Position " + p.getPosition() + " does not correspond to an entry in type " + standard.getId());
+                                 }
+                             } else {
+                                 String refTypeId = seqImpl.getTypeId();
+
+                                 stdRef = standard.getReferences().stream().filter(r -> r.getReferencedType()
+                                                                                   .getId()
+                                                                                   .equals(refTypeId))
+                                         .findFirst()
+                                         .orElseThrow(() -> schemaException("Reference " + refTypeId + " does not correspond to an entry in type " + standard.getId()));
+                             }
+
+                             seqImpl.setStandardReference(stdRef);
+                         }
+                     });
     }
 
     LoopImplementation readImplementation(XMLStreamReader reader,
@@ -177,7 +152,7 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
         String typeId = QN_TRANSACTION.toString();
         EDIComplexType standard = (EDIComplexType) types.get(typeId);
         LoopImpl impl = new TransactionImpl(qnImplementation.toString(), typeId, loop.getSequence());
-        impl.setStandard(new Reference(standard, 1, 1));
+        impl.setStandardReference(new Reference(standard, 1, 1));
         implementedTypes.add(impl);
         return impl;
     }
@@ -305,7 +280,7 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
 
         if (element.equals(QN_SEGMENT)) {
             Discriminator disc = buildDiscriminator(discriminatorAttr, sequence);
-            SegmentImpl segment = new SegmentImpl(minOccurs, maxOccurs, typeId, typeId, disc, sequence);
+            SegmentImpl segment = new SegmentImpl(minOccurs, maxOccurs, typeId, disc, sequence);
             implementedTypes.add(segment);
             return segment;
         } else {
