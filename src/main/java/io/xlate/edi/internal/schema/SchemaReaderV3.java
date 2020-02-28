@@ -105,7 +105,7 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
                          String typeId;
 
                          if (type.getType() == Type.LOOP) {
-                             typeId = QN_LOOP.toString() + '.' + type.getTypeId();
+                             typeId = qnLoop.toString() + '.' + type.getTypeId();
                          } else {
                              typeId = type.getTypeId();
                          }
@@ -149,7 +149,7 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
         }
 
         LoopImplementation loop = readLoopImplementation(reader, complexType, true);
-        String typeId = QN_TRANSACTION.toString();
+        String typeId = qnTransaction.toString();
         EDIComplexType standard = (EDIComplexType) types.get(typeId);
         LoopImpl impl = new TransactionImpl(qnImplementation.toString(), typeId, loop.getSequence());
         impl.setStandardReference(new Reference(standard, 1, 1));
@@ -208,14 +208,14 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
 
     void readLoopSequenceEntry(QName entryName, List<EDITypeImplementation> sequence) {
         try {
-            if (entryName.equals(QN_LOOP)) {
+            if (entryName.equals(qnLoop)) {
                 if (sequence.isEmpty()) {
                     throw schemaException("segment element must be first child of loop sequence", reader);
                 }
                 LoopImplementation loop = readLoopImplementation(reader, entryName, false);
                 implementedTypes.add(loop);
                 sequence.add(loop);
-            } else if (entryName.equals(QN_SEGMENT)) {
+            } else if (entryName.equals(qnSegment)) {
                 sequence.add(readSegmentImplementation(reader));
             } else {
                 throw unexpectedElement(entryName, reader);
@@ -253,11 +253,11 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
 
     void readSegmentSequenceEntry(QName entryName, List<EDITypeImplementation> sequence) {
         try {
-            if (entryName.equals(QN_ELEMENT)) {
+            if (entryName.equals(qnElement)) {
                 ElementImpl element = readElementImplementation(reader);
                 implementedTypes.add(element);
                 sequence.add(element.getPosition() - 1, element);
-            } else if (entryName.equals(QN_COMPOSITE)) {
+            } else if (entryName.equals(qnComposite)) {
                 CompositeImpl element = readCompositeImplementation(reader);
                 implementedTypes.add(element);
                 sequence.add(element.getPosition() - 1, element);
@@ -278,7 +278,7 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
 
         QName element = reader.getName();
 
-        if (element.equals(QN_SEGMENT)) {
+        if (element.equals(qnSegment)) {
             Discriminator disc = buildDiscriminator(discriminatorAttr, sequence);
             SegmentImpl segment = new SegmentImpl(minOccurs, maxOccurs, typeId, disc, sequence);
             implementedTypes.add(segment);
@@ -340,7 +340,7 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
 
     void readCompositeSequenceEntry(QName entryName, List<EDITypeImplementation> sequence) {
         try {
-            if (entryName.equals(QN_ELEMENT)) {
+            if (entryName.equals(qnElement)) {
                 ElementImpl element = readElementImplementation(reader);
                 implementedTypes.add(element);
                 sequence.add(element.getPosition() - 1, element);
@@ -360,7 +360,7 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
 
         QName element = reader.getName();
 
-        if (element.equals(QN_COMPOSITE)) {
+        if (element.equals(qnComposite)) {
             return new CompositeImpl(minOccurs, maxOccurs, null, position, sequence);
         } else {
             throw unexpectedElement(element, reader);
@@ -371,7 +371,7 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
 
         QName element = reader.getName();
 
-        if (element.equals(QN_SEQUENCE)) {
+        if (element.equals(qnSequence)) {
             boolean endOfType = false;
 
             while (!endOfType && reader.hasNext()) {
@@ -407,7 +407,7 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
         if (event == XMLStreamConstants.START_ELEMENT) {
             QName element = reader.getName();
 
-            if (!element.equals(QN_ENUMERATION)) {
+            if (!element.equals(qnEnumeration)) {
                 throw unexpectedElement(element, reader);
             }
 
@@ -433,7 +433,7 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
 
         QName element = reader.getName();
 
-        if (element.equals(QN_ELEMENT)) {
+        if (element.equals(qnElement)) {
             return new ElementImpl(minOccurs, maxOccurs, (String) null, position, valueSet);
         } else {
             throw unexpectedElement(element, reader);

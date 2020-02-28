@@ -34,24 +34,24 @@ abstract class SchemaReaderBase implements SchemaReader {
 
     final String xmlns;
 
-    final QName QN_SCHEMA;
-    final QName QN_DESCRIPTION;
-    final QName QN_INTERCHANGE;
-    final QName QN_GROUP;
-    final QName QN_TRANSACTION;
-    final QName QN_LOOP;
-    final QName QN_SEGMENT;
-    final QName QN_COMPOSITE;
-    final QName QN_ELEMENT;
-    final QName QN_SYNTAX;
-    final QName QN_POSITION;
-    final QName QN_SEQUENCE;
-    final QName QN_ENUMERATION;
-    final QName QN_VALUE;
+    final QName qnSchema;
+    final QName qnDescription;
+    final QName qnInterchange;
+    final QName qnGroup;
+    final QName qnTransaction;
+    final QName qnLoop;
+    final QName qnSegment;
+    final QName qnComposite;
+    final QName qnElement;
+    final QName qnSyntax;
+    final QName qnPosition;
+    final QName qnSequence;
+    final QName qnEnumeration;
+    final QName qnValue;
 
-    final QName QN_COMPOSITE_T;
-    final QName QN_ELEMENT_T;
-    final QName QN_SEGMENT_T;
+    final QName qnCompositeType;
+    final QName qnElementType;
+    final QName qnSegmentType;
 
     final Map<QName, EDIType.Type> complex;
     final Map<QName, EDIType.Type> typeDefinitions;
@@ -61,54 +61,54 @@ abstract class SchemaReaderBase implements SchemaReader {
 
     public SchemaReaderBase(String xmlns, XMLStreamReader reader) {
         this.xmlns = xmlns;
-        QN_SCHEMA = new QName(xmlns, "schema");
-        QN_DESCRIPTION = new QName(xmlns, "description");
-        QN_INTERCHANGE = new QName(xmlns, "interchange");
-        QN_GROUP = new QName(xmlns, "group");
-        QN_TRANSACTION = new QName(xmlns, "transaction");
-        QN_LOOP = new QName(xmlns, "loop");
-        QN_SEGMENT = new QName(xmlns, "segment");
-        QN_COMPOSITE = new QName(xmlns, "composite");
-        QN_ELEMENT = new QName(xmlns, "element");
-        QN_SYNTAX = new QName(xmlns, "syntax");
-        QN_POSITION = new QName(xmlns, "position");
-        QN_SEQUENCE = new QName(xmlns, "sequence");
-        QN_ENUMERATION = new QName(xmlns, "enumeration");
-        QN_VALUE = new QName(xmlns, "value");
+        qnSchema = new QName(xmlns, "schema");
+        qnDescription = new QName(xmlns, "description");
+        qnInterchange = new QName(xmlns, "interchange");
+        qnGroup = new QName(xmlns, "group");
+        qnTransaction = new QName(xmlns, "transaction");
+        qnLoop = new QName(xmlns, "loop");
+        qnSegment = new QName(xmlns, "segment");
+        qnComposite = new QName(xmlns, "composite");
+        qnElement = new QName(xmlns, "element");
+        qnSyntax = new QName(xmlns, "syntax");
+        qnPosition = new QName(xmlns, "position");
+        qnSequence = new QName(xmlns, "sequence");
+        qnEnumeration = new QName(xmlns, "enumeration");
+        qnValue = new QName(xmlns, "value");
 
-        QN_COMPOSITE_T = new QName(xmlns, "compositeType");
-        QN_ELEMENT_T = new QName(xmlns, "elementType");
-        QN_SEGMENT_T = new QName(xmlns, "segmentType");
+        qnCompositeType = new QName(xmlns, "compositeType");
+        qnElementType = new QName(xmlns, "elementType");
+        qnSegmentType = new QName(xmlns, "segmentType");
 
         complex = new HashMap<>(4);
-        complex.put(QN_INTERCHANGE, EDIType.Type.INTERCHANGE);
-        complex.put(QN_GROUP, EDIType.Type.GROUP);
-        complex.put(QN_TRANSACTION, EDIType.Type.TRANSACTION);
-        complex.put(QN_LOOP, EDIType.Type.LOOP);
-        complex.put(QN_SEGMENT_T, EDIType.Type.SEGMENT);
-        complex.put(QN_COMPOSITE_T, EDIType.Type.COMPOSITE);
+        complex.put(qnInterchange, EDIType.Type.INTERCHANGE);
+        complex.put(qnGroup, EDIType.Type.GROUP);
+        complex.put(qnTransaction, EDIType.Type.TRANSACTION);
+        complex.put(qnLoop, EDIType.Type.LOOP);
+        complex.put(qnSegmentType, EDIType.Type.SEGMENT);
+        complex.put(qnCompositeType, EDIType.Type.COMPOSITE);
 
         typeDefinitions = new HashMap<>(3);
-        typeDefinitions.put(QN_SEGMENT_T, EDIType.Type.SEGMENT);
-        typeDefinitions.put(QN_COMPOSITE_T, EDIType.Type.COMPOSITE);
-        typeDefinitions.put(QN_ELEMENT_T, EDIType.Type.ELEMENT);
+        typeDefinitions.put(qnSegmentType, EDIType.Type.SEGMENT);
+        typeDefinitions.put(qnCompositeType, EDIType.Type.COMPOSITE);
+        typeDefinitions.put(qnElementType, EDIType.Type.ELEMENT);
 
         references = new HashSet<>(4);
-        references.add(QN_SEGMENT);
-        references.add(QN_COMPOSITE);
-        references.add(QN_ELEMENT);
+        references.add(qnSegment);
+        references.add(qnComposite);
+        references.add(qnElement);
 
         this.reader = reader;
     }
 
     @Override
     public String getInterchangeName() {
-        return QN_INTERCHANGE.toString();
+        return qnInterchange.toString();
     }
 
     @Override
     public String getTransactionName() {
-        return QN_TRANSACTION.toString();
+        return qnTransaction.toString();
     }
 
     @Override
@@ -138,11 +138,11 @@ abstract class SchemaReaderBase implements SchemaReader {
         reader.nextTag();
         element = reader.getName();
 
-        if (!QN_INTERCHANGE.equals(element) && !QN_TRANSACTION.equals(element)) {
+        if (!qnInterchange.equals(element) && !qnTransaction.equals(element)) {
             throw unexpectedElement(element, reader);
         }
 
-        return QN_INTERCHANGE.equals(element);
+        return qnInterchange.equals(element);
     }
 
     String readDescription(XMLStreamReader reader) throws XMLStreamException {
@@ -152,7 +152,7 @@ abstract class SchemaReaderBase implements SchemaReader {
         element = reader.getName();
         String description = null;
 
-        if (QN_DESCRIPTION.equals(element)) {
+        if (qnDescription.equals(element)) {
             description = reader.getElementText();
             reader.nextTag();
         }
@@ -170,7 +170,7 @@ abstract class SchemaReaderBase implements SchemaReader {
 
         element = reader.getName();
 
-        if (!QN_SEQUENCE.equals(element)) {
+        if (!qnSequence.equals(element)) {
             throw unexpectedElement(element, reader);
         }
 
@@ -180,21 +180,21 @@ abstract class SchemaReaderBase implements SchemaReader {
         List<EDIReference> refs = new ArrayList<>(3);
         refs.add(headerRef);
 
-        while (QN_SEGMENT.equals(element)) {
+        while (qnSegment.equals(element)) {
             refs.add(readReference(reader, types));
             reader.nextTag(); // Advance to end element
             reader.nextTag(); // Advance to next start element
             element = reader.getName();
         }
 
-        if (QN_GROUP.equals(element)) {
-            refs.add(readControlStructure(reader, element, QN_TRANSACTION, types));
+        if (qnGroup.equals(element)) {
+            refs.add(readControlStructure(reader, element, qnTransaction, types));
             reader.nextTag(); // Advance to end element
             reader.nextTag(); // Advance to next start element
             element = reader.getName();
         }
 
-        if (QN_TRANSACTION.equals(element)) {
+        if (qnTransaction.equals(element)) {
             refs.add(readControlStructure(reader, element, null, types));
             reader.nextTag(); // Advance to end element
             reader.nextTag(); // Advance to next start element
@@ -202,7 +202,7 @@ abstract class SchemaReaderBase implements SchemaReader {
 
         refs.add(trailerRef);
 
-        StructureType interchange = new StructureType(QN_INTERCHANGE.toString(),
+        StructureType interchange = new StructureType(qnInterchange.toString(),
                                               EDIType.Type.INTERCHANGE,
                                               "INTERCHANGE",
                                               refs,
@@ -278,7 +278,7 @@ abstract class SchemaReaderBase implements SchemaReader {
 
     void readTransaction(XMLStreamReader reader, Map<String, EDIType> types) throws XMLStreamException {
         QName element = reader.getName();
-        types.put(QN_TRANSACTION.toString(), readComplexType(reader, element, types));
+        types.put(qnTransaction.toString(), readComplexType(reader, element, types));
     }
 
     void readTypeDefinitions(XMLStreamReader reader, Map<String, EDIType> types) throws XMLStreamException {
@@ -297,7 +297,7 @@ abstract class SchemaReaderBase implements SchemaReader {
                 break;
 
             case XMLStreamConstants.END_ELEMENT:
-                if (reader.getName().equals(QN_SCHEMA)) {
+                if (reader.getName().equals(qnSchema)) {
                     schemaEnd = true;
                 }
                 break;
@@ -317,7 +317,7 @@ abstract class SchemaReaderBase implements SchemaReader {
         if (complex.containsKey(element)) {
             nameCheck(name, types, reader);
             types.put(name, readComplexType(reader, element, types));
-        } else if (QN_ELEMENT_T.equals(element)) {
+        } else if (qnElementType.equals(element)) {
             nameCheck(name, types, reader);
             types.put(name, readSimpleType(reader));
         } else {
@@ -342,9 +342,9 @@ abstract class SchemaReaderBase implements SchemaReader {
         final String id;
         String code = reader.getAttributeValue(null, "code");
 
-        if (QN_TRANSACTION.equals(complexType)) {
-            id = QN_TRANSACTION.toString();
-        } else if (QN_LOOP.equals(complexType)) {
+        if (qnTransaction.equals(complexType)) {
+            id = qnTransaction.toString();
+        } else if (qnLoop.equals(complexType)) {
             id = code;
         } else {
             id = reader.getAttributeValue(null, "name");
@@ -368,13 +368,13 @@ abstract class SchemaReaderBase implements SchemaReader {
             case XMLStreamConstants.START_ELEMENT:
                 QName element = reader.getName();
 
-                if (element.equals(QN_SEQUENCE)) {
+                if (element.equals(qnSequence)) {
                     if (sequence) {
                         throw schemaException("multiple sequence elements", reader);
                     }
                     sequence = true;
                     readReferences(reader, types, refs);
-                } else if (element.equals(QN_SYNTAX)) {
+                } else if (element.equals(qnSyntax)) {
                     switch (type) {
                     case SEGMENT:
                     case COMPOSITE:
@@ -414,7 +414,7 @@ abstract class SchemaReaderBase implements SchemaReader {
                 break;
 
             case XMLStreamConstants.END_ELEMENT:
-                if (reader.getName().equals(QN_SEQUENCE)) {
+                if (reader.getName().equals(qnSequence)) {
                     return;
                 }
 
@@ -433,7 +433,7 @@ abstract class SchemaReaderBase implements SchemaReader {
         if (references.contains(element)) {
             refId = readReferencedId(reader);
             Objects.requireNonNull(refId);
-        } else if (QN_LOOP.equals(element)) {
+        } else if (qnLoop.equals(element)) {
             refId = reader.getAttributeValue(null, "code");
             //TODO: ensure not null
         } else {
@@ -446,9 +446,9 @@ abstract class SchemaReaderBase implements SchemaReader {
 
         Reference ref;
 
-        if (QN_LOOP.equals(element)) {
+        if (qnLoop.equals(element)) {
             StructureType loop = readComplexType(reader, element, types);
-            String loopRefId = QN_LOOP.toString() + '.' + refId;
+            String loopRefId = qnLoop.toString() + '.' + refId;
             types.put(loopRefId, loop);
             ref = new Reference(loopRefId, refTag, minOccurs, maxOccurs);
             ref.setReferencedType(loop);
@@ -486,7 +486,7 @@ abstract class SchemaReaderBase implements SchemaReader {
             case XMLStreamConstants.START_ELEMENT:
                 QName element = reader.getName();
 
-                if (QN_POSITION.equals(element)) {
+                if (qnPosition.equals(element)) {
                     String position = reader.getElementText();
 
                     try {
@@ -498,7 +498,7 @@ abstract class SchemaReaderBase implements SchemaReader {
 
                 break;
             case XMLStreamConstants.END_ELEMENT:
-                if (QN_SYNTAX.equals(reader.getName())) {
+                if (qnSyntax.equals(reader.getName())) {
                     return positions;
                 }
                 break;
@@ -508,7 +508,7 @@ abstract class SchemaReaderBase implements SchemaReader {
             }
         }
 
-        throw schemaException("missing end element " + QN_SYNTAX, reader);
+        throw schemaException("missing end element " + qnSyntax, reader);
     }
 
     ElementType readSimpleType(XMLStreamReader reader) throws XMLStreamException {
@@ -548,15 +548,15 @@ abstract class SchemaReaderBase implements SchemaReader {
             case XMLStreamConstants.START_ELEMENT:
                 element = reader.getName();
 
-                if (element.equals(QN_VALUE)) {
+                if (element.equals(qnValue)) {
                     values.add(reader.getElementText());
-                } else if (!element.equals(QN_ENUMERATION)) {
+                } else if (!element.equals(qnEnumeration)) {
                     throw unexpectedElement(element, reader);
                 }
 
                 break;
             case XMLStreamConstants.END_ELEMENT:
-                if (reader.getName().equals(QN_ENUMERATION)) {
+                if (reader.getName().equals(qnEnumeration)) {
                     enumerationEnd = true;
                 }
                 break;
