@@ -111,6 +111,7 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
                          }
 
                          EDIComplexType standard = (EDIComplexType) types.get(typeId);
+                         List<EDIReference> standardRefs = standard.getReferences();
 
                          for (EDITypeImplementation t : type.getSequence()) {
                              EDIReference stdRef;
@@ -119,7 +120,6 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
                              if (t instanceof Positioned) {
                                  Positioned p = (Positioned) t;
                                  int offset = p.getPosition() - 1;
-                                 List<EDIReference> standardRefs = standard.getReferences();
                                  if (standardRefs != null && offset > -1 && offset < standardRefs.size()) {
                                      stdRef = standardRefs.get(offset);
                                  } else {
@@ -128,9 +128,9 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
                              } else {
                                  String refTypeId = seqImpl.getTypeId();
 
-                                 stdRef = standard.getReferences().stream().filter(r -> r.getReferencedType()
-                                                                                   .getId()
-                                                                                   .equals(refTypeId))
+                                 stdRef = standardRefs.stream().filter(r -> r.getReferencedType()
+                                                                           .getId()
+                                                                           .equals(refTypeId))
                                          .findFirst()
                                          .orElseThrow(() -> schemaException("Reference " + refTypeId + " does not correspond to an entry in type " + standard.getId()));
                              }

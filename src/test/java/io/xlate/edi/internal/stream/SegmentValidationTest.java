@@ -406,6 +406,10 @@ public class SegmentValidationTest {
                 + "S12*X~"
                 + "S12*X~" // SEGMENT_EXCEEDS_MAXIMUM_USE
                 + "S11*B~"
+                + "S11*B~" // LOOP_OCCURS_OVER_MAXIMUM_TIMES
+                + "S11*C~"
+                // IMPLEMENTATION_LOOP_OCCURS_UNDER_MINIMUM_TIMES
+                + "S11*D~"
                 + "S09*X~"
                 + "IEA*1*508121953~").getBytes());
 
@@ -432,6 +436,7 @@ public class SegmentValidationTest {
         assertEquals(EDIStreamEvent.START_TRANSACTION, reader.next(), "Expecting start of transaction");
         reader.setTransactionSchema(schemaFactory.createSchema(getClass().getResource("/x12/EDISchemaSegmentValidationImpl.xml")));
 
+        // Loop A
         assertEquals(EDIStreamEvent.START_LOOP, reader.next());
         assertEquals("0000A", reader.getReferenceCode());
 
@@ -446,6 +451,7 @@ public class SegmentValidationTest {
         assertEquals(EDIStreamEvent.END_LOOP, reader.next());
         assertEquals("0000A", reader.getReferenceCode());
 
+        // Loop B - Occurrence 1
         assertEquals(EDIStreamEvent.START_LOOP, reader.next());
         assertEquals("0000B", reader.getReferenceCode());
 
@@ -456,10 +462,49 @@ public class SegmentValidationTest {
         assertEquals(EDIStreamEvent.END_LOOP, reader.next());
         assertEquals("0000B", reader.getReferenceCode());
 
+        // Loop B - Occurrence 2
         assertEquals(EDIStreamEvent.START_LOOP, reader.next());
         assertEquals("0000B", reader.getReferenceCode());
         assertEquals(EDIStreamEvent.END_LOOP, reader.next());
         assertEquals("0000B", reader.getReferenceCode());
+
+        // Loop B - Occurrence 3
+        assertEquals(EDIStreamEvent.START_LOOP, reader.next());
+        assertEquals("0000B", reader.getReferenceCode());
+
+        assertEquals(EDIStreamEvent.SEGMENT_ERROR, reader.next());
+        assertEquals(EDIStreamValidationError.LOOP_OCCURS_OVER_MAXIMUM_TIMES, reader.getErrorType());
+        assertEquals("S11", reader.getReferenceCode());
+
+        assertEquals(EDIStreamEvent.END_LOOP, reader.next());
+        assertEquals("0000B", reader.getReferenceCode());
+
+        // Loop C - Occurrence 1
+        assertEquals(EDIStreamEvent.START_LOOP, reader.next());
+        assertEquals("0000C", reader.getReferenceCode());
+        assertEquals(EDIStreamEvent.END_LOOP, reader.next());
+        assertEquals("0000C", reader.getReferenceCode());
+
+        assertEquals(EDIStreamEvent.SEGMENT_ERROR, reader.next());
+        assertEquals(EDIStreamValidationError.IMPLEMENTATION_LOOP_OCCURS_UNDER_MINIMUM_TIMES, reader.getErrorType());
+        assertEquals("S11", reader.getReferenceCode());
+
+        // Loop D - Occurrence 1
+        assertEquals(EDIStreamEvent.START_LOOP, reader.next());
+        assertEquals("0000D", reader.getReferenceCode());
+
+        // Standard Loop L0000 may only occur 5 times
+        assertEquals(EDIStreamEvent.SEGMENT_ERROR, reader.next());
+        assertEquals(EDIStreamValidationError.LOOP_OCCURS_OVER_MAXIMUM_TIMES, reader.getErrorType());
+        assertEquals("S11", reader.getReferenceCode());
+
+        // Loop L0001 has minOccurs=1
+        assertEquals(EDIStreamEvent.SEGMENT_ERROR, reader.next());
+        assertEquals(EDIStreamValidationError.MANDATORY_SEGMENT_MISSING, reader.getErrorType());
+        assertEquals("S20", reader.getReferenceCode());
+
+        assertEquals(EDIStreamEvent.END_LOOP, reader.next());
+        assertEquals("0000D", reader.getReferenceCode());
 
         assertTrue(!reader.hasNext(), "Unexpected segment errors exist");
     }

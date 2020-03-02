@@ -412,20 +412,22 @@ public class ProxyEventHandler implements EventHandler {
                               Location location) {
 
         StreamEvent target = events[index];
+        EDIStreamEvent associatedEvent = (index > 0) ? getAssociatedEvent(error) : null;
 
-        if (index > 0 && event == EDIStreamEvent.SEGMENT_ERROR) {
+        if (associatedEvent != null) {
             /*
              * Ensure segment errors occur before other event types
              * when the array has other events already present.
              */
             int offset = index;
+            boolean complete = false;
 
-            while (offset > 0) {
-                if (events[offset - 1].type != EDIStreamEvent.SEGMENT_ERROR) {
+            while (!complete && offset > 0) {
+                if (events[offset - 1].type == associatedEvent) {
+                    complete = true;
+                } else {
                     events[offset] = events[offset - 1];
                     offset--;
-                } else {
-                    break;
                 }
             }
 
@@ -434,59 +436,27 @@ public class ProxyEventHandler implements EventHandler {
 
         target.type = event;
         target.errorType = error;
-
-        if (data instanceof CharArraySequence) {
-            target.data = put(target.data, (CharArraySequence) data);
-        } else if (data != null) {
-            target.data = put(target.data, data);
-        } else {
-            target.data = null;
-        }
-
-        target.referenceCode = code;
-        target.location = setLocation(target.location, location);
+        target.setData(data);
+        target.setReferenceCode(code);
+        target.setLocation(location);
     }
 
-    private static CharBuffer put(CharBuffer buffer, CharArraySequence holder) {
-        final int length = holder != null ? holder.length() : 50;
+    private static EDIStreamEvent getAssociatedEvent(EDIStreamValidationError error) {
+        final EDIStreamEvent event;
 
-        if (buffer == null || buffer.capacity() < length) {
-            buffer = CharBuffer.allocate(length);
+        switch (error) {
+        case IMPLEMENTATION_LOOP_OCCURS_UNDER_MINIMUM_TIMES:
+            event = EDIStreamEvent.END_LOOP;
+            break;
+        case MANDATORY_SEGMENT_MISSING:
+        case IMPLEMENTATION_SEGMENT_BELOW_MINIMUM_USE:
+            event = null;
+            break;
+        default:
+            event = null;
+            break;
         }
 
-        buffer.clear();
-
-        if (holder != null && length > 0) {
-            holder.putToBuffer(buffer);
-        }
-
-        buffer.flip();
-
-        return buffer;
-    }
-
-    private static CharBuffer put(CharBuffer buffer, CharSequence text) {
-        int length = text.length();
-
-        if (buffer == null || buffer.capacity() < length) {
-            buffer = CharBuffer.allocate(length);
-        }
-
-        buffer.clear();
-        for (int i = 0; i < length; i++) {
-            buffer.put(text.charAt(i));
-        }
-        buffer.flip();
-
-        return buffer;
-    }
-
-    private static StaEDIStreamLocation setLocation(StaEDIStreamLocation target, Location source) {
-        if (target == null) {
-            return new StaEDIStreamLocation(source);
-        }
-
-        target.set(source);
-        return target;
+        return event;
     }
 }

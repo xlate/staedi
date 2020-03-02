@@ -15,10 +15,26 @@
  ******************************************************************************/
 package io.xlate.edi.internal.stream.validation;
 
+import static io.xlate.edi.stream.EDIStreamValidationError.IMPLEMENTATION_LOOP_OCCURS_UNDER_MINIMUM_TIMES;
+import static io.xlate.edi.stream.EDIStreamValidationError.IMPLEMENTATION_SEGMENT_BELOW_MINIMUM_USE;
+import static io.xlate.edi.stream.EDIStreamValidationError.IMPLEMENTATION_UNUSED_SEGMENT_PRESENT;
+import static io.xlate.edi.stream.EDIStreamValidationError.LOOP_OCCURS_OVER_MAXIMUM_TIMES;
+import static io.xlate.edi.stream.EDIStreamValidationError.MANDATORY_SEGMENT_MISSING;
+import static io.xlate.edi.stream.EDIStreamValidationError.REQUIRED_DATA_ELEMENT_MISSING;
+import static io.xlate.edi.stream.EDIStreamValidationError.SEGMENT_EXCEEDS_MAXIMUM_USE;
+import static io.xlate.edi.stream.EDIStreamValidationError.SEGMENT_NOT_IN_DEFINED_TRANSACTION_SET;
+import static io.xlate.edi.stream.EDIStreamValidationError.SEGMENT_NOT_IN_PROPER_SEQUENCE;
+import static io.xlate.edi.stream.EDIStreamValidationError.TOO_MANY_COMPONENTS;
+import static io.xlate.edi.stream.EDIStreamValidationError.TOO_MANY_DATA_ELEMENTS;
+import static io.xlate.edi.stream.EDIStreamValidationError.TOO_MANY_REPETITIONS;
+import static io.xlate.edi.stream.EDIStreamValidationError.UNEXPECTED_SEGMENT;
+
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.BiConsumer;
 
 import io.xlate.edi.internal.stream.StaEDIStreamLocation;
 import io.xlate.edi.internal.stream.tokenization.Dialect;
@@ -30,8 +46,8 @@ import io.xlate.edi.schema.EDIReference;
 import io.xlate.edi.schema.EDISimpleType;
 import io.xlate.edi.schema.EDISyntaxRule;
 import io.xlate.edi.schema.EDIType;
-import io.xlate.edi.schema.Schema;
 import io.xlate.edi.schema.EDIType.Type;
+import io.xlate.edi.schema.Schema;
 import io.xlate.edi.schema.implementation.CompositeImplementation;
 import io.xlate.edi.schema.implementation.Discriminator;
 import io.xlate.edi.schema.implementation.EDITypeImplementation;
@@ -54,14 +70,33 @@ public class Validator {
     private UsageNode element;
     private UsageNode composite;
 
-    private final List<String> mandatory = new ArrayList<>();
+    static class UsageError {
+        String code;
+        EDIStreamValidationError error;
+        int depth;
+
+        UsageError(String code, EDIStreamValidationError error, int depth) {
+            super();
+            this.code = code;
+            this.error = error;
+            this.depth = depth;
+        }
+
+        void handle(BiConsumer<String, EDIStreamValidationError> handler) {
+            handler.accept(code, error);
+        }
+    }
+
+    private final List<UsageError> useErrors = new ArrayList<>();
+
     private final List<EDIStreamValidationError> elementErrors = new ArrayList<>(5);
 
     private int depth = 1;
     private boolean complete = false;
 
     private final UsageNode implRoot;
-    private UsageNode implNode;
+    private UsageNode implSegment;
+    private UsageNode implCorrectSegment;
     private List<UsageNode> implSegmentCandidates = new ArrayList<>();
 
     public Validator(Schema schema, Schema containerSchema) {
@@ -73,10 +108,10 @@ public class Validator {
 
         if (schema.getImplementation() != null) {
             implRoot = buildTree(null, 0, schema.getImplementation(), -1);
-            implNode = implRoot.getFirstChild();
+            implCorrectSegment = implSegment = implRoot.getFirstChild();
         } else {
             implRoot = null;
-            implNode = null;
+            implCorrectSegment = implSegment = null;
         }
     }
 
@@ -114,27 +149,27 @@ public class Validator {
         return (number > -1) ? String.valueOf(number) : null;
     }
 
-    private static EDIReference referenceOf(final EDIComplexType root) {
+    private static EDIReference referenceOf(EDIComplexType type, int minOccurs, int maxOccurs) {
         return new EDIReference() {
             @Override
             public EDIType getReferencedType() {
-                return root;
+                return type;
             }
 
             @Override
             public int getMinOccurs() {
-                return 1;
+                return minOccurs;
             }
 
             @Override
             public int getMaxOccurs() {
-                return 1;
+                return maxOccurs;
             }
         };
     }
 
     private static UsageNode buildTree(final EDIComplexType root) {
-        return buildTree(null, 0, referenceOf(root), -1);
+        return buildTree(null, 0, referenceOf(root, 1, 1), -1);
     }
 
     private static UsageNode buildTree(UsageNode parent, int parentDepth, EDIReference link, int index) {
@@ -209,26 +244,36 @@ public class Validator {
         return startSegment;
     }
 
-    private UsageNode completeLoops(ValidationEventHandler handler, int d) {
+    private void completeLoops(ValidationEventHandler handler, int d) {
         UsageNode node;
+        boolean implLoop;
 
-        if (implNode != null) {
-            node = implNode;
+        if (implCorrectSegment != null) {
+            /*-
+             * Use the implementation node so that the reference code passed to the
+             * handler reflects the implementation.
+             */
+            node = implCorrectSegment;
+            implLoop = true;
         } else {
             node = correctSegment;
+            implLoop = false;
         }
 
         while (this.depth < d--) {
+            handleMissingMandatory(handler, d);
             node = completeLoop(handler, node);
         }
 
-        return node;
+        if (implLoop) {
+            implSegment = node;
+        }
     }
 
     UsageNode completeLoop(ValidationEventHandler handler, UsageNode node) {
-        node = node.getParent();
-        handler.loopEnd(node.getCode());
-        return node;
+        UsageNode parent = node.getParent();
+        handler.loopEnd(parent.getCode());
+        return parent;
     }
 
     public void validateSegment(ValidationEventHandler handler, CharSequence tag) {
@@ -237,12 +282,13 @@ public class Validator {
         final int startDepth = this.depth;
 
         UsageNode current = correctSegment;
-        mandatory.clear();
+        UsageNode currentImpl = implCorrectSegment;
+        useErrors.clear();
         complete = false;
         boolean handled = false;
 
         while (!handled && current != null) {
-            handled = handleNode(tag, current, startDepth, handler);
+            handled = handleNode(tag, current, currentImpl, startDepth, handler);
 
             if (!handled) {
                 /*
@@ -252,10 +298,20 @@ public class Validator {
                 checkMinimumUsage(current);
 
                 UsageNode next = current.getNextSibling();
+                UsageNode nextImpl = currentImpl;
+
+                while (nextImpl != null && nextImpl.getReferencedType().equals(current.getReferencedType())) {
+                    // Advance past multiple implementations of the 'current' standard node
+                    checkMinimumUsage(nextImpl);
+                    nextImpl = nextImpl.getNextSibling();
+                }
 
                 if (next != null) {
                     // Advance to the next segment in the loop
                     current = next;
+                    if (nextImpl != null) {
+                        currentImpl = nextImpl; // May be unchanged
+                    }
                 } else {
                     // End of the loop - check if the segment appears earlier in the loop
                     handled = checkPeerSegments(tag, current, startDepth, handler);
@@ -263,9 +319,11 @@ public class Validator {
                     if (!handled) {
                         if (this.depth > 1) {
                             current = current.getParent();
+                            currentImpl = currentImpl != null ? currentImpl.getParent() : null;
                             this.depth--;
                         } else {
                             current = this.root.getFirstChild();
+                            currentImpl = this.implRoot != null ? this.implRoot.getFirstChild() : null;
                             handled = checkUnexpectedSegment(tag, current, startDepth, handler);
                         }
                     }
@@ -276,34 +334,27 @@ public class Validator {
         handleMissingMandatory(handler);
     }
 
-    boolean handleNode(CharSequence tag, UsageNode current, int startDepth, ValidationEventHandler handler) {
-        boolean handled = false;
+    boolean handleNode(CharSequence tag, UsageNode current, UsageNode currentImpl, int startDepth, ValidationEventHandler handler) {
+        final boolean handled;
 
         switch (current.getNodeType()) {
         case SEGMENT:
-            if (this.handleSegment(tag, current, startDepth, handler)) {
-                handleMissingMandatory(handler);
-                handled = true;
-            }
+            handled = handleSegment(tag, current, currentImpl, startDepth, handler);
             break;
-
         case GROUP:
         case TRANSACTION:
         case LOOP:
-            if (this.handleLoop(tag, current, startDepth, handler)) {
-                handleMissingMandatory(handler);
-                handled = true;
-            }
+            handled = handleLoop(tag, current, currentImpl, startDepth, handler);
             break;
-
         default:
+            handled = false;
             break;
         }
 
         return handled;
     }
 
-    boolean handleSegment(CharSequence tag, UsageNode current, int startDepth, ValidationEventHandler handler) {
+    boolean handleSegment(CharSequence tag, UsageNode current, UsageNode currentImpl, int startDepth, ValidationEventHandler handler) {
         if (!current.getId().contentEquals(tag)) {
             /*
              * The schema segment does not match the segment tag found
@@ -312,28 +363,15 @@ public class Validator {
             return false;
         }
 
-        if (current.isUsed() && current.isFirstChild()) {
+        if (current.isUsed() && current.isFirstChild() &&
+                current.getParent().isNodeType(EDIType.Type.LOOP)) {
             /*
              * The current segment is the first segment in the loop and
-             * the loop has previous occurrences. Scan all segments in
-             * the loop to determine if any segments in the previous
-             * occurrence did not meet the minimum usage requirements.
+             * the loop has previous occurrences. This will occur when
+             * the previous loop occurrence contained only the loop start
+             * segment.
              */
-            UsageNode parent = current.getParent();
-
-            for (UsageNode sibling : parent.getChildren()) {
-                checkMinimumUsage(sibling);
-                sibling.reset();
-            }
-
-            if (parent.isNodeType(EDIType.Type.LOOP)) {
-                if (implNode != null) {
-                    implNode = completeLoop(handler, implNode);
-                } else {
-                    completeLoop(handler, correctSegment);
-                }
-                handler.loopBegin(parent.getCode());
-            }
+            return false;
         }
 
         completeLoops(handler, startDepth);
@@ -342,13 +380,57 @@ public class Validator {
 
         if (current.exceedsMaximumUsage()) {
             handleMissingMandatory(handler);
-            handler.segmentError(current.getId(),
-                                 EDIStreamValidationError.SEGMENT_EXCEEDS_MAXIMUM_USE);
+            handler.segmentError(current.getId(), SEGMENT_EXCEEDS_MAXIMUM_USE);
         }
 
         correctSegment = segment = current;
-        selectImplementationCandidates(segment, handler);
+
+        if (currentImpl != null) {
+            UsageNode impl = currentImpl;
+
+            while (impl != null && impl.getReferencedType().equals(current.getReferencedType())) {
+                implSegmentCandidates.add(impl);
+                impl = impl.getNextSibling();
+            }
+
+            if (implSegmentCandidates.isEmpty()) {
+                handleMissingMandatory(handler);
+                handler.segmentError(current.getId(), IMPLEMENTATION_UNUSED_SEGMENT_PRESENT);
+                // Save the currentImpl so that the search is resumed from the correct location
+                implCorrectSegment = implSegment = currentImpl;
+            } else if (implSegmentCandidates.size() == 1) {
+                currentImpl.incrementUsage();
+                currentImpl.resetChildren();
+
+                if (currentImpl.exceedsMaximumUsage()) {
+                    handler.segmentError(currentImpl.getId(), SEGMENT_EXCEEDS_MAXIMUM_USE);
+                }
+
+                implCorrectSegment = implSegment = currentImpl;
+                implSegmentCandidates.clear();
+            }
+        }
+
         return true;
+    }
+
+    static UsageNode toSegment(UsageNode node) {
+        UsageNode segmentNode;
+
+        switch (node.getNodeType()) {
+        case SEGMENT:
+            segmentNode = node;
+            break;
+        case GROUP:
+        case TRANSACTION:
+        case LOOP:
+            segmentNode = node.getFirstChild();
+            break;
+        default:
+            throw new IllegalStateException("Unexpected node type: " + node.getNodeType());
+        }
+
+        return segmentNode;
     }
 
     void checkMinimumUsage(UsageNode node) {
@@ -357,22 +439,20 @@ public class Validator {
              * The schema segment has not met it's minimum usage
              * requirement.
              */
-            switch (node.getNodeType()) {
-            case SEGMENT:
-                mandatory.add(node.getId());
-                break;
-            case GROUP:
-            case TRANSACTION:
-            case LOOP:
-                mandatory.add(node.getFirstChild().getId());
-                break;
-            default:
-                break;
+            final UsageNode segmentNode = toSegment(node);
+            final String tag = segmentNode.getId();
+
+            if (!segmentNode.isImplementation()) {
+                useErrors.add(new UsageError(tag, MANDATORY_SEGMENT_MISSING, node.getDepth()));
+            } else if (node.getNodeType() == Type.SEGMENT) {
+                useErrors.add(new UsageError(tag, IMPLEMENTATION_SEGMENT_BELOW_MINIMUM_USE, node.getDepth()));
+            } else {
+                useErrors.add(new UsageError(tag, IMPLEMENTATION_LOOP_OCCURS_UNDER_MINIMUM_TIMES, node.getDepth()));
             }
         }
     }
 
-    boolean handleLoop(CharSequence tag, UsageNode current, int startDepth, ValidationEventHandler handler) {
+    boolean handleLoop(CharSequence tag, UsageNode current, UsageNode currentImpl, int startDepth, ValidationEventHandler handler) {
         if (!current.getFirstChild().getId().contentEquals(tag)) {
             return false;
         }
@@ -383,10 +463,18 @@ public class Validator {
 
         if (current.exceedsMaximumUsage()) {
             handleMissingMandatory(handler);
-            handler.segmentError(tag, EDIStreamValidationError.LOOP_OCCURS_OVER_MAXIMUM_TIMES);
+            handler.segmentError(tag, LOOP_OCCURS_OVER_MAXIMUM_TIMES);
         }
 
-        selectImplementationCandidates(segment, handler);
+        if (currentImpl != null) {
+            UsageNode impl = currentImpl;
+
+            while (impl != null && impl.getReferencedType().equals(current.getReferencedType())) {
+                this.implSegmentCandidates.add(impl);
+                impl = impl.getNextSibling();
+            }
+        }
+
         return true;
     }
 
@@ -404,15 +492,13 @@ public class Validator {
             UsageNode next = current.getSiblingById(tag);
 
             if (next != null && !next.isFirstChild()) {
-                mandatory.clear();
-                handler.segmentError(next.getId(),
-                                     EDIStreamValidationError.SEGMENT_NOT_IN_PROPER_SEQUENCE);
+                useErrors.clear();
+                handler.segmentError(next.getId(), SEGMENT_NOT_IN_PROPER_SEQUENCE);
 
                 next.incrementUsage();
 
                 if (next.exceedsMaximumUsage()) {
-                    handler.segmentError(next.getId(),
-                                         EDIStreamValidationError.SEGMENT_EXCEEDS_MAXIMUM_USE);
+                    handler.segmentError(next.getId(), SEGMENT_EXCEEDS_MAXIMUM_USE);
                 }
 
                 segment = next;
@@ -430,23 +516,24 @@ public class Validator {
             final String tagString = tag.toString();
 
             if (containerSchema != null && containerSchema.containsSegment(tagString)) {
-                // The segment is defined in the containing schema. Handle missing mandatory
-                // segments and complete any open loops.
-                handleMissingMandatory(handler);
+                // The segment is defined in the containing schema.
+                // Complete any open loops (handling missing mandatory at each level).
                 completeLoops(handler, startDepth);
+
+                // Handle any remaining missing mandatory segments
+                handleMissingMandatory(handler);
+
                 complete = true;
             } else {
                 // Unexpected segment... must reset our position!
                 segmentExpected = false;
                 this.depth = startDepth;
-                mandatory.clear();
+                useErrors.clear();
 
                 if (schema.containsSegment(tagString)) {
-                    handler.segmentError(tag,
-                                         EDIStreamValidationError.UNEXPECTED_SEGMENT);
+                    handler.segmentError(tag, UNEXPECTED_SEGMENT);
                 } else {
-                    handler.segmentError(tag,
-                                         EDIStreamValidationError.SEGMENT_NOT_IN_DEFINED_TRANSACTION_SET);
+                    handler.segmentError(tag, SEGMENT_NOT_IN_DEFINED_TRANSACTION_SET);
                 }
             }
 
@@ -457,83 +544,22 @@ public class Validator {
     }
 
     private void handleMissingMandatory(ValidationEventHandler handler) {
-        for (String id : mandatory) {
-            handler.segmentError(id, EDIStreamValidationError.MANDATORY_SEGMENT_MISSING);
+        for (UsageError error : useErrors) {
+            error.handle(handler::segmentError);
         }
-        mandatory.clear();
+
+        useErrors.clear();
     }
 
-    void selectImplementationCandidates(UsageNode currentNode, ValidationEventHandler handler) {
-        if (currentNode != null && isImplementation()) {
-            implSegmentCandidates.clear();
-            EDIType standardType = currentNode.getReferencedType();
-            UsageNode currentImpl = this.implNode;
+    private void handleMissingMandatory(ValidationEventHandler handler, int depth) {
+        Iterator<UsageError> cursor = useErrors.iterator();
 
-            EDIType implType;
-
-            while (currentImpl != null) {
-                switch (currentImpl.getNodeType()) {
-                case SEGMENT:
-                    implType = currentImpl.getReferencedType();
-                    break;
-                case TRANSACTION:
-                case LOOP:
-                    implType = currentImpl.getFirstChild().getReferencedType();
-                    break;
-                default:
-                    throw new IllegalStateException("Unexpected impl node type: " + currentImpl.getNodeType());
-                }
-
-                if (implType == standardType) {
-                    if (currentImpl.isFirstChild() && currentImpl.getParent().getDepth() > 1) {
-                        currentImpl = currentImpl.getParent();
-                    }
-
-                    implSegmentCandidates.add(currentImpl);
-                }
-
-                UsageNode nextImpl = currentImpl.getNextSibling();
-
-                if (nextImpl != null) {
-                    currentImpl = nextImpl;
-                } else {
-                    if (currentNode.isFirstChild()) {
-                        currentImpl = currentImpl.getParent();
-
-                        if (currentImpl != null) {
-                            final int implDepth = currentImpl.getDepth();
-
-                            if (implDepth == 1 || implDepth < currentNode.getParent().getDepth()) {
-                                // Do not navigate above the depth of the standard segment's parent loop
-                                currentImpl = null;
-                            }
-                        }
-                    } else {
-                        currentImpl = null;
-
-                        if (implSegmentCandidates.isEmpty()) {
-                            // Non-starting segment in loop that is not defined in the impl loop
-                            handler.segmentError(currentNode.getId(),
-                                                 EDIStreamValidationError.IMPLEMENTATION_UNUSED_SEGMENT_PRESENT);
-                        }
-                    }
-                }
+        while (cursor.hasNext()) {
+            UsageError e = cursor.next();
+            if (e.depth >= depth) {
+                e.handle(handler::segmentError);
+                cursor.remove();
             }
-        }
-
-        if (implSegmentCandidates.size() == 1 && implSegmentCandidates.get(0).isNodeType(Type.SEGMENT)) {
-            UsageNode selected = implSegmentCandidates.get(0);
-            checkMinimumImplUsage(this.implNode, selected, handler);
-            implSegmentCandidates.clear();
-
-            selected.incrementUsage();
-
-            if (selected.exceedsMaximumUsage()) {
-                handler.segmentError(selected.getId(),
-                                     EDIStreamValidationError.SEGMENT_EXCEEDS_MAXIMUM_USE);
-            }
-
-            this.implNode = selected;
         }
     }
 
@@ -544,48 +570,17 @@ public class Validator {
             return false;
         }
 
+        // TODO: Add test cases with discriminators in composites and in element no. >1
+
         for (UsageNode candidate : implSegmentCandidates) {
             PolymorphicImplementation implType;
-            UsageNode implSeg;
-
-            switch (candidate.getNodeType()) {
-            case SEGMENT:
-                implSeg = candidate;
-                break;
-            case TRANSACTION:
-            case LOOP:
-                implSeg = candidate.getFirstChild();
-                break;
-            default:
-                throw new IllegalStateException("Unexpected impl node type: " + candidate.getNodeType());
-            }
-
+            UsageNode implSeg = toSegment(candidate);
             implType = (PolymorphicImplementation) candidate.getLink();
 
             if (isMatch(implType, currentEvent)) {
-                checkMinimumImplUsage(this.implNode, candidate, handler);
-                implSegmentCandidates.clear();
-                implNode = implSeg;
+                handleImplementationSelected(candidate, implSeg, handler);
 
-                if (candidate.isNodeType(Type.LOOP)) {
-                    candidate.incrementUsage();
-                    candidate.resetChildren();
-                    implSeg.incrementUsage();
-
-                    if (candidate.exceedsMaximumUsage()) {
-                        handler.segmentError(implSeg.getId(),
-                                             EDIStreamValidationError.LOOP_OCCURS_OVER_MAXIMUM_TIMES);
-                    }
-                } else {
-                    candidate.incrementUsage();
-
-                    if (candidate.exceedsMaximumUsage()) {
-                        handler.segmentError(implSeg.getId(),
-                                             EDIStreamValidationError.SEGMENT_EXCEEDS_MAXIMUM_USE);
-                    }
-                }
-
-                if (implNode.isFirstChild()) {
+                if (implSegment.isFirstChild()) {
                     //start of loop
                     setLoopReferenceCode(events, index, count - 1, implType);
                 }
@@ -597,31 +592,34 @@ public class Validator {
         return false;
     }
 
+    void handleImplementationSelected(UsageNode candidate, UsageNode implSeg, ValidationEventHandler handler) {
+        checkMinimumImplUsage(implSegment, candidate, handler);
+        implSegmentCandidates.clear();
+        implCorrectSegment = implSegment = implSeg;
+
+        if (candidate.isNodeType(Type.LOOP)) {
+            candidate.incrementUsage();
+            candidate.resetChildren();
+            implSeg.incrementUsage();
+
+            if (candidate.exceedsMaximumUsage()) {
+                handler.segmentError(implSeg.getId(), LOOP_OCCURS_OVER_MAXIMUM_TIMES);
+            }
+        } else {
+            candidate.incrementUsage();
+
+            if (candidate.exceedsMaximumUsage()) {
+                handler.segmentError(implSeg.getId(), SEGMENT_EXCEEDS_MAXIMUM_USE);
+            }
+        }
+    }
+
     void checkMinimumImplUsage(UsageNode sibling, UsageNode selected, ValidationEventHandler handler) {
         while (sibling != null && sibling != selected) {
-            if (!sibling.hasMinimumUsage()) {
-                /*
-                 * The schema segment has not met it's minimum usage
-                 * requirement.
-                 */
-                switch (sibling.getNodeType()) {
-                case SEGMENT:
-                    handler.segmentError(sibling.getId(),
-                                         EDIStreamValidationError.IMPLEMENTATION_SEGMENT_BELOW_MINIMUM_USE);
-                    break;
-                case GROUP:
-                case TRANSACTION:
-                case LOOP:
-                    handler.segmentError(sibling.getFirstChild().getId(),
-                                         EDIStreamValidationError.IMPLEMENTATION_LOOP_OCCURS_UNDER_MINIMUM_TIMES);
-                    break;
-                default:
-                    break;
-                }
-            }
-
+            checkMinimumUsage(sibling);
             sibling = sibling.getNextSibling();
         }
+        handleMissingMandatory(handler);
     }
 
     static boolean isMatch(PolymorphicImplementation implType, StreamEvent currentEvent) {
@@ -640,17 +638,50 @@ public class Validator {
         return false;
     }
 
+    /**
+     * Overlay the most recently started loop's standard reference code with the reference
+     * code of the implType.
+     *
+     * @param events
+     * @param index
+     * @param count
+     * @param implType
+     */
     static void setLoopReferenceCode(StreamEvent[] events, int index, int count, PolymorphicImplementation implType) {
         for (int i = index; i < count; i++) {
-            CharSequence eventRefCode = events[i].getReferenceCode();
+            CharSequence stdRefCode = events[i].getReferenceCode();
             // This is the reference code of the impl's standard type
             CharSequence implRefCode = ((EDIComplexType) implType.getReferencedType()).getCode();
 
-            if (events[i].getType() == EDIStreamEvent.START_LOOP && Objects.equals(eventRefCode, implRefCode)) {
+            if (events[i].getType() == EDIStreamEvent.START_LOOP && compare(stdRefCode, implRefCode) == 0) {
                 events[i].setReferenceCode(implType.getId());
             }
         }
     }
+
+    // Replace with CharSequence#compare(CharSequence, CharSequence) when migrating to Java 11+
+    @SuppressWarnings("unchecked")
+    static int compare(CharSequence cs1, CharSequence cs2) {
+        if (Objects.requireNonNull(cs1) == Objects.requireNonNull(cs2)) {
+            return 0;
+        }
+
+        if (cs1.getClass() == cs2.getClass() && cs1 instanceof Comparable) {
+            return ((Comparable<Object>) cs1).compareTo(cs2);
+        }
+
+        for (int i = 0, len = Math.min(cs1.length(), cs2.length()); i < len; i++) {
+            char a = cs1.charAt(i);
+            char b = cs2.charAt(i);
+            if (a != b) {
+                return a - b;
+            }
+        }
+
+        return cs1.length() - cs2.length();
+    }
+
+    /**************************************************************************/
 
     public List<EDIStreamValidationError> getElementErrors() {
         return elementErrors;
@@ -668,14 +699,14 @@ public class Validator {
         this.element = segment.getChild(elementPosition);
 
         if (element == null) {
-            elementErrors.add(EDIStreamValidationError.TOO_MANY_DATA_ELEMENTS);
+            elementErrors.add(TOO_MANY_DATA_ELEMENTS);
             this.element = null;
             return false;
         } else if (!element.isNodeType(EDIType.Type.COMPOSITE)) {
             this.element.incrementUsage();
 
             if (this.element.exceedsMaximumUsage()) {
-                elementErrors.add(EDIStreamValidationError.TOO_MANY_REPETITIONS);
+                elementErrors.add(TOO_MANY_REPETITIONS);
                 return false;
             }
 
@@ -689,14 +720,14 @@ public class Validator {
         this.element = null;
 
         if (elementPosition >= segment.getChildren().size()) {
-            elementErrors.add(EDIStreamValidationError.TOO_MANY_DATA_ELEMENTS);
+            elementErrors.add(TOO_MANY_DATA_ELEMENTS);
             return false;
         }
 
         this.composite.incrementUsage();
 
         if (this.composite.exceedsMaximumUsage()) {
-            elementErrors.add(EDIStreamValidationError.TOO_MANY_REPETITIONS);
+            elementErrors.add(TOO_MANY_REPETITIONS);
             return false;
         }
 
@@ -726,7 +757,7 @@ public class Validator {
                  * Only notify if this is not a composite - handled in
                  * validCompositeOccurrences
                  */
-                elementErrors.add(EDIStreamValidationError.TOO_MANY_DATA_ELEMENTS);
+                elementErrors.add(TOO_MANY_DATA_ELEMENTS);
                 return false;
             }
 
@@ -755,7 +786,7 @@ public class Validator {
                  * This element has components but is not defined as a composite
                  * structure.
                  */
-                elementErrors.add(EDIStreamValidationError.TOO_MANY_COMPONENTS);
+                elementErrors.add(TOO_MANY_COMPONENTS);
             } else {
                 if (componentIndex == 0) {
                     this.element.resetChildren();
@@ -766,7 +797,7 @@ public class Validator {
                         this.element = this.element.getChild(componentIndex);
                     }
                 } else {
-                    elementErrors.add(EDIStreamValidationError.TOO_MANY_COMPONENTS);
+                    elementErrors.add(TOO_MANY_COMPONENTS);
                 }
             }
         }
@@ -780,14 +811,14 @@ public class Validator {
                 this.element.incrementUsage();
 
                 if (this.element.exceedsMaximumUsage()) {
-                    elementErrors.add(EDIStreamValidationError.TOO_MANY_REPETITIONS);
+                    elementErrors.add(TOO_MANY_REPETITIONS);
                 }
             }
 
             this.element.validate(dialect, value, elementErrors);
         } else {
             if (!element.hasMinimumUsage()) {
-                elementErrors.add(EDIStreamValidationError.REQUIRED_DATA_ELEMENT_MISSING);
+                elementErrors.add(REQUIRED_DATA_ELEMENT_MISSING);
             }
         }
 

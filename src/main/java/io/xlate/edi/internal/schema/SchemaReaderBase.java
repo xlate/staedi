@@ -434,8 +434,7 @@ abstract class SchemaReaderBase implements SchemaReader {
             refId = readReferencedId(reader);
             Objects.requireNonNull(refId);
         } else if (qnLoop.equals(element)) {
-            refId = reader.getAttributeValue(null, "code");
-            //TODO: ensure not null
+            refId = parseAttribute(reader, "code", String::valueOf);
         } else {
             throw unexpectedElement(element, reader);
         }

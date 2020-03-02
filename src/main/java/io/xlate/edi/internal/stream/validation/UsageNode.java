@@ -91,6 +91,10 @@ class UsageNode {
         return (index < children.size()) ? children.get(index) : null;
     }
 
+    boolean isImplementation() {
+        return (link instanceof EDITypeImplementation);
+    }
+
     String getId() {
         if (link instanceof EDITypeImplementation) {
             return ((EDITypeImplementation) link).getId();

@@ -19,7 +19,7 @@
   <transaction>
     <sequence>
       <segment ref="S0A" />
-      <loop code="L0000" maxOccurs="3">
+      <loop code="L0000" maxOccurs="5">
         <sequence>
           <segment ref="S11" minOccurs="1" />
           <segment ref="S12" maxOccurs="5" />
@@ -27,7 +27,7 @@
           <segment ref="S14" />
         </sequence>
       </loop>
-      <loop code="L0001">
+      <loop code="L0001" minOccurs="1">
         <sequence>
           <segment ref="S20" minOccurs="1" />
           <segment ref="S21" />
@@ -65,6 +65,32 @@
             </sequence>
           </segment>
           <segment type="S12" maxOccurs="2" />
+        </sequence>
+      </loop>
+      <loop type="L0000" code="0000C" minOccurs="2" maxOccurs="2" discriminator="1">
+        <sequence>
+          <segment type="S11">
+            <sequence>
+              <element position="1">
+                <enumeration>
+                  <value>C</value>
+                </enumeration>
+              </element>
+            </sequence>
+          </segment>
+        </sequence>
+      </loop>
+      <loop type="L0000" code="0000D" minOccurs="1" maxOccurs="1" discriminator="1">
+        <sequence>
+          <segment type="S11">
+            <sequence>
+              <element position="1">
+                <enumeration>
+                  <value>D</value>
+                </enumeration>
+              </element>
+            </sequence>
+          </segment>
         </sequence>
       </loop>
     </sequence>
