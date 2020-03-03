@@ -5,5 +5,8 @@ import io.xlate.edi.schema.EDIType;
 
 public interface EDITypeImplementation extends EDIReference, EDIType {
 
+    String getTitle();
+
+    String getDescription();
 
 }

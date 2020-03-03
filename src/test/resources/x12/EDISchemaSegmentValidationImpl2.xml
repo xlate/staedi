@@ -53,6 +53,7 @@
       <loop type="L0000" code="0000A" minOccurs="1" discriminator="1">
         <sequence>
           <segment type="S10">
+            <description>First occurrence of Loop L0000</description>
             <sequence>
               <element position="1">
                 <enumeration>
@@ -63,16 +64,19 @@
           </segment>
           <segment type="S12" minOccurs="1" />
 
-          <loop type="L0002" code="0002AXX" discriminator="2.2">
+          <loop type="L0002" code="0002AXX" discriminator="2.2" title="2AXX">
+            <description>A nested loop with discriminator on a component beyond the first position.</description>
             <sequence>
               <segment type="S30">
                 <sequence>
-                  <element position="1" >
+                  <element position="1">
                   </element>
-                  <composite position="2" minOccurs="1">
+                  <composite position="2" minOccurs="1" maxOccurs="2">
+                    <description>A repeatable composite</description>
                     <sequence>
                       <element position="1" />
                       <element position="2">
+                        <description>Discriminator value in a component element</description>
                         <enumeration>
                           <value>XX</value>
                         </enumeration>

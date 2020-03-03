@@ -15,7 +15,10 @@ public class ElementImpl extends BaseImpl<EDISimpleType> implements ElementImple
             int maxOccurs,
             String typeId,
             int position,
-            Set<String> values) {
+            Set<String> values,
+            String title,
+            String description) {
+        super(title, description);
         this.minOccurs = minOccurs;
         this.maxOccurs = maxOccurs;
         this.typeId = typeId;

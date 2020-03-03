@@ -14,8 +14,11 @@ public class CompositeImpl extends BaseComplexImpl implements CompositeImplement
             int maxOccurs,
             String typeId,
             int position,
-            List<EDITypeImplementation> sequence) {
-        super(sequence);
+            List<EDITypeImplementation> sequence,
+            String title,
+            String description) {
+
+        super(sequence, title, description);
         this.minOccurs = minOccurs;
         this.maxOccurs = maxOccurs;
         this.typeId = typeId;

@@ -475,7 +475,7 @@
             </simpleType>
           </attribute>
 
-          <attribute name="base" type="tns:elementBaseType" use="required" />
+          <attribute name="base" type="tns:elementBaseType" use="optional" default="string" />
           <attribute name="minLength" type="nonNegativeInteger" default="1" />
           <attribute name="maxLength" type="nonNegativeInteger" default="1" />
         </extension>

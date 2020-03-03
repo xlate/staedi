@@ -10,6 +10,14 @@ public abstract class BaseImpl<T extends EDIType> implements EDITypeImplementati
     protected T standard;
     protected int minOccurs;
     protected int maxOccurs;
+    protected String title;
+    protected String description;
+
+    public BaseImpl(String title, String description) {
+        super();
+        this.title = title;
+        this.description = description;
+    }
 
     @Override
     public String getId() {
@@ -29,6 +37,16 @@ public abstract class BaseImpl<T extends EDIType> implements EDITypeImplementati
     @Override
     public int getMaxOccurs() {
         return maxOccurs;
+    }
+
+    @Override
+    public String getTitle() {
+        return title;
+    }
+
+    @Override
+    public String getDescription() {
+        return description;
     }
 
     public String getTypeId() {

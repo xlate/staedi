@@ -17,8 +17,10 @@ public class LoopImpl extends BaseComplexImpl implements LoopImplementation {
             String id,
             String typeId,
             Discriminator discriminator,
-            List<EDITypeImplementation> sequence) {
-        super(sequence);
+            List<EDITypeImplementation> sequence,
+            String title,
+            String description) {
+        super(sequence, title, description);
         this.minOccurs = minOccurs;
         this.maxOccurs = maxOccurs;
         this.id = id;

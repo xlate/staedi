@@ -15,8 +15,10 @@ public class SegmentImpl extends BaseComplexImpl implements SegmentImplementatio
             int maxOccurs,
             String typeId,
             Discriminator discriminator,
-            List<EDITypeImplementation> sequence) {
-        super(sequence);
+            List<EDITypeImplementation> sequence,
+            String title,
+            String description) {
+        super(sequence, title, description);
         this.minOccurs = minOccurs;
         this.maxOccurs = maxOccurs;
         this.typeId = typeId;

@@ -49,6 +49,7 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
     private static final String ATTR_MAX_OCCURS = "maxOccurs";
     private static final String ATTR_POSITION = "position";
     private static final String ATTR_DISCRIMINATOR = "discriminator";
+    private static final String ATTR_TITLE = "title";
 
     final QName qnImplementation;
     final Deque<EDITypeImplementation> implementedTypes = new LinkedList<>();
@@ -167,6 +168,8 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
         int minOccurs = 0;
         int maxOccurs = 0;
         BigDecimal discriminatorAttr = null;
+        String title = null;
+        String descr = null;
 
         if (transactionLoop) {
             id = qnImplementation.toString();
@@ -177,11 +180,11 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
             minOccurs = parseAttribute(reader, ATTR_MIN_OCCURS, Integer::parseInt, -1);
             maxOccurs = parseAttribute(reader, ATTR_MAX_OCCURS, Integer::parseInt, -1);
             discriminatorAttr = parseAttribute(reader, ATTR_DISCRIMINATOR, BigDecimal::new, null);
+            title = parseAttribute(reader, ATTR_TITLE, String::valueOf, null);
         }
 
-        //TODO: Read title attribute and description element
-
         if (reader.nextTag() == XMLStreamConstants.START_ELEMENT) {
+            descr = readImplDescription(reader);
             readSequence(reader, e -> readLoopSequenceEntry(e, sequence));
         } else {
             throw unexpectedEvent(reader);
@@ -197,7 +200,7 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
                     disc = buildDiscriminator(discriminatorAttr, segImpl.getSequence());
                 }
 
-                return new LoopImpl(minOccurs, maxOccurs, id, typeId, disc, sequence);
+                return new LoopImpl(minOccurs, maxOccurs, id, typeId, disc, sequence, title, descr);
             } else {
                 throw unexpectedElement(element, reader);
             }
@@ -227,25 +230,27 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
     }
 
     SegmentImpl readSegmentImplementation(XMLStreamReader reader) throws XMLStreamException {
-        //TODO: Read title attribute and description element
         List<EDITypeImplementation> sequence = new ArrayList<>();
         String typeId = parseAttribute(reader, "type", String::valueOf);
         int minOccurs = parseAttribute(reader, ATTR_MIN_OCCURS, Integer::parseInt, -1);
         int maxOccurs = parseAttribute(reader, ATTR_MAX_OCCURS, Integer::parseInt, -1);
         BigDecimal discriminatorAttr = parseAttribute(reader, ATTR_DISCRIMINATOR, BigDecimal::new, null);
+        String title = parseAttribute(reader, ATTR_TITLE, String::valueOf, null);
+        String descr = null;
 
         int event = reader.nextTag();
 
         if (event == XMLStreamConstants.START_ELEMENT) {
+            descr = readImplDescription(reader);
             readSequence(reader, e -> readSegmentSequenceEntry(e, sequence));
         } else if (event == XMLStreamConstants.END_ELEMENT) {
-            return newSegmentImpl(reader, minOccurs, maxOccurs, typeId, discriminatorAttr, sequence);
+            return newSegmentImpl(reader, minOccurs, maxOccurs, typeId, discriminatorAttr, sequence, title, null);
         } else {
             throw unexpectedEvent(reader);
         }
 
         if (reader.nextTag() == XMLStreamConstants.END_ELEMENT) {
-            return newSegmentImpl(reader, minOccurs, maxOccurs, typeId, discriminatorAttr, sequence);
+            return newSegmentImpl(reader, minOccurs, maxOccurs, typeId, discriminatorAttr, sequence, title, descr);
         } else {
             throw unexpectedEvent(reader);
         }
@@ -274,13 +279,15 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
                                int maxOccurs,
                                String typeId,
                                BigDecimal discriminatorAttr,
-                               List<EDITypeImplementation> sequence) {
+                               List<EDITypeImplementation> sequence,
+                               String title,
+                               String descr) {
 
         QName element = reader.getName();
 
         if (element.equals(qnSegment)) {
             Discriminator disc = buildDiscriminator(discriminatorAttr, sequence);
-            SegmentImpl segment = new SegmentImpl(minOccurs, maxOccurs, typeId, disc, sequence);
+            SegmentImpl segment = new SegmentImpl(minOccurs, maxOccurs, typeId, disc, sequence, title, descr);
             implementedTypes.add(segment);
             return segment;
         } else {
@@ -319,20 +326,22 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
         int position = parseAttribute(reader, ATTR_POSITION, Integer::parseInt, 0);
         int minOccurs = parseAttribute(reader, ATTR_MIN_OCCURS, Integer::parseInt, 0);
         int maxOccurs = parseAttribute(reader, ATTR_MAX_OCCURS, Integer::parseInt, 0);
+        String title = parseAttribute(reader, ATTR_TITLE, String::valueOf, null);
+        String descr = null;
 
-        //TODO: Read title attribute and description element
         int event = reader.nextTag();
 
         if (event == XMLStreamConstants.START_ELEMENT) {
+            descr = readImplDescription(reader);
             readSequence(reader, e -> readCompositeSequenceEntry(e, sequence));
         } else if (event == XMLStreamConstants.END_ELEMENT) {
-            return newCompositeImpl(reader, minOccurs, maxOccurs, position, sequence);
+            return newCompositeImpl(reader, minOccurs, maxOccurs, position, sequence, title, null);
         } else {
             throw unexpectedEvent(reader);
         }
 
         if (reader.nextTag() == XMLStreamConstants.END_ELEMENT) {
-            return newCompositeImpl(reader, minOccurs, maxOccurs, position, sequence);
+            return newCompositeImpl(reader, minOccurs, maxOccurs, position, sequence, title, descr);
         } else {
             throw unexpectedEvent(reader);
         }
@@ -356,19 +365,20 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
                                    int minOccurs,
                                    int maxOccurs,
                                    int position,
-                                   List<EDITypeImplementation> sequence) {
+                                   List<EDITypeImplementation> sequence,
+                                   String title,
+                                   String descr) {
 
         QName element = reader.getName();
 
         if (element.equals(qnComposite)) {
-            return new CompositeImpl(minOccurs, maxOccurs, null, position, sequence);
+            return new CompositeImpl(minOccurs, maxOccurs, null, position, sequence, title, descr);
         } else {
             throw unexpectedElement(element, reader);
         }
     }
 
     void readSequence(XMLStreamReader reader, Consumer<QName> startHandler) throws XMLStreamException {
-
         QName element = reader.getName();
 
         if (element.equals(qnSequence)) {
@@ -397,14 +407,17 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
     }
 
     ElementImpl readElementImplementation(XMLStreamReader reader) throws XMLStreamException {
-        //TODO: Read title attribute and description element
         Set<String> valueSet = new HashSet<>();
         int position = parseAttribute(reader, ATTR_POSITION, Integer::parseInt, 0);
         int minOccurs = parseAttribute(reader, ATTR_MIN_OCCURS, Integer::parseInt, 0);
         int maxOccurs = parseAttribute(reader, ATTR_MAX_OCCURS, Integer::parseInt, 0);
+        String title = parseAttribute(reader, ATTR_TITLE, String::valueOf, null);
+        String descr = null;
+
         int event = reader.nextTag();
 
         if (event == XMLStreamConstants.START_ELEMENT) {
+            descr = readImplDescription(reader);
             QName element = reader.getName();
 
             if (!element.equals(qnEnumeration)) {
@@ -413,13 +426,13 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
 
             valueSet = super.readEnumerationValues(reader);
         } else if (event == XMLStreamConstants.END_ELEMENT) {
-            return newElementImpl(reader, minOccurs, maxOccurs, position, valueSet);
+            return newElementImpl(reader, minOccurs, maxOccurs, position, valueSet, title, null);
         } else {
             throw unexpectedEvent(reader);
         }
 
         if (reader.nextTag() == XMLStreamConstants.END_ELEMENT) {
-            return newElementImpl(reader, minOccurs, maxOccurs, position, valueSet);
+            return newElementImpl(reader, minOccurs, maxOccurs, position, valueSet, title, descr);
         } else {
             throw unexpectedEvent(reader);
         }
@@ -429,14 +442,30 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
                                int minOccurs,
                                int maxOccurs,
                                int position,
-                               Set<String> valueSet) {
+                               Set<String> valueSet,
+                               String title,
+                               String descr) {
 
         QName element = reader.getName();
 
         if (element.equals(qnElement)) {
-            return new ElementImpl(minOccurs, maxOccurs, (String) null, position, valueSet);
+            return new ElementImpl(minOccurs, maxOccurs, (String) null, position, valueSet, title, descr);
         } else {
             throw unexpectedElement(element, reader);
         }
     }
+
+    String readImplDescription(XMLStreamReader reader) throws XMLStreamException {
+        QName element = reader.getName();
+        String description = null;
+
+        if (element.equals(qnDescription)) {
+            description = reader.getElementText();
+            reader.nextTag();
+            checkEvent(reader, XMLStreamConstants.START_ELEMENT);
+        }
+
+        return description;
+    }
+
 }
