@@ -393,7 +393,10 @@ public class Lexer {
             eventsReady = event.execute(nextState, start, length);
         }
 
-        buffer.clear();
+        if (events.isEmpty()) {
+            buffer.clear();
+        }
+
         return eventsReady;
     }
 

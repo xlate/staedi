@@ -244,7 +244,7 @@ public class Validator {
         return startSegment;
     }
 
-    private void completeLoops(ValidationEventHandler handler, int d) {
+    private void completeLoops(ValidationEventHandler handler, int workingDepth) {
         UsageNode node;
         boolean implLoop;
 
@@ -260,9 +260,10 @@ public class Validator {
             implLoop = false;
         }
 
-        while (this.depth < d--) {
-            handleMissingMandatory(handler, d);
+        while (this.depth < workingDepth) {
+            handleMissingMandatory(handler, workingDepth);
             node = completeLoop(handler, node);
+            workingDepth--;
         }
 
         if (implLoop) {
@@ -556,7 +557,7 @@ public class Validator {
 
         while (cursor.hasNext()) {
             UsageError e = cursor.next();
-            if (e.depth >= depth) {
+            if (e.depth > depth) {
                 e.handle(handler::segmentError);
                 cursor.remove();
             }
@@ -569,8 +570,6 @@ public class Validator {
         if (currentEvent.getType() != EDIStreamEvent.ELEMENT_DATA) {
             return false;
         }
-
-        // TODO: Add test cases with discriminators in composites and in element no. >1
 
         for (UsageNode candidate : implSegmentCandidates) {
             PolymorphicImplementation implType;
