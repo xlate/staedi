@@ -34,7 +34,6 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.BiConsumer;
 
 import io.xlate.edi.internal.stream.StaEDIStreamLocation;
 import io.xlate.edi.internal.stream.tokenization.Dialect;
@@ -62,42 +61,27 @@ public class Validator {
 
     private Schema containerSchema;
     private Schema schema;
+
     private final UsageNode root;
+    private final UsageNode implRoot;
 
     private boolean segmentExpected;
     private UsageNode segment;
     private UsageNode correctSegment;
-    private UsageNode element;
     private UsageNode composite;
+    private UsageNode element;
 
-    static class UsageError {
-        String code;
-        EDIStreamValidationError error;
-        int depth;
-
-        UsageError(String code, EDIStreamValidationError error, int depth) {
-            super();
-            this.code = code;
-            this.error = error;
-            this.depth = depth;
-        }
-
-        void handle(BiConsumer<String, EDIStreamValidationError> handler) {
-            handler.accept(code, error);
-        }
-    }
+    private boolean implSegmentSelected;
+    private UsageNode implSegment;
+    private UsageNode implComposite;
+    private UsageNode implElement;
+    private List<UsageNode> implSegmentCandidates = new ArrayList<>();
 
     private final List<UsageError> useErrors = new ArrayList<>();
-
     private final List<EDIStreamValidationError> elementErrors = new ArrayList<>(5);
 
     private int depth = 1;
     private boolean complete = false;
-
-    private final UsageNode implRoot;
-    private UsageNode implSegment;
-    private UsageNode implCorrectSegment;
-    private List<UsageNode> implSegmentCandidates = new ArrayList<>();
 
     public Validator(Schema schema, Schema containerSchema) {
         this.schema = schema;
@@ -108,10 +92,10 @@ public class Validator {
 
         if (schema.getImplementation() != null) {
             implRoot = buildTree(null, 0, schema.getImplementation(), -1);
-            implCorrectSegment = implSegment = implRoot.getFirstChild();
+            implSegment = implRoot.getFirstChild();
         } else {
             implRoot = null;
-            implCorrectSegment = implSegment = null;
+            implSegment = null;
         }
     }
 
@@ -248,12 +232,12 @@ public class Validator {
         UsageNode node;
         boolean implLoop;
 
-        if (implCorrectSegment != null) {
+        if (implSegment != null) {
             /*-
              * Use the implementation node so that the reference code passed to the
              * handler reflects the implementation.
              */
-            node = implCorrectSegment;
+            node = implSegment;
             implLoop = true;
         } else {
             node = correctSegment;
@@ -279,11 +263,12 @@ public class Validator {
 
     public void validateSegment(ValidationEventHandler handler, CharSequence tag) {
         segmentExpected = true;
+        implSegmentSelected = false;
 
         final int startDepth = this.depth;
 
         UsageNode current = correctSegment;
-        UsageNode currentImpl = implCorrectSegment;
+        UsageNode currentImpl = implSegment;
         useErrors.clear();
         complete = false;
         boolean handled = false;
@@ -398,7 +383,7 @@ public class Validator {
                 handleMissingMandatory(handler);
                 handler.segmentError(current.getId(), IMPLEMENTATION_UNUSED_SEGMENT_PRESENT);
                 // Save the currentImpl so that the search is resumed from the correct location
-                implCorrectSegment = implSegment = currentImpl;
+                implSegment = currentImpl;
             } else if (implSegmentCandidates.size() == 1) {
                 currentImpl.incrementUsage();
                 currentImpl.resetChildren();
@@ -407,8 +392,9 @@ public class Validator {
                     handler.segmentError(currentImpl.getId(), SEGMENT_EXCEEDS_MAXIMUM_USE);
                 }
 
-                implCorrectSegment = implSegment = currentImpl;
+                implSegment = currentImpl;
                 implSegmentCandidates.clear();
+                implSegmentSelected = true;
             }
         }
 
@@ -594,7 +580,8 @@ public class Validator {
     void handleImplementationSelected(UsageNode candidate, UsageNode implSeg, ValidationEventHandler handler) {
         checkMinimumImplUsage(implSegment, candidate, handler);
         implSegmentCandidates.clear();
-        implCorrectSegment = implSegment = implSeg;
+        implSegment = implSeg;
+        implSegmentSelected = true;
 
         if (candidate.isNodeType(Type.LOOP)) {
             candidate.incrementUsage();
@@ -691,15 +678,19 @@ public class Validator {
             return true;
         }
 
-        int elementPosition = position.getElementPosition() - 1;
-        int componentIndex = position.getComponentPosition() - 1;
+        final int elementPosition = position.getElementPosition() - 1;
+        final int componentIndex = position.getComponentPosition() - 1;
+
         elementErrors.clear();
+
         this.composite = null;
         this.element = segment.getChild(elementPosition);
 
+        this.implComposite = null;
+        this.implElement = implSegmentSelected ? implSegment.getChild(elementPosition) : null;
+
         if (element == null) {
             elementErrors.add(TOO_MANY_DATA_ELEMENTS);
-            this.element = null;
             return false;
         } else if (!element.isNodeType(EDIType.Type.COMPOSITE)) {
             this.element.incrementUsage();

@@ -6,8 +6,8 @@ import static io.xlate.edi.internal.schema.StaEDISchemaFactory.unexpectedEvent;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Deque;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -124,16 +124,19 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
                                  if (standardRefs != null && offset > -1 && offset < standardRefs.size()) {
                                      stdRef = standardRefs.get(offset);
                                  } else {
-                                     throw schemaException("Position " + p.getPosition() + " does not correspond to an entry in type " + standard.getId());
+                                     throw schemaException("Position " + p.getPosition()
+                                             + " does not correspond to an entry in type " + standard.getId());
                                  }
                              } else {
                                  String refTypeId = seqImpl.getTypeId();
 
                                  stdRef = standardRefs.stream().filter(r -> r.getReferencedType()
-                                                                           .getId()
-                                                                           .equals(refTypeId))
-                                         .findFirst()
-                                         .orElseThrow(() -> schemaException("Reference " + refTypeId + " does not correspond to an entry in type " + standard.getId()));
+                                                                             .getId()
+                                                                             .equals(refTypeId))
+                                                      .findFirst()
+                                                      .orElseThrow(() -> schemaException("Reference " + refTypeId
+                                                              + " does not correspond to an entry in type "
+                                                              + standard.getId()));
                              }
 
                              seqImpl.setStandardReference(stdRef);
@@ -219,7 +222,7 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
                 implementedTypes.add(loop);
                 sequence.add(loop);
             } else if (entryName.equals(qnSegment)) {
-                sequence.add(readSegmentImplementation(reader));
+                sequence.add(readSegmentImplementation());
             } else {
                 throw unexpectedElement(entryName, reader);
             }
@@ -229,7 +232,7 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
 
     }
 
-    SegmentImpl readSegmentImplementation(XMLStreamReader reader) throws XMLStreamException {
+    SegmentImpl readSegmentImplementation() throws XMLStreamException {
         List<EDITypeImplementation> sequence = new ArrayList<>();
         String typeId = parseAttribute(reader, "type", String::valueOf);
         int minOccurs = parseAttribute(reader, ATTR_MIN_OCCURS, Integer::parseInt, -1);
@@ -242,40 +245,51 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
 
         if (event == XMLStreamConstants.START_ELEMENT) {
             descr = readImplDescription(reader);
-            readSequence(reader, e -> readSegmentSequenceEntry(e, sequence));
+            readSequence(reader, e -> readPositionedSequenceEntry(e, sequence, true));
         } else if (event == XMLStreamConstants.END_ELEMENT) {
-            return newSegmentImpl(reader, minOccurs, maxOccurs, typeId, discriminatorAttr, sequence, title, null);
+            return newSegmentImpl(minOccurs, maxOccurs, typeId, discriminatorAttr, sequence, title, null);
         } else {
             throw unexpectedEvent(reader);
         }
 
         if (reader.nextTag() == XMLStreamConstants.END_ELEMENT) {
-            return newSegmentImpl(reader, minOccurs, maxOccurs, typeId, discriminatorAttr, sequence, title, descr);
+            return newSegmentImpl(minOccurs, maxOccurs, typeId, discriminatorAttr, sequence, title, descr);
         } else {
             throw unexpectedEvent(reader);
         }
     }
 
-    void readSegmentSequenceEntry(QName entryName, List<EDITypeImplementation> sequence) {
+    void readPositionedSequenceEntry(QName entryName, List<EDITypeImplementation> sequence, boolean composites) {
+        EDITypeImplementation type;
+
         try {
             if (entryName.equals(qnElement)) {
-                ElementImpl element = readElementImplementation(reader);
-                implementedTypes.add(element);
-                sequence.add(element.getPosition() - 1, element);
-            } else if (entryName.equals(qnComposite)) {
-                CompositeImpl element = readCompositeImplementation(reader);
-                implementedTypes.add(element);
-                sequence.add(element.getPosition() - 1, element);
+                type = readElementImplementation(reader);
+            } else if (composites && entryName.equals(qnComposite)) {
+                type = readCompositeImplementation(reader);
             } else {
                 throw unexpectedElement(entryName, reader);
             }
         } catch (XMLStreamException xse) {
             throw schemaException("Exception reading segment sequence", reader, xse);
         }
+
+        implementedTypes.add(type);
+
+        int position = ((Positioned) type).getPosition();
+
+        while (position > sequence.size()) {
+            sequence.add(null);
+        }
+
+        EDITypeImplementation previous = sequence.set(position - 1, type);
+
+        if (previous != null) {
+            throw schemaException("Duplicate value for position " + position, reader);
+        }
     }
 
-    SegmentImpl newSegmentImpl(XMLStreamReader reader,
-                               int minOccurs,
+    SegmentImpl newSegmentImpl(int minOccurs,
                                int maxOccurs,
                                String typeId,
                                BigDecimal discriminatorAttr,
@@ -295,30 +309,46 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
         }
     }
 
-    Discriminator buildDiscriminator(BigDecimal discriminatorAttr, List<EDITypeImplementation> sequence) {
+    Discriminator buildDiscriminator(BigDecimal discriminatorAttr,
+                                     List<EDITypeImplementation> sequence) {
         Discriminator disc = null;
 
         if (discriminatorAttr != null) {
             int elementPosition = discriminatorAttr.intValue();
             int componentPosition = discriminatorAttr.remainder(BigDecimal.ONE)
                                                      .movePointRight(discriminatorAttr.scale()).intValue();
-            EDITypeImplementation eleImpl = sequence.get(elementPosition - 1);
 
-            if (eleImpl.getType() == EDIType.Type.ELEMENT && componentPosition < 1) {
-                disc = new DiscriminatorImpl(elementPosition,
-                                             componentPosition,
-                                             ((ElementImpl) eleImpl).getValueSet());
-            } else if (eleImpl.getType() == EDIType.Type.COMPOSITE && componentPosition > 0) {
-                eleImpl = ((CompositeImpl) eleImpl).getSequence().get(componentPosition - 1);
-                disc = new DiscriminatorImpl(elementPosition,
-                                             componentPosition,
-                                             ((ElementImpl) eleImpl).getValueSet());
+            EDITypeImplementation eleImpl = getDiscriminatorElement(discriminatorAttr, elementPosition, sequence, "element");
+
+            if (eleImpl instanceof CompositeImpl) {
+                sequence = ((CompositeImpl) eleImpl).getSequence();
+                eleImpl = getDiscriminatorElement(discriminatorAttr, componentPosition, sequence, "component");
+            }
+
+            Set<String> valueSet;
+
+            if (eleImpl != null) {
+                valueSet = ((ElementImpl) eleImpl).getValueSet();
             } else {
-                // TODO: error
+                throw schemaException("Discriminator position is unused (not specified): " + discriminatorAttr, reader);
+            }
+
+            if (!valueSet.isEmpty()) {
+                disc = new DiscriminatorImpl(elementPosition, componentPosition, valueSet);
+            } else {
+                throw schemaException("Discriminator element does not specify value enumeration: " + discriminatorAttr, reader);
             }
         }
 
         return disc;
+    }
+
+    EDITypeImplementation getDiscriminatorElement(BigDecimal attr, int position, List<EDITypeImplementation> sequence, String type) {
+        if (position > 0 && position <= sequence.size()) {
+            return sequence.get(position - 1);
+        } else {
+            throw schemaException("Discriminator " + type + " position invalid: " + attr, reader);
+        }
     }
 
     CompositeImpl readCompositeImplementation(XMLStreamReader reader) throws XMLStreamException {
@@ -333,7 +363,7 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
 
         if (event == XMLStreamConstants.START_ELEMENT) {
             descr = readImplDescription(reader);
-            readSequence(reader, e -> readCompositeSequenceEntry(e, sequence));
+            readSequence(reader, e -> readPositionedSequenceEntry(e, sequence, false));
         } else if (event == XMLStreamConstants.END_ELEMENT) {
             return newCompositeImpl(reader, minOccurs, maxOccurs, position, sequence, title, null);
         } else {
@@ -344,20 +374,6 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
             return newCompositeImpl(reader, minOccurs, maxOccurs, position, sequence, title, descr);
         } else {
             throw unexpectedEvent(reader);
-        }
-    }
-
-    void readCompositeSequenceEntry(QName entryName, List<EDITypeImplementation> sequence) {
-        try {
-            if (entryName.equals(qnElement)) {
-                ElementImpl element = readElementImplementation(reader);
-                implementedTypes.add(element);
-                sequence.add(element.getPosition() - 1, element);
-            } else {
-                throw unexpectedElement(entryName, reader);
-            }
-        } catch (XMLStreamException xse) {
-            throw schemaException("Exception reading composite sequence", reader, xse);
         }
     }
 
@@ -407,7 +423,7 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
     }
 
     ElementImpl readElementImplementation(XMLStreamReader reader) throws XMLStreamException {
-        Set<String> valueSet = new HashSet<>();
+        Set<String> valueSet = Collections.emptySet();
         int position = parseAttribute(reader, ATTR_POSITION, Integer::parseInt, 0);
         int minOccurs = parseAttribute(reader, ATTR_MIN_OCCURS, Integer::parseInt, 0);
         int maxOccurs = parseAttribute(reader, ATTR_MAX_OCCURS, Integer::parseInt, 0);

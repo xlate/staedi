@@ -146,4 +146,81 @@ public class StaEDISchemaFactoryTest {
         assertEquals(IMPL_V3, schema.getImplementation().getId(), "Incorrect impl id");
         assertTrue(schema.containsSegment("AK9"), "Missing AK9 segment");
     }
+
+    @Test
+    public void testDuplicateImplPositionSpecified() {
+        SchemaFactory factory = SchemaFactory.newFactory();
+        assertTrue(factory instanceof StaEDISchemaFactory, "Not an instance");
+        InputStream stream = getClass().getResourceAsStream("/x12/implSchemaDuplicatePosition.xml");
+        EDISchemaException thrown = assertThrows(EDISchemaException.class, () -> factory.createSchema(stream));
+        Throwable cause = thrown.getCause();
+        assertNotNull(cause);
+        assertEquals("Duplicate value for position 1", cause.getMessage());
+    }
+
+    @Test
+    public void testDiscriminatorElementTooLarge() {
+        SchemaFactory factory = SchemaFactory.newFactory();
+        assertTrue(factory instanceof StaEDISchemaFactory, "Not an instance");
+        InputStream stream = getClass().getResourceAsStream("/x12/discriminators/element-too-large.xml");
+        EDISchemaException thrown = assertThrows(EDISchemaException.class, () -> factory.createSchema(stream));
+        Throwable cause = thrown.getCause();
+        assertNotNull(cause);
+        assertEquals("Discriminator element position invalid: 3.1", cause.getMessage());
+    }
+
+    @Test
+    public void testDiscriminatorElementTooSmall() {
+        SchemaFactory factory = SchemaFactory.newFactory();
+        assertTrue(factory instanceof StaEDISchemaFactory, "Not an instance");
+        InputStream stream = getClass().getResourceAsStream("/x12/discriminators/element-too-small.xml");
+        EDISchemaException thrown = assertThrows(EDISchemaException.class, () -> factory.createSchema(stream));
+        Throwable cause = thrown.getCause();
+        assertNotNull(cause);
+        assertEquals("Discriminator element position invalid: 0.1", cause.getMessage());
+    }
+
+    @Test
+    public void testDiscriminatorElementNotSpecified() {
+        SchemaFactory factory = SchemaFactory.newFactory();
+        assertTrue(factory instanceof StaEDISchemaFactory, "Not an instance");
+        InputStream stream = getClass().getResourceAsStream("/x12/discriminators/element-not-specified.xml");
+        EDISchemaException thrown = assertThrows(EDISchemaException.class, () -> factory.createSchema(stream));
+        Throwable cause = thrown.getCause();
+        assertNotNull(cause);
+        assertEquals("Discriminator position is unused (not specified): 2.1", cause.getMessage());
+    }
+
+    @Test
+    public void testDiscriminatorComponentTooLarge() {
+        SchemaFactory factory = SchemaFactory.newFactory();
+        assertTrue(factory instanceof StaEDISchemaFactory, "Not an instance");
+        InputStream stream = getClass().getResourceAsStream("/x12/discriminators/component-too-large.xml");
+        EDISchemaException thrown = assertThrows(EDISchemaException.class, () -> factory.createSchema(stream));
+        Throwable cause = thrown.getCause();
+        assertNotNull(cause);
+        assertEquals("Discriminator component position invalid: 2.3", cause.getMessage());
+    }
+
+    @Test
+    public void testDiscriminatorComponentTooSmall() {
+        SchemaFactory factory = SchemaFactory.newFactory();
+        assertTrue(factory instanceof StaEDISchemaFactory, "Not an instance");
+        InputStream stream = getClass().getResourceAsStream("/x12/discriminators/component-too-small.xml");
+        EDISchemaException thrown = assertThrows(EDISchemaException.class, () -> factory.createSchema(stream));
+        Throwable cause = thrown.getCause();
+        assertNotNull(cause);
+        assertEquals("Discriminator component position invalid: 2.0", cause.getMessage());
+    }
+
+    @Test
+    public void testDiscriminatorMissingEnumeration() {
+        SchemaFactory factory = SchemaFactory.newFactory();
+        assertTrue(factory instanceof StaEDISchemaFactory, "Not an instance");
+        InputStream stream = getClass().getResourceAsStream("/x12/discriminators/element-without-enumeration.xml");
+        EDISchemaException thrown = assertThrows(EDISchemaException.class, () -> factory.createSchema(stream));
+        Throwable cause = thrown.getCause();
+        assertNotNull(cause);
+        assertEquals("Discriminator element does not specify value enumeration: 2.2", cause.getMessage());
+    }
 }
