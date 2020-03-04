@@ -92,6 +92,7 @@ interface SyntaxValidator {
 
                 handler.elementError(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR,
                                      EDIStreamValidationError.CONDITIONAL_REQUIRED_DATA_ELEMENT_MISSING,
+                                     structure.getCode(), // FIXME: should be the child
                                      element,
                                      component,
                                      -1);
@@ -111,6 +112,7 @@ interface SyntaxValidator {
 
                 handler.elementError(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR,
                                      EDIStreamValidationError.EXCLUSION_CONDITION_VIOLATED,
+                                     structure.getCode(),
                                      element,
                                      component,
                                      -1);

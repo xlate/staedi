@@ -22,6 +22,7 @@ import java.util.List;
 
 import io.xlate.edi.internal.stream.CharArraySequence;
 import io.xlate.edi.internal.stream.StaEDIStreamLocation;
+import io.xlate.edi.internal.stream.validation.UsageError;
 import io.xlate.edi.internal.stream.validation.Validator;
 import io.xlate.edi.schema.EDIType;
 import io.xlate.edi.schema.Schema;
@@ -89,7 +90,7 @@ public class ProxyEventHandler implements EventHandler {
 
     public CharBuffer getCharacters() {
         if (hasEvents()) {
-            return events[eventIndex].data;
+            return events[eventIndex].getData();
         }
         throw new IllegalStateException();
     }
@@ -110,7 +111,7 @@ public class ProxyEventHandler implements EventHandler {
     }
 
     public String getReferenceCode() {
-        CharSequence refCode = events[eventIndex].referenceCode;
+        CharSequence refCode = events[eventIndex].getReferenceCode();
         return refCode != null ? refCode.toString() : null;
     }
 
@@ -212,10 +213,11 @@ public class ProxyEventHandler implements EventHandler {
             boolean invalid = !validator().validCompositeOccurrences(location);
 
             if (invalid) {
-                List<EDIStreamValidationError> errors = validator().getElementErrors();
+                code = validator().getElementReferenceCode();
+                List<UsageError> errors = validator().getElementErrors();
 
-                for (EDIStreamValidationError error : errors) {
-                    enqueueEvent(error.getCategory(), error, "", null);
+                for (UsageError error : errors) {
+                    enqueueEvent(error.getError().getCategory(), error.getError(), "", error.getCode());
                 }
             } else {
                 code = validator().getCompositeReferenceCode();
@@ -252,7 +254,7 @@ public class ProxyEventHandler implements EventHandler {
 
         if (validator != null) {
             derivedComposite = validateElement(validator);
-            code = validator.getElementReferenceNumber();
+            code = validator.getElementReferenceCode();
         } else {
             derivedComposite = false;
             code = null;
@@ -282,26 +284,25 @@ public class ProxyEventHandler implements EventHandler {
         final boolean composite = location.getComponentPosition() > -1;
         boolean valid = validator.validateElement(dialect, location, elementHolder);
         boolean derivedComposite = !composite && validator.isComposite();
-        String code = validator.getElementReferenceNumber();
 
         if (!valid) {
             /*
              * Process element-level errors before possibly starting a
              * composite or reporting other data-related errors.
              */
-            List<EDIStreamValidationError> errors = validator.getElementErrors();
-            Iterator<EDIStreamValidationError> cursor = errors.iterator();
+            List<UsageError> errors = validator.getElementErrors();
+            Iterator<UsageError> cursor = errors.iterator();
 
             while (cursor.hasNext()) {
-                EDIStreamValidationError error = cursor.next();
+                UsageError error = cursor.next();
 
-                switch (error) {
+                switch (error.getError()) {
                 case TOO_MANY_DATA_ELEMENTS:
                 case TOO_MANY_REPETITIONS:
-                    enqueueEvent(error.getCategory(),
-                                 error,
+                    enqueueEvent(error.getError().getCategory(),
+                                 error.getError(),
                                  elementHolder,
-                                 code,
+                                 error.getCode(),
                                  location);
                     cursor.remove();
                     //$FALL-THROUGH$
@@ -317,13 +318,13 @@ public class ProxyEventHandler implements EventHandler {
         }
 
         if (!valid) {
-            List<EDIStreamValidationError> errors = validator.getElementErrors();
+            List<UsageError> errors = validator.getElementErrors();
 
-            for (EDIStreamValidationError error : errors) {
-                enqueueEvent(error.getCategory(),
-                             error,
+            for (UsageError error : errors) {
+                enqueueEvent(error.getError().getCategory(),
+                             error.getError(),
                              elementHolder,
-                             code,
+                             error.getCode(),
                              location);
             }
         }
@@ -350,6 +351,7 @@ public class ProxyEventHandler implements EventHandler {
     @Override
     public void elementError(final EDIStreamEvent event,
                              final EDIStreamValidationError error,
+                             final CharSequence referenceCode,
                              final int element,
                              final int component,
                              final int repetition) {
@@ -359,7 +361,7 @@ public class ProxyEventHandler implements EventHandler {
         copy.setElementOccurrence(repetition);
         copy.setComponentPosition(component);
 
-        enqueueEvent(event, error, null, null, copy);
+        enqueueEvent(event, error, null, referenceCode, copy);
     }
 
     private Validator validator() {

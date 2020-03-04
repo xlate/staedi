@@ -100,9 +100,9 @@ public class LexerTest {
         }
 
         @Override
-        public void elementError(
-                                 EDIStreamEvent event,
+        public void elementError(EDIStreamEvent event,
                                  EDIStreamValidationError error,
+                                 CharSequence code,
                                  int elem,
                                  int component,
                                  int repetition) {
@@ -167,9 +167,9 @@ public class LexerTest {
         }
 
         @Override
-        public void elementError(
-                                 EDIStreamEvent event,
+        public void elementError(EDIStreamEvent event,
                                  EDIStreamValidationError error,
+                                 CharSequence code,
                                  int elem,
                                  int component,
                                  int repetition) {

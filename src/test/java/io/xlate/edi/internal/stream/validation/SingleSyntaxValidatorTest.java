@@ -3,6 +3,7 @@ package io.xlate.edi.internal.stream.validation;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
 
@@ -45,6 +46,7 @@ public class SingleSyntaxValidatorTest extends SyntaxValidatorTestBase {
         }).when(handler)
           .elementError(eq(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR),
                         any(EDIStreamValidationError.class),
+                        nullable(CharSequence.class),
                         any(Integer.class),
                         any(Integer.class),
                         any(Integer.class));
@@ -68,6 +70,7 @@ public class SingleSyntaxValidatorTest extends SyntaxValidatorTestBase {
         }).when(handler)
           .elementError(eq(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR),
                         any(EDIStreamValidationError.class),
+                        nullable(CharSequence.class),
                         any(Integer.class),
                         any(Integer.class),
                         any(Integer.class));
@@ -92,6 +95,7 @@ public class SingleSyntaxValidatorTest extends SyntaxValidatorTestBase {
         }).when(handler)
           .elementError(eq(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR),
                         eq(EDIStreamValidationError.CONDITIONAL_REQUIRED_DATA_ELEMENT_MISSING),
+                        nullable(CharSequence.class),
                         any(Integer.class),
                         any(Integer.class),
                         any(Integer.class));

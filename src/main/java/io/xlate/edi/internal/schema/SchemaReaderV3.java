@@ -115,6 +115,9 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
                          List<EDIReference> standardRefs = standard.getReferences();
 
                          for (EDITypeImplementation t : type.getSequence()) {
+                             if (t == null) {
+                                 continue;
+                             }
                              EDIReference stdRef;
                              BaseImpl<?> seqImpl = (BaseImpl<?>) t;
 

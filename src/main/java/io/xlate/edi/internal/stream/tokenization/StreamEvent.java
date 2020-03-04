@@ -14,8 +14,13 @@ public class StreamEvent {
 
     EDIStreamEvent type;
     EDIStreamValidationError errorType;
+
     CharBuffer data;
+    boolean dataNull = true;
+
     CharBuffer referenceCode;
+    boolean referenceCodeNull = true;
+
     StaEDIStreamLocation location;
 
     @Override
@@ -27,29 +32,31 @@ public class StreamEvent {
         return type;
     }
 
-    public CharSequence getData() {
-        return data;
+    public CharBuffer getData() {
+        return dataNull ? null : data;
     }
 
     public void setData(CharSequence data) {
         if (data instanceof CharArraySequence) {
             this.data = put(this.data, (CharArraySequence) data);
+            this.dataNull = false;
         } else if (data != null) {
             this.data = put(this.data, data);
+            this.dataNull = false;
         } else {
-            this.data = null;
+            this.dataNull = true;
         }
     }
 
     public CharSequence getReferenceCode() {
-        return referenceCode;
+        return referenceCodeNull ? null : referenceCode;
     }
 
     public void setReferenceCode(CharSequence referenceCode) {
-        if (referenceCode != null) {
+        this.referenceCodeNull = (referenceCode == null);
+
+        if (!this.referenceCodeNull) {
             this.referenceCode = put(this.referenceCode, referenceCode);
-        } else {
-            this.referenceCode = null;
         }
     }
 

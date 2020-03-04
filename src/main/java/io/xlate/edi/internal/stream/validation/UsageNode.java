@@ -114,7 +114,7 @@ class UsageNode {
             return ((EDIComplexType) referencedNode).getCode();
         }
 
-        return null;
+        return referencedNode.getId();
     }
 
     int getNumber() {
@@ -184,7 +184,11 @@ class UsageNode {
     }
 
     void resetChildren() {
-        children.forEach(UsageNode::reset);
+        for (UsageNode node : children) {
+            if (node != null) {
+                node.reset();
+            }
+        }
     }
 
     private UsageNode getSibling(int index) {
@@ -207,7 +211,7 @@ class UsageNode {
 
     UsageNode getChildById(CharSequence id) {
         return children.stream()
-                       .filter(c -> c.getId().contentEquals(id))
+                       .filter(c -> c != null && c.getId().contentEquals(id))
                        .findFirst()
                        .orElse(null);
     }

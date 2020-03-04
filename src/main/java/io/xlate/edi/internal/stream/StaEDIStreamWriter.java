@@ -37,6 +37,7 @@ import io.xlate.edi.internal.stream.tokenization.EDIFACTDialect;
 import io.xlate.edi.internal.stream.tokenization.ElementDataHandler;
 import io.xlate.edi.internal.stream.tokenization.State;
 import io.xlate.edi.internal.stream.tokenization.ValidationEventHandler;
+import io.xlate.edi.internal.stream.validation.UsageError;
 import io.xlate.edi.internal.stream.validation.Validator;
 import io.xlate.edi.schema.EDIType;
 import io.xlate.edi.schema.Schema;
@@ -588,6 +589,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     @Override
     public void elementError(EDIStreamEvent event,
                              EDIStreamValidationError error,
+                             CharSequence referenceCode,
                              int element,
                              int component,
                              int repetition) {
@@ -624,8 +626,13 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
             setupCommand.run();
 
             if (!validator.validateElement(dialect, location, data)) {
-                for (EDIStreamValidationError error : validator.getElementErrors()) {
-                    elementError(error.getCategory(), error, location.getElementPosition(), location.getComponentPosition(), location.getElementOccurrence());
+                for (UsageError error : validator.getElementErrors()) {
+                    elementError(error.getError().getCategory(),
+                                 error.getError(),
+                                 error.getCode(),
+                                 location.getElementPosition(),
+                                 location.getComponentPosition(),
+                                 location.getElementOccurrence());
                 }
 
                 throw validationExceptionChain(errors);

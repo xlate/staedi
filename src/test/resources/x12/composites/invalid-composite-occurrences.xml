@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="yes"?>
+<!--
+  Copyright 2020 xlate.io LLC, http://www.xlate.io
+
+  Licensed under the Apache License, Version 2.0 (the "License"); you may not
+  use this file except in compliance with the License.  You may obtain a copy
+  of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+  License for the specific language governing permissions and limitations under
+  the License.
+-->
+<schema xmlns="http://xlate.io/EDISchema/v3">
+
+  <transaction>
+    <sequence>
+      <segment type="S02" />
+
+      <loop code="L0000" maxOccurs="5">
+        <sequence>
+          <segment type="S10" />
+          <segment type="S11" maxOccurs="10" />
+        </sequence>
+      </loop>
+
+      <segment type="S12" maxOccurs="5" />
+    </sequence>
+  </transaction>
+
+  <implementation>
+    <sequence>
+      <segment type="S02" />
+
+      <loop type="L0000" code="0000A" discriminator="1.0"><!-- Component too large -->
+        <sequence>
+          <segment type="S10">
+            <sequence>
+              <element position="1">
+                <enumeration>
+                  <value>A</value>
+                </enumeration>
+              </element>
+              <composite position="2">
+                <sequence>
+                  <element position="1" />
+                  <element position="2" />
+                </sequence>
+              </composite>
+            </sequence>
+          </segment>
+
+          <segment type="S11" discriminator="1">
+            <sequence>
+              <element position="1">
+                <enumeration>
+                  <value>A</value>
+                </enumeration>
+              </element>
+              <composite position="2">
+                <sequence>
+                  <element position="1" />
+                  <element position="2" />
+                </sequence>
+              </composite>
+              <element position="3" />
+            </sequence>
+          </segment>
+          <segment type="S11" discriminator="1">
+            <sequence>
+              <element position="1">
+                <enumeration>
+                  <value>B</value>
+                </enumeration>
+              </element>
+              <element position="3" />
+            </sequence>
+          </segment>
+        </sequence>
+      </loop>
+
+      <segment type="S12">
+        <sequence>
+          <element position="1" minOccurs="2" />
+          <composite position="2" minOccurs="1" />
+          <element position="3" minOccurs="2" />
+        </sequence>
+      </segment>
+    </sequence>
+  </implementation>
+
+  <elementType name="E001" base="string" />
+  <elementType name="E002" base="string" maxLength="10" />
+
+  <elementType name="E003" base="identifier">
+    <enumeration>
+      <value>XX</value>
+      <value>YY</value>
+      <value>ZZ</value>
+    </enumeration>
+  </elementType>
+
+  <compositeType name="C001">
+    <sequence>
+      <element type="E001" />
+      <element type="E002" />
+    </sequence>
+  </compositeType>
+
+  <segmentType name="S02">
+    <sequence>
+      <element type="E001" minOccurs="1" />
+    </sequence>
+  </segmentType>
+
+  <segmentType name="S10">
+    <sequence>
+      <element type="E001" />
+      <composite type="C001" minOccurs="1" />
+    </sequence>
+  </segmentType>
+
+  <segmentType name="S11">
+    <sequence>
+      <element type="E001" />
+      <composite type="C001" maxOccurs="2" />
+      <element type="E002" />
+    </sequence>
+  </segmentType>
+
+  <segmentType name="S12">
+    <sequence>
+      <element type="E001" maxOccurs="2" />
+      <composite type="C001" maxOccurs="2" />
+      <element type="E002" maxOccurs="2" />
+    </sequence>
+  </segmentType>
+</schema>
