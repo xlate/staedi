@@ -62,6 +62,10 @@ class UsageNode {
         this.siblingIndex = siblingIndex;
     }
 
+    public static boolean hasMinimumUsage(UsageNode node) {
+        return node == null || node.hasMinimumUsage();
+    }
+
     @Override
     public String toString() {
         return String.format(TOSTRING_FORMAT, usageCount, depth, link);
@@ -132,7 +136,14 @@ class UsageNode {
             throw new UnsupportedOperationException("simple type only");
         }
 
-        final EDISimpleType element = (EDISimpleType) link.getReferencedType();
+        final EDISimpleType element;
+
+        if (link instanceof EDISimpleType) {
+            element = (EDISimpleType) link;
+        } else {
+            element = (EDISimpleType) link.getReferencedType();
+        }
+
         validator.validate(dialect, element, value, errors);
     }
 

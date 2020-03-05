@@ -49,8 +49,9 @@ public class CompositeValidationTest {
                 + "S11*A*2:REP1^3:REP2^4:REP3*5~" // TOO_MANY_REPETITIONS
                 + "S11*B*3:REP1*4~" // IMPLEMENTATION_UNUSED_DATA_ELEMENT_PRESENT
                 + "S11*B**:5~" // TOO_MANY_COMPONENTS
-                + "S99*X:X~"
-                + "S12*A^B**X~"
+                + "S99*X:X~" // SEGMENT_NOT_IN_DEFINED_TRANSACTION_SET
+                + "S12*A^B**X~" // REQUIRED_DATA_ELEMENT_MISSING (S1202), IMPLEMENTATION_TOO_FEW_REPETITIONS (S1203)
+                + "S12*A*X:Y*1^2*YY~" // IMPLEMENTATION_TOO_FEW_REPETITIONS (S1201)
                 + "S09*X~"
                 + "IEA*1*508121953~").getBytes());
 
@@ -117,6 +118,14 @@ public class CompositeValidationTest {
         assertEquals(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR, reader.next());
         assertEquals(EDIStreamValidationError.IMPLEMENTATION_TOO_FEW_REPETITIONS, reader.getErrorType());
         assertEquals("E002", reader.getReferenceCode());
+
+        assertEquals(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR, reader.next());
+        assertEquals(EDIStreamValidationError.IMPLEMENTATION_TOO_FEW_REPETITIONS, reader.getErrorType());
+        assertEquals("E001", reader.getReferenceCode());
+
+        assertEquals(EDIStreamEvent.ELEMENT_DATA_ERROR, reader.next());
+        assertEquals(EDIStreamValidationError.IMPLEMENTATION_INVALID_CODE_VALUE, reader.getErrorType());
+        assertEquals("E003", reader.getReferenceCode());
 
         assertTrue(!reader.hasNext(), "Unexpected segment errors exist");
     }

@@ -17,8 +17,11 @@ package io.xlate.edi.schema.implementation;
 
 import java.util.Set;
 
-public interface ElementImplementation extends EDITypeImplementation {
+import io.xlate.edi.schema.EDISimpleType;
 
+public interface ElementImplementation extends EDITypeImplementation, EDISimpleType {
+
+    @Override
     Set<String> getValueSet();
 
     @Override

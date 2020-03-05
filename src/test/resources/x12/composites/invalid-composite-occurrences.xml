@@ -87,6 +87,12 @@
           <element position="1" minOccurs="2" />
           <composite position="2" minOccurs="1" />
           <element position="3" minOccurs="2" />
+          <element position="4">
+            <enumeration>
+              <value>XX</value>
+              <value>ZZ</value>
+            </enumeration>
+          </element>
         </sequence>
       </segment>
     </sequence>
@@ -95,7 +101,7 @@
   <elementType name="E001" base="string" />
   <elementType name="E002" base="string" maxLength="10" />
 
-  <elementType name="E003" base="identifier">
+  <elementType name="E003" base="identifier" maxLength="2">
     <enumeration>
       <value>XX</value>
       <value>YY</value>
@@ -136,6 +142,7 @@
       <element type="E001" maxOccurs="2" />
       <composite type="C001" maxOccurs="2" />
       <element type="E002" maxOccurs="2" />
+      <element type="E003" />
     </sequence>
   </segmentType>
 </schema>

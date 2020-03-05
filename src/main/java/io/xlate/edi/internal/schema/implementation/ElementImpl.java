@@ -40,4 +40,24 @@ public class ElementImpl extends BaseImpl<EDISimpleType> implements ElementImple
     public int getPosition() {
         return position;
     }
+
+    @Override
+    public Base getBase() {
+        return standard.getBase();
+    }
+
+    @Override
+    public int getNumber() {
+        return standard.getNumber();
+    }
+
+    @Override
+    public long getMinLength() {
+        return standard.getMinLength();
+    }
+
+    @Override
+    public long getMaxLength() {
+        return standard.getMaxLength();
+    }
 }
