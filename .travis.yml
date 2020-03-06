@@ -6,10 +6,17 @@ jdk:
   - openjdk8
   - openjdk11
 
+addons:
+  sonarcloud:
+    organization: "xlate"
+    token:
+      secure: "LJx3XwC8sa4H1tQORh4R0fjSNqjLbXQRnztaXnghiKL8qVhxz0Q/PsS2cK/ArC2+U+BulIkuK5ylaxMLVTyoJtustjLgSWOLanOF3w+m4Et3pJ+bXLQncn8foaE7+xwWxsACYMcrBcBGSndltsi19rqry0EKehb0BPdsU2cHRTchCcD0e1RTKw2G8ls90W4MCs5x8/5KudGCbyb8YVGP7/fPAnr9riIOjZt7j97LV89XjPH3g8dURELrVC2MhyH3+0PfO9XnGAD6RdgwfdQ0e48NEdEdlNPUvzFN8tfzfqPevf3Qdyt63aAhxLowkB5l3KpdujWP3vI0n6xv0AiyinYHqD/QEd7WE2emupo5Wes+xc/YPIWd/jgph6AAslmI9i2L6FgXG0BxkfrZ5HWA98zvNZKrbB7zIFCeB0C0ZjOZ4tdg3q66ZU++OzvIkCBNwSeDg7x8hdbx5+BEn9doGodWlSruccr0gu6d7y3X5e2QbR/SUyb+KDzxuPU1u1STJA96foixLX+7fkEQ71QJtJrvZm5sIu8QJ5Qbpnntr081JxHpenL7+jbPr5mJtvRs824nGP+4yBGFjNycEjizRpVNrIHwOm2OBum4nPMiTeEdRjV783yUEayg+zIpg0pJPP/AjtLvt3uw77EsONn6K9q9JBmp4T5FniFQW/JJOpM="
+
 script:
   - # Build project, run tests, and generate JavaDocs
   - mvn -B test javadoc:javadoc
 
 after_success:
   - # Runs the tests with coverage and then execute the SonarCloud analysis (Java 11+ only)
-  - ./ci_coverage.sh
+  - # ./ci_coverage.sh
+  - if [[ $(bc -l <<< "$(java -version 2>&1 | awk -F '\"' '/version/ {print $2}' | awk -F'.' '{print $1"."$2}') >= 11") -eq 1 ]]; then mvn -Pcoverage -B verify sonar:sonar -Dsonar.projectKey=xlate_staedi -Dsonar.branch.name=$(if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then echo $TRAVIS_BRANCH; else echo "pull-request-$TRAVIS_PULL_REQUEST"; fi); else echo "Not Java 11"; fi
