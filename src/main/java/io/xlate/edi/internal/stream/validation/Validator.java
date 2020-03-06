@@ -80,7 +80,7 @@ public class Validator {
 
         if (schema.getImplementation() != null) {
             implRoot = buildTree(null, 0, schema.getImplementation(), -1);
-            implSegment = implRoot.getFirstChild();
+            implSegment = implRoot != null ? implRoot.getFirstChild() : null;
         } else {
             implRoot = null;
             implSegment = null;
