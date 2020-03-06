@@ -15,5 +15,7 @@ addons:
 script:
   - # Build project, run tests, and generate JavaDocs
   - mvn -B test javadoc:javadoc
+
+after_success:
   - # Runs the tests with coverage and then execute the SonarCloud analysis (Java 11+ only)
-  - if [[ $(bc -l <<< "$(java -version 2>&1 | awk -F '\"' '/version/ {print $2}' | awk -F'.' '{print $1"."$2}') >= 11") -eq 1 ]]; then mvn -Pcoverage -B verify sonar:sonar -Dsonar.host.url=https://sonarcloud.io -Dsonar.projectKey=xlate_staedi -Dsonar.branch.name=$(if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then echo $TRAVIS_BRANCH; else echo "pull-request-$TRAVIS_PULL_REQUEST"; fi); else echo "Not Java 11"; fi
+  - ./ci_coverage.sh
