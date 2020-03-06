@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="yes"?>
+<!--
+  Copyright 2020 xlate.io LLC, http://www.xlate.io
+
+  Licensed under the Apache License, Version 2.0 (the "License"); you may not
+  use this file except in compliance with the License.  You may obtain a copy
+  of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+  License for the specific language governing permissions and limitations under
+  the License.
+-->
+<schema xmlns="http://xlate.io/EDISchema/v3">
+
+  <transaction>
+    <sequence>
+      <segment type="S02" />
+
+      <loop code="L0000" maxOccurs="5">
+        <sequence>
+          <segment type="S30" />
+        </sequence>
+      </loop>
+    </sequence>
+  </transaction>
+
+  <implementation>
+    <sequence>
+      <segment type="S02" />
+
+      <loop type="L0000" code="0000A" discriminator="2.0"><!-- Component too large -->
+        <sequence>
+          <segment type="S30">
+            <sequence>
+              <element position="1"></element>
+              <composite position="2">
+                <sequence>
+                  <element position="1" />
+                  <element position="2">
+                    <enumeration>
+                      <value>XX</value>
+                    </enumeration>
+                  </element>
+                </sequence>
+              </composite>
+            </sequence>
+          </segment>
+        </sequence>
+      </loop>
+    </sequence>
+  </implementation>
+
+  <elementType name="E999" base="string" />
+  <elementType name="E888" base="string" />
+
+  <elementType name="E777" base="identifier">
+    <enumeration>
+      <value>XX</value>
+      <value>YY</value>
+      <value>ZZ</value>
+    </enumeration>
+  </elementType>
+
+  <compositeType name="C001">
+    <sequence>
+      <element type="E888" />
+      <element type="E777" />
+    </sequence>
+  </compositeType>
+
+  <segmentType name="S02">
+    <sequence>
+      <element type="E999" minOccurs="1" />
+    </sequence>
+  </segmentType>
+
+  <segmentType name="S30">
+    <sequence>
+      <element type="E999" />
+      <composite type="C001" minOccurs="1" />
+    </sequence>
+  </segmentType>
+</schema>

@@ -15,9 +15,6 @@
  ******************************************************************************/
 package io.xlate.edi.internal.schema;
 
-import static io.xlate.edi.internal.schema.StaEDISchemaFactory.QN_INTERCHANGE;
-import static io.xlate.edi.internal.schema.StaEDISchemaFactory.QN_TRANSACTION;
-
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
@@ -26,18 +23,41 @@ import io.xlate.edi.schema.EDIComplexType;
 import io.xlate.edi.schema.EDISchemaException;
 import io.xlate.edi.schema.EDIType;
 import io.xlate.edi.schema.Schema;
+import io.xlate.edi.schema.implementation.LoopImplementation;
 
 class StaEDISchema implements Schema {
 
-    static final String INTERCHANGE = QN_INTERCHANGE.toString();
-    static final String TRANSACTION = QN_TRANSACTION.toString();
+    final String interchangeName;
+    final String transactionStandardName;
+    final String implementationName;
+    Map<String, EDIType> types = Collections.emptyMap();
+    EDIComplexType standardLoop = null;
+    LoopImplementation implementationLoop = null;
 
-    private Map<String, EDIType> types = Collections.emptyMap();
-    private EDIComplexType mainLoop = null;
+    public StaEDISchema(String interchangeName, String transactionStandardName, String implementationName) {
+        super();
+        this.interchangeName = interchangeName;
+        this.transactionStandardName = transactionStandardName;
+        this.implementationName = implementationName;
+    }
+
+    public StaEDISchema(String interchangeName, String transactionStandardName) {
+        this(interchangeName, transactionStandardName, null);
+    }
 
     @Override
     public EDIComplexType getMainLoop() {
-        return mainLoop;
+        return getStandard();
+    }
+
+    @Override
+    public EDIComplexType getStandard() {
+        return standardLoop;
+    }
+
+    @Override
+    public LoopImplementation getImplementation() {
+        return implementationLoop;
     }
 
     void setTypes(Map<String, EDIType> types) throws EDISchemaException {
@@ -47,13 +67,17 @@ class StaEDISchema implements Schema {
 
         this.types = Collections.unmodifiableMap(types);
 
-        if (types.containsKey(QN_INTERCHANGE.toString())) {
-            this.mainLoop = (EDIComplexType) types.get(QN_INTERCHANGE.toString());
-        } else if (types.containsKey(QN_TRANSACTION.toString())) {
-            this.mainLoop = (EDIComplexType) types.get(QN_TRANSACTION.toString());
+        if (types.containsKey(interchangeName)) {
+            this.standardLoop = (EDIComplexType) types.get(interchangeName);
+        } else if (types.containsKey(transactionStandardName)) {
+            this.standardLoop = (EDIComplexType) types.get(transactionStandardName);
         } else {
             throw new EDISchemaException("Schema must contain either " +
-                    QN_INTERCHANGE + " or " + QN_TRANSACTION);
+                    interchangeName + " or " + transactionStandardName);
+        }
+
+        if (implementationName != null && types.containsKey(implementationName)) {
+            this.implementationLoop = (LoopImplementation) types.get(implementationName);
         }
     }
 

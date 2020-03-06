@@ -19,7 +19,7 @@
 
   <transaction>
     <sequence>
-      <segment ref="BIN" minOccurs="1" />
+      <segment ref="BIN" minOccurs="1" maxOccurs="3" />
     </sequence>
   </transaction>
 

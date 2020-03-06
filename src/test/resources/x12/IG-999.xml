@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<schema xmlns="http://xlate.io/EDISchema/v3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://xlate.io/EDISchema/v3 ../../../main/resources/schema/EDISchema-v3.xsd">
+  <transaction>
+    <sequence>
+      <segment type="AK1" minOccurs="1" />
+      <loop code="L0001" maxOccurs="99999">
+        <sequence>
+          <segment type="AK2" />
+          <loop code="L0002" maxOccurs="99999">
+            <sequence>
+              <segment type="IK3" />
+              <segment type="CTX" maxOccurs="10" />
+              <loop code="L0003" maxOccurs="99999">
+                <sequence>
+                  <segment type="IK4" />
+                  <segment type="CTX" maxOccurs="10" />
+                </sequence>
+              </loop>
+            </sequence>
+          </loop>
+          <segment type="IK5" minOccurs="1" />
+        </sequence>
+      </loop>
+      <segment type="AK9" minOccurs="1" />
+    </sequence>
+  </transaction>
+
+  <implementation>
+    <sequence>
+      <segment type="AK1">
+        <sequence>
+          <element position="2" minOccurs="1" />
+          <element position="1" minOccurs="1" />
+          <element position="3" minOccurs="1" />
+        </sequence>
+      </segment>
+
+      <loop code="AK2" type="L0001" title="Transaction Set Response Header">
+        <sequence>
+          <segment type="AK2">
+          <!-- Unchanged from standard -->
+          </segment>
+
+          <loop code="IK3" type="L0002" title="Error Identification">
+            <sequence>
+              <segment type="IK3">
+                <sequence>
+                  <element position="1" minOccurs="1" />
+                  <element position="2" minOccurs="1" />
+                  <element position="3" minOccurs="0" />
+                  <element position="4" minOccurs="1" />
+                </sequence>
+              </segment>
+              <segment type="CTX" discriminator="01.01" maxOccurs="9">
+                <sequence>
+                  <composite position="1">
+                    <sequence>
+                      <element position="1">
+                        <enumeration>
+                          <value>SITUATIONAL TRIGGER</value>
+                        </enumeration>
+                      </element>
+                    </sequence>
+                  </composite>
+                  <element position="2" minOccurs="1" />
+                  <element position="3" minOccurs="1" />
+                  <element position="4" />
+                  <composite position="5" />
+                  <composite position="6">
+                    <sequence>
+                      <element position="1" />
+                    </sequence>
+                  </composite>
+                </sequence>
+              </segment>
+              <segment type="CTX" maxOccurs="1">
+                <sequence>
+                  <composite position="1">
+                    <sequence>
+                      <element position="1" minOccurs="1" />
+                      <element position="2" minOccurs="1" />
+                    </sequence>
+                  </composite>
+                    <!-- Remaining elements are not used. -->
+                </sequence>
+              </segment>
+              <loop code="IK4" type="L0003" title="Implementation Data Element Note">
+                <sequence>
+                  <segment type="IK4">
+                      <!-- Unchanged from standard -->
+                  </segment>
+                  <segment type="CTX" maxOccurs="10">
+                    <sequence>
+                      <composite position="1">
+                        <sequence>
+                          <element position="1">
+                            <enumeration>
+                              <value>SITUATIONAL TRIGGER</value>
+                            </enumeration>
+                          </element>
+                        </sequence>
+                      </composite>
+                      <element position="2" minOccurs="1" />
+                      <element position="3" minOccurs="1" />
+                      <element position="4" />
+                      <composite position="5" minOccurs="1" />
+                      <composite position="6">
+                        <sequence>
+                          <element position="1" />
+                        </sequence>
+                      </composite>
+                    </sequence>
+                  </segment>
+                </sequence>
+              </loop>
+            </sequence>
+          </loop>
+          <segment type="IK5">
+              <!-- Unchanged from standard -->
+          </segment>
+        </sequence>
+      </loop>
+      <segment type="AK9">
+          <!-- Unchanged from standard -->
+      </segment>
+    </sequence>
+  </implementation>
+
+  <elementType name="DE0002" base="decimal" maxLength="6" />
+  <elementType name="DE0028" base="decimal" maxLength="9" />
+  <elementType name="DE0097" base="decimal" maxLength="6" />
+  <elementType name="DE0123" base="decimal" maxLength="6" />
+  <elementType name="DE0143" base="string" minLength="3" maxLength="3" />
+  <elementType name="DE0329" base="string" minLength="4" maxLength="9" />
+  <elementType name="DE0447" base="string" maxLength="4" />
+  <elementType name="DE0479" base="string" minLength="2" maxLength="2" />
+  <elementType name="DE0480" base="string" maxLength="12" />
+  <elementType name="DE0618" base="string" maxLength="3" />
+  <elementType name="DE0620" base="string" maxLength="3" />
+  <elementType name="DE0621" base="string" maxLength="3" />
+  <elementType name="DE0715" base="string" />
+  <elementType name="DE0716" base="string" maxLength="3" />
+  <elementType name="DE0717" base="string" />
+  <elementType name="DE0719" base="decimal" maxLength="10" />
+  <elementType name="DE0721" base="string" minLength="2" maxLength="3" />
+  <elementType name="DE0722" base="decimal" maxLength="2" />
+  <elementType name="DE0724" base="string" maxLength="99" />
+  <elementType name="DE0725" base="decimal" maxLength="4" />
+  <elementType name="DE1528" base="decimal" maxLength="2" />
+  <elementType name="DE1686" base="decimal" maxLength="4" />
+  <elementType name="DE1705" base="string" maxLength="35" />
+  <elementType name="DE9998" base="string" maxLength="35" />
+  <elementType name="DE9999" base="string" maxLength="35" />
+
+  <compositeType name="C030">
+    <sequence>
+      <element type="DE0722" minOccurs="1" />
+      <element type="DE1528" />
+      <element type="DE1686" />
+    </sequence>
+  </compositeType>
+
+  <compositeType name="C998">
+    <sequence>
+      <element type="DE9999" minOccurs="1" />
+      <element type="DE9998" />
+    </sequence>
+  </compositeType>
+
+  <compositeType name="C999">
+    <sequence>
+      <element type="DE0725" minOccurs="1" />
+      <element type="DE0725" />
+    </sequence>
+  </compositeType>
+
+  <segmentType name="AK1">
+    <sequence>
+      <element type="DE0479" minOccurs="1" />
+      <element type="DE0028" minOccurs="1" />
+      <element type="DE0480" />
+    </sequence>
+  </segmentType>
+
+  <segmentType name="AK2">
+    <sequence>
+      <element type="DE0143" minOccurs="1" />
+      <element type="DE0329" minOccurs="1" />
+      <element type="DE1705" />
+    </sequence>
+  </segmentType>
+
+  <segmentType name="AK9">
+    <sequence>
+      <element type="DE0715" minOccurs="1" />
+      <element type="DE0097" minOccurs="1" />
+      <element type="DE0123" minOccurs="1" />
+      <element type="DE0002" minOccurs="1" />
+      <element type="DE0716" />
+      <element type="DE0716" />
+      <element type="DE0716" />
+      <element type="DE0716" />
+      <element type="DE0716" />
+    </sequence>
+  </segmentType>
+
+  <segmentType name="CTX">
+    <sequence>
+      <composite type="C998" minOccurs="1" maxOccurs="10" />
+      <element type="DE0721" />
+      <element type="DE0719" />
+      <element type="DE0447" />
+      <composite type="C030" />
+      <composite type="C999" />
+    </sequence>
+  </segmentType>
+
+  <segmentType name="IK3">
+    <sequence>
+      <element type="DE0721" minOccurs="1" />
+      <element type="DE0719" minOccurs="1" />
+      <element type="DE0447" />
+      <element type="DE0620" />
+    </sequence>
+  </segmentType>
+
+  <segmentType name="IK4">
+    <sequence>
+      <composite type="C030" minOccurs="1" />
+      <element type="DE0725" />
+      <element type="DE0621" minOccurs="1" />
+      <element type="DE0724" />
+    </sequence>
+  </segmentType>
+
+  <segmentType name="IK5">
+    <sequence>
+      <element type="DE0717" minOccurs="1" />
+      <element type="DE0618" />
+      <element type="DE0618" />
+      <element type="DE0618" />
+      <element type="DE0618" />
+      <element type="DE0618" />
+    </sequence>
+  </segmentType>
+</schema>

@@ -16,8 +16,8 @@ class StructureTest {
     void testStructureConstruction() {
         EDIReference ref = new Reference("E1", "element", 1, 1);
         EDISyntaxRule rule = new SyntaxRestriction(EDISyntaxRule.Type.EXCLUSION, Arrays.asList(1, 8));
-        Structure s = new Structure("SEG", Type.SEGMENT, "SEG", Arrays.asList(ref), Arrays.asList(rule));
-        assertEquals("id: SEG, type: SEGMENT, code: SEG, references: [{refId: E1, minOccurs: 1, maxOccurs: 1}], syntaxRestrictions: [{type: EXCLUSION, positions: [1, 8]}]", s.toString());
+        StructureType s = new StructureType("SEG", Type.SEGMENT, "SEG", Arrays.asList(ref), Arrays.asList(rule));
+        assertEquals("id: SEG, type: SEGMENT, code: SEG, references: [{refId: E1, minOccurs: 1, maxOccurs: 1, type: { null }}], syntaxRestrictions: [{type: EXCLUSION, positions: [1, 8]}]", s.toString());
     }
 
 }

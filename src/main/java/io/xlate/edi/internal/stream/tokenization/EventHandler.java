@@ -21,12 +21,12 @@ public interface EventHandler extends ElementDataHandler, ValidationEventHandler
 
     void interchangeEnd();
 
-    void segmentBegin(char[] text, int start, int length);
+    boolean segmentBegin(char[] text, int start, int length);
 
-    void segmentEnd();
+    boolean segmentEnd();
 
-    void compositeBegin(boolean isNil);
+    boolean compositeBegin(boolean isNil);
 
-    void compositeEnd(boolean isNil);
+    boolean compositeEnd(boolean isNil);
 
 }

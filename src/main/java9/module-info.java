@@ -5,5 +5,6 @@ module io.xlate.staedi {
     requires transitive java.xml;
 
     exports io.xlate.edi.schema;
+    exports io.xlate.edi.schema.implementation;
     exports io.xlate.edi.stream;
 }

@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="yes"?>
+<!--
+  Copyright 2020 xlate.io LLC, http://www.xlate.io
+
+  Licensed under the Apache License, Version 2.0 (the "License"); you may not
+  use this file except in compliance with the License.  You may obtain a copy
+  of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+  License for the specific language governing permissions and limitations under
+  the License.
+-->
+<schema xmlns="http://xlate.io/EDISchema/v3">
+
+  <transaction>
+    <sequence>
+      <segment ref="S0A" />
+      <loop code="L0000" maxOccurs="5">
+        <sequence>
+          <segment ref="S11" minOccurs="1" />
+          <segment ref="S12" maxOccurs="5" />
+          <segment ref="S13" />
+          <segment ref="S14" />
+        </sequence>
+      </loop>
+      <loop code="L0001" minOccurs="1">
+        <sequence>
+          <segment ref="S20" minOccurs="1" />
+          <segment ref="S21" />
+        </sequence>
+      </loop>
+    </sequence>
+  </transaction>
+
+  <implementation>
+    <sequence>
+      <segment type="S0A" />
+      <loop type="L0000" code="0000A" minOccurs="1" discriminator="1">
+        <sequence>
+          <segment type="S11">
+            <sequence>
+              <element position="1">
+                <enumeration>
+                  <value>A</value>
+                </enumeration>
+              </element>
+            </sequence>
+          </segment>
+          <segment type="S13" minOccurs="1" />
+        </sequence>
+      </loop>
+      <loop type="L0000" code="0000B" minOccurs="1" maxOccurs="2" discriminator="1">
+        <sequence>
+          <segment type="S11">
+            <sequence>
+              <element position="1">
+                <enumeration>
+                  <value>B</value>
+                </enumeration>
+              </element>
+            </sequence>
+          </segment>
+          <segment type="S12" maxOccurs="2" />
+        </sequence>
+      </loop>
+      <loop type="L0000" code="0000C" minOccurs="2" maxOccurs="2" discriminator="1">
+        <sequence>
+          <segment type="S11">
+            <sequence>
+              <element position="1">
+                <enumeration>
+                  <value>C</value>
+                </enumeration>
+              </element>
+            </sequence>
+          </segment>
+        </sequence>
+      </loop>
+      <loop type="L0000" code="0000D" minOccurs="1" maxOccurs="1" discriminator="1">
+        <sequence>
+          <segment type="S11">
+            <sequence>
+              <element position="1">
+                <enumeration>
+                  <value>D</value>
+                </enumeration>
+              </element>
+            </sequence>
+          </segment>
+        </sequence>
+      </loop>
+    </sequence>
+  </implementation>
+
+  <elementType name="E999" base="string" />
+
+  <segmentType name="S01">
+    <sequence>
+      <element ref="E999" minOccurs="1" />
+    </sequence>
+  </segmentType>
+
+  <segmentType name="S11">
+    <sequence>
+      <element ref="E999" minOccurs="1" />
+    </sequence>
+  </segmentType>
+
+  <segmentType name="S12">
+    <sequence>
+      <element ref="E999" minOccurs="1" />
+    </sequence>
+  </segmentType>
+
+  <segmentType name="S13">
+    <sequence>
+      <element ref="E999" minOccurs="1" />
+    </sequence>
+  </segmentType>
+
+  <segmentType name="S14">
+    <sequence>
+      <element ref="E999" minOccurs="1" />
+    </sequence>
+  </segmentType>
+
+  <segmentType name="S19">
+    <sequence>
+      <element ref="E999" minOccurs="1" />
+    </sequence>
+  </segmentType>
+
+  <segmentType name="S09">
+    <sequence>
+      <element ref="E999" minOccurs="1" />
+    </sequence>
+  </segmentType>
+
+  <segmentType name="S20">
+    <sequence>
+      <element ref="E999" minOccurs="1" />
+    </sequence>
+  </segmentType>
+
+  <segmentType name="S21">
+    <sequence>
+      <element ref="E999" minOccurs="1" />
+    </sequence>
+  </segmentType>
+
+  <segmentType name="S0A">
+    <sequence>
+      <element ref="E999" minOccurs="1" />
+    </sequence>
+  </segmentType>
+</schema>

@@ -39,7 +39,7 @@ public class Lexer {
     private State previous;
 
     private interface Notifier {
-        void execute(State state, int start, int length);
+        boolean execute(State state, int start, int length);
     }
 
     private final Deque<Notifier> events = new ArrayDeque<>(20);
@@ -75,22 +75,27 @@ public class Lexer {
 
         this.location = location;
 
-        isn = (notifyState, start, length) -> handler.interchangeBegin(dialect);
+        isn = (notifyState, start, length) -> {
+            handler.interchangeBegin(dialect);
+            return true;
+        };
 
         ien = (notifyState, start, length) -> {
             handler.interchangeEnd();
             dialect = null;
             characters.reset();
+            return true;
         };
 
         ssn = (notifyState, start, length) -> {
             location.incrementSegmentPosition();
-            handler.segmentBegin(buffer.array(), start, length);
+            return handler.segmentBegin(buffer.array(), start, length);
         };
 
         sen = (notifyState, start, length) -> {
-            handler.segmentEnd();
+            boolean eventsReady = handler.segmentEnd();
             location.clearSegmentLocations();
+            return eventsReady;
         };
 
         csn = (notifyState, start, length) -> {
@@ -100,22 +105,23 @@ public class Lexer {
                 location.incrementElementPosition();
             }
 
-            handler.compositeBegin(false);
+            return handler.compositeBegin(false);
         };
 
         cen = (notifyState, start, length) -> {
-            handler.compositeEnd(false);
+            boolean eventsReady = handler.compositeEnd(false);
             location.clearComponentPosition();
+            return eventsReady;
         };
 
         en = (notifyState, start, length) -> {
             updateLocation(notifyState, location);
-            handler.elementData(buffer.array(), start, length);
+            return handler.elementData(buffer.array(), start, length);
         };
 
         bn = (notifyState, start, length) -> {
             updateLocation(notifyState, location);
-            handler.binaryData(binaryStream);
+            return handler.binaryData(binaryStream);
         };
     }
 
@@ -377,19 +383,21 @@ public class Lexer {
 
     private boolean nextEvent() {
         Notifier event = events.peek();
+        boolean eventsReady = false;
 
         if (event != null) {
             events.remove();
             State nextState = stateQueue.remove();
             int start = startQueue.remove();
             int length = lengthQueue.remove();
-
-            event.execute(nextState, start, length);
-            return true;
+            eventsReady = event.execute(nextState, start, length);
         }
 
-        buffer.clear();
-        return false;
+        if (events.isEmpty()) {
+            buffer.clear();
+        }
+
+        return eventsReady;
     }
 
     private void enqueue(Notifier task, int position) {

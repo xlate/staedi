@@ -15,9 +15,38 @@
  ******************************************************************************/
 package io.xlate.edi.schema;
 
+import io.xlate.edi.schema.implementation.LoopImplementation;
+
 public interface Schema extends Iterable<EDIType> {
 
+    /**
+     * Retrieve the {@link EDIComplexType} that is the entry point of the
+     * standard schema.
+     *
+     * @return the standard schema root type
+     *
+     * @deprecated use {@link #getStandard()} instead
+     */
+    @Deprecated /*(forRemoval = true, since = "1.2")*/
     public abstract EDIComplexType getMainLoop();
+
+    /**
+     * Retrieve the {@link EDIComplexType} that is the entry point of the
+     * standard schema.
+     *
+     * @return the standard schema root type
+     *
+     */
+    public abstract EDIComplexType getStandard();
+
+    /**
+     * Retrieve the {@link LoopImplementation} that is the entry point of the
+     * implementation schema.
+     *
+     * @return the implementation schema root type
+     *
+     */
+    public abstract LoopImplementation getImplementation();
 
     public abstract EDIType getType(String name);
 

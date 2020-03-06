@@ -21,7 +21,7 @@ import java.util.Set;
 
 import io.xlate.edi.schema.EDISimpleType;
 
-class Element extends BasicType implements EDISimpleType {
+class ElementType extends BasicType implements EDISimpleType {
 
     private static final String TOSTRING_FORMAT = "id: %s, type: %s, base: %s, number: %d, minLength: %d, maxLength: %d, values: %s";
     private Base base;
@@ -30,11 +30,7 @@ class Element extends BasicType implements EDISimpleType {
     private long maxLength;
     private Set<String> values;
 
-    Element(String id, Base base, int number, long minLength, long maxLength) {
-        this(id, base, number, minLength, maxLength, Collections.emptySet());
-    }
-
-    Element(String id, Base base, int number, long minLength, long maxLength, Set<String> values) {
+    ElementType(String id, Base base, int number, long minLength, long maxLength, Set<String> values) {
         super(id, Type.ELEMENT);
         this.base = base;
         this.number = number;

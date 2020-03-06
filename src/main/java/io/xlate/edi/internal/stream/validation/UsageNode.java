@@ -15,33 +15,39 @@
  ******************************************************************************/
 package io.xlate.edi.internal.stream.validation;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import io.xlate.edi.internal.stream.tokenization.Dialect;
 import io.xlate.edi.schema.EDIComplexType;
 import io.xlate.edi.schema.EDIReference;
 import io.xlate.edi.schema.EDISimpleType;
 import io.xlate.edi.schema.EDISyntaxRule;
 import io.xlate.edi.schema.EDIType;
+import io.xlate.edi.schema.implementation.EDITypeImplementation;
 import io.xlate.edi.stream.EDIStreamValidationError;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 class UsageNode {
 
-    private final EDIReference link;
-    private final ElementValidator validator;
+    private static final String TOSTRING_FORMAT = "usageCount: %d, depth: %d, link: { %s }";
+
     private final UsageNode parent;
-    private int siblingIndex;
+    private final int depth;
+    private final EDIReference link;
+    private final int siblingIndex;
+
+    private final ElementValidator validator;
     private final List<UsageNode> children = new ArrayList<>();
     private int usageCount;
 
-    UsageNode(UsageNode parent, EDIReference link, int siblingIndex) {
+    UsageNode(UsageNode parent, int depth, EDIReference link, int siblingIndex) {
         if (link == null) {
             throw new NullPointerException();
         }
 
         this.parent = parent;
+        this.depth = depth;
         this.link = link;
 
         EDIType referencedType = link.getReferencedType();
@@ -56,12 +62,29 @@ class UsageNode {
         this.siblingIndex = siblingIndex;
     }
 
-    EDIType getReferencedType() {
-        return link.getReferencedType();
+    public static boolean hasMinimumUsage(UsageNode node) {
+        return node == null || node.hasMinimumUsage();
+    }
+
+    @Override
+    public String toString() {
+        return String.format(TOSTRING_FORMAT, usageCount, depth, link);
     }
 
     UsageNode getParent() {
         return parent;
+    }
+
+    int getDepth() {
+        return depth;
+    }
+
+    EDIReference getLink() {
+        return link;
+    }
+
+    EDIType getReferencedType() {
+        return link.getReferencedType();
     }
 
     List<UsageNode> getChildren() {
@@ -72,18 +95,30 @@ class UsageNode {
         return (index < children.size()) ? children.get(index) : null;
     }
 
+    boolean isImplementation() {
+        return (link instanceof EDITypeImplementation);
+    }
+
     String getId() {
+        if (link instanceof EDITypeImplementation) {
+            return ((EDITypeImplementation) link).getId();
+        }
+
         return link.getReferencedType().getId();
     }
 
     String getCode() {
+        if (link instanceof EDITypeImplementation) {
+            return ((EDITypeImplementation) link).getId();
+        }
+
         EDIType referencedNode = link.getReferencedType();
 
         if (referencedNode instanceof EDIComplexType) {
             return ((EDIComplexType) referencedNode).getCode();
         }
 
-        return null;
+        return referencedNode.getId();
     }
 
     int getNumber() {
@@ -101,7 +136,14 @@ class UsageNode {
             throw new UnsupportedOperationException("simple type only");
         }
 
-        final EDISimpleType element = (EDISimpleType) link.getReferencedType();
+        final EDISimpleType element;
+
+        if (link instanceof EDISimpleType) {
+            element = (EDISimpleType) link;
+        } else {
+            element = (EDISimpleType) link.getReferencedType();
+        }
+
         validator.validate(dialect, element, value, errors);
     }
 
@@ -153,7 +195,11 @@ class UsageNode {
     }
 
     void resetChildren() {
-        children.forEach(UsageNode::reset);
+        for (UsageNode node : children) {
+            if (node != null) {
+                node.reset();
+            }
+        }
     }
 
     private UsageNode getSibling(int index) {
@@ -176,7 +222,7 @@ class UsageNode {
 
     UsageNode getChildById(CharSequence id) {
         return children.stream()
-                       .filter(c -> c.getId().contentEquals(id))
+                       .filter(c -> c != null && c.getId().contentEquals(id))
                        .findFirst()
                        .orElse(null);
     }

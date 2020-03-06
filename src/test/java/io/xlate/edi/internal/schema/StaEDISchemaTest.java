@@ -21,6 +21,11 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import java.io.InputStream;
 import java.util.Map;
 
+import javax.xml.stream.FactoryConfigurationError;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
+
 import org.junit.jupiter.api.Test;
 
 import io.xlate.edi.schema.EDISchemaException;
@@ -29,19 +34,39 @@ import io.xlate.edi.schema.EDIType;
 @SuppressWarnings("resource")
 public class StaEDISchemaTest {
 
+    final String INTERCHANGE_V2 = "{http://xlate.io/EDISchema/v2}interchange";
+    final String TRANSACTION_V2 = "{http://xlate.io/EDISchema/v2}transaction";
+
+    final String INTERCHANGE_V3 = "{http://xlate.io/EDISchema/v3}interchange";
+    final String TRANSACTION_V3 = "{http://xlate.io/EDISchema/v3}transaction";
+
     @Test
     public void testSetTypesNullTypes() {
-        StaEDISchema schema = new StaEDISchema();
+        StaEDISchema schema = new StaEDISchema(INTERCHANGE_V2, TRANSACTION_V2);
         assertThrows(NullPointerException.class, () -> schema.setTypes(null));
     }
 
     @Test
-    public void testRootTypeIsInterchange() throws EDISchemaException {
-        StaEDISchema schema = new StaEDISchema();
-        InputStream schemaStream = getClass().getResourceAsStream("/X12/v00402.xml");
-        Map<String, EDIType> types = new StaEDISchemaFactory().loadTypes(schemaStream);
+    public void testRootTypeIsInterchange() throws EDISchemaException, XMLStreamException, FactoryConfigurationError {
+        StaEDISchema schema = new StaEDISchema(INTERCHANGE_V2, TRANSACTION_V2);
+        InputStream schemaStream = getClass().getResourceAsStream("/X12/v00200.xml");
+        XMLStreamReader reader = XMLInputFactory.newInstance().createXMLStreamReader(schemaStream);
+        reader.nextTag(); // Pass by <schema> element
+        Map<String, EDIType> types = new SchemaReaderV2(reader).readTypes();
         schema.setTypes(types);
 
-        assertEquals(EDIType.Type.INTERCHANGE, schema.getType(StaEDISchema.INTERCHANGE).getType());
+        assertEquals(EDIType.Type.INTERCHANGE, schema.getType(INTERCHANGE_V2).getType());
+    }
+
+    @Test
+    public void testRootTypeIsInterchangeV3() throws EDISchemaException, XMLStreamException, FactoryConfigurationError {
+        StaEDISchema schema = new StaEDISchema(INTERCHANGE_V3, TRANSACTION_V3);
+        InputStream schemaStream = getClass().getResourceAsStream("/X12/v00402.xml");
+        XMLStreamReader reader = XMLInputFactory.newInstance().createXMLStreamReader(schemaStream);
+        reader.nextTag(); // Pass by <schema> element
+        Map<String, EDIType> types = new SchemaReaderV3(reader).readTypes();
+        schema.setTypes(types);
+
+        assertEquals(EDIType.Type.INTERCHANGE, schema.getType(INTERCHANGE_V3).getType());
     }
 }

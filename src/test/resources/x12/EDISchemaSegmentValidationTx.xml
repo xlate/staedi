@@ -29,7 +29,7 @@
           <segment ref="S19" minOccurs="1" />
         </sequence>
       </loop>
-      <loop code="0001">
+      <loop code="0001" maxOccurs="5">
         <sequence>
           <segment ref="S20" minOccurs="1" />
           <segment ref="S21" />

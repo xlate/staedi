@@ -26,14 +26,14 @@ import io.xlate.edi.schema.EDIReference;
 import io.xlate.edi.schema.EDISyntaxRule;
 import io.xlate.edi.schema.EDIType;
 
-class Structure extends BasicType implements EDIComplexType {
+class StructureType extends BasicType implements EDIComplexType {
 
     private static final String TOSTRING_FORMAT = "id: %s, type: %s, code: %s, references: [%s], syntaxRestrictions: [%s]";
     private String code;
     private List<EDIReference> references;
     private List<EDISyntaxRule> syntaxRules;
 
-    Structure(String id, EDIType.Type type, String code, List<EDIReference> references, List<EDISyntaxRule> syntaxRules) {
+    StructureType(String id, EDIType.Type type, String code, List<EDIReference> references, List<EDISyntaxRule> syntaxRules) {
         super(id, type);
         Objects.requireNonNull(code, "EDIComplexType code must not be null");
         Objects.requireNonNull(references, "EDIComplexType references must not be null");

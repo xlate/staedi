@@ -11,6 +11,11 @@ public interface ValidationEventHandler {
 
     void segmentError(CharSequence token, EDIStreamValidationError error);
 
-    void elementError(EDIStreamEvent event, EDIStreamValidationError error, int element, int component, int repetition);
+    void elementError(EDIStreamEvent event,
+                      EDIStreamValidationError error,
+                      CharSequence referenceCode,
+                      int element,
+                      int component,
+                      int repetition);
 
 }

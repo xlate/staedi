@@ -40,4 +40,22 @@ abstract class BasicType implements EDIType {
     public Type getType() {
         return type;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o instanceof BasicType) {
+            BasicType other = (BasicType) o;
+            return Objects.equals(id, other.id) && Objects.equals(type, other.type);
+        }
+
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, type);
+    }
 }

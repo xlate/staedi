@@ -21,6 +21,14 @@ public class StaEDIStreamLocation extends LocationView implements Location {
 
     private boolean repeated = false;
 
+    public StaEDIStreamLocation() {
+        super();
+    }
+
+    public StaEDIStreamLocation(Location source) {
+        super(source);
+    }
+
     public StaEDIStreamLocation copy() {
         StaEDIStreamLocation copy = new StaEDIStreamLocation();
         copy.lineNumber = this.lineNumber;
@@ -32,6 +40,16 @@ public class StaEDIStreamLocation extends LocationView implements Location {
         copy.componentPosition = this.componentPosition;
         copy.repeated = this.repeated;
         return copy;
+    }
+
+    public void set(Location source) {
+        lineNumber = source.getLineNumber();
+        columnNumber = source.getColumnNumber();
+        characterOffset = source.getCharacterOffset();
+        segmentPosition = source.getSegmentPosition();
+        elementPosition = source.getElementPosition();
+        componentPosition = source.getComponentPosition();
+        elementOccurrence = source.getElementOccurrence();
     }
 
     public void setElementPosition(int elementPosition) {
