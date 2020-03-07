@@ -156,7 +156,7 @@
     </enumeration>
   </elementType>
 
-  <elementType name="I18" base="identifier">
+  <elementType name="I18" base="identifier" minLength="3" maxLength="3">
     <enumeration>
       <value>000</value>
       <value>001</value>
