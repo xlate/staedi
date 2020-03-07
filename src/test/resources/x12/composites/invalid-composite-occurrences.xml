@@ -28,6 +28,7 @@
       </loop>
 
       <segment type="S12" maxOccurs="5" />
+      <segment type="S13" maxOccurs="1" />
     </sequence>
   </transaction>
 
@@ -95,6 +96,13 @@
           </element>
         </sequence>
       </segment>
+
+      <segment type="S13">
+        <sequence>
+          <element position="1" />
+          <element position="2" minOccurs="2" />
+        </sequence>
+      </segment>
     </sequence>
   </implementation>
 
@@ -143,6 +151,13 @@
       <composite type="C001" maxOccurs="2" />
       <element type="E002" maxOccurs="2" />
       <element type="E003" />
+    </sequence>
+  </segmentType>
+
+  <segmentType name="S13">
+    <sequence>
+      <element type="E001" />
+      <element type="E002" />
     </sequence>
   </segmentType>
 </schema>

@@ -66,6 +66,14 @@ class UsageNode {
         return node == null || node.hasMinimumUsage();
     }
 
+    public static UsageNode getParent(UsageNode node) {
+        return node != null ? node.getParent() : null;
+    }
+
+    public static UsageNode getFirstChild(UsageNode node) {
+        return node != null ? node.getFirstChild() : null;
+    }
+
     @Override
     public String toString() {
         return String.format(TOSTRING_FORMAT, usageCount, depth, link);

@@ -281,13 +281,7 @@ public class Validator {
                 checkMinimumUsage(current);
 
                 UsageNode next = current.getNextSibling();
-                UsageNode nextImpl = currentImpl;
-
-                while (nextImpl != null && nextImpl.getReferencedType().equals(current.getReferencedType())) {
-                    // Advance past multiple implementations of the 'current' standard node
-                    checkMinimumUsage(nextImpl);
-                    nextImpl = nextImpl.getNextSibling();
-                }
+                UsageNode nextImpl = checkMinimumImplUsage(currentImpl, current);
 
                 if (next != null) {
                     // Advance to the next segment in the loop
@@ -301,12 +295,12 @@ public class Validator {
 
                     if (!handled) {
                         if (this.depth > 1) {
-                            current = current.getParent();
-                            currentImpl = currentImpl != null ? currentImpl.getParent() : null;
+                            current = UsageNode.getParent(current);
+                            currentImpl = UsageNode.getParent(currentImpl);
                             this.depth--;
                         } else {
-                            current = this.root.getFirstChild();
-                            currentImpl = this.implRoot != null ? this.implRoot.getFirstChild() : null;
+                            current = UsageNode.getFirstChild(this.root);
+                            currentImpl = UsageNode.getFirstChild(this.implRoot);
                             handled = checkUnexpectedSegment(tag, current, startDepth, handler);
                         }
                     }
@@ -315,6 +309,16 @@ public class Validator {
         }
 
         handleMissingMandatory(handler);
+    }
+
+    UsageNode checkMinimumImplUsage(UsageNode nextImpl, UsageNode current) {
+        while (nextImpl != null && nextImpl.getReferencedType().equals(current.getReferencedType())) {
+            // Advance past multiple implementations of the 'current' standard node
+            checkMinimumUsage(nextImpl);
+            nextImpl = nextImpl.getNextSibling();
+        }
+
+        return nextImpl;
     }
 
     boolean handleNode(CharSequence tag, UsageNode current, UsageNode currentImpl, int startDepth, ValidationEventHandler handler) {
@@ -670,6 +674,14 @@ public class Validator {
         return elementErrors;
     }
 
+    boolean isImplElementSelected() {
+        return implSegmentSelected && this.implElement != null;
+    }
+
+    boolean isImplUnusedElementPresent() {
+        return implSegmentSelected && this.implElement == null;
+    }
+
     public boolean validCompositeOccurrences(Location position) {
         if (!segmentExpected) {
             return true;
@@ -719,7 +731,7 @@ public class Validator {
             return false;
         }
 
-        if (implSegmentSelected && this.implElement == null) {
+        if (isImplUnusedElementPresent()) {
             elementErrors.add(new UsageError(composite, IMPLEMENTATION_UNUSED_DATA_ELEMENT_PRESENT));
             return false;
         }
@@ -756,6 +768,7 @@ public class Validator {
 
         if (implSegmentSelected && elementPosition > 0 && componentIndex < 0) {
             UsageNode previousImpl = implSegment.getChild(elementPosition - 1);
+
             if (tooFewRepetitions(previousImpl)) {
                 elementErrors.add(new UsageError(previousImpl, IMPLEMENTATION_TOO_FEW_REPETITIONS));
             }
@@ -794,34 +807,8 @@ public class Validator {
         }
 
         if (componentIndex > -1) {
-            if (!isComposite) {
-                /*
-                 * This element has components but is not defined as a composite
-                 * structure.
-                 */
-                elementErrors.add(new UsageError(this.element, TOO_MANY_COMPONENTS));
-            } else {
-                if (componentIndex == 0) {
-                    this.element.resetChildren();
-                    if (this.implSegmentSelected && this.implElement != null) {
-                        this.implElement.resetChildren();
-                    }
-                }
-
-                if (componentIndex < element.getChildren().size()) {
-                    if (valueReceived || !derivedComposite) {
-                        this.element = this.element.getChild(componentIndex);
-
-                        if (this.implSegmentSelected && this.implElement != null) {
-                            this.implElement = this.implElement.getChild(componentIndex);
-                        }
-                    }
-                } else {
-                    elementErrors.add(new UsageError(this.element, TOO_MANY_COMPONENTS));
-                }
-            }
-            //TODO: for components - elementErrors.add(new UsageError(this.element, IMPLEMENTATION_UNUSED_DATA_ELEMENT_PRESENT));
-        } else if (implSegmentSelected && this.implElement == null) {
+            validateComponentElement(componentIndex, valueReceived, derivedComposite);
+        } else if (isImplUnusedElementPresent()) {
             // Validated in validCompositeOccurrences for received composites
             elementErrors.add(new UsageError(this.element, IMPLEMENTATION_UNUSED_DATA_ELEMENT_PRESENT));
         }
@@ -831,35 +818,7 @@ public class Validator {
         }
 
         if (valueReceived) {
-            if (!isComposite) {
-                this.element.incrementUsage();
-
-                if (this.implElement != null) {
-                    this.implElement.incrementUsage();
-                }
-
-                if (this.element.exceedsMaximumUsage()) {
-                    elementErrors.add(new UsageError(this.element, TOO_MANY_REPETITIONS));
-                }
-            }
-
-            List<EDIStreamValidationError> errors = new ArrayList<>();
-            this.element.validate(dialect, value, errors);
-
-            for (EDIStreamValidationError error : errors) {
-                elementErrors.add(new UsageError(this.element, error));
-            }
-
-            if (errors.isEmpty() && implSegmentSelected && implElement != null) {
-                this.implElement.validate(dialect, value, errors);
-
-                for (EDIStreamValidationError error : errors) {
-                    if (error == INVALID_CODE_VALUE) {
-                        error = IMPLEMENTATION_INVALID_CODE_VALUE;
-                    }
-                    elementErrors.add(new UsageError(this.element, error));
-                }
-            }
+            validateElementValue(dialect, value);
         } else {
             if (!UsageNode.hasMinimumUsage(element) || !UsageNode.hasMinimumUsage(implElement)) {
                 elementErrors.add(new UsageError(this.element, REQUIRED_DATA_ELEMENT_MISSING));
@@ -869,6 +828,69 @@ public class Validator {
         return elementErrors.isEmpty();
     }
 
+    void validateComponentElement(int componentIndex, boolean valueReceived, boolean derivedComposite) {
+        if (!element.isNodeType(EDIType.Type.COMPOSITE)) {
+            /*
+             * This element has components but is not defined as a composite
+             * structure.
+             */
+            elementErrors.add(new UsageError(this.element, TOO_MANY_COMPONENTS));
+        } else {
+            if (componentIndex == 0) {
+                this.element.resetChildren();
+
+                if (isImplElementSelected()) {
+                    this.implElement.resetChildren();
+                }
+            }
+
+            if (componentIndex < element.getChildren().size()) {
+                if (valueReceived || !derivedComposite) {
+                    this.element = this.element.getChild(componentIndex);
+
+                    if (isImplElementSelected()) {
+                        this.implElement = this.implElement.getChild(componentIndex);
+                    }
+                }
+            } else {
+                elementErrors.add(new UsageError(this.element, TOO_MANY_COMPONENTS));
+            }
+        }
+        //TODO: for components - elementErrors.add(new UsageError(this.element, IMPLEMENTATION_UNUSED_DATA_ELEMENT_PRESENT));
+    }
+
+    void validateElementValue(Dialect dialect, CharSequence value) {
+        if (!element.isNodeType(EDIType.Type.COMPOSITE)) {
+            this.element.incrementUsage();
+
+            if (this.implElement != null) {
+                this.implElement.incrementUsage();
+            }
+
+            if (this.element.exceedsMaximumUsage()) {
+                elementErrors.add(new UsageError(this.element, TOO_MANY_REPETITIONS));
+            }
+        }
+
+        List<EDIStreamValidationError> errors = new ArrayList<>();
+        this.element.validate(dialect, value, errors);
+
+        for (EDIStreamValidationError error : errors) {
+            elementErrors.add(new UsageError(this.element, error));
+        }
+
+        if (errors.isEmpty() && implSegmentSelected && implElement != null) {
+            this.implElement.validate(dialect, value, errors);
+
+            for (EDIStreamValidationError error : errors) {
+                if (error == INVALID_CODE_VALUE) {
+                    error = IMPLEMENTATION_INVALID_CODE_VALUE;
+                }
+                elementErrors.add(new UsageError(this.element, error));
+            }
+        }
+    }
+
     public void validateSyntax(ElementDataHandler handler, ValidationEventHandler validationHandler, final StaEDIStreamLocation location, final boolean isComposite) {
         if (isComposite && composite == null) {
             // End composite but element is not composite in schema
@@ -876,23 +898,9 @@ public class Validator {
         }
 
         final UsageNode structure = isComposite ? composite : segment;
-
-        final int index;
-        int elementPosition = location.getElementPosition() - 1;
-        int componentIndex = location.getComponentPosition() - 1;
-
-        if (isComposite) {
-            int componentPosition = location.getComponentPosition();
-
-            if (componentPosition < 1) {
-                index = 1;
-            } else {
-                index = componentPosition;
-            }
-        } else {
-            index = location.getElementPosition();
-        }
-
+        final int index = getCurrentIndex(location, isComposite);
+        final int elementPosition = location.getElementPosition() - 1;
+        final int componentIndex = location.getComponentPosition() - 1;
         final List<UsageNode> children = structure.getChildren();
 
         for (int i = index, max = children.size(); i < max; i++) {
@@ -931,5 +939,23 @@ public class Validator {
         }
 
         return false;
+    }
+
+    int getCurrentIndex(Location location, boolean isComposite) {
+        final int index;
+
+        if (isComposite) {
+            int componentPosition = location.getComponentPosition();
+
+            if (componentPosition < 1) {
+                index = 1;
+            } else {
+                index = componentPosition;
+            }
+        } else {
+            index = location.getElementPosition();
+        }
+
+        return index;
     }
 }
