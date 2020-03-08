@@ -24,8 +24,9 @@ public class ReadInterchangeAcknowledgementTest {
         String ta105 = null;
 
         //InputStream stream = new FileInputStream("x12_interchange_ack.txt");
-        try (InputStream stream = getClass().getResource("/wiki/x12_interchange_ack.txt").openStream()) {
-            EDIStreamReader reader = factory.createEDIStreamReader(stream);
+        try (InputStream stream = getClass().getResource("/wiki/x12_interchange_ack.txt").openStream();
+             EDIStreamReader reader = factory.createEDIStreamReader(stream)) {
+
             EDIStreamEvent event;
             String segment = null;
 

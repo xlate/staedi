@@ -457,7 +457,7 @@ public class StaEDIStreamWriterTest {
         EDIStreamReader reader = inputFactory.createEDIStreamReader(source);
 
         EDIOutputFactory outputFactory = EDIOutputFactory.newFactory();
-        outputFactory.setProperty(StaEDIOutputFactory.PRETTY_PRINT, true);
+        outputFactory.setProperty(EDIOutputFactory.PRETTY_PRINT, true);
         ByteArrayOutputStream result = new ByteArrayOutputStream(16384);
         EDIStreamWriter writer = outputFactory.createEDIStreamWriter(result);
 
@@ -556,7 +556,7 @@ public class StaEDIStreamWriterTest {
         EDIStreamReader reader = inputFactory.createEDIStreamReader(source);
 
         EDIOutputFactory outputFactory = EDIOutputFactory.newFactory();
-        outputFactory.setProperty(StaEDIOutputFactory.PRETTY_PRINT, true);
+        outputFactory.setProperty(EDIOutputFactory.PRETTY_PRINT, true);
         ByteArrayOutputStream result = new ByteArrayOutputStream(16384);
         EDIStreamWriter writer = outputFactory.createEDIStreamWriter(result);
 
@@ -657,7 +657,7 @@ public class StaEDIStreamWriterTest {
         EDIStreamReader reader = inputFactory.createEDIStreamReader(source);
 
         EDIOutputFactory outputFactory = EDIOutputFactory.newFactory();
-        outputFactory.setProperty(StaEDIOutputFactory.PRETTY_PRINT, true);
+        outputFactory.setProperty(EDIOutputFactory.PRETTY_PRINT, true);
         ByteArrayOutputStream result = new ByteArrayOutputStream(16384);
         EDIStreamWriter writer = outputFactory.createEDIStreamWriter(result);
 
@@ -727,7 +727,7 @@ public class StaEDIStreamWriterTest {
     @Test
     public void testValidatedSegmentTags() throws EDISchemaException, EDIStreamException {
         EDIOutputFactory outputFactory = EDIOutputFactory.newFactory();
-        outputFactory.setProperty(StaEDIOutputFactory.PRETTY_PRINT, true);
+        outputFactory.setProperty(EDIOutputFactory.PRETTY_PRINT, true);
         ByteArrayOutputStream result = new ByteArrayOutputStream(16384);
         EDIStreamWriter writer = outputFactory.createEDIStreamWriter(result);
 
@@ -750,7 +750,7 @@ public class StaEDIStreamWriterTest {
     @Test
     public void testElementValidationThrown() throws EDISchemaException, EDIStreamException {
         EDIOutputFactory outputFactory = EDIOutputFactory.newFactory();
-        outputFactory.setProperty(StaEDIOutputFactory.PRETTY_PRINT, true);
+        outputFactory.setProperty(EDIOutputFactory.PRETTY_PRINT, true);
         ByteArrayOutputStream result = new ByteArrayOutputStream(16384);
         EDIStreamWriter writer = outputFactory.createEDIStreamWriter(result);
 
@@ -808,7 +808,7 @@ public class StaEDIStreamWriterTest {
         EDIStreamReader reader = inputFactory.createEDIStreamReader(source);
 
         EDIOutputFactory outputFactory = EDIOutputFactory.newFactory();
-        outputFactory.setProperty(StaEDIOutputFactory.PRETTY_PRINT, true);
+        outputFactory.setProperty(EDIOutputFactory.PRETTY_PRINT, true);
         ByteArrayOutputStream result = new ByteArrayOutputStream(16384);
         EDIStreamWriter writer = outputFactory.createEDIStreamWriter(result);
         writer.setControlSchema(control);
