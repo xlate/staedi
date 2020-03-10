@@ -51,7 +51,8 @@ public class CompositeValidationTest {
                 + "S11*B**:5~" // TOO_MANY_COMPONENTS
                 + "S99*X:X~" // SEGMENT_NOT_IN_DEFINED_TRANSACTION_SET
                 + "S12*A^B**X~" // REQUIRED_DATA_ELEMENT_MISSING (S1202), IMPLEMENTATION_TOO_FEW_REPETITIONS (S1203)
-                + "S12*A*X:Y*1^2*YY~" // IMPLEMENTATION_TOO_FEW_REPETITIONS (S1201)
+                + "S12*A*X:Y*1^2*YY~" // IMPLEMENTATION_TOO_FEW_REPETITIONS (S1201), IMPLEMENTATION_INVALID_CODE_VALUE (S1204 == YY)
+                + "S12*A^B*X:Y:ZZ:??*1^2*XX~" // IMPLEMENTATION_UNUSED_DATA_ELEMENT_PRESENT (S1202-03 == ZZ)
                 + "S13*A*1234567890~" // IMPLEMENTATION_TOO_FEW_REPETITIONS (S1202)
                 + "S09*X~"
                 + "IEA*1*508121953~").getBytes());
@@ -114,7 +115,7 @@ public class CompositeValidationTest {
 
         assertEquals(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR, reader.next());
         assertEquals(EDIStreamValidationError.REQUIRED_DATA_ELEMENT_MISSING, reader.getErrorType());
-        assertEquals("C001", reader.getReferenceCode());
+        assertEquals("C002", reader.getReferenceCode());
 
         assertEquals(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR, reader.next());
         assertEquals(EDIStreamValidationError.IMPLEMENTATION_TOO_FEW_REPETITIONS, reader.getErrorType());
@@ -127,6 +128,20 @@ public class CompositeValidationTest {
         assertEquals(EDIStreamEvent.ELEMENT_DATA_ERROR, reader.next());
         assertEquals(EDIStreamValidationError.IMPLEMENTATION_INVALID_CODE_VALUE, reader.getErrorType());
         assertEquals("E003", reader.getReferenceCode());
+
+        assertEquals(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR, reader.next());
+        assertEquals(EDIStreamValidationError.IMPLEMENTATION_UNUSED_DATA_ELEMENT_PRESENT, reader.getErrorType());
+        assertEquals("E003", reader.getReferenceCode());
+        assertEquals(10, reader.getLocation().getSegmentPosition());
+        assertEquals(2, reader.getLocation().getElementPosition());
+        assertEquals(3, reader.getLocation().getComponentPosition());
+
+        assertEquals(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR, reader.next());
+        assertEquals(EDIStreamValidationError.TOO_MANY_COMPONENTS, reader.getErrorType());
+        assertEquals("C002", reader.getReferenceCode());
+        assertEquals(10, reader.getLocation().getSegmentPosition());
+        assertEquals(2, reader.getLocation().getElementPosition());
+        assertEquals(4, reader.getLocation().getComponentPosition());
 
         assertEquals(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR, reader.next());
         assertEquals(EDIStreamValidationError.IMPLEMENTATION_TOO_FEW_REPETITIONS, reader.getErrorType());

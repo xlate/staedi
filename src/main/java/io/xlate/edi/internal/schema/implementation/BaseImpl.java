@@ -8,8 +8,8 @@ public abstract class BaseImpl<T extends EDIType> implements EDITypeImplementati
 
     protected String typeId;
     protected T standard;
-    protected int minOccurs;
-    protected int maxOccurs;
+    protected int minOccurs = -1;
+    protected int maxOccurs = -1;
     protected String title;
     protected String description;
 

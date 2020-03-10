@@ -102,49 +102,83 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
                              false)
                      .filter(type -> type.getType() != Type.ELEMENT)
                      .map(type -> (BaseComplexImpl) type)
-                     .forEach(type -> {
-                         String typeId;
+                     .forEach(type -> setReferences(type, types));
+    }
 
-                         if (type.getType() == Type.LOOP) {
-                             typeId = qnLoop.toString() + '.' + type.getTypeId();
-                         } else {
-                             typeId = type.getTypeId();
-                         }
+    void setReferences(BaseComplexImpl type, Map<String, EDIType> types ) {
+        String typeId;
 
-                         EDIComplexType standard = (EDIComplexType) types.get(typeId);
-                         List<EDIReference> standardRefs = standard.getReferences();
+        if (type.getType() == Type.LOOP) {
+            typeId = qnLoop.toString() + '.' + type.getTypeId();
+        } else {
+            typeId = type.getTypeId();
+        }
 
-                         for (EDITypeImplementation t : type.getSequence()) {
-                             if (t == null) {
-                                 continue;
-                             }
-                             EDIReference stdRef;
-                             BaseImpl<?> seqImpl = (BaseImpl<?>) t;
+        EDIComplexType standard = (EDIComplexType) types.get(typeId);
+        List<EDIReference> standardRefs = standard.getReferences();
+        List<EDITypeImplementation> implSequence = type.getSequence();
 
-                             if (t instanceof Positioned) {
-                                 Positioned p = (Positioned) t;
-                                 int offset = p.getPosition() - 1;
-                                 if (standardRefs != null && offset > -1 && offset < standardRefs.size()) {
-                                     stdRef = standardRefs.get(offset);
-                                 } else {
-                                     throw schemaException("Position " + p.getPosition()
-                                             + " does not correspond to an entry in type " + standard.getId());
-                                 }
-                             } else {
-                                 String refTypeId = seqImpl.getTypeId();
+        if (implSequence.isEmpty()) {
+            implSequence.addAll(getDefaultSequence(standardRefs));
+            return;
+        }
 
-                                 stdRef = standardRefs.stream().filter(r -> r.getReferencedType()
-                                                                             .getId()
-                                                                             .equals(refTypeId))
-                                                      .findFirst()
-                                                      .orElseThrow(() -> schemaException("Reference " + refTypeId
-                                                              + " does not correspond to an entry in type "
-                                                              + standard.getId()));
-                             }
+        for (EDITypeImplementation t : implSequence) {
+            if (t == null) {
+                continue;
+            }
+            EDIReference stdRef;
+            BaseImpl<?> seqImpl = (BaseImpl<?>) t;
 
-                             seqImpl.setStandardReference(stdRef);
-                         }
-                     });
+            if (t instanceof Positioned) {
+                Positioned p = (Positioned) t;
+                int offset = p.getPosition() - 1;
+                if (standardRefs != null && offset > -1 && offset < standardRefs.size()) {
+                    stdRef = standardRefs.get(offset);
+                } else {
+                    throw schemaException("Position " + p.getPosition()
+                            + " does not correspond to an entry in type " + standard.getId());
+                }
+            } else {
+                String refTypeId = seqImpl.getTypeId();
+
+                stdRef = standardRefs.stream().filter(r -> r.getReferencedType()
+                                                            .getId()
+                                                            .equals(refTypeId))
+                                     .findFirst()
+                                     .orElseThrow(() -> schemaException("Reference " + refTypeId
+                                             + " does not correspond to an entry in type "
+                                             + standard.getId()));
+            }
+
+            seqImpl.setStandardReference(stdRef);
+        }
+    }
+
+    List<EDITypeImplementation> getDefaultSequence(List<EDIReference> standardRefs) {
+        List<EDITypeImplementation> sequence = new ArrayList<>(standardRefs.size());
+        int position = 0;
+
+        for (EDIReference ref : standardRefs) {
+            sequence.add(getDefaultImplementation(ref, ++position));
+        }
+
+        return sequence;
+    }
+
+    EDITypeImplementation getDefaultImplementation(EDIReference standardReference, int position) {
+        EDIType std = standardReference.getReferencedType();
+
+        switch (std.getType()) {
+        case ELEMENT:
+            return new ElementImpl(standardReference, position);
+        case COMPOSITE:
+            return new CompositeImpl(standardReference, position, getDefaultSequence(((EDIComplexType) std).getReferences()));
+        case SEGMENT:
+            return new SegmentImpl(standardReference, null, getDefaultSequence(((EDIComplexType) std).getReferences()));
+        default:
+            throw schemaException("Implemenation of " + std.getId() + " must not be empty");
+        }
     }
 
     LoopImplementation readImplementation(XMLStreamReader reader,

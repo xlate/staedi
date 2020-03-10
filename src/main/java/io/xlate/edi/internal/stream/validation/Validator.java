@@ -678,8 +678,8 @@ public class Validator {
         return implSegmentSelected && this.implElement != null;
     }
 
-    boolean isImplUnusedElementPresent() {
-        return implSegmentSelected && this.implElement == null;
+    boolean isImplUnusedElementPresent(boolean valueReceived) {
+        return valueReceived && implSegmentSelected && this.implElement == null;
     }
 
     public boolean validCompositeOccurrences(Location position) {
@@ -731,7 +731,7 @@ public class Validator {
             return false;
         }
 
-        if (isImplUnusedElementPresent()) {
+        if (isImplUnusedElementPresent(true)) {
             elementErrors.add(new UsageError(composite, IMPLEMENTATION_UNUSED_DATA_ELEMENT_PRESENT));
             return false;
         }
@@ -808,7 +808,7 @@ public class Validator {
 
         if (componentIndex > -1) {
             validateComponentElement(componentIndex, valueReceived, derivedComposite);
-        } else if (isImplUnusedElementPresent()) {
+        } else if (isImplUnusedElementPresent(valueReceived)) {
             // Validated in validCompositeOccurrences for received composites
             elementErrors.add(new UsageError(this.element, IMPLEMENTATION_UNUSED_DATA_ELEMENT_PRESENT));
         }
@@ -837,11 +837,7 @@ public class Validator {
             elementErrors.add(new UsageError(this.element, TOO_MANY_COMPONENTS));
         } else {
             if (componentIndex == 0) {
-                this.element.resetChildren();
-
-                if (isImplElementSelected()) {
-                    this.implElement.resetChildren();
-                }
+                UsageNode.resetChildren(this.element, this.implElement);
             }
 
             if (componentIndex < element.getChildren().size()) {
@@ -850,13 +846,16 @@ public class Validator {
 
                     if (isImplElementSelected()) {
                         this.implElement = this.implElement.getChild(componentIndex);
+
+                        if (isImplUnusedElementPresent(valueReceived)) {
+                            elementErrors.add(new UsageError(this.element, IMPLEMENTATION_UNUSED_DATA_ELEMENT_PRESENT));
+                        }
                     }
                 }
             } else {
                 elementErrors.add(new UsageError(this.element, TOO_MANY_COMPONENTS));
             }
         }
-        //TODO: for components - elementErrors.add(new UsageError(this.element, IMPLEMENTATION_UNUSED_DATA_ELEMENT_PRESENT));
     }
 
     void validateElementValue(Dialect dialect, CharSequence value) {

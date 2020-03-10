@@ -2,6 +2,7 @@ package io.xlate.edi.internal.schema.implementation;
 
 import java.util.List;
 
+import io.xlate.edi.schema.EDIReference;
 import io.xlate.edi.schema.implementation.CompositeImplementation;
 import io.xlate.edi.schema.implementation.EDITypeImplementation;
 
@@ -22,6 +23,13 @@ public class CompositeImpl extends BaseComplexImpl implements CompositeImplement
         this.minOccurs = minOccurs;
         this.maxOccurs = maxOccurs;
         this.typeId = typeId;
+        this.position = position;
+    }
+
+    public CompositeImpl(EDIReference standardReference, int position, List<EDITypeImplementation> sequence) {
+        super(sequence, null, null);
+        this.setStandardReference(standardReference);
+        this.typeId = standard.getId();
         this.position = position;
     }
 

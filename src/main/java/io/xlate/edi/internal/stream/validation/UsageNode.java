@@ -74,6 +74,14 @@ class UsageNode {
         return node != null ? node.getFirstChild() : null;
     }
 
+    public static void resetChildren(UsageNode... nodes) {
+        for (UsageNode node : nodes) {
+            if (node != null) {
+                node.resetChildren();
+            }
+        }
+    }
+
     @Override
     public String toString() {
         return String.format(TOSTRING_FORMAT, usageCount, depth, link);

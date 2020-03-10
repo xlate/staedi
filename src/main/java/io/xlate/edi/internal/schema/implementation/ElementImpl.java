@@ -2,6 +2,7 @@ package io.xlate.edi.internal.schema.implementation;
 
 import java.util.Set;
 
+import io.xlate.edi.schema.EDIReference;
 import io.xlate.edi.schema.EDISimpleType;
 import io.xlate.edi.schema.implementation.ElementImplementation;
 
@@ -24,6 +25,14 @@ public class ElementImpl extends BaseImpl<EDISimpleType> implements ElementImple
         this.typeId = typeId;
         this.position = position;
         this.values = values;
+    }
+
+    public ElementImpl(EDIReference standardReference, int position) {
+        super(null, null);
+        this.setStandardReference(standardReference);
+        this.typeId = standard.getId();
+        this.position = position;
+        this.values = standard.getValueSet();
     }
 
     @Override

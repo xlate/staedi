@@ -86,7 +86,12 @@
       <segment type="S12">
         <sequence>
           <element position="1" minOccurs="2" />
-          <composite position="2" minOccurs="1" />
+          <composite position="2" minOccurs="1">
+            <sequence>
+              <element position="1" />
+              <element position="2" />
+            </sequence>
+          </composite>
           <element position="3" minOccurs="2" />
           <element position="4">
             <enumeration>
@@ -124,6 +129,14 @@
     </sequence>
   </compositeType>
 
+  <compositeType name="C002">
+    <sequence>
+      <element type="E001" />
+      <element type="E002" />
+      <element type="E003" />
+    </sequence>
+  </compositeType>
+
   <segmentType name="S02">
     <sequence>
       <element type="E001" minOccurs="1" />
@@ -148,7 +161,7 @@
   <segmentType name="S12">
     <sequence>
       <element type="E001" maxOccurs="2" />
-      <composite type="C001" maxOccurs="2" />
+      <composite type="C002" maxOccurs="2" />
       <element type="E002" maxOccurs="2" />
       <element type="E003" />
     </sequence>
