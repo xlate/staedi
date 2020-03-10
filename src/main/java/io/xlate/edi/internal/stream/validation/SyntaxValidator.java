@@ -79,11 +79,15 @@ interface SyntaxValidator {
 
         for (int position : syntax.getPositions()) {
             final boolean used;
+            final String referenceCode;
 
             if (position < limit) {
-                used = children.get(position - 1).isUsed();
+                UsageNode node = children.get(position - 1);
+                used = node.isUsed();
+                referenceCode = node.getCode();
             } else {
                 used = false;
+                referenceCode = null;
             }
 
             if (!used) {
@@ -92,7 +96,7 @@ interface SyntaxValidator {
 
                 handler.elementError(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR,
                                      EDIStreamValidationError.CONDITIONAL_REQUIRED_DATA_ELEMENT_MISSING,
-                                     structure.getCode(), // FIXME: should be the child
+                                     referenceCode,
                                      element,
                                      component,
                                      -1);

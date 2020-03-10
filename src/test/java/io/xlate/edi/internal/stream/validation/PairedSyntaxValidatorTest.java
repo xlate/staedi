@@ -1,8 +1,10 @@
 package io.xlate.edi.internal.stream.validation;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.AdditionalMatchers.or;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
@@ -82,7 +84,7 @@ public class PairedSyntaxValidatorTest extends SyntaxValidatorTestBase {
     @Test
     public void testValidatePairedAnchorUnused() {
         when(syntax.getPositions()).thenReturn(Arrays.asList(1, 3, 4));
-        List<UsageNode> children = Arrays.asList(mockUsageNode(false, 1),
+        List<UsageNode> children = Arrays.asList(mockUsageNode("E001", false, 1),
                                                  mockUsageNode(false, 2),
                                                  mockUsageNode(true, 3));
         when(structure.getChildren()).thenReturn(children);
@@ -94,7 +96,7 @@ public class PairedSyntaxValidatorTest extends SyntaxValidatorTestBase {
         }).when(handler)
           .elementError(eq(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR),
                         eq(EDIStreamValidationError.CONDITIONAL_REQUIRED_DATA_ELEMENT_MISSING),
-                        nullable(CharSequence.class),
+                        or(isNull(), eq("E001")),
                         any(Integer.class),
                         any(Integer.class),
                         any(Integer.class));

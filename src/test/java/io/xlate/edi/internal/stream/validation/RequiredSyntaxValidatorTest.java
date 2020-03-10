@@ -3,6 +3,7 @@ package io.xlate.edi.internal.stream.validation;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.matches;
 import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
@@ -57,10 +58,10 @@ public class RequiredSyntaxValidatorTest extends SyntaxValidatorTestBase {
     @Test
     public void testValidateRequiredNoneUsed() {
         when(syntax.getPositions()).thenReturn(Arrays.asList(1, 3, 4));
-        List<UsageNode> children = Arrays.asList(mockUsageNode(false, 1),
-                                                 mockUsageNode(false, 2),
-                                                 mockUsageNode(false, 3),
-                                                 mockUsageNode(false, 4));
+        List<UsageNode> children = Arrays.asList(mockUsageNode("E001", false, 1),
+                                                 mockUsageNode("E002", false, 2),
+                                                 mockUsageNode("E003", false, 3),
+                                                 mockUsageNode("E004", false, 4));
         when(structure.getChildren()).thenReturn(children);
         final AtomicInteger count = new AtomicInteger(0);
 
@@ -70,7 +71,7 @@ public class RequiredSyntaxValidatorTest extends SyntaxValidatorTestBase {
         }).when(handler)
           .elementError(eq(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR),
                         eq(EDIStreamValidationError.CONDITIONAL_REQUIRED_DATA_ELEMENT_MISSING),
-                        nullable(CharSequence.class),
+                        matches("E00[13-4]"),
                         any(Integer.class),
                         any(Integer.class),
                         any(Integer.class));

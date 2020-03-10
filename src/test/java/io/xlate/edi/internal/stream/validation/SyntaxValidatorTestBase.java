@@ -35,11 +35,16 @@ abstract class SyntaxValidatorTestBase {
         when(structure.getReferencedType()).thenReturn(structureType);
     }
 
-    protected UsageNode mockUsageNode(boolean used, int index) {
+    protected UsageNode mockUsageNode(String referenceCode, boolean used, int index) {
         UsageNode node = mock(UsageNode.class);
+        when(node.getCode()).thenReturn(referenceCode);
         when(node.isUsed()).thenReturn(used);
         when(node.getParent()).thenReturn(structure);
         when(node.getIndex()).thenReturn(index);
         return node;
+    }
+
+    protected UsageNode mockUsageNode(boolean used, int index) {
+        return mockUsageNode(null, used, index);
     }
 }

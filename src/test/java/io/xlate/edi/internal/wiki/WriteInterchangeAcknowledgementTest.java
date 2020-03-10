@@ -1,22 +1,28 @@
 package io.xlate.edi.internal.wiki;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import java.io.ByteArrayOutputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
 import org.junit.jupiter.api.Test;
 
 import io.xlate.edi.stream.EDIOutputFactory;
 import io.xlate.edi.stream.EDIStreamConstants;
-import io.xlate.edi.stream.EDIStreamException;
 import io.xlate.edi.stream.EDIStreamWriter;
 
 public class WriteInterchangeAcknowledgementTest {
 
     @Test
-    public void testAcknowledgementWrite() throws EDIStreamException {
+    public void testAcknowledgementWrite() throws Exception {
         EDIOutputFactory factory = EDIOutputFactory.newFactory();
         // Optionally specify delimiters - here the given values are the same as default
         factory.setProperty(EDIStreamConstants.Delimiters.SEGMENT, '~');
         factory.setProperty(EDIStreamConstants.Delimiters.DATA_ELEMENT, '*');
         factory.setProperty(EDIOutputFactory.PRETTY_PRINT, true);
-        EDIStreamWriter writer = factory.createEDIStreamWriter(System.out);
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
 
         writer.startInterchange();
 
@@ -26,7 +32,7 @@ public class WriteInterchangeAcknowledgementTest {
               .writeElement("00")
               .writeElement("          ")
               .writeElement("ZZ")
-              .writeElement("ReceiverID     ")
+              .writeElement("Receiver       ")
               .writeElement("ZZ")
               .writeElement("Sender         ")
               .writeElement("203001")
@@ -55,5 +61,8 @@ public class WriteInterchangeAcknowledgementTest {
         writer.endInterchange();
 
         writer.close();
+
+        assertEquals(new String(Files.readAllBytes(Paths.get("./src/test/resources/wiki/x12_interchange_ack.txt"))),
+                     stream.toString().trim());
     }
 }
