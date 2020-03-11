@@ -174,10 +174,8 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
             return new ElementImpl(standardReference, position);
         case COMPOSITE:
             return new CompositeImpl(standardReference, position, getDefaultSequence(((EDIComplexType) std).getReferences()));
-        case SEGMENT:
-            return new SegmentImpl(standardReference, null, getDefaultSequence(((EDIComplexType) std).getReferences()));
         default:
-            throw schemaException("Implemenation of " + std.getId() + " must not be empty");
+            throw schemaException("Implementation of " + std.getId() + " must not be empty");
         }
     }
 

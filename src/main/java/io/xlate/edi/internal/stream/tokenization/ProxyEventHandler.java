@@ -111,8 +111,7 @@ public class ProxyEventHandler implements EventHandler {
     }
 
     public String getReferenceCode() {
-        CharSequence refCode = events[eventIndex].getReferenceCode();
-        return refCode != null ? refCode.toString() : null;
+        return hasEvents() ? events[eventIndex].getReferenceCodeString() : null;
     }
 
     public Location getLocation() {
@@ -374,28 +373,6 @@ public class ProxyEventHandler implements EventHandler {
                               CharArraySequence holder,
                               CharSequence code,
                               Location location) {
-
-        if (event == EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR && eventCount > 0
-                && events[eventCount].type == EDIStreamEvent.START_COMPOSITE) {
-            switch (error) {
-            case TOO_MANY_DATA_ELEMENTS:
-            case TOO_MANY_REPETITIONS:
-                /*
-                 * We have an element-level error with a pending start
-                 * composite event. Move the element error before the start
-                 * of the composite.
-                 */
-                StreamEvent current = events[eventCount];
-                events[eventCount] = events[eventCount - 1];
-                events[eventCount - 1] = current;
-
-                enqueueEvent(eventCount - 1, event, error, holder, code, location);
-                eventCount++;
-                return;
-            default:
-                break;
-            }
-        }
 
         enqueueEvent(eventCount, event, error, holder, code, location);
         eventCount++;

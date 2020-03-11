@@ -2,7 +2,6 @@ package io.xlate.edi.internal.schema.implementation;
 
 import java.util.List;
 
-import io.xlate.edi.schema.EDIReference;
 import io.xlate.edi.schema.implementation.Discriminator;
 import io.xlate.edi.schema.implementation.EDITypeImplementation;
 import io.xlate.edi.schema.implementation.SegmentImplementation;
@@ -23,13 +22,6 @@ public class SegmentImpl extends BaseComplexImpl implements SegmentImplementatio
         this.minOccurs = minOccurs;
         this.maxOccurs = maxOccurs;
         this.typeId = typeId;
-        this.discriminator = discriminator;
-    }
-
-    public SegmentImpl(EDIReference standardReference, Discriminator discriminator, List<EDITypeImplementation> sequence) {
-        super(sequence, null, null);
-        this.setStandardReference(standardReference);
-        this.typeId = standard.getId();
         this.discriminator = discriminator;
     }
 

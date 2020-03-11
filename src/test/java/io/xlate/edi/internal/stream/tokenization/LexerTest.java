@@ -16,9 +16,11 @@
 package io.xlate.edi.internal.stream.tokenization;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
@@ -307,5 +309,25 @@ public class LexerTest {
         } while (!"interchangeEnd".equals(last));
 
         assertTrue(s > 0, "No events");
+    }
+
+    @Test
+    public void testRejectedX12Dialect() throws EDIException, IOException {
+        InputStream stream = new ByteArrayInputStream("ISA*00?          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~".getBytes());
+        TestLexerEventHandler eventHandler = new TestLexerEventHandler();
+        final StaEDIStreamLocation location = new StaEDIStreamLocation();
+        final Lexer lexer = new Lexer(stream, eventHandler, location);
+        EDIException thrown = assertThrows(EDIException.class, lexer::parse);
+        assertTrue(thrown.getMessage().contains("EDIE003"));
+    }
+
+    @Test
+    public void testInvalidCharacter() throws EDIException, IOException {
+        InputStream stream = new ByteArrayInputStream("ISA*00*\u0008         *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~".getBytes());
+        TestLexerEventHandler eventHandler = new TestLexerEventHandler();
+        final StaEDIStreamLocation location = new StaEDIStreamLocation();
+        final Lexer lexer = new Lexer(stream, eventHandler, location);
+        EDIException thrown = assertThrows(EDIException.class, lexer::parse);
+        assertTrue(thrown.getMessage().contains("EDIE004"));
     }
 }

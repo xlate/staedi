@@ -182,10 +182,6 @@ public enum State {
         this.code = code;
     }
 
-    public boolean isInitial() {
-        return code == INITIAL.code;
-    }
-
     public State transition(CharacterClass clazz) {
         return TRANSITION_TABLE[code][clazz.code];
     }

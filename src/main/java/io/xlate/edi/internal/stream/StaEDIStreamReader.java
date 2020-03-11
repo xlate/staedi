@@ -212,7 +212,7 @@ public class StaEDIStreamReader implements EDIStreamReader {
     @Override
     public String getStandard() {
         if (lexer.getDialect() == null || lexer.getDialect().getStandard() == null) {
-            throw new IllegalStateException("version not accessible");
+            throw new IllegalStateException("standard not accessible");
         }
 
         return lexer.getDialect().getStandard();
@@ -252,7 +252,6 @@ public class StaEDIStreamReader implements EDIStreamReader {
 
     @Override
     public String getReferenceCode() {
-        // FIXME: add state check
         return proxy.getReferenceCode();
     }
 

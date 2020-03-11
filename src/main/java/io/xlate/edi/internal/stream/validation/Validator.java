@@ -69,7 +69,6 @@ public class Validator {
     private final List<UsageError> elementErrors = new ArrayList<>(5);
 
     private int depth = 1;
-    private boolean complete = false;
 
     public Validator(Schema schema, Schema containerSchema) {
         this.schema = schema;
@@ -85,14 +84,6 @@ public class Validator {
             implRoot = null;
             implSegment = null;
         }
-    }
-
-    public boolean isComplete() {
-        return complete;
-    }
-
-    public boolean isImplementation() {
-        return implRoot != null;
     }
 
     public boolean isPendingDiscrimination() {
@@ -267,7 +258,6 @@ public class Validator {
         UsageNode current = correctSegment;
         UsageNode currentImpl = implSegment;
         useErrors.clear();
-        complete = false;
         boolean handled = false;
 
         while (!handled && current != null) {
@@ -510,8 +500,6 @@ public class Validator {
 
                 // Handle any remaining missing mandatory segments
                 handleMissingMandatory(handler);
-
-                complete = true;
             } else {
                 // Unexpected segment... must reset our position!
                 segmentExpected = false;
@@ -731,8 +719,7 @@ public class Validator {
             return false;
         }
 
-        if (isImplUnusedElementPresent(true)) {
-            elementErrors.add(new UsageError(composite, IMPLEMENTATION_UNUSED_DATA_ELEMENT_PRESENT));
+        if (!validateImplUnusedElementBlank(this.composite, true)) {
             return false;
         }
 
@@ -808,9 +795,9 @@ public class Validator {
 
         if (componentIndex > -1) {
             validateComponentElement(componentIndex, valueReceived, derivedComposite);
-        } else if (isImplUnusedElementPresent(valueReceived)) {
+        } else {
             // Validated in validCompositeOccurrences for received composites
-            elementErrors.add(new UsageError(this.element, IMPLEMENTATION_UNUSED_DATA_ELEMENT_PRESENT));
+            validateImplUnusedElementBlank(this.element, valueReceived);
         }
 
         if (!elementErrors.isEmpty()) {
@@ -846,10 +833,7 @@ public class Validator {
 
                     if (isImplElementSelected()) {
                         this.implElement = this.implElement.getChild(componentIndex);
-
-                        if (isImplUnusedElementPresent(valueReceived)) {
-                            elementErrors.add(new UsageError(this.element, IMPLEMENTATION_UNUSED_DATA_ELEMENT_PRESENT));
-                        }
+                        validateImplUnusedElementBlank(this.element, valueReceived);
                     }
                 }
             } else {
@@ -930,6 +914,15 @@ public class Validator {
             SyntaxValidator validator = SyntaxValidator.getInstance(ruleType);
             validator.validate(rule, structure, validationHandler);
         }
+    }
+
+    boolean validateImplUnusedElementBlank(UsageNode node, boolean valueReceived) {
+        if (isImplUnusedElementPresent(valueReceived)) {
+            // Validated in validCompositeOccurrences for received composites
+            elementErrors.add(new UsageError(node, IMPLEMENTATION_UNUSED_DATA_ELEMENT_PRESENT));
+            return false;
+        }
+        return true;
     }
 
     boolean tooFewRepetitions(UsageNode node) {

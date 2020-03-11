@@ -52,6 +52,10 @@ public class StreamEvent {
         return referenceCodeNull ? null : referenceCode;
     }
 
+    public String getReferenceCodeString() {
+        return referenceCodeNull ? null : referenceCode.toString();
+    }
+
     public void setReferenceCode(CharSequence referenceCode) {
         this.referenceCodeNull = (referenceCode == null);
 

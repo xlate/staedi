@@ -125,10 +125,6 @@ public class Lexer {
         };
     }
 
-    public boolean isInitialized() {
-        return state.isInitial() && modes.isEmpty();
-    }
-
     public Dialect getDialect() {
         return dialect;
     }
@@ -139,19 +135,15 @@ public class Lexer {
         this.binaryStream = new InputStream() {
             @Override
             public int read() throws IOException {
-                if (binaryRemain-- < 1) {
+                int input = -1;
+
+                if (binaryRemain-- < 1 || (input = stream.read()) < 0) {
                     state = State.ELEMENT_END_BINARY;
-                    return -1;
-                }
-
-                int input = stream.read();
-
-                if (input != -1) {
+                } else {
                     location.incrementOffset(input);
-                    return input;
                 }
-                state = State.ELEMENT_END_BINARY;
-                return -1;
+
+                return input;
             }
         };
 
@@ -201,19 +193,19 @@ public class Lexer {
             case HEADER_TAG_1:
             case HEADER_TAG_2:
             case HEADER_TAG_3:
-            	handleStateHeaderTag(input);
+                handleStateHeaderTag(input);
                 break;
             case DATA_RELEASE:
                 // Skip this character - next character will be literal value
                 break;
             case ELEMENT_DATA_BINARY:
-            	handleStateElementDataBinary();
+                handleStateElementDataBinary();
                 break;
             case INTERCHANGE_CANDIDATE:
-            	handleStateInterchangeCandidate(input);
+                handleStateInterchangeCandidate(input);
                 break;
             case HEADER_DATA:
-            	handleStateHeaderData(input);
+                handleStateHeaderData(input);
                 eventsReady = dialectConfirmed(State.TAG_SEARCH);
                 break;
             case HEADER_SEGMENT_BEGIN:
@@ -264,9 +256,9 @@ public class Lexer {
                     message.append("); input: '");
                     message.append((char) input);
                     message.append('\'');
-                    error(EDIException.INVALID_STATE, message);
+                    throw error(EDIException.INVALID_STATE, message);
                 } else {
-                    error(EDIException.INVALID_CHARACTER);
+                    throw error(EDIException.INVALID_CHARACTER);
                 }
             }
         }
@@ -313,7 +305,7 @@ public class Lexer {
         }
     }
 
-    private boolean dialectConfirmed(State confirmed) throws IOException {
+    private boolean dialectConfirmed(State confirmed) throws IOException, EDIException {
         if (dialect.isConfirmed()) {
             state = confirmed;
             nextEvent();
@@ -322,20 +314,22 @@ public class Lexer {
             stream.reset();
             buffer.clear();
             clearQueues();
+            dialect = null;
             state = State.INITIAL;
+            throw error(EDIException.INVALID_STATE, "Invalid header segment");
         }
 
         return false;
     }
 
-    private void error(int code, CharSequence message) throws EDIException {
+    private EDIException error(int code, CharSequence message) {
         Location where = new LocationView(location);
-        throw new EDIException(code, message.toString(), where);
+        return new EDIException(code, message.toString(), where);
     }
 
-    private void error(int code) throws EDIException {
+    private EDIException error(int code) {
         Location where = new LocationView(location);
-        throw new EDIException(code, where);
+        return new EDIException(code, where);
     }
 
     private static void updateLocation(State state, StaEDIStreamLocation location) {
@@ -432,9 +426,7 @@ public class Lexer {
 
     private void closeInterchange() throws EDIException {
         closeSegment();
-        if (modes.pop() != Mode.INTERCHANGE) {
-            error(EDIException.INVALID_STATE);
-        }
+        popMode(Mode.INTERCHANGE);
         enqueue(ien, 0);
     }
 
@@ -445,9 +437,7 @@ public class Lexer {
 
     private void closeSegment() throws EDIException {
         handleElement();
-        if (modes.pop() != Mode.SEGMENT) {
-            error(EDIException.INVALID_STATE);
-        }
+        popMode(Mode.SEGMENT);
         enqueue(sen, 0);
     }
 
@@ -483,9 +473,13 @@ public class Lexer {
     }
 
     private void closeComposite() throws EDIException {
-        if (modes.pop() != Mode.COMPOSITE) {
-            error(EDIException.INVALID_STATE);
-        }
+        popMode(Mode.COMPOSITE);
         enqueue(cen, 0);
+    }
+
+    void popMode(Mode expected) throws EDIException {
+        if (modes.pop() != expected) {
+            throw error(EDIException.INVALID_STATE);
+        }
     }
 }
