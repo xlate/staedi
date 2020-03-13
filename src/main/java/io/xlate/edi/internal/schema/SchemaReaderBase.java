@@ -338,6 +338,7 @@ abstract class SchemaReaderBase implements SchemaReader {
     StructureType readComplexType(XMLStreamReader reader,
                                QName complexType,
                                Map<String, EDIType> types) throws XMLStreamException {
+
         final EDIType.Type type = complex.get(complexType);
         final String id;
         String code = reader.getAttributeValue(null, "code");
@@ -360,73 +361,54 @@ abstract class SchemaReaderBase implements SchemaReader {
 
         final List<EDIReference> refs = new ArrayList<>(8);
         final List<EDISyntaxRule> rules = new ArrayList<>(2);
-        boolean sequence = false;
-        boolean endOfType = false;
 
-        while (!endOfType && reader.hasNext()) {
-            switch (reader.next()) {
-            case XMLStreamConstants.START_ELEMENT:
-                QName element = reader.getName();
+        reader.nextTag();
+        requireElementStart(qnSequence, reader);
+        readReferences(reader, types, refs);
 
-                if (element.equals(qnSequence)) {
-                    if (sequence) {
-                        throw schemaException("multiple sequence elements", reader);
-                    }
-                    sequence = true;
-                    readReferences(reader, types, refs);
-                } else if (element.equals(qnSyntax)) {
-                    switch (type) {
-                    case SEGMENT:
-                    case COMPOSITE:
-                        readSyntax(reader, rules);
-                        break;
-                    default:
-                        break;
-                    }
-                } else {
-                    throw schemaException("Unexpected element " + element, reader);
-                }
+        int event = reader.nextTag();
 
-                break;
-
-            case XMLStreamConstants.END_ELEMENT:
-                if (reader.getName().equals(complexType)) {
-                    endOfType = true;
-                }
-                break;
-
-            default:
-                checkEvent(reader);
-                break;
-            }
+        if (event == XMLStreamConstants.START_ELEMENT) {
+            requireElementStart(qnSyntax, reader);
+            readSyntax(reader, rules);
+            event = reader.nextTag();
         }
 
-        return new StructureType(id, type, code, refs, rules);
+        if (event == XMLStreamConstants.END_ELEMENT) {
+            return new StructureType(id, type, code, refs, rules);
+        } else {
+            throw unexpectedEvent(reader);
+        }
     }
 
     void readReferences(XMLStreamReader reader,
                        Map<String, EDIType> types,
-                       List<EDIReference> refs) throws XMLStreamException {
-        while (reader.hasNext()) {
-            switch (reader.next()) {
-            case XMLStreamConstants.START_ELEMENT:
-                refs.add(readReference(reader, types));
-                break;
+                       List<EDIReference> refs) {
 
-            case XMLStreamConstants.END_ELEMENT:
-                if (reader.getName().equals(qnSequence)) {
-                    return;
+        try {
+            while (reader.hasNext()) {
+                switch (reader.next()) {
+                case XMLStreamConstants.START_ELEMENT:
+                    refs.add(readReference(reader, types));
+                    break;
+
+                case XMLStreamConstants.END_ELEMENT:
+                    if (reader.getName().equals(qnSequence)) {
+                        return;
+                    }
+
+                    break;
+                default:
+                    checkEvent(reader);
+                    break;
                 }
-
-                break;
-            default:
-                checkEvent(reader);
-                break;
             }
+        } catch (XMLStreamException xse) {
+            throw schemaException("Exception reading sequence", reader, xse);
         }
     }
 
-    Reference readReference(XMLStreamReader reader, Map<String, EDIType> types) throws XMLStreamException {
+    Reference readReference(XMLStreamReader reader, Map<String, EDIType> types) {
         QName element = reader.getName();
         String refId = null;
 
@@ -446,7 +428,14 @@ abstract class SchemaReaderBase implements SchemaReader {
         Reference ref;
 
         if (qnLoop.equals(element)) {
-            StructureType loop = readComplexType(reader, element, types);
+            StructureType loop;
+
+            try {
+                loop = readComplexType(reader, element, types);
+            } catch (XMLStreamException xse) {
+                throw schemaException("Exception reading loop", reader, xse);
+            }
+
             String loopRefId = qnLoop.toString() + '.' + refId;
             types.put(loopRefId, loop);
             ref = new Reference(loopRefId, refTag, minOccurs, maxOccurs);
@@ -458,7 +447,7 @@ abstract class SchemaReaderBase implements SchemaReader {
         return ref;
     }
 
-    void readSyntax(XMLStreamReader reader, List<EDISyntaxRule> rules) throws XMLStreamException {
+    void readSyntax(XMLStreamReader reader, List<EDISyntaxRule> rules) {
         String type = reader.getAttributeValue(null, "type");
         EDISyntaxRule.Type typeInt = null;
 
@@ -470,9 +459,11 @@ abstract class SchemaReaderBase implements SchemaReader {
             throw schemaException("Invalid syntax 'type': [" + type + ']', reader, e);
         }
 
-        SyntaxRestriction rule = new SyntaxRestriction(typeInt, readSyntaxPositions(reader));
-
-        rules.add(rule);
+        try {
+            rules.add(new SyntaxRestriction(typeInt, readSyntaxPositions(reader)));
+        } catch (XMLStreamException xse) {
+            throw schemaException("Exception reading syntax", reader, xse);
+        }
     }
 
     List<Integer> readSyntaxPositions(XMLStreamReader reader) throws XMLStreamException {
@@ -595,6 +586,14 @@ abstract class SchemaReaderBase implements SchemaReader {
 
         if (event != eventId) {
             throw unexpectedEvent(reader);
+        }
+    }
+
+    void requireElementStart(QName element, XMLStreamReader reader) {
+        requireEvent(XMLStreamConstants.START_ELEMENT, reader);
+
+        if (!element.equals(reader.getName())) {
+            throw schemaException("Unexpected XML element [" + reader.getName() + "]", reader);
         }
     }
 
