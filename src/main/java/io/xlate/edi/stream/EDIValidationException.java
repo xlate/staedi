@@ -9,6 +9,7 @@ public class EDIValidationException extends RuntimeException {
     protected final transient Location location;
     protected final transient CharSequence data;
 
+    @SuppressWarnings("java:S1165") // Intentionally allow field to be set after instantiation
     private EDIValidationException nextException;
 
     public EDIValidationException(EDIStreamEvent event,

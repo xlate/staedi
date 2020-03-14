@@ -75,6 +75,7 @@ public class CharArraySequence implements CharSequence, Comparable<CharSequence>
     }
 
     @Override
+    @SuppressWarnings("java:S1210") // equals & hashCode are not used with this class
     public int compareTo(CharSequence other) {
         int len1 = length;
         int len2 = other.length();

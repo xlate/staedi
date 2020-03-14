@@ -26,6 +26,7 @@ import io.xlate.edi.schema.EDIReference;
 import io.xlate.edi.schema.EDISyntaxRule;
 import io.xlate.edi.schema.EDIType;
 
+@SuppressWarnings("java:S2160") // Intentionally inherit 'equals' from superclass
 class StructureType extends BasicType implements EDIComplexType {
 
     private static final String TOSTRING_FORMAT = "id: %s, type: %s, code: %s, references: [%s], syntaxRestrictions: [%s]";

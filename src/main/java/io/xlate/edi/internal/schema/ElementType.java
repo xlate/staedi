@@ -21,6 +21,7 @@ import java.util.Set;
 
 import io.xlate.edi.schema.EDISimpleType;
 
+@SuppressWarnings("java:S2160") // Intentionally inherit 'equals' from superclass
 class ElementType extends BasicType implements EDISimpleType {
 
     private static final String TOSTRING_FORMAT = "id: %s, type: %s, base: %s, number: %d, minLength: %d, maxLength: %d, values: %s";

@@ -12,6 +12,7 @@ public class LoopImpl extends BaseComplexImpl implements LoopImplementation {
     private final String id;
     private final Discriminator discriminator;
 
+    @SuppressWarnings("java:S107")
     public LoopImpl(int minOccurs,
             int maxOccurs,
             String id,

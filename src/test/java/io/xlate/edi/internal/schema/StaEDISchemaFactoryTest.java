@@ -113,11 +113,11 @@ public class StaEDISchemaFactoryTest {
         SchemaFactory factory = SchemaFactory.newFactory();
         InputStream stream1 = new ByteArrayInputStream(("<schema xmlns='" + StaEDISchemaFactory.XMLNS_V2 + "'><interchange _header='ABC' trailer='XYZ' /></schema>").getBytes());
         EDISchemaException thrown1 = assertThrows(EDISchemaException.class, () -> factory.createSchema(stream1));
-        assertEquals("Missing required attribute [header]", thrown1.getOriginalMessage());
+        assertEquals("Missing required attribute: [header]", thrown1.getOriginalMessage());
 
         InputStream stream2 = new ByteArrayInputStream(("<schema xmlns='" + StaEDISchemaFactory.XMLNS_V2 + "'><interchange header='ABC' _trailer='XYZ' /></schema>").getBytes());
         EDISchemaException thrown2 = assertThrows(EDISchemaException.class, () -> factory.createSchema(stream2));
-        assertEquals("Missing required attribute [trailer]", thrown2.getOriginalMessage());
+        assertEquals("Missing required attribute: [trailer]", thrown2.getOriginalMessage());
 
     }
 

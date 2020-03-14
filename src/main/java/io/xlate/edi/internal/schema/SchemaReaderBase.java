@@ -217,22 +217,20 @@ abstract class SchemaReaderBase implements SchemaReader {
                                    Map<String, EDIType> types) throws XMLStreamException {
         int minOccurs = 0;
         int maxOccurs = 99999;
+        String use = parseAttribute(reader, "use", String::valueOf, "optional");
 
-        String use = reader.getAttributeValue(null, "use");
-        if (use != null) {
-            switch (use) {
-            case "required":
-                minOccurs = 1;
-                break;
-            case "optional":
-                minOccurs = 0;
-                break;
-            case "prohibited":
-                maxOccurs = 0;
-                break;
-            default:
-                throw schemaException("Invalid value for 'use': " + use, reader);
-            }
+        switch (use) {
+        case "required":
+            minOccurs = 1;
+            break;
+        case "optional":
+            minOccurs = 0;
+            break;
+        case "prohibited":
+            maxOccurs = 0;
+            break;
+        default:
+            throw schemaException("Invalid value for 'use': " + use, reader);
         }
 
         Reference headerRef = createControlReference(reader, "header");
@@ -267,12 +265,7 @@ abstract class SchemaReaderBase implements SchemaReader {
     }
 
     Reference createControlReference(XMLStreamReader reader, String attributeName) {
-        String refId = reader.getAttributeValue(null, attributeName);
-
-        if (refId == null) {
-            throw schemaException("Missing required attribute [" + attributeName + ']', reader);
-        }
-
+        final String refId = parseAttribute(reader, attributeName, String::valueOf);
         return new Reference(refId, "segment", 1, 1);
     }
 
@@ -312,12 +305,14 @@ abstract class SchemaReaderBase implements SchemaReader {
 
     void readTypeDefinition(Map<String, EDIType> types, XMLStreamReader reader) throws XMLStreamException {
         QName element = reader.getName();
-        String name = reader.getAttributeValue(null, "name");
+        String name;
 
         if (complex.containsKey(element)) {
+            name = parseAttribute(reader, "name", String::valueOf);
             nameCheck(name, types, reader);
             types.put(name, readComplexType(reader, element, types));
         } else if (qnElementType.equals(element)) {
+            name = parseAttribute(reader, "name", String::valueOf);
             nameCheck(name, types, reader);
             types.put(name, readSimpleType(reader));
         } else {
@@ -326,10 +321,6 @@ abstract class SchemaReaderBase implements SchemaReader {
     }
 
     void nameCheck(String name, Map<String, EDIType> types, XMLStreamReader reader) {
-        if (name == null) {
-            throw schemaException("missing type name", reader);
-        }
-
         if (types.containsKey(name)) {
             throw schemaException("duplicate name: " + name, reader);
         }
@@ -341,14 +332,14 @@ abstract class SchemaReaderBase implements SchemaReader {
 
         final EDIType.Type type = complex.get(complexType);
         final String id;
-        String code = reader.getAttributeValue(null, "code");
+        String code = parseAttribute(reader, "code", String::valueOf, null);
 
         if (qnTransaction.equals(complexType)) {
             id = qnTransaction.toString();
         } else if (qnLoop.equals(complexType)) {
             id = code;
         } else {
-            id = reader.getAttributeValue(null, "name");
+            id = parseAttribute(reader, "name", String::valueOf);
 
             if (type == EDIType.Type.SEGMENT && !id.matches("^[A-Z][A-Z0-9]{1,2}$")) {
                 throw schemaException("Invalid segment name [" + id + ']', reader);
@@ -448,13 +439,11 @@ abstract class SchemaReaderBase implements SchemaReader {
     }
 
     void readSyntax(XMLStreamReader reader, List<EDISyntaxRule> rules) {
-        String type = reader.getAttributeValue(null, "type");
+        String type = parseAttribute(reader, "type", String::valueOf);
         EDISyntaxRule.Type typeInt = null;
 
         try {
             typeInt = EDISyntaxRule.Type.valueOf(type.toUpperCase());
-        } catch (NullPointerException e) {
-            throw schemaException("Invalid syntax 'type': [null]", reader, e);
         } catch (IllegalArgumentException e) {
             throw schemaException("Invalid syntax 'type': [" + type + ']', reader, e);
         }

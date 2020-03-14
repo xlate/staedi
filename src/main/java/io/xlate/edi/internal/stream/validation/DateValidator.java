@@ -103,7 +103,6 @@ class DateValidator extends ElementValidator {
          * are current year or in the past.
          **/
         if (length == 6) {
-            // TODO: Add reader property for date window
             int year = Calendar.getInstance().get(Calendar.YEAR);
             int century = year / 100;
 
