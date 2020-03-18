@@ -30,6 +30,7 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.concurrent.atomic.AtomicReference;
 
+import javax.xml.namespace.NamespaceContext;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
@@ -50,6 +51,7 @@ import org.xmlunit.diff.Diff;
 import io.xlate.edi.schema.Schema;
 import io.xlate.edi.schema.SchemaFactory;
 import io.xlate.edi.stream.EDIInputFactory;
+import io.xlate.edi.stream.EDIStreamConstants.Namespaces;
 import io.xlate.edi.stream.EDIStreamFilter;
 import io.xlate.edi.stream.EDIStreamReader;
 
@@ -148,6 +150,61 @@ public class StaEDIXMLStreamReaderTest {
         assertEquals("          ", xmlReader.getElementText());
         assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.next()); // ISA03;
         assertEquals("00", xmlReader.getElementText());
+    }
+
+    @Test
+    public void testNamespaces() throws Exception {
+        XMLStreamReader xmlReader = getXmlReader(TINY_X12);
+
+        assertEquals(XMLStreamConstants.START_DOCUMENT, xmlReader.next());
+        assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.next());
+        assertEquals("INTERCHANGE", xmlReader.getLocalName());
+        assertEquals(Namespaces.LOOPS, xmlReader.getName().getNamespaceURI());
+        assertEquals("l", xmlReader.getName().getPrefix());
+        assertEquals(4, xmlReader.getNamespaceCount());
+        assertEquals(Namespaces.LOOPS, xmlReader.getNamespaceURI());
+
+        assertSegmentBoundaries(xmlReader, "ISA", 16);
+
+        NamespaceContext context = xmlReader.getNamespaceContext();
+        assertEquals("s", context.getPrefix(Namespaces.SEGMENTS));
+        assertEquals("s", context.getPrefixes(Namespaces.SEGMENTS).next());
+        assertEquals(Namespaces.SEGMENTS, context.getNamespaceURI("s"));
+        assertNull(context.getNamespaceURI("x"));
+        assertEquals(Namespaces.SEGMENTS, xmlReader.getNamespaceURI());
+
+        assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.next());
+        assertEquals("IEA", xmlReader.getLocalName());
+        assertEquals(Namespaces.SEGMENTS, xmlReader.getNamespaceURI());
+
+        // No namespaces declared on the segment
+        assertEquals(0, xmlReader.getNamespaceCount());
+        assertNull(xmlReader.getNamespacePrefix(0));
+        assertNull(xmlReader.getNamespaceURI(0));
+
+        assertElement(xmlReader, "IEA01", "1");
+        assertEquals(Namespaces.ELEMENTS, xmlReader.getNamespaceURI());
+
+        // No namespaces declared on the element
+        assertEquals(0, xmlReader.getNamespaceCount());
+        assertNull(xmlReader.getNamespacePrefix(0));
+        assertNull(xmlReader.getNamespaceURI(0));
+
+        assertElement(xmlReader, "IEA02", "508121953");
+        assertEquals(Namespaces.ELEMENTS, xmlReader.getNamespaceURI());
+
+        assertEquals(XMLStreamConstants.END_ELEMENT, xmlReader.next());
+        assertEquals("IEA", xmlReader.getLocalName());
+        assertEquals(Namespaces.SEGMENTS, xmlReader.getNamespaceURI());
+
+        assertEquals(XMLStreamConstants.END_ELEMENT, xmlReader.next());
+        assertEquals("INTERCHANGE", xmlReader.getLocalName());
+        assertEquals(Namespaces.LOOPS, xmlReader.getName().getNamespaceURI());
+        assertEquals("l", xmlReader.getName().getPrefix());
+        assertEquals(4, xmlReader.getNamespaceCount());
+        assertEquals(Namespaces.LOOPS, xmlReader.getNamespaceURI());
+
+        assertEquals(XMLStreamConstants.END_DOCUMENT, xmlReader.next());
     }
 
     private void assertElement(XMLStreamReader xmlReader, String tag, String value) throws Exception {
@@ -284,10 +341,6 @@ public class StaEDIXMLStreamReaderTest {
         EDIStreamReader ediReader = Mockito.mock(EDIStreamReader.class);
         XMLStreamReader xmlReader = new StaEDIXMLStreamReader(ediReader);
         try {
-            xmlReader.getNamespaceURI();
-            fail("UnsupportedOperationExpected");
-        } catch (UnsupportedOperationException e) {}
-        try {
             xmlReader.getAttributeValue("", "");
             fail("UnsupportedOperationExpected");
         } catch (UnsupportedOperationException e) {}
@@ -317,22 +370,6 @@ public class StaEDIXMLStreamReaderTest {
         } catch (UnsupportedOperationException e) {}
         try {
             xmlReader.isAttributeSpecified(0);
-            fail("UnsupportedOperationExpected");
-        } catch (UnsupportedOperationException e) {}
-        try {
-            xmlReader.getNamespacePrefix(0);
-            fail("UnsupportedOperationExpected");
-        } catch (UnsupportedOperationException e) {}
-        try {
-            xmlReader.getNamespaceURI(0);
-            fail("UnsupportedOperationExpected");
-        } catch (UnsupportedOperationException e) {}
-        try {
-            xmlReader.getNamespaceContext();
-            fail("UnsupportedOperationExpected");
-        } catch (UnsupportedOperationException e) {}
-        try {
-            xmlReader.getNamespaceURI("");
             fail("UnsupportedOperationExpected");
         } catch (UnsupportedOperationException e) {}
         try {

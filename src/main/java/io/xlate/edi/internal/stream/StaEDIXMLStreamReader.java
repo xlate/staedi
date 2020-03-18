@@ -21,7 +21,12 @@ import java.io.OutputStream;
 import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.Deque;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Queue;
 
@@ -31,6 +36,7 @@ import javax.xml.stream.Location;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
+import io.xlate.edi.stream.EDIStreamConstants.Namespaces;
 import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamException;
 import io.xlate.edi.stream.EDIStreamReader;
@@ -39,13 +45,15 @@ public class StaEDIXMLStreamReader implements XMLStreamReader {
 
     private static final Location location = new DefaultLocation();
     private static final QName DUMMY_QNAME = new QName("DUMMY");
-    private static final QName INTERCHANGE = new QName("INTERCHANGE");
+    private static final QName INTERCHANGE = new QName(Namespaces.LOOPS, "INTERCHANGE", prefixOf(Namespaces.LOOPS));
 
     private final EDIStreamReader ediReader;
     private final Queue<Integer> eventQueue = new ArrayDeque<>(3);
     private final Queue<QName> elementQueue = new ArrayDeque<>(3);
+
     private final Deque<QName> elementStack = new ArrayDeque<>();
 
+    private NamespaceContext namespaceContext;
     private final StringBuilder cdataBuilder = new StringBuilder();
     private char[] cdata;
 
@@ -66,24 +74,28 @@ public class StaEDIXMLStreamReader implements XMLStreamReader {
     }
 
     private boolean isEvent(int... eventTypes) {
-    	return Arrays.stream(eventTypes).anyMatch(eventQueue.element()::equals);
+        return Arrays.stream(eventTypes).anyMatch(eventQueue.element()::equals);
     }
 
-    private QName deriveName(QName parent, String hint) {
-        String name = hint;
+    private QName buildName(QName parent, String namespace) {
+        return buildName(parent, namespace, null);
+    }
+
+    private QName buildName(QName parent, String namespace, String name) {
+        String prefix = prefixOf(namespace);
 
         if (name == null) {
             final io.xlate.edi.stream.Location l = ediReader.getLocation();
             final int componentPosition = l.getComponentPosition();
 
             if (componentPosition > 0) {
-                name = String.format("%s-%d", parent, componentPosition);
+                name = String.format("%s-%d", parent.getLocalPart(), componentPosition);
             } else {
-                name = String.format("%s%02d", parent, l.getElementPosition());
+                name = String.format("%s%02d", parent.getLocalPart(), l.getElementPosition());
             }
         }
 
-        return new QName(name);
+        return new QName(namespace, name, prefix);
     }
 
     private void enqueueEvent(int xmlEvent, QName element, boolean remember) {
@@ -107,7 +119,7 @@ public class StaEDIXMLStreamReader implements XMLStreamReader {
 
         switch (ediEvent) {
         case ELEMENT_DATA:
-            name = deriveName(elementStack.getFirst(), null);
+            name = buildName(elementStack.getFirst(), Namespaces.ELEMENTS);
             enqueueEvent(START_ELEMENT, name, false);
             enqueueEvent(CHARACTERS, DUMMY_QNAME, false);
             enqueueEvent(END_ELEMENT, name, false);
@@ -118,7 +130,7 @@ public class StaEDIXMLStreamReader implements XMLStreamReader {
              * This section will read the binary data and Base64 the stream
              * into an XML CDATA section.
              * */
-            name = deriveName(elementStack.getFirst(), null);
+            name = buildName(elementStack.getFirst(), Namespaces.ELEMENTS);
             enqueueEvent(START_ELEMENT, name, false);
             enqueueEvent(CDATA, DUMMY_QNAME, false);
 
@@ -149,26 +161,29 @@ public class StaEDIXMLStreamReader implements XMLStreamReader {
         case START_INTERCHANGE:
             enqueueEvent(START_DOCUMENT, DUMMY_QNAME, false);
             enqueueEvent(START_ELEMENT, INTERCHANGE, true);
+            namespaceContext = new DocumentNamespaceContext();
             break;
 
         case START_SEGMENT:
-            enqueueEvent(START_ELEMENT, new QName(ediReader.getText()), true);
+            name = buildName(elementStack.getFirst(), Namespaces.SEGMENTS, ediReader.getText());
+            enqueueEvent(START_ELEMENT, name, true);
             break;
 
         case START_GROUP:
         case START_TRANSACTION:
         case START_LOOP:
-            name = deriveName(elementStack.getFirst(), ediReader.getText());
+            name = buildName(elementStack.getFirst(), Namespaces.LOOPS, ediReader.getText());
             enqueueEvent(START_ELEMENT, name, true);
             break;
 
         case START_COMPOSITE:
-            name = deriveName(elementStack.getFirst(), ediReader.getReferenceCode());
+            name = buildName(elementStack.getFirst(), Namespaces.COMPOSITES, ediReader.getReferenceCode());
             enqueueEvent(START_ELEMENT, name, true);
             break;
 
         case END_INTERCHANGE:
             enqueueEvent(END_ELEMENT, elementStack.removeFirst(), false);
+            namespaceContext = null;
             enqueueEvent(END_DOCUMENT, DUMMY_QNAME, false);
             break;
 
@@ -181,7 +196,9 @@ public class StaEDIXMLStreamReader implements XMLStreamReader {
             break;
 
         case SEGMENT_ERROR:
-            throw new XMLStreamException(String.format("Segment %s has error %s", ediReader.getText(), ediReader.getErrorType()));
+            throw new XMLStreamException(String.format("Segment %s has error %s",
+                                                       ediReader.getText(),
+                                                       ediReader.getErrorType()));
 
         default:
             throw new IllegalStateException("Unknown state: " + ediEvent);
@@ -224,7 +241,8 @@ public class StaEDIXMLStreamReader implements XMLStreamReader {
             final String currentLocalPart = name.getLocalPart();
 
             if (!localName.equals(currentLocalPart)) {
-                throw new XMLStreamException("Current localPart " + currentLocalPart + " does not match required localName " + localName);
+                throw new XMLStreamException("Current localPart " + currentLocalPart
+                        + " does not match required localName " + localName);
             }
         }
 
@@ -364,22 +382,32 @@ public class StaEDIXMLStreamReader implements XMLStreamReader {
 
     @Override
     public int getNamespaceCount() {
+        if (INTERCHANGE.equals(elementQueue.element())) {
+            return Namespaces.all().size();
+        }
         return 0;
     }
 
     @Override
     public String getNamespacePrefix(int index) {
-        throw new UnsupportedOperationException();
+        if (INTERCHANGE.equals(elementQueue.element())) {
+            String namespace = Namespaces.all().get(index);
+            return prefixOf(namespace);
+        }
+        return null;
     }
 
     @Override
     public String getNamespaceURI(int index) {
-        throw new UnsupportedOperationException();
+        if (INTERCHANGE.equals(elementQueue.element())) {
+            return Namespaces.all().get(index);
+        }
+        return null;
     }
 
     @Override
     public NamespaceContext getNamespaceContext() {
-        throw new UnsupportedOperationException();
+        return this.namespaceContext;
     }
 
     @Override
@@ -392,7 +420,7 @@ public class StaEDIXMLStreamReader implements XMLStreamReader {
         requireCharacters();
 
         if (cdataBuilder.length() > 0) {
-        	if (cdata == null) {
+            if (cdata == null) {
                 cdata = new char[cdataBuilder.length()];
                 cdataBuilder.getChars(0, cdataBuilder.length(), cdata, 0);
             }
@@ -505,7 +533,10 @@ public class StaEDIXMLStreamReader implements XMLStreamReader {
 
     @Override
     public String getNamespaceURI() {
-        throw new UnsupportedOperationException();
+        if (hasName()) {
+            return elementQueue.element().getNamespaceURI();
+        }
+        return null;
     }
 
     @Override
@@ -543,6 +574,10 @@ public class StaEDIXMLStreamReader implements XMLStreamReader {
         throw new UnsupportedOperationException();
     }
 
+    static String prefixOf(String namespace) {
+        return String.valueOf(namespace.substring(namespace.lastIndexOf(':') + 1).charAt(0));
+    }
+
     private static class DefaultLocation implements Location {
         @Override
         public int getLineNumber() {
@@ -567,6 +602,39 @@ public class StaEDIXMLStreamReader implements XMLStreamReader {
         @Override
         public String getSystemId() {
             return null;
+        }
+    }
+
+    private static class DocumentNamespaceContext implements NamespaceContext {
+        private final Map<String, String> namespaces;
+
+        DocumentNamespaceContext() {
+            List<String> names = Namespaces.all();
+            namespaces = new HashMap<>(names.size());
+            for (String namespace : names) {
+                String prefix = prefixOf(namespace);
+                namespaces.put(namespace, prefix);
+            }
+        }
+
+        @Override
+        public String getNamespaceURI(String prefix) {
+            return namespaces.entrySet()
+                    .stream()
+                    .filter(e -> e.getValue().equals(prefix))
+                    .map(Map.Entry::getKey)
+                    .findFirst()
+                    .orElse(null);
+        }
+
+        @Override
+        public String getPrefix(String namespaceURI) {
+            return namespaces.get(namespaceURI);
+        }
+
+        @Override
+        public Iterator<String> getPrefixes(String namespaceURI) {
+            return Collections.singletonList(namespaces.get(namespaceURI)).iterator();
         }
     }
 }
