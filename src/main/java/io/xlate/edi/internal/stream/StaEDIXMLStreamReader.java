@@ -21,12 +21,7 @@ import java.io.OutputStream;
 import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.Base64;
-import java.util.Collections;
 import java.util.Deque;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Queue;
 
@@ -48,6 +43,7 @@ public class StaEDIXMLStreamReader implements XMLStreamReader {
     private static final QName INTERCHANGE = new QName(Namespaces.LOOPS, "INTERCHANGE", prefixOf(Namespaces.LOOPS));
 
     private final EDIStreamReader ediReader;
+    private boolean autoAdvance;
     private final Queue<Integer> eventQueue = new ArrayDeque<>(3);
     private final Queue<QName> elementQueue = new ArrayDeque<>(3);
 
@@ -61,7 +57,10 @@ public class StaEDIXMLStreamReader implements XMLStreamReader {
         this.ediReader = ediReader;
 
         if (ediReader.getEventType() == EDIStreamEvent.START_INTERCHANGE) {
+            autoAdvance = false;
             enqueueEvent(EDIStreamEvent.START_INTERCHANGE);
+        } else {
+            autoAdvance = true;
         }
     }
 
@@ -108,8 +107,11 @@ public class StaEDIXMLStreamReader implements XMLStreamReader {
     }
 
     private void advanceEvent() {
-        eventQueue.remove();
-        elementQueue.remove();
+        if (autoAdvance) {
+            eventQueue.remove();
+            elementQueue.remove();
+        }
+        autoAdvance = true;
     }
 
     private void enqueueEvent(EDIStreamEvent ediEvent) throws XMLStreamException {
@@ -602,39 +604,6 @@ public class StaEDIXMLStreamReader implements XMLStreamReader {
         @Override
         public String getSystemId() {
             return null;
-        }
-    }
-
-    private static class DocumentNamespaceContext implements NamespaceContext {
-        private final Map<String, String> namespaces;
-
-        DocumentNamespaceContext() {
-            List<String> names = Namespaces.all();
-            namespaces = new HashMap<>(names.size());
-            for (String namespace : names) {
-                String prefix = prefixOf(namespace);
-                namespaces.put(namespace, prefix);
-            }
-        }
-
-        @Override
-        public String getNamespaceURI(String prefix) {
-            return namespaces.entrySet()
-                    .stream()
-                    .filter(e -> e.getValue().equals(prefix))
-                    .map(Map.Entry::getKey)
-                    .findFirst()
-                    .orElse(null);
-        }
-
-        @Override
-        public String getPrefix(String namespaceURI) {
-            return namespaces.get(namespaceURI);
-        }
-
-        @Override
-        public Iterator<String> getPrefixes(String namespaceURI) {
-            return Collections.singletonList(namespaces.get(namespaceURI)).iterator();
         }
     }
 }

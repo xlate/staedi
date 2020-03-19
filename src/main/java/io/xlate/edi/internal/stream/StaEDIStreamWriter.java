@@ -26,6 +26,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import io.xlate.edi.internal.stream.tokenization.CharacterClass;
@@ -95,7 +96,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         this.stream = stream;
         this.encoding = encoding;
         this.properties = new HashMap<>(properties);
-        this.prettyPrint = property(EDIOutputFactory.PRETTY_PRINT);
+        this.prettyPrint = property(EDIOutputFactory.PRETTY_PRINT, Boolean::valueOf);
 
         if (prettyPrint) {
             lineSeparator = System.getProperty("line.separator");
@@ -106,8 +107,12 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     }
 
     @SuppressWarnings("unchecked")
-    private <T> T property(String key) {
-        return (T) properties.get(key);
+    private <T> T property(String key, Function<String, T> converter) {
+        Object prop = properties.get(key);
+        if (prop instanceof String) {
+            return converter.apply((String) prop);
+        }
+        return (T) prop;
     }
 
     private void setupDelimiters() {
@@ -504,7 +509,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         ensureLevelAtLeast(LEVEL_ELEMENT);
         ensureArgs(text.length, start, end);
 
-        for (int i = 0, m = text.length; i < m; i++) {
+        for (int i = start, m = end; i < m; i++) {
             char curr = text[i];
             if (characters.isDelimiter(curr)) {
                 throw new IllegalArgumentException("Value contains separator");

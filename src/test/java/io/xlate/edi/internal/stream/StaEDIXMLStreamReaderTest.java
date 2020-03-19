@@ -24,8 +24,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.io.StringReader;
 import java.io.StringWriter;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.concurrent.atomic.AtomicReference;
@@ -35,11 +39,14 @@ import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
+import javax.xml.stream.XMLStreamWriter;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.stax.StAXResult;
 import javax.xml.transform.stax.StAXSource;
 import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.stream.StreamSource;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -51,9 +58,13 @@ import org.xmlunit.diff.Diff;
 import io.xlate.edi.schema.Schema;
 import io.xlate.edi.schema.SchemaFactory;
 import io.xlate.edi.stream.EDIInputFactory;
+import io.xlate.edi.stream.EDIOutputFactory;
 import io.xlate.edi.stream.EDIStreamConstants.Namespaces;
+import io.xlate.edi.stream.EDIStreamEvent;
+import io.xlate.edi.stream.EDIStreamException;
 import io.xlate.edi.stream.EDIStreamFilter;
 import io.xlate.edi.stream.EDIStreamReader;
+import io.xlate.edi.stream.EDIStreamWriter;
 
 @SuppressWarnings("resource")
 public class StaEDIXMLStreamReaderTest {
@@ -76,11 +87,12 @@ public class StaEDIXMLStreamReaderTest {
         return new StaEDIXMLStreamReader(ediReader);
     }
 
-    XMLStreamReader getXmlReader(byte[] bytes) throws XMLStreamException {
+    XMLStreamReader getXmlReader(byte[] bytes) throws XMLStreamException, EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         factory.setProperty(EDIInputFactory.EDI_VALIDATE_CONTROL_STRUCTURE, "false");
         InputStream stream = new ByteArrayInputStream(bytes);
         EDIStreamReader ediReader = factory.createEDIStreamReader(stream);
+        assertEquals(EDIStreamEvent.START_INTERCHANGE, ediReader.next());
         return new StaEDIXMLStreamReader(ediReader);
     }
 
@@ -260,7 +272,7 @@ public class StaEDIXMLStreamReaderTest {
     }
 
     @Test
-    public void testWriteXml() throws Exception {
+    public void testReadXml() throws Exception {
         XMLStreamReader xmlReader = getXmlReader("/x12/extraDelimiter997.edi");
         xmlReader.next(); // Per StAXSource JavaDoc, put in START_DOCUMENT state
         TransformerFactory factory = TransformerFactory.newInstance();
@@ -273,6 +285,28 @@ public class StaEDIXMLStreamReaderTest {
         Diff d = DiffBuilder.compare(Input.fromFile("src/test/resources/x12/extraDelimiter997.xml"))
                    .withTest(resultString).build();
         assertTrue(!d.hasDifferences(), () -> "XML unexpectedly different:\n" + d.toString(new DefaultComparisonFormatter()));
+    }
+
+    @Test
+    public void testXmlIOEquivalence() throws Exception {
+        XMLStreamReader xmlReader = getXmlReader("/x12/extraDelimiter997.edi");
+        xmlReader.next(); // Per StAXSource JavaDoc, put in START_DOCUMENT state
+        TransformerFactory factory = TransformerFactory.newInstance();
+        Transformer transformer = factory.newTransformer();
+        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+        transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
+        StringWriter result = new StringWriter();
+        transformer.transform(new StAXSource(xmlReader), new StreamResult(result));
+        String resultString = result.toString();
+
+        EDIOutputFactory ediOutFactory = EDIOutputFactory.newFactory();
+        ediOutFactory.setProperty(EDIOutputFactory.PRETTY_PRINT, "true");
+        ByteArrayOutputStream resultEDI = new ByteArrayOutputStream();
+        EDIStreamWriter ediWriter = ediOutFactory.createEDIStreamWriter(resultEDI);
+        XMLStreamWriter xmlWriter = new StaEDIXMLStreamWriter(ediWriter);
+        transformer.transform(new StreamSource(new StringReader(resultString)), new StAXResult(xmlWriter));
+        String expectedEDI = String.join("\n", Files.readAllLines(Paths.get("src/test/resources/x12/extraDelimiter997.edi")));
+        assertEquals(expectedEDI, new String(resultEDI.toByteArray()).trim());
     }
 
     @Test
