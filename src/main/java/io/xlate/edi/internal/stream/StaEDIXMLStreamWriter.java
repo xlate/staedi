@@ -14,9 +14,9 @@ import io.xlate.edi.stream.EDIStreamConstants.Namespaces;
 import io.xlate.edi.stream.EDIStreamException;
 import io.xlate.edi.stream.EDIStreamWriter;
 
-public class StaEDIXMLStreamWriter implements XMLStreamWriter {
+final class StaEDIXMLStreamWriter implements XMLStreamWriter {
 
-    private static final QName INTERCHANGE = new QName(Namespaces.LOOPS, "INTERCHANGE", "l");
+    private static final QName INTERCHANGE = new QName(Namespaces.LOOPS, "INTERCHANGE");
 
     private final EDIStreamWriter ediWriter;
     private final Map<String, String> namespaces = new HashMap<>();
@@ -215,12 +215,12 @@ public class StaEDIXMLStreamWriter implements XMLStreamWriter {
 
     @Override
     public void writeNamespace(String prefix, String namespaceURI) throws XMLStreamException {
-        namespaces.put(prefix, namespaceURI);
+        setPrefix(prefix, namespaceURI);
     }
 
     @Override
     public void writeDefaultNamespace(String namespaceURI) throws XMLStreamException {
-        System.out.println("NamespaceURI: " + namespaceURI);
+        setDefaultNamespace(namespaceURI);
     }
 
     @Override
@@ -299,14 +299,17 @@ public class StaEDIXMLStreamWriter implements XMLStreamWriter {
 
     @Override
     public String getPrefix(String uri) throws XMLStreamException {
-        // TODO Auto-generated method stub
-        return null;
+        return namespaces.entrySet()
+                .stream()
+                .filter(e -> e.getValue().equals(uri))
+                .map(Map.Entry::getKey)
+                .findFirst()
+                .orElse(null);
     }
 
     @Override
     public void setPrefix(String prefix, String uri) throws XMLStreamException {
-        // TODO Auto-generated method stub
-
+        namespaces.put(prefix, uri);
     }
 
     @Override
