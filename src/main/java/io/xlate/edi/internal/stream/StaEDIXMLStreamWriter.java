@@ -4,7 +4,9 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
+import javax.xml.XMLConstants;
 import javax.xml.namespace.NamespaceContext;
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLStreamException;
@@ -19,28 +21,27 @@ final class StaEDIXMLStreamWriter implements XMLStreamWriter {
     private static final QName INTERCHANGE = new QName(Namespaces.LOOPS, "INTERCHANGE");
 
     private final EDIStreamWriter ediWriter;
-    private final Map<String, String> namespaces = new HashMap<>();
-
-    private NamespaceContext namespaceContext;
 
     private final Deque<QName> elementStack = new ArrayDeque<>();
     private QName previousElement;
-    private String defaultNamespaceURI;
+
+    private NamespaceContext namespaceContext;
+    private final Deque<Map<String, String>> namespaceStack = new ArrayDeque<>();
 
     public StaEDIXMLStreamWriter(EDIStreamWriter ediWriter) {
         this.ediWriter = ediWriter;
-        this.namespaceContext = new DocumentNamespaceContext();
+        namespaceStack.push(new HashMap<>()); // Root namespace scope
     }
 
     @FunctionalInterface
     interface EDIStreamWriterRunner {
-       void execute() throws EDIStreamException;
+        void execute() throws EDIStreamException;
     }
 
     void execute(EDIStreamWriterRunner runner) throws XMLStreamException {
         try {
             runner.execute();
-        } catch (EDIStreamException e) {
+        } catch (Exception e) {
             throw new XMLStreamException(e);
         }
     }
@@ -58,6 +59,8 @@ final class StaEDIXMLStreamWriter implements XMLStreamWriter {
     }
 
     void writeStart(QName name) throws XMLStreamException {
+        namespaceStack.push(new HashMap<>());
+
         switch (name.getNamespaceURI()) {
         case Namespaces.COMPOSITES:
             if (repeatedElement(name, previousElement)) {
@@ -94,6 +97,7 @@ final class StaEDIXMLStreamWriter implements XMLStreamWriter {
 
     void writeEnd() throws XMLStreamException {
         QName name = elementStack.remove();
+        namespaceStack.remove();
 
         switch (name.getNamespaceURI()) {
         case Namespaces.COMPOSITES:
@@ -129,11 +133,11 @@ final class StaEDIXMLStreamWriter implements XMLStreamWriter {
         if (idx >= 0) {
             prefix = localName.substring(0, idx);
             local = localName.substring(idx + 1);
-            uri = namespaces.get(prefix);
+            uri = getNamespaceURI(prefix);
         } else {
             prefix = "";
             local = localName;
-            uri = defaultNamespaceURI;
+            uri = getNamespaceURI(XMLConstants.DEFAULT_NS_PREFIX);
         }
 
         if ("INTERCHANGE".equals(local)) {
@@ -215,12 +219,12 @@ final class StaEDIXMLStreamWriter implements XMLStreamWriter {
 
     @Override
     public void writeNamespace(String prefix, String namespaceURI) throws XMLStreamException {
-        setPrefix(prefix, namespaceURI);
+        // No operation - ignored
     }
 
     @Override
     public void writeDefaultNamespace(String namespaceURI) throws XMLStreamException {
-        setDefaultNamespace(namespaceURI);
+        // No operation - ignored
     }
 
     @Override
@@ -240,8 +244,7 @@ final class StaEDIXMLStreamWriter implements XMLStreamWriter {
 
     @Override
     public void writeCData(String data) throws XMLStreamException {
-        // TODO Auto-generated method stub
-
+        writeCharacters(data);
     }
 
     @Override
@@ -251,8 +254,7 @@ final class StaEDIXMLStreamWriter implements XMLStreamWriter {
 
     @Override
     public void writeEntityRef(String name) throws XMLStreamException {
-        // TODO Auto-generated method stub
-
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -299,27 +301,66 @@ final class StaEDIXMLStreamWriter implements XMLStreamWriter {
 
     @Override
     public String getPrefix(String uri) throws XMLStreamException {
-        return namespaces.entrySet()
-                .stream()
-                .filter(e -> e.getValue().equals(uri))
-                .map(Map.Entry::getKey)
-                .findFirst()
-                .orElse(null);
+        return namespaceStack.stream()
+                             .filter(m -> m.containsValue(uri))
+                             .flatMap(m -> m.entrySet().stream())
+                             .filter(e -> e.getValue().equals(uri))
+                             .map(Map.Entry::getKey)
+                             .findFirst()
+                             .orElseGet(() -> getContextPrefix(uri));
+    }
+
+    String getNamespaceURI(String prefix) {
+        return namespaceStack.stream()
+                             .filter(m -> m.containsKey(prefix))
+                             .map(m -> m.get(prefix))
+                             .findFirst()
+                             .orElseGet(() -> getContextNamespaceURI(prefix));
+    }
+
+    String getContextNamespaceURI(String prefix) {
+        if (namespaceContext != null) {
+            return namespaceContext.getNamespaceURI(prefix);
+        }
+        return null;
+    }
+
+    String getContextPrefix(String uri) {
+        if (namespaceContext != null) {
+            return namespaceContext.getPrefix(uri);
+        }
+        return null;
     }
 
     @Override
     public void setPrefix(String prefix, String uri) throws XMLStreamException {
-        namespaces.put(prefix, uri);
+        Objects.requireNonNull(prefix);
+        if (uri != null) {
+            namespaceStack.element().put(prefix, uri);
+        } else {
+            namespaceStack.element().remove(prefix);
+        }
     }
 
     @Override
     public void setDefaultNamespace(String uri) throws XMLStreamException {
-        this.defaultNamespaceURI = uri;
+        setPrefix(XMLConstants.DEFAULT_NS_PREFIX, uri);
     }
 
     @Override
     public void setNamespaceContext(NamespaceContext context) throws XMLStreamException {
-        this.namespaceContext = context;
+        if (this.namespaceContext != null) {
+            throw new XMLStreamException("NamespaceContext has already been set");
+        }
+
+        if (!elementStack.isEmpty()) {
+            throw new XMLStreamException("NamespaceContext must only be called at the start of the document");
+        }
+
+        this.namespaceContext = Objects.requireNonNull(context);
+
+        // Clear the root contexts (per setNamespaceContext JavaDoc)
+        namespaceStack.getLast().clear();
     }
 
     @Override
@@ -328,9 +369,8 @@ final class StaEDIXMLStreamWriter implements XMLStreamWriter {
     }
 
     @Override
-    public Object getProperty(String name) throws IllegalArgumentException {
-        // TODO Auto-generated method stub
-        return null;
+    public Object getProperty(String name) {
+        throw new IllegalArgumentException("Properties not supported");
     }
 
 }

@@ -6,15 +6,16 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.ByteArrayOutputStream;
 
+import javax.xml.namespace.NamespaceContext;
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLStreamException;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 import io.xlate.edi.stream.EDIOutputFactory;
 import io.xlate.edi.stream.EDIStreamConstants.Namespaces;
@@ -23,6 +24,8 @@ import io.xlate.edi.stream.EDIStreamWriter;
 class StaEDIXMLStreamWriterTest {
 
     static final Class<UnsupportedOperationException> UNSUPPORTED = UnsupportedOperationException.class;
+    static final String NS_URI_TEST = "urn:names:test";
+    static final String NS_PFX_TEST = "t";
 
     ByteArrayOutputStream stream;
     EDIStreamWriter ediWriter;
@@ -163,6 +166,17 @@ class StaEDIXMLStreamWriterTest {
     }
 
     @Test
+    void testWriteEmptyElement_OutOfSequence() throws XMLStreamException {
+        XMLStreamException thrown;
+
+        it.setPrefix("e", Namespaces.ELEMENTS);
+        it.writeStartDocument();
+        it.writeStartElement("l", "INTERCHANGE", Namespaces.LOOPS);
+        thrown = assertThrows(XMLStreamException.class, () -> it.writeEmptyElement("e:ISA01"));
+        assertEquals(IllegalStateException.class, thrown.getCause().getClass());
+    }
+
+    @Test
     void testWriteEndElement() throws XMLStreamException {
         it.writeStartDocument();
         it.writeStartElement("l", "INTERCHANGE", Namespaces.LOOPS);
@@ -172,11 +186,6 @@ class StaEDIXMLStreamWriterTest {
         it.writeEndElement(); // Test
         it.flush();
         assertArrayEquals("ISA*00".getBytes(), stream.toByteArray());
-    }
-
-    @Test
-    void testWriteEndDocument() {
-        fail("Not yet implemented");
     }
 
     @Test
@@ -195,16 +204,6 @@ class StaEDIXMLStreamWriterTest {
     }
 
     @Test
-    void testWriteNamespace() {
-        fail("Not yet implemented");
-    }
-
-    @Test
-    void testWriteDefaultNamespace() {
-        fail("Not yet implemented");
-    }
-
-    @Test
     void testWriteComment() {
         assertThrows(UNSUPPORTED, () -> it.writeComment(""));
     }
@@ -220,28 +219,47 @@ class StaEDIXMLStreamWriterTest {
     }
 
     @Test
-    void testWriteCData() {
-        fail("Not yet implemented");
-    }
-
-    @Test
     void testWriteDTD() {
         assertThrows(UNSUPPORTED, () -> it.writeDTD(""));
     }
 
     @Test
     void testWriteEntityRef() {
-        fail("Not yet implemented");
+        assertThrows(UNSUPPORTED, () -> it.writeEntityRef(""));
     }
 
     @Test
-    void testWriteStartDocumentString() {
-        fail("Not yet implemented");
+    void testWriteStartDocumentString() throws XMLStreamException {
+        it.setPrefix("l", Namespaces.LOOPS);
+        it.setPrefix("s", Namespaces.SEGMENTS);
+        it.writeStartDocument("1.0"); // Test
+        it.writeStartElement("l:INTERCHANGE");
+        it.writeStartElement("s:ISA");
+        it.flush();
+        it.close();
+        assertArrayEquals("ISA".getBytes(), stream.toByteArray());
     }
 
     @Test
-    void testWriteStartDocumentStringString() {
-        fail("Not yet implemented");
+    void testWriteStartDocumentStringString() throws XMLStreamException {
+        it.setPrefix("l", Namespaces.LOOPS);
+        it.setPrefix("s", Namespaces.SEGMENTS);
+        it.writeStartDocument("UTF-8", "1.0"); // Test
+        it.writeStartElement("l:INTERCHANGE");
+        it.writeStartElement("s:ISA");
+        it.flush();
+        it.close();
+        assertArrayEquals("ISA".getBytes(), stream.toByteArray());
+    }
+
+    @Test
+    void testWriteCData() throws XMLStreamException {
+        it.writeStartDocument();
+        it.writeStartElement("l", "INTERCHANGE", Namespaces.LOOPS);
+        it.writeCData(" \t\n\r"); // Test
+        it.writeStartElement("s", "ISA", Namespaces.SEGMENTS);
+        it.flush();
+        assertArrayEquals("ISA".getBytes(), stream.toByteArray());
     }
 
     @Test
@@ -289,22 +307,48 @@ class StaEDIXMLStreamWriterTest {
     }
 
     @Test
-    void testSetDefaultNamespace() {
-        fail("Not yet implemented");
+    void testSetNamespaceContext() throws XMLStreamException {
+        NamespaceContext ctx = Mockito.mock(NamespaceContext.class);
+        Mockito.when(ctx.getNamespaceURI(NS_PFX_TEST)).thenReturn(NS_URI_TEST);
+        Mockito.when(ctx.getPrefix(NS_URI_TEST)).thenReturn(NS_PFX_TEST);
+        it.setNamespaceContext(ctx);
+        assertEquals(NS_PFX_TEST, it.getContextPrefix(NS_URI_TEST));
+        assertEquals(NS_URI_TEST, it.getContextNamespaceURI(NS_PFX_TEST));
+        assertNull(it.getContextNamespaceURI("m"));
+        assertNull(it.getContextPrefix("urn:names:missing"));
     }
 
     @Test
-    void testSetNamespaceContext() {
-        fail("Not yet implemented");
+    void testSetNamespaceContext_MultipleCalls() throws XMLStreamException {
+        NamespaceContext ctx = Mockito.mock(NamespaceContext.class);
+        Mockito.when(ctx.getNamespaceURI(NS_PFX_TEST)).thenReturn(NS_URI_TEST);
+        Mockito.when(ctx.getPrefix(NS_URI_TEST)).thenReturn(NS_PFX_TEST);
+        it.setNamespaceContext(ctx);
+        Throwable thrown = assertThrows(XMLStreamException.class, () -> it.setNamespaceContext(ctx));
+        assertEquals("NamespaceContext has already been set", thrown.getMessage());
     }
 
     @Test
-    void testGetNamespaceContext() {
-        fail("Not yet implemented");
+    void testSetNamespaceContext_AfterDocumentStart() throws XMLStreamException {
+        NamespaceContext ctx = Mockito.mock(NamespaceContext.class);
+        Mockito.when(ctx.getNamespaceURI(NS_PFX_TEST)).thenReturn(NS_URI_TEST);
+        Mockito.when(ctx.getPrefix(NS_URI_TEST)).thenReturn(NS_PFX_TEST);
+        it.writeStartDocument();
+        it.writeStartElement("l", "INTERCHANGE", Namespaces.LOOPS);
+        Throwable thrown = assertThrows(XMLStreamException.class, () -> it.setNamespaceContext(ctx));
+        assertEquals("NamespaceContext must only be called at the start of the document", thrown.getMessage());
+    }
+
+    @Test
+    void testGetNamespaceContext() throws XMLStreamException {
+        NamespaceContext ctx = Mockito.mock(NamespaceContext.class);
+        it.setNamespaceContext(ctx);
+
+        assertEquals(ctx, it.getNamespaceContext());
     }
 
     @Test
     void testGetProperty() {
-        fail("Not yet implemented");
+        assertThrows(IllegalArgumentException.class, () -> it.getProperty("anything"));
     }
 }
