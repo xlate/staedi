@@ -1,12 +1,12 @@
 package io.xlate.edi.internal.schema;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.Arrays;
 
 import org.junit.jupiter.api.Test;
 
-import io.xlate.edi.internal.schema.SyntaxRestriction;
 import io.xlate.edi.schema.EDISyntaxRule;
 
 public class SyntaxRestrictionTest {

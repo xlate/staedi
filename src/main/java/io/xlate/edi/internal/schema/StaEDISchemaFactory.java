@@ -100,10 +100,10 @@ public class StaEDISchemaFactory implements SchemaFactory {
 
     @Override
     public Schema createSchema(URL location) throws EDISchemaException {
-        try {
-            return createSchema(location.openStream());
+        try (InputStream stream = location.openStream()) {
+            return createSchema(stream);
         } catch (IOException e) {
-            throw new EDISchemaException("Unable to open stream", e);
+            throw new EDISchemaException("Unable to read URL stream", e);
         }
     }
 

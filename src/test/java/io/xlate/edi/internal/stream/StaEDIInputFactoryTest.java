@@ -25,7 +25,6 @@ import java.io.InputStream;
 
 import org.junit.jupiter.api.Test;
 
-import io.xlate.edi.internal.stream.StaEDIInputFactory;
 import io.xlate.edi.schema.EDISchemaException;
 import io.xlate.edi.schema.Schema;
 import io.xlate.edi.schema.SchemaFactory;

@@ -54,6 +54,7 @@ public class StaEDIInputFactory extends EDIInputFactory {
         return new StaEDIStreamReader(stream, DEFAULT_ENCODING, schema, properties);
     }
 
+    @SuppressWarnings("resource")
     @Override
     public EDIStreamReader createEDIStreamReader(InputStream stream, String encoding, Schema schema) throws EDIStreamException {
         Objects.requireNonNull(stream);

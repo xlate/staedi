@@ -16,6 +16,7 @@
 package io.xlate.edi.internal.schema;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.net.URL;
 import java.util.Enumeration;
@@ -45,7 +46,9 @@ public class SchemaUtils {
             Enumeration<URL> resources = getStreams("staedi-control-index.properties");
 
             while (resources.hasMoreElements()) {
-                controlIndex.load(resources.nextElement().openStream());
+                try (InputStream stream = resources.nextElement().openStream()) {
+                    controlIndex.load(stream);
+                }
             }
         } catch (IOException e) {
             throw new UncheckedIOException(e);
