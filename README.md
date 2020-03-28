@@ -1,14 +1,41 @@
 # StAEDI - Streaming API for EDI
 [![Build Status](https://travis-ci.com/xlate/staedi.svg?branch=master)](https://travis-ci.com/xlate/staedi) [![Coverage Status](https://coveralls.io/repos/github/xlate/staedi/badge.svg?branch=master)](https://coveralls.io/github/xlate/staedi?branch=master) [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=xlate_staedi&metric=alert_status)](https://sonarcloud.io/dashboard?id=xlate_staedi) [![Join the chat at https://gitter.im/xlate/staedi](https://badges.gitter.im/xlate/staedi.svg)](https://gitter.im/xlate/staedi?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-## Overview
+StAEDI is a streaming API for EDI reading, writing, and validation in Java. [Support](https://github.com/xlate/staedi/wiki/Support)
 
-StAEDI is a streaming API for EDI reading and writing for Java based on the StAX (Streaming API for XML)
-available in the standard JDK. The API follows the same conventions as StAX using a "pull" processing flow
-for reading and an emit flow for writing. StAEDI also supports filters to allow client applications to
-process only certain events in the input stream such as segment begin events.
+The API follows the same conventions as StAX (XML API available in the standard JDK)
+using a "pull" processing flow for reading and an emit flow for writing.
 
-StAEDI is licensed under [Apache License 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt)
+## Features
+- Support for **X12** and **EDIFACT** standards
+- Read structures from an EDI stream in sequence (start loop, start segment, element data, end segment, etc.)
+- EDI Schema that allows for user-specified **validation** rules
+- Validation of **EDI standards** (segment occurrences, element type, element length constraints, etc.)
+- Validation of **industry implementations**, for example HIPAA
+
+## Using `EDIStreamReader`
+How to bootstrap the reader:
+```java
+// Create an EDIInputFactory
+EDIInputFactory factory = EDIInputFactory.newFactory();
+
+// Obtain an InputStream of the EDI document to read.
+InputStream stream = new FileInputStream(...);
+
+// Create an EDIStreamReader from the stream using the factory
+EDIStreamReader reader = factory.createEDIStreamReader(stream);
+
+// First event - EDIStreamEvent.START_INTERCHANGE
+EDIStreamEvent event = reader.next();
+
+// Second event - EDIStreamEvent.START_SEGMENT
+event = reader.next();
+
+// Object the event text (segment tag for EDIStreamEvent.START_SEGMENT)
+String segmentName = reader.getText();
+
+// Continue processing the stream...
+```
 
 ## Maven Coordinates
 
@@ -18,21 +45,6 @@ StAEDI is licensed under [Apache License 2.0](http://www.apache.org/licenses/LIC
   <artifactId>staedi</artifactId>
   <version>1.2.1</version>
 </dependency>
-```
-
-If you wish to use a SNAPSHOT version, add the Sonatype OSS repository to your Maven configuration.
-
-```xml
-<repositories>
-  <repository>
-    <id>oss-sonatype</id>
-    <name>oss-sonatype</name>
-    <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
-    <snapshots>
-      <enabled>true</enabled>
-    </snapshots>
-  </repository>
-</repositories>
 ```
 
 ## Reading EDI
@@ -142,31 +154,39 @@ int groupCount = 0;
 writer.startInterchange();
 
 // Write interchange header segment
-writer.writeStartSegment("ISA");
-writer.writeElement("00").writeElement("          ");
-writer.writeElement("00").writeElement("          ");
-writer.writeElement("ZZ").writeElement("ReceiverID     ");
-writer.writeElement("ZZ").writeElement("Sender         ");
-writer.writeElement("050812");
-writer.writeElement("1953");
-writer.writeElement("^");
-writer.writeElement("00501");
-writer.writeElement("508121953");
-writer.writeElement("0");
-writer.writeElement("P");
-writer.writeElement(":");
-writer.writeEndSegment();
+writer.writeStartSegment("ISA")
+      .writeElement("00")
+      .writeElement("          ")
+      .writeElement("00")
+      .writeElement("          ")
+      .writeElement("ZZ")
+      .writeElement("ReceiverID     ")
+      .writeElement("ZZ")
+      .writeElement("Sender         ")
+      .writeElement("203001")
+      .writeElement("1430")
+      .writeElement("^")
+      .writeElement("00501")
+      .writeElement("000000001")
+      .writeElement("0")
+      .writeElement("P")
+      .writeElement(":")
+      .writeEndSegment();
 
 // Write functional group header segment
 groupCount++;
 writer.writeStartSegment("GS");
 writer.writeStartElement();
 
-...
+// Continue writing remainder of functional group
+
+writer.writeStartSegment("IEA")
+      .writeElement(String.valueOf(groupCount))
+      .writeElement("000000001")
+      .writeEndSegment();
 
 writer.endInterchange();
 
 writer.close();
 stream.close();
-
 ```
