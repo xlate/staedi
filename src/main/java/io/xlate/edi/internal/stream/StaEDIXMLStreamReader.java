@@ -202,6 +202,16 @@ public class StaEDIXMLStreamReader implements XMLStreamReader {
                                                        ediReader.getText(),
                                                        ediReader.getErrorType()));
 
+        case ELEMENT_OCCURRENCE_ERROR:
+            throw new XMLStreamException(String.format("Element %s has error %s",
+                                                       ediReader.getText(),
+                                                       ediReader.getErrorType()));
+
+        case ELEMENT_DATA_ERROR:
+            throw new XMLStreamException(String.format("Element %s has error %s",
+                                                       ediReader.getText(),
+                                                       ediReader.getErrorType()));
+
         default:
             throw new IllegalStateException("Unknown state: " + ediEvent);
         }

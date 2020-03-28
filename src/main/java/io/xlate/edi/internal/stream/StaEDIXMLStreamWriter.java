@@ -16,7 +16,7 @@ import io.xlate.edi.stream.EDIStreamConstants.Namespaces;
 import io.xlate.edi.stream.EDIStreamException;
 import io.xlate.edi.stream.EDIStreamWriter;
 
-final class StaEDIXMLStreamWriter implements XMLStreamWriter {
+public final class StaEDIXMLStreamWriter implements XMLStreamWriter {
 
     private static final QName INTERCHANGE = new QName(Namespaces.LOOPS, "INTERCHANGE");
 

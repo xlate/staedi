@@ -35,7 +35,7 @@ public class WriteInterchangeAcknowledgementTest {
               .writeElement("Receiver       ")
               .writeElement("ZZ")
               .writeElement("Sender         ")
-              .writeElement("203001")
+              .writeElement("200301")
               .writeElement("1430")
               .writeElement("^")
               .writeElement("00501")
