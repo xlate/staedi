@@ -6,7 +6,7 @@ StAEDI is a streaming API for EDI reading, writing, and validation in Java. [Sup
 ![Event Flow](staedi_events.png)
 
 The API follows the same conventions as StAX (XML API available in the standard JDK)
-using a "pull" processing flow for reading and an emit flow for writing.
+using a "pull" processing flow for EDI parsing and an emit flow for EDI generation.
 
 ## Features
 - Support for **X12** and **EDIFACT** standards
