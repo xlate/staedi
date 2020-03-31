@@ -81,7 +81,7 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
         InputStream stream = getClass().getResourceAsStream("/x12/simple997.edi");
         EDIStreamReader reader = factory.createEDIStreamReader(stream);
         assertNull(reader.getProperty("NONE"), "Property was not null");
-        assertThrows(NullPointerException.class, () -> reader.getProperty(null));
+        assertThrows(IllegalArgumentException.class, () -> reader.getProperty(null));
     }
 
     @Test
