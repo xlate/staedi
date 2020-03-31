@@ -137,16 +137,6 @@ class UsageNode {
         return referencedNode.getId();
     }
 
-    int getNumber() {
-        EDIType referencedNode = link.getReferencedType();
-
-        if (referencedNode instanceof EDISimpleType) {
-            return ((EDISimpleType) referencedNode).getNumber();
-        }
-
-        return -1;
-    }
-
     void validate(Dialect dialect, CharSequence value, List<EDIStreamValidationError> errors) {
         if (validator == null) {
             throw new UnsupportedOperationException("simple type only");

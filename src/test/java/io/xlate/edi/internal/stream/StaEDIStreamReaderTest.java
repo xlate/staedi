@@ -81,6 +81,7 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
         InputStream stream = getClass().getResourceAsStream("/x12/simple997.edi");
         EDIStreamReader reader = factory.createEDIStreamReader(stream);
         assertNull(reader.getProperty("NONE"), "Property was not null");
+        assertThrows(NullPointerException.class, () -> reader.getProperty(null));
     }
 
     @Test
@@ -538,6 +539,14 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
                 char[] expected = simple997tags[s++].toCharArray();
                 int start = reader.getTextStart();
                 int length = reader.getTextLength();
+                assertThrows(NullPointerException.class, () -> reader.getTextCharacters(start, null, 0, length));
+                assertThrows(IndexOutOfBoundsException.class, () -> reader.getTextCharacters(start, tag, -1, length));
+                assertThrows(IndexOutOfBoundsException.class, () -> reader.getTextCharacters(start, tag, 21, length));
+                assertThrows(IndexOutOfBoundsException.class, () -> reader.getTextCharacters(start, tag, 0, -1));
+                assertThrows(IndexOutOfBoundsException.class, () -> reader.getTextCharacters(start, tag, 0, 21));
+                assertThrows(IndexOutOfBoundsException.class, () -> reader.getTextCharacters(-1, tag, 0, length));
+                assertThrows(IndexOutOfBoundsException.class, () -> reader.getTextCharacters(4, tag, 0, length));
+
                 int number = reader.getTextCharacters(start, tag, 0, length);
                 assertEquals(expected.length, number, "Invalid length read");
                 assertArrayEquals(expected, Arrays.copyOfRange(tag, 0, length), "Unexpected segment");
