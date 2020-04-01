@@ -18,8 +18,6 @@ package io.xlate.edi.schema;
 import java.io.InputStream;
 import java.net.URL;
 
-import io.xlate.edi.internal.schema.StaEDISchemaFactory;
-
 public interface SchemaFactory {
 
     /**
@@ -32,7 +30,7 @@ public interface SchemaFactory {
      * @return the factory implementation
      */
     public static SchemaFactory newFactory() {
-        return new StaEDISchemaFactory();
+        return new io.xlate.edi.internal.schema.StaEDISchemaFactory();
     }
 
     public abstract Schema createSchema(URL location) throws EDISchemaException;

@@ -20,7 +20,6 @@ import java.io.InputStream;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
-import io.xlate.edi.internal.stream.StaEDIInputFactory;
 import io.xlate.edi.schema.Schema;
 
 public abstract class EDIInputFactory extends PropertySupport {
@@ -37,7 +36,7 @@ public abstract class EDIInputFactory extends PropertySupport {
      * @return the factory implementation
      */
     public static EDIInputFactory newFactory() {
-        return new StaEDIInputFactory();
+        return new io.xlate.edi.internal.stream.StaEDIInputFactory();
     }
 
     /**

@@ -19,8 +19,6 @@ import java.io.OutputStream;
 
 import javax.xml.stream.XMLStreamWriter;
 
-import io.xlate.edi.internal.stream.StaEDIOutputFactory;
-
 public abstract class EDIOutputFactory extends PropertySupport {
 
     public static final String PRETTY_PRINT = "io.xlate.edi.stream.PRETTY_PRINT";
@@ -35,7 +33,7 @@ public abstract class EDIOutputFactory extends PropertySupport {
      * @return the factory implementation
      */
     public static EDIOutputFactory newFactory() {
-        return new StaEDIOutputFactory();
+        return new io.xlate.edi.internal.stream.StaEDIOutputFactory();
     }
 
     /**
