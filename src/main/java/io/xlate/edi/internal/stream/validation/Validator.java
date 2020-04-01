@@ -677,7 +677,7 @@ public class Validator {
         return cs1.length() - cs2.length();
     }
 
-    /**************************************************************************/
+    /* ********************************************************************** */
 
     public List<UsageError> getElementErrors() {
         return elementErrors;

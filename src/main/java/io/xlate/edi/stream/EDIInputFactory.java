@@ -111,6 +111,7 @@ public abstract class EDIInputFactory extends PropertySupport {
      * follows:
      *
      * <table>
+     * <caption>EDI Event Namespace Cross Reference</caption>
      * <tr>
      *   <td>Event</td>
      *   <td>Element Local Name</td>
@@ -164,8 +165,9 @@ public abstract class EDIInputFactory extends PropertySupport {
      *
      * @param reader the reader to wrap
      * @return a new {@link XMLStreamReader}
+     * @throws XMLStreamException when the reader encounters an error in creation
      *
-     * @see {@link EDINamespaces}
+     * @see EDINamespaces
      */
     public abstract XMLStreamReader createXMLStreamReader(EDIStreamReader reader) throws XMLStreamException;
 }
