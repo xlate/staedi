@@ -19,6 +19,8 @@ import java.io.OutputStream;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.xml.stream.XMLStreamWriter;
+
 import io.xlate.edi.stream.EDIOutputFactory;
 import io.xlate.edi.stream.EDIStreamConstants;
 import io.xlate.edi.stream.EDIStreamException;
@@ -56,5 +58,10 @@ public class StaEDIOutputFactory extends EDIOutputFactory {
             return new StaEDIStreamWriter(stream, encoding, properties);
         }
         throw new EDIStreamException("Unsupported encoding: " + encoding);
+    }
+
+    @Override
+    public XMLStreamWriter createXMLStreamWriter(EDIStreamWriter writer) {
+        return new StaEDIXMLStreamWriter(writer);
     }
 }

@@ -18,8 +18,8 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import io.xlate.edi.stream.EDIOutputFactory;
-import io.xlate.edi.stream.EDIStreamConstants.Namespaces;
 import io.xlate.edi.stream.EDIStreamWriter;
+import io.xlate.edi.stream.EDINamespaces;
 
 class StaEDIXMLStreamWriterTest {
 
@@ -43,23 +43,23 @@ class StaEDIXMLStreamWriterTest {
 
     @Test
     void testRepeatedElement() {
-        assertFalse(it.repeatedElement(new QName(Namespaces.ELEMENTS, "SG101", "e"), null));
-        assertTrue(it.repeatedElement(new QName(Namespaces.ELEMENTS, "SG101", "e"),
-                                      new QName(Namespaces.ELEMENTS, "SG101", "e2")));
-        assertFalse(it.repeatedElement(new QName(Namespaces.ELEMENTS, "SG101", "e"),
-                                       new QName(Namespaces.ELEMENTS, "SG102", "e2")));
+        assertFalse(it.repeatedElement(new QName(EDINamespaces.ELEMENTS, "SG101", "e"), null));
+        assertTrue(it.repeatedElement(new QName(EDINamespaces.ELEMENTS, "SG101", "e"),
+                                      new QName(EDINamespaces.ELEMENTS, "SG101", "e2")));
+        assertFalse(it.repeatedElement(new QName(EDINamespaces.ELEMENTS, "SG101", "e"),
+                                       new QName(EDINamespaces.ELEMENTS, "SG102", "e2")));
 
-        assertTrue(it.repeatedElement(new QName(Namespaces.ELEMENTS, "SG101", "e"),
-                                      new QName(Namespaces.COMPOSITES, "SG101", "e2")));
-        assertFalse(it.repeatedElement(new QName(Namespaces.ELEMENTS, "SG101", "e"),
-                                       new QName(Namespaces.COMPOSITES, "SG102", "e2")));
+        assertTrue(it.repeatedElement(new QName(EDINamespaces.ELEMENTS, "SG101", "e"),
+                                      new QName(EDINamespaces.COMPOSITES, "SG101", "e2")));
+        assertFalse(it.repeatedElement(new QName(EDINamespaces.ELEMENTS, "SG101", "e"),
+                                       new QName(EDINamespaces.COMPOSITES, "SG102", "e2")));
 
     }
 
     @Test
     void testWriteStartElementString() throws XMLStreamException {
-        it.setPrefix("l", Namespaces.LOOPS);
-        it.setPrefix("s", Namespaces.SEGMENTS);
+        it.setPrefix("l", EDINamespaces.LOOPS);
+        it.setPrefix("s", EDINamespaces.SEGMENTS);
         it.writeStartDocument();
         it.writeStartElement("l:INTERCHANGE");
         it.writeStartElement("s:ISA");
@@ -70,8 +70,8 @@ class StaEDIXMLStreamWriterTest {
 
     @Test
     void testWriteStartElementString_DefaultNamespace() throws XMLStreamException {
-        it.setPrefix("l", Namespaces.LOOPS);
-        it.setDefaultNamespace(Namespaces.SEGMENTS);
+        it.setPrefix("l", EDINamespaces.LOOPS);
+        it.setDefaultNamespace(EDINamespaces.SEGMENTS);
         it.writeStartDocument();
         it.writeStartElement("l:INTERCHANGE");
         it.writeStartElement("ISA");
@@ -83,7 +83,7 @@ class StaEDIXMLStreamWriterTest {
     void testWriteStartElementString_UndefinedNamespace() throws XMLStreamException {
         XMLStreamException thrown;
 
-        it.setPrefix("l", Namespaces.LOOPS);
+        it.setPrefix("l", EDINamespaces.LOOPS);
         it.writeStartDocument();
         it.writeStartElement("l:INTERCHANGE");
 
@@ -99,8 +99,8 @@ class StaEDIXMLStreamWriterTest {
     @Test
     void testWriteStartElementStringString() throws XMLStreamException {
         it.writeStartDocument();
-        it.writeStartElement(Namespaces.LOOPS, "INTERCHANGE");
-        it.writeStartElement(Namespaces.SEGMENTS, "ISA");
+        it.writeStartElement(EDINamespaces.LOOPS, "INTERCHANGE");
+        it.writeStartElement(EDINamespaces.SEGMENTS, "ISA");
         it.flush();
         assertArrayEquals("ISA".getBytes(), stream.toByteArray());
     }
@@ -108,9 +108,9 @@ class StaEDIXMLStreamWriterTest {
     @Test
     void testWriteStartElementStringStringString() throws XMLStreamException {
         it.writeStartDocument();
-        it.writeStartElement("l", "INTERCHANGE", Namespaces.LOOPS); // Test
-        it.writeStartElement("s", "ISA", Namespaces.SEGMENTS); // Test
-        it.writeStartElement("e", "ISA01", Namespaces.ELEMENTS); // Test
+        it.writeStartElement("l", "INTERCHANGE", EDINamespaces.LOOPS); // Test
+        it.writeStartElement("s", "ISA", EDINamespaces.SEGMENTS); // Test
+        it.writeStartElement("e", "ISA01", EDINamespaces.ELEMENTS); // Test
         it.writeCharacters("00");
         it.flush();
         assertArrayEquals("ISA*00".getBytes(), stream.toByteArray());
@@ -119,10 +119,10 @@ class StaEDIXMLStreamWriterTest {
     @Test
     void testWriteEmptyElementStringString() throws XMLStreamException {
         it.writeStartDocument();
-        it.writeStartElement("l", "INTERCHANGE", Namespaces.LOOPS);
-        it.writeStartElement("s", "ISA", Namespaces.SEGMENTS);
-        it.writeEmptyElement(Namespaces.ELEMENTS, "ISA01"); // Test
-        it.writeStartElement("e", "ISA02", Namespaces.ELEMENTS);
+        it.writeStartElement("l", "INTERCHANGE", EDINamespaces.LOOPS);
+        it.writeStartElement("s", "ISA", EDINamespaces.SEGMENTS);
+        it.writeEmptyElement(EDINamespaces.ELEMENTS, "ISA01"); // Test
+        it.writeStartElement("e", "ISA02", EDINamespaces.ELEMENTS);
         it.writeCharacters("          ");
         it.flush();
         assertArrayEquals("ISA**          ".getBytes(), stream.toByteArray());
@@ -131,10 +131,10 @@ class StaEDIXMLStreamWriterTest {
     @Test
     void testWriteEmptyElementStringStringString() throws XMLStreamException {
         it.writeStartDocument();
-        it.writeStartElement("l", "INTERCHANGE", Namespaces.LOOPS);
-        it.writeStartElement("s", "ISA", Namespaces.SEGMENTS);
-        it.writeEmptyElement("e", "ISA01", Namespaces.ELEMENTS); // Test
-        it.writeStartElement("e", "ISA02", Namespaces.ELEMENTS);
+        it.writeStartElement("l", "INTERCHANGE", EDINamespaces.LOOPS);
+        it.writeStartElement("s", "ISA", EDINamespaces.SEGMENTS);
+        it.writeEmptyElement("e", "ISA01", EDINamespaces.ELEMENTS); // Test
+        it.writeStartElement("e", "ISA02", EDINamespaces.ELEMENTS);
         it.writeCharacters("          ");
         it.flush();
         assertArrayEquals("ISA**          ".getBytes(), stream.toByteArray());
@@ -143,10 +143,10 @@ class StaEDIXMLStreamWriterTest {
     @Test
     void testWriteEmptyElementString() throws XMLStreamException {
         it.writeStartDocument();
-        it.writeStartElement("l", "INTERCHANGE", Namespaces.LOOPS);
-        it.writeStartElement("s", "ISA", Namespaces.SEGMENTS);
-        it.writeEmptyElement(Namespaces.ELEMENTS, "ISA01"); // Test
-        it.writeStartElement("e", "ISA02", Namespaces.ELEMENTS);
+        it.writeStartElement("l", "INTERCHANGE", EDINamespaces.LOOPS);
+        it.writeStartElement("s", "ISA", EDINamespaces.SEGMENTS);
+        it.writeEmptyElement(EDINamespaces.ELEMENTS, "ISA01"); // Test
+        it.writeStartElement("e", "ISA02", EDINamespaces.ELEMENTS);
         it.writeCharacters("          ");
         it.flush();
         assertArrayEquals("ISA**          ".getBytes(), stream.toByteArray());
@@ -154,12 +154,12 @@ class StaEDIXMLStreamWriterTest {
 
     @Test
     void testWriteEmptyElement() throws XMLStreamException {
-        it.setPrefix("e", Namespaces.ELEMENTS);
+        it.setPrefix("e", EDINamespaces.ELEMENTS);
         it.writeStartDocument();
-        it.writeStartElement("l", "INTERCHANGE", Namespaces.LOOPS);
-        it.writeStartElement("s", "ISA", Namespaces.SEGMENTS);
+        it.writeStartElement("l", "INTERCHANGE", EDINamespaces.LOOPS);
+        it.writeStartElement("s", "ISA", EDINamespaces.SEGMENTS);
         it.writeEmptyElement("e:ISA01"); // Test
-        it.writeStartElement("e", "ISA02", Namespaces.ELEMENTS);
+        it.writeStartElement("e", "ISA02", EDINamespaces.ELEMENTS);
         it.writeCharacters("          ");
         it.flush();
         assertArrayEquals("ISA**          ".getBytes(), stream.toByteArray());
@@ -169,9 +169,9 @@ class StaEDIXMLStreamWriterTest {
     void testWriteEmptyElement_OutOfSequence() throws XMLStreamException {
         XMLStreamException thrown;
 
-        it.setPrefix("e", Namespaces.ELEMENTS);
+        it.setPrefix("e", EDINamespaces.ELEMENTS);
         it.writeStartDocument();
-        it.writeStartElement("l", "INTERCHANGE", Namespaces.LOOPS);
+        it.writeStartElement("l", "INTERCHANGE", EDINamespaces.LOOPS);
         thrown = assertThrows(XMLStreamException.class, () -> it.writeEmptyElement("e:ISA01"));
         assertEquals(IllegalStateException.class, thrown.getCause().getClass());
     }
@@ -179,9 +179,9 @@ class StaEDIXMLStreamWriterTest {
     @Test
     void testWriteEndElement() throws XMLStreamException {
         it.writeStartDocument();
-        it.writeStartElement("l", "INTERCHANGE", Namespaces.LOOPS);
-        it.writeStartElement("s", "ISA", Namespaces.SEGMENTS);
-        it.writeStartElement(Namespaces.ELEMENTS, "ISA01");
+        it.writeStartElement("l", "INTERCHANGE", EDINamespaces.LOOPS);
+        it.writeStartElement("s", "ISA", EDINamespaces.SEGMENTS);
+        it.writeStartElement(EDINamespaces.ELEMENTS, "ISA01");
         it.writeCharacters("00");
         it.writeEndElement(); // Test
         it.flush();
@@ -230,8 +230,8 @@ class StaEDIXMLStreamWriterTest {
 
     @Test
     void testWriteStartDocumentString() throws XMLStreamException {
-        it.setPrefix("l", Namespaces.LOOPS);
-        it.setPrefix("s", Namespaces.SEGMENTS);
+        it.setPrefix("l", EDINamespaces.LOOPS);
+        it.setPrefix("s", EDINamespaces.SEGMENTS);
         it.writeStartDocument("1.0"); // Test
         it.writeStartElement("l:INTERCHANGE");
         it.writeStartElement("s:ISA");
@@ -242,8 +242,8 @@ class StaEDIXMLStreamWriterTest {
 
     @Test
     void testWriteStartDocumentStringString() throws XMLStreamException {
-        it.setPrefix("l", Namespaces.LOOPS);
-        it.setPrefix("s", Namespaces.SEGMENTS);
+        it.setPrefix("l", EDINamespaces.LOOPS);
+        it.setPrefix("s", EDINamespaces.SEGMENTS);
         it.writeStartDocument("UTF-8", "1.0"); // Test
         it.writeStartElement("l:INTERCHANGE");
         it.writeStartElement("s:ISA");
@@ -255,9 +255,9 @@ class StaEDIXMLStreamWriterTest {
     @Test
     void testWriteCData() throws XMLStreamException {
         it.writeStartDocument();
-        it.writeStartElement("l", "INTERCHANGE", Namespaces.LOOPS);
+        it.writeStartElement("l", "INTERCHANGE", EDINamespaces.LOOPS);
         it.writeCData(" \t\n\r"); // Test
-        it.writeStartElement("s", "ISA", Namespaces.SEGMENTS);
+        it.writeStartElement("s", "ISA", EDINamespaces.SEGMENTS);
         it.flush();
         assertArrayEquals("ISA".getBytes(), stream.toByteArray());
     }
@@ -265,9 +265,9 @@ class StaEDIXMLStreamWriterTest {
     @Test
     void testWriteCharactersString_WhitespaceLegal() throws XMLStreamException {
         it.writeStartDocument();
-        it.writeStartElement("l", "INTERCHANGE", Namespaces.LOOPS);
+        it.writeStartElement("l", "INTERCHANGE", EDINamespaces.LOOPS);
         it.writeCharacters(" \t\n\r"); // Test
-        it.writeStartElement("s", "ISA", Namespaces.SEGMENTS);
+        it.writeStartElement("s", "ISA", EDINamespaces.SEGMENTS);
         it.flush();
         assertArrayEquals("ISA".getBytes(), stream.toByteArray());
     }
@@ -275,7 +275,7 @@ class StaEDIXMLStreamWriterTest {
     @Test
     void testWriteCharactersString_JunkIllegal() throws XMLStreamException {
         it.writeStartDocument();
-        it.writeStartElement("l", "INTERCHANGE", Namespaces.LOOPS);
+        it.writeStartElement("l", "INTERCHANGE", EDINamespaces.LOOPS);
         XMLStreamException thrown = assertThrows(XMLStreamException.class, ()-> it.writeCharacters(" illegal non-whitespace characters "));
         assertEquals("Illegal non-whitespace characters", thrown.getMessage());
     }
@@ -283,9 +283,9 @@ class StaEDIXMLStreamWriterTest {
     @Test
     void testWriteCharactersCharArrayIntInt_WhitespaceLegal() throws XMLStreamException {
         it.writeStartDocument();
-        it.writeStartElement("l", "INTERCHANGE", Namespaces.LOOPS);
+        it.writeStartElement("l", "INTERCHANGE", EDINamespaces.LOOPS);
         it.writeCharacters(" \t \n \r  OUT OF INDEX BOUNDS".toCharArray(), 2, 6); // Test
-        it.writeStartElement("s", "ISA", Namespaces.SEGMENTS);
+        it.writeStartElement("s", "ISA", EDINamespaces.SEGMENTS);
         it.flush();
         assertArrayEquals("ISA".getBytes(), stream.toByteArray());
     }
@@ -293,17 +293,17 @@ class StaEDIXMLStreamWriterTest {
     @Test
     void testWriteCharactersCharArrayIntInt_JunkIllegal() throws XMLStreamException {
         it.writeStartDocument();
-        it.writeStartElement("l", "INTERCHANGE", Namespaces.LOOPS);
+        it.writeStartElement("l", "INTERCHANGE", EDINamespaces.LOOPS);
         XMLStreamException thrown = assertThrows(XMLStreamException.class, ()-> it.writeCharacters(" \t \n \r  OUT OF INDEX BOUNDS".toCharArray(), 2, 7)); // Test
         assertEquals("Illegal non-whitespace characters", thrown.getMessage());
     }
 
     @Test
     void testPrefixConfiguration() throws XMLStreamException {
-        it.setPrefix("e", Namespaces.SEGMENTS);
-        it.setPrefix("s", Namespaces.ELEMENTS);
-        assertEquals("e", it.getPrefix(Namespaces.SEGMENTS));
-        assertNull(it.getPrefix(Namespaces.LOOPS));
+        it.setPrefix("e", EDINamespaces.SEGMENTS);
+        it.setPrefix("s", EDINamespaces.ELEMENTS);
+        assertEquals("e", it.getPrefix(EDINamespaces.SEGMENTS));
+        assertNull(it.getPrefix(EDINamespaces.LOOPS));
     }
 
     @Test
@@ -334,7 +334,7 @@ class StaEDIXMLStreamWriterTest {
         Mockito.when(ctx.getNamespaceURI(NS_PFX_TEST)).thenReturn(NS_URI_TEST);
         Mockito.when(ctx.getPrefix(NS_URI_TEST)).thenReturn(NS_PFX_TEST);
         it.writeStartDocument();
-        it.writeStartElement("l", "INTERCHANGE", Namespaces.LOOPS);
+        it.writeStartElement("l", "INTERCHANGE", EDINamespaces.LOOPS);
         Throwable thrown = assertThrows(XMLStreamException.class, () -> it.setNamespaceContext(ctx));
         assertEquals("NamespaceContext must only be called at the start of the document", thrown.getMessage());
     }

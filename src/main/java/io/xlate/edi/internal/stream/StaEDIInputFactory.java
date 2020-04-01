@@ -20,6 +20,9 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
+
 import io.xlate.edi.schema.Schema;
 import io.xlate.edi.stream.EDIInputFactory;
 import io.xlate.edi.stream.EDIStreamException;
@@ -69,5 +72,10 @@ public class StaEDIInputFactory extends EDIInputFactory {
     @Override
     public EDIStreamReader createFilteredReader(EDIStreamReader reader, EDIStreamFilter filter) {
         return new StaEDIFilteredStreamReader(reader, filter);
+    }
+
+    @Override
+    public XMLStreamReader createXMLStreamReader(EDIStreamReader reader) throws XMLStreamException {
+        return new StaEDIXMLStreamReader(reader);
     }
 }

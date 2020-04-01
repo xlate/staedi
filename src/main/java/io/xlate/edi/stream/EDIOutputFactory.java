@@ -17,6 +17,8 @@ package io.xlate.edi.stream;
 
 import java.io.OutputStream;
 
+import javax.xml.stream.XMLStreamWriter;
+
 import io.xlate.edi.internal.stream.StaEDIOutputFactory;
 
 public abstract class EDIOutputFactory extends PropertySupport {
@@ -59,4 +61,15 @@ public abstract class EDIOutputFactory extends PropertySupport {
     public abstract EDIStreamWriter createEDIStreamWriter(OutputStream stream,
                                                           String encoding) throws EDIStreamException;
 
+    /**
+     * Creates a new {@link XMLStreamWriter} that uses the given writer as its output.
+     *
+     * XML Elements written to the writer must use the namespaces declared by the constants
+     * in {@link EDINamespaces}. The sequence of elements is critical and must align with
+     * the structure of the intended EDI output to be written via the given EDI writer.
+     *
+     * @param writer the writer used to generate EDI output using the XML writer
+     * @return a new {@link XMLStreamWriter}
+     */
+    public abstract XMLStreamWriter createXMLStreamWriter(EDIStreamWriter writer);
 }

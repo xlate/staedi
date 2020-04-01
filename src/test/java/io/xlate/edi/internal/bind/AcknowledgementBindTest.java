@@ -16,11 +16,9 @@ import javax.xml.stream.XMLStreamWriter;
 
 import org.junit.jupiter.api.Test;
 
-import io.xlate.edi.internal.stream.StaEDIXMLStreamReader;
-import io.xlate.edi.internal.stream.StaEDIXMLStreamWriter;
 import io.xlate.edi.stream.EDIInputFactory;
+import io.xlate.edi.stream.EDINamespaces;
 import io.xlate.edi.stream.EDIOutputFactory;
-import io.xlate.edi.stream.EDIStreamConstants.Namespaces;
 import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamReader;
 import io.xlate.edi.stream.EDIStreamWriter;
@@ -35,7 +33,7 @@ public class AcknowledgementBindTest {
         oFactory.setProperty(EDIOutputFactory.PRETTY_PRINT, Boolean.TRUE);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         EDIStreamWriter writer = oFactory.createEDIStreamWriter(out);
-        XMLStreamWriter xmlWriter = new StaEDIXMLStreamWriter(writer);
+        XMLStreamWriter xmlWriter = oFactory.createXMLStreamWriter(writer);
 
         ISA header = new ISA();
         //ISA*00*          *00*          *ZZ*Receiver       *ZZ*Sender         *200301*1430*^*00501*000000001*0*P*:~
@@ -70,7 +68,7 @@ public class AcknowledgementBindTest {
         Interchange interchange2;
         try (EDIStreamReader reader = iFactory.createEDIStreamReader(new ByteArrayInputStream(out.toByteArray()))) {
             assertEquals(EDIStreamEvent.START_INTERCHANGE, reader.next());
-            XMLStreamReader xmlReader = new StaEDIXMLStreamReader(reader);
+            XMLStreamReader xmlReader = iFactory.createXMLStreamReader(reader);
             Unmarshaller u = context.createUnmarshaller();
             interchange2 = (Interchange) u.unmarshal(xmlReader);
         }
@@ -98,56 +96,56 @@ public class AcknowledgementBindTest {
     }
 
     @XmlType
-    @XmlRootElement(name = "INTERCHANGE", namespace = Namespaces.LOOPS)
+    @XmlRootElement(name = "INTERCHANGE", namespace = EDINamespaces.LOOPS)
     static class Interchange {
-        @XmlElement(name = "ISA", namespace = Namespaces.SEGMENTS)
+        @XmlElement(name = "ISA", namespace = EDINamespaces.SEGMENTS)
         ISA header;
 
-        @XmlElement(name = "IEA", namespace = Namespaces.SEGMENTS)
+        @XmlElement(name = "IEA", namespace = EDINamespaces.SEGMENTS)
         IEA trailer;
     }
 
-    @XmlType(namespace = Namespaces.SEGMENTS, propOrder = {})
+    @XmlType(namespace = EDINamespaces.SEGMENTS, propOrder = {})
     static class ISA {
-        @XmlElement(namespace = Namespaces.ELEMENTS)
+        @XmlElement(namespace = EDINamespaces.ELEMENTS)
         String ISA01;
-        @XmlElement(namespace = Namespaces.ELEMENTS)
+        @XmlElement(namespace = EDINamespaces.ELEMENTS)
         String ISA02;
-        @XmlElement(namespace = Namespaces.ELEMENTS)
+        @XmlElement(namespace = EDINamespaces.ELEMENTS)
         String ISA03;
-        @XmlElement(namespace = Namespaces.ELEMENTS)
+        @XmlElement(namespace = EDINamespaces.ELEMENTS)
         String ISA04;
-        @XmlElement(namespace = Namespaces.ELEMENTS)
+        @XmlElement(namespace = EDINamespaces.ELEMENTS)
         String ISA05;
-        @XmlElement(namespace = Namespaces.ELEMENTS)
+        @XmlElement(namespace = EDINamespaces.ELEMENTS)
         String ISA06;
-        @XmlElement(namespace = Namespaces.ELEMENTS)
+        @XmlElement(namespace = EDINamespaces.ELEMENTS)
         String ISA07;
-        @XmlElement(namespace = Namespaces.ELEMENTS)
+        @XmlElement(namespace = EDINamespaces.ELEMENTS)
         String ISA08;
-        @XmlElement(namespace = Namespaces.ELEMENTS)
+        @XmlElement(namespace = EDINamespaces.ELEMENTS)
         String ISA09;
-        @XmlElement(namespace = Namespaces.ELEMENTS)
+        @XmlElement(namespace = EDINamespaces.ELEMENTS)
         String ISA10;
-        @XmlElement(namespace = Namespaces.ELEMENTS)
+        @XmlElement(namespace = EDINamespaces.ELEMENTS)
         String ISA11;
-        @XmlElement(namespace = Namespaces.ELEMENTS)
+        @XmlElement(namespace = EDINamespaces.ELEMENTS)
         String ISA12;
-        @XmlElement(namespace = Namespaces.ELEMENTS)
+        @XmlElement(namespace = EDINamespaces.ELEMENTS)
         String ISA13;
-        @XmlElement(namespace = Namespaces.ELEMENTS)
+        @XmlElement(namespace = EDINamespaces.ELEMENTS)
         String ISA14;
-        @XmlElement(namespace = Namespaces.ELEMENTS)
+        @XmlElement(namespace = EDINamespaces.ELEMENTS)
         String ISA15;
-        @XmlElement(namespace = Namespaces.ELEMENTS)
+        @XmlElement(namespace = EDINamespaces.ELEMENTS)
         String ISA16;
     }
 
-    @XmlType(namespace = Namespaces.SEGMENTS, propOrder = {})
+    @XmlType(namespace = EDINamespaces.SEGMENTS, propOrder = {})
     static class IEA {
-        @XmlElement(namespace = Namespaces.ELEMENTS)
+        @XmlElement(namespace = EDINamespaces.ELEMENTS)
         String IEA01;
-        @XmlElement(namespace = Namespaces.ELEMENTS)
+        @XmlElement(namespace = EDINamespaces.ELEMENTS)
         String IEA02;
     }
 }

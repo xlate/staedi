@@ -20,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -59,12 +60,12 @@ import io.xlate.edi.schema.Schema;
 import io.xlate.edi.schema.SchemaFactory;
 import io.xlate.edi.stream.EDIInputFactory;
 import io.xlate.edi.stream.EDIOutputFactory;
-import io.xlate.edi.stream.EDIStreamConstants.Namespaces;
 import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamException;
 import io.xlate.edi.stream.EDIStreamFilter;
 import io.xlate.edi.stream.EDIStreamReader;
 import io.xlate.edi.stream.EDIStreamWriter;
+import io.xlate.edi.stream.EDINamespaces;
 
 @SuppressWarnings("resource")
 public class StaEDIXMLStreamReaderTest {
@@ -147,8 +148,34 @@ public class StaEDIXMLStreamReaderTest {
     }
 
     @Test
+    public void testRequire() throws Exception {
+        XMLStreamReader xmlReader = getXmlReader(DUMMY_X12);
+        XMLStreamException thrown;
+
+        assertEquals(XMLStreamConstants.START_DOCUMENT, xmlReader.next());
+        thrown = assertThrows(XMLStreamException.class, () -> xmlReader.require(XMLStreamConstants.START_DOCUMENT, EDINamespaces.LOOPS, "INTERCHANGE"));
+        assertTrue(thrown.getMessage().endsWith("does not have a corresponding name"));
+        thrown = assertThrows(XMLStreamException.class, () -> xmlReader.require(XMLStreamConstants.START_ELEMENT, EDINamespaces.LOOPS, "INTERCHANGE"));
+        assertTrue(thrown.getMessage().contains("does not match required type"));
+        xmlReader.next();
+        // Happy Path
+        xmlReader.require(XMLStreamConstants.START_ELEMENT, EDINamespaces.LOOPS, "INTERCHANGE");
+        xmlReader.require(XMLStreamConstants.START_ELEMENT, EDINamespaces.LOOPS, null);
+        xmlReader.require(XMLStreamConstants.START_ELEMENT, null, "INTERCHANGE");
+        xmlReader.require(XMLStreamConstants.START_ELEMENT, null, null);
+
+        thrown = assertThrows(XMLStreamException.class, () -> xmlReader.require(XMLStreamConstants.START_ELEMENT, EDINamespaces.LOOPS, "GROUP"));
+        assertTrue(thrown.getMessage().contains("does not match required localName"));
+
+        thrown = assertThrows(XMLStreamException.class, () -> xmlReader.require(XMLStreamConstants.START_ELEMENT, EDINamespaces.SEGMENTS, "INTERCHANGE"));
+        assertTrue(thrown.getMessage().contains("does not match required namespaceURI"));
+
+    }
+
+    @Test
     public void testGetElementText() throws Exception {
         XMLStreamReader xmlReader = getXmlReader(DUMMY_X12);
+        XMLStreamException thrown;
 
         assertEquals(XMLStreamConstants.START_DOCUMENT, xmlReader.next());
         assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.next());
@@ -156,6 +183,9 @@ public class StaEDIXMLStreamReaderTest {
 
         assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.next());
         assertEquals("ISA", xmlReader.getLocalName());
+        thrown = assertThrows(XMLStreamException.class, () -> xmlReader.getElementText());
+        assertEquals("Element text only available for simple element", thrown.getMessage());
+
         assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.next()); // ISA01;
         assertEquals("00", xmlReader.getElementText());
         assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.next()); // ISA02;
@@ -171,23 +201,23 @@ public class StaEDIXMLStreamReaderTest {
         assertEquals(XMLStreamConstants.START_DOCUMENT, xmlReader.next());
         assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.next());
         assertEquals("INTERCHANGE", xmlReader.getLocalName());
-        assertEquals(Namespaces.LOOPS, xmlReader.getName().getNamespaceURI());
+        assertEquals(EDINamespaces.LOOPS, xmlReader.getName().getNamespaceURI());
         assertEquals("l", xmlReader.getName().getPrefix());
         assertEquals(4, xmlReader.getNamespaceCount());
-        assertEquals(Namespaces.LOOPS, xmlReader.getNamespaceURI());
+        assertEquals(EDINamespaces.LOOPS, xmlReader.getNamespaceURI());
 
         assertSegmentBoundaries(xmlReader, "ISA", 16);
 
         NamespaceContext context = xmlReader.getNamespaceContext();
-        assertEquals("s", context.getPrefix(Namespaces.SEGMENTS));
-        assertEquals("s", context.getPrefixes(Namespaces.SEGMENTS).next());
-        assertEquals(Namespaces.SEGMENTS, context.getNamespaceURI("s"));
+        assertEquals("s", context.getPrefix(EDINamespaces.SEGMENTS));
+        assertEquals("s", context.getPrefixes(EDINamespaces.SEGMENTS).next());
+        assertEquals(EDINamespaces.SEGMENTS, context.getNamespaceURI("s"));
         assertNull(context.getNamespaceURI("x"));
-        assertEquals(Namespaces.SEGMENTS, xmlReader.getNamespaceURI());
+        assertEquals(EDINamespaces.SEGMENTS, xmlReader.getNamespaceURI());
 
         assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.next());
         assertEquals("IEA", xmlReader.getLocalName());
-        assertEquals(Namespaces.SEGMENTS, xmlReader.getNamespaceURI());
+        assertEquals(EDINamespaces.SEGMENTS, xmlReader.getNamespaceURI());
 
         // No namespaces declared on the segment
         assertEquals(0, xmlReader.getNamespaceCount());
@@ -195,7 +225,7 @@ public class StaEDIXMLStreamReaderTest {
         assertNull(xmlReader.getNamespaceURI(0));
 
         assertElement(xmlReader, "IEA01", "1");
-        assertEquals(Namespaces.ELEMENTS, xmlReader.getNamespaceURI());
+        assertEquals(EDINamespaces.ELEMENTS, xmlReader.getNamespaceURI());
 
         // No namespaces declared on the element
         assertEquals(0, xmlReader.getNamespaceCount());
@@ -203,18 +233,18 @@ public class StaEDIXMLStreamReaderTest {
         assertNull(xmlReader.getNamespaceURI(0));
 
         assertElement(xmlReader, "IEA02", "508121953");
-        assertEquals(Namespaces.ELEMENTS, xmlReader.getNamespaceURI());
+        assertEquals(EDINamespaces.ELEMENTS, xmlReader.getNamespaceURI());
 
         assertEquals(XMLStreamConstants.END_ELEMENT, xmlReader.next());
         assertEquals("IEA", xmlReader.getLocalName());
-        assertEquals(Namespaces.SEGMENTS, xmlReader.getNamespaceURI());
+        assertEquals(EDINamespaces.SEGMENTS, xmlReader.getNamespaceURI());
 
         assertEquals(XMLStreamConstants.END_ELEMENT, xmlReader.next());
         assertEquals("INTERCHANGE", xmlReader.getLocalName());
-        assertEquals(Namespaces.LOOPS, xmlReader.getName().getNamespaceURI());
+        assertEquals(EDINamespaces.LOOPS, xmlReader.getName().getNamespaceURI());
         assertEquals("l", xmlReader.getName().getPrefix());
         assertEquals(4, xmlReader.getNamespaceCount());
-        assertEquals(Namespaces.LOOPS, xmlReader.getNamespaceURI());
+        assertEquals(EDINamespaces.LOOPS, xmlReader.getNamespaceURI());
 
         assertEquals(XMLStreamConstants.END_DOCUMENT, xmlReader.next());
     }
@@ -644,5 +674,12 @@ public class StaEDIXMLStreamReaderTest {
         assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.next()); // BIN02;
         assertEquals(XMLStreamConstants.CDATA, xmlReader.next()); // BIN02 content;
         assertEquals(XMLStreamConstants.END_ELEMENT, xmlReader.next()); // BIN02;
+    }
+
+    @Test
+    void testGetProperty() throws Exception {
+        XMLStreamReader xmlReader = getXmlReader(DUMMY_X12);
+        assertNull(xmlReader.getProperty("DUMMY"));
+        assertThrows(IllegalArgumentException.class, () -> xmlReader.getProperty(null));
     }
 }

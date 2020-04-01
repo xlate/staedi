@@ -12,13 +12,13 @@ import javax.xml.namespace.QName;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 
-import io.xlate.edi.stream.EDIStreamConstants.Namespaces;
 import io.xlate.edi.stream.EDIStreamException;
 import io.xlate.edi.stream.EDIStreamWriter;
+import io.xlate.edi.stream.EDINamespaces;
 
-public final class StaEDIXMLStreamWriter implements XMLStreamWriter {
+final class StaEDIXMLStreamWriter implements XMLStreamWriter {
 
-    private static final QName INTERCHANGE = new QName(Namespaces.LOOPS, "INTERCHANGE");
+    private static final QName INTERCHANGE = new QName(EDINamespaces.LOOPS, "INTERCHANGE");
 
     private final EDIStreamWriter ediWriter;
 
@@ -28,7 +28,7 @@ public final class StaEDIXMLStreamWriter implements XMLStreamWriter {
     private NamespaceContext namespaceContext;
     private final Deque<Map<String, String>> namespaceStack = new ArrayDeque<>();
 
-    public StaEDIXMLStreamWriter(EDIStreamWriter ediWriter) {
+    StaEDIXMLStreamWriter(EDIStreamWriter ediWriter) {
         this.ediWriter = ediWriter;
         namespaceStack.push(new HashMap<>()); // Root namespace scope
     }
@@ -62,7 +62,7 @@ public final class StaEDIXMLStreamWriter implements XMLStreamWriter {
         namespaceStack.push(new HashMap<>());
 
         switch (name.getNamespaceURI()) {
-        case Namespaces.COMPOSITES:
+        case EDINamespaces.COMPOSITES:
             if (repeatedElement(name, previousElement)) {
                 execute(ediWriter::writeRepeatElement);
             } else {
@@ -70,8 +70,8 @@ public final class StaEDIXMLStreamWriter implements XMLStreamWriter {
             }
             elementStack.push(name);
             break;
-        case Namespaces.ELEMENTS:
-            if (Namespaces.COMPOSITES.equals(elementStack.element().getNamespaceURI())) {
+        case EDINamespaces.ELEMENTS:
+            if (EDINamespaces.COMPOSITES.equals(elementStack.element().getNamespaceURI())) {
                 execute(ediWriter::startComponent);
             } else {
                 if (repeatedElement(name, previousElement)) {
@@ -82,11 +82,11 @@ public final class StaEDIXMLStreamWriter implements XMLStreamWriter {
             }
             elementStack.push(name);
             break;
-        case Namespaces.LOOPS:
+        case EDINamespaces.LOOPS:
             // Loops are implicit when writing
             elementStack.push(name);
             break;
-        case Namespaces.SEGMENTS:
+        case EDINamespaces.SEGMENTS:
             execute(() -> ediWriter.writeStartSegment(name.getLocalPart()));
             elementStack.push(name);
             break;
@@ -100,22 +100,22 @@ public final class StaEDIXMLStreamWriter implements XMLStreamWriter {
         namespaceStack.remove();
 
         switch (name.getNamespaceURI()) {
-        case Namespaces.COMPOSITES:
+        case EDINamespaces.COMPOSITES:
             execute(ediWriter::endElement);
             previousElement = name;
             break;
-        case Namespaces.ELEMENTS:
-            if (Namespaces.COMPOSITES.equals(elementStack.element().getNamespaceURI())) {
+        case EDINamespaces.ELEMENTS:
+            if (EDINamespaces.COMPOSITES.equals(elementStack.element().getNamespaceURI())) {
                 execute(ediWriter::endComponent);
             } else {
                 execute(ediWriter::endElement);
                 previousElement = name;
             }
             break;
-        case Namespaces.LOOPS:
+        case EDINamespaces.LOOPS:
             // Loops are implicit when writing
             break;
-        case Namespaces.SEGMENTS:
+        case EDINamespaces.SEGMENTS:
             execute(ediWriter::writeEndSegment);
             break;
         default:
@@ -274,7 +274,7 @@ public final class StaEDIXMLStreamWriter implements XMLStreamWriter {
 
     @Override
     public void writeCharacters(String text) throws XMLStreamException {
-        if (Namespaces.ELEMENTS.equals(elementStack.element().getNamespaceURI())) {
+        if (EDINamespaces.ELEMENTS.equals(elementStack.element().getNamespaceURI())) {
             execute(() -> ediWriter.writeElementData(text));
         } else {
             for (int i = 0, m = text.length(); i < m; i++) {
@@ -288,7 +288,7 @@ public final class StaEDIXMLStreamWriter implements XMLStreamWriter {
 
     @Override
     public void writeCharacters(char[] text, int start, int len) throws XMLStreamException {
-        if (Namespaces.ELEMENTS.equals(elementStack.element().getNamespaceURI())) {
+        if (EDINamespaces.ELEMENTS.equals(elementStack.element().getNamespaceURI())) {
             execute(() -> ediWriter.writeElementData(text, start, start + len));
         } else {
             for (int i = start, m = start + len; i < m; i++) {

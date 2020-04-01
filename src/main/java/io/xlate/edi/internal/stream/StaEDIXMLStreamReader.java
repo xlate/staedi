@@ -31,16 +31,16 @@ import javax.xml.stream.Location;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
-import io.xlate.edi.stream.EDIStreamConstants.Namespaces;
 import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamException;
 import io.xlate.edi.stream.EDIStreamReader;
+import io.xlate.edi.stream.EDINamespaces;
 
-public class StaEDIXMLStreamReader implements XMLStreamReader {
+final class StaEDIXMLStreamReader implements XMLStreamReader {
 
     private static final Location location = new DefaultLocation();
     private static final QName DUMMY_QNAME = new QName("DUMMY");
-    private static final QName INTERCHANGE = new QName(Namespaces.LOOPS, "INTERCHANGE", prefixOf(Namespaces.LOOPS));
+    private static final QName INTERCHANGE = new QName(EDINamespaces.LOOPS, "INTERCHANGE", prefixOf(EDINamespaces.LOOPS));
 
     private final EDIStreamReader ediReader;
     private boolean autoAdvance;
@@ -53,7 +53,7 @@ public class StaEDIXMLStreamReader implements XMLStreamReader {
     private final StringBuilder cdataBuilder = new StringBuilder();
     private char[] cdata;
 
-    public StaEDIXMLStreamReader(EDIStreamReader ediReader) throws XMLStreamException {
+    StaEDIXMLStreamReader(EDIStreamReader ediReader) throws XMLStreamException {
         this.ediReader = ediReader;
 
         if (ediReader.getEventType() == EDIStreamEvent.START_INTERCHANGE) {
@@ -88,7 +88,7 @@ public class StaEDIXMLStreamReader implements XMLStreamReader {
             final int componentPosition = l.getComponentPosition();
 
             if (componentPosition > 0) {
-                name = String.format("%s-%d", parent.getLocalPart(), componentPosition);
+                name = String.format("%s-%02d", parent.getLocalPart(), componentPosition);
             } else {
                 name = String.format("%s%02d", parent.getLocalPart(), l.getElementPosition());
             }
@@ -121,7 +121,7 @@ public class StaEDIXMLStreamReader implements XMLStreamReader {
 
         switch (ediEvent) {
         case ELEMENT_DATA:
-            name = buildName(elementStack.getFirst(), Namespaces.ELEMENTS);
+            name = buildName(elementStack.getFirst(), EDINamespaces.ELEMENTS);
             enqueueEvent(START_ELEMENT, name, false);
             enqueueEvent(CHARACTERS, DUMMY_QNAME, false);
             enqueueEvent(END_ELEMENT, name, false);
@@ -132,7 +132,7 @@ public class StaEDIXMLStreamReader implements XMLStreamReader {
              * This section will read the binary data and Base64 the stream
              * into an XML CDATA section.
              * */
-            name = buildName(elementStack.getFirst(), Namespaces.ELEMENTS);
+            name = buildName(elementStack.getFirst(), EDINamespaces.ELEMENTS);
             enqueueEvent(START_ELEMENT, name, false);
             enqueueEvent(CDATA, DUMMY_QNAME, false);
 
@@ -167,19 +167,19 @@ public class StaEDIXMLStreamReader implements XMLStreamReader {
             break;
 
         case START_SEGMENT:
-            name = buildName(elementStack.getFirst(), Namespaces.SEGMENTS, ediReader.getText());
+            name = buildName(elementStack.getFirst(), EDINamespaces.SEGMENTS, ediReader.getText());
             enqueueEvent(START_ELEMENT, name, true);
             break;
 
         case START_GROUP:
         case START_TRANSACTION:
         case START_LOOP:
-            name = buildName(elementStack.getFirst(), Namespaces.LOOPS, ediReader.getText());
+            name = buildName(elementStack.getFirst(), EDINamespaces.LOOPS, ediReader.getText());
             enqueueEvent(START_ELEMENT, name, true);
             break;
 
         case START_COMPOSITE:
-            name = buildName(elementStack.getFirst(), Namespaces.COMPOSITES, ediReader.getReferenceCode());
+            name = buildName(elementStack.getFirst(), EDINamespaces.COMPOSITES, ediReader.getReferenceCode());
             enqueueEvent(START_ELEMENT, name, true);
             break;
 
@@ -248,46 +248,58 @@ public class StaEDIXMLStreamReader implements XMLStreamReader {
             throw new XMLStreamException("Current type " + currentType + " does not match required type " + type);
         }
 
-        if (localName != null && hasName()) {
-            final QName name = getName();
-            final String currentLocalPart = name.getLocalPart();
-
-            if (!localName.equals(currentLocalPart)) {
-                throw new XMLStreamException("Current localPart " + currentLocalPart
-                        + " does not match required localName " + localName);
+        if (namespaceURI != null || localName != null) {
+            if (!hasName()) {
+                throw new XMLStreamException("Current type " + currentType + " does not have a corresponding name");
             }
-        }
 
-        if (namespaceURI != null) {
-            throw new XMLStreamException("Current namespace '' does not match namespaceURI " + namespaceURI);
+            final QName name = getName();
+
+            if (localName != null) {
+                final String currentLocalPart = name.getLocalPart();
+
+                if (!localName.equals(currentLocalPart)) {
+                    throw new XMLStreamException("Current localPart " + currentLocalPart
+                            + " does not match required localName " + localName);
+                }
+            }
+
+            if (namespaceURI != null) {
+                final String currentURI = name.getNamespaceURI();
+
+                if (!namespaceURI.equals(currentURI)) {
+                    throw new XMLStreamException("Current namespace " + currentURI
+                            + " does not match required namespaceURI " + namespaceURI);
+                }
+            }
         }
     }
 
-    static void streamException(String message) throws XMLStreamException {
-        throw new XMLStreamException(message);
+    static XMLStreamException streamException(String message) {
+        return new XMLStreamException(message);
     }
 
     @Override
     public String getElementText() throws XMLStreamException {
         if (ediReader.getEventType() != EDIStreamEvent.ELEMENT_DATA) {
-            streamException("Element text only available for simple element");
+            throw streamException("Element text only available for simple element");
         }
 
         if (getEventType() != START_ELEMENT) {
-            streamException("Element text only available on START_ELEMENT");
+            throw streamException("Element text only available on START_ELEMENT");
         }
 
         int eventType = next();
 
         if (eventType != CHARACTERS) {
-            streamException("Unexpected event type: " + eventType);
+            throw streamException("Unexpected event type: " + eventType);
         }
 
         final String text = getText();
         eventType = next();
 
         if (eventType != END_ELEMENT) {
-            streamException("Unexpected event type after text " + eventType);
+            throw streamException("Unexpected event type after text " + eventType);
         }
 
         return text;
@@ -395,7 +407,7 @@ public class StaEDIXMLStreamReader implements XMLStreamReader {
     @Override
     public int getNamespaceCount() {
         if (INTERCHANGE.equals(elementQueue.element())) {
-            return Namespaces.all().size();
+            return EDINamespaces.all().size();
         }
         return 0;
     }
@@ -403,7 +415,7 @@ public class StaEDIXMLStreamReader implements XMLStreamReader {
     @Override
     public String getNamespacePrefix(int index) {
         if (INTERCHANGE.equals(elementQueue.element())) {
-            String namespace = Namespaces.all().get(index);
+            String namespace = EDINamespaces.all().get(index);
             return prefixOf(namespace);
         }
         return null;
@@ -412,7 +424,7 @@ public class StaEDIXMLStreamReader implements XMLStreamReader {
     @Override
     public String getNamespaceURI(int index) {
         if (INTERCHANGE.equals(elementQueue.element())) {
-            return Namespaces.all().get(index);
+            return EDINamespaces.all().get(index);
         }
         return null;
     }

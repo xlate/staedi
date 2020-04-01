@@ -8,13 +8,13 @@ import java.util.Map;
 
 import javax.xml.namespace.NamespaceContext;
 
-import io.xlate.edi.stream.EDIStreamConstants.Namespaces;
+import io.xlate.edi.stream.EDINamespaces;
 
 class DocumentNamespaceContext implements NamespaceContext {
     private final Map<String, String> namespaces;
 
     DocumentNamespaceContext() {
-        List<String> names = Namespaces.all();
+        List<String> names = EDINamespaces.all();
         namespaces = new HashMap<>(names.size());
         for (String namespace : names) {
             String prefix = StaEDIXMLStreamReader.prefixOf(namespace);

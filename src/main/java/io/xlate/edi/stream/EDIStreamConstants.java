@@ -15,9 +15,6 @@
  ******************************************************************************/
 package io.xlate.edi.stream;
 
-import java.util.Arrays;
-import java.util.List;
-
 public interface EDIStreamConstants {
 
     public static class Standards {
@@ -38,19 +35,5 @@ public interface EDIStreamConstants {
         public static final String REPETITION = "io.xlate.edi.stream.delim.repetition";
         public static final String DECIMAL = "io.xlate.edi.stream.delim.decimal";
         public static final String RELEASE = "io.xlate.edi.stream.delim.release";
-    }
-
-    public static class Namespaces {
-        private Namespaces() {
-        }
-
-        public static final String LOOPS = "urn:xlate.io:staedi:names:loops";
-        public static final String SEGMENTS = "urn:xlate.io:staedi:names:segments";
-        public static final String COMPOSITES = "urn:xlate.io:staedi:names:composites";
-        public static final String ELEMENTS = "urn:xlate.io:staedi:names:elements";
-
-        public static final List<String> all() {
-            return Arrays.asList(LOOPS, SEGMENTS, COMPOSITES, ELEMENTS);
-        }
     }
 }

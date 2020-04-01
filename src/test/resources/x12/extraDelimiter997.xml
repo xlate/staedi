@@ -48,8 +48,8 @@
         <e:AK302>AK302-R1</e:AK302>
         <e:AK302>AK302-R2</e:AK302>
         <c:AK302>
-          <e:AK302-1>AK302-R3-COMP1</e:AK302-1>
-          <e:AK302-2>AK302-R3-COMP2</e:AK302-2>
+          <e:AK302-01>AK302-R3-COMP1</e:AK302-01>
+          <e:AK302-02>AK302-R3-COMP2</e:AK302-02>
         </c:AK302>
         <e:AK303/>
         <e:AK304>AK304-R1</e:AK304>
@@ -61,13 +61,13 @@
         <e:AK402>66</e:AK402>
         <e:AK403>7</e:AK403>
         <c:AK404>
-          <e:AK404-1>AK404-R1-COMP1</e:AK404-1>
-          <e:AK404-2>AK404-R1-COMP2</e:AK404-2>
-          <e:AK404-3>AK404-R1-COMP3</e:AK404-3>
+          <e:AK404-01>AK404-R1-COMP1</e:AK404-01>
+          <e:AK404-02>AK404-R1-COMP2</e:AK404-02>
+          <e:AK404-03>AK404-R1-COMP3</e:AK404-03>
         </c:AK404>
         <c:AK404>
-          <e:AK404-1>AK404-R2-COMP1</e:AK404-1>
-          <e:AK404-2>AK404-R2-COMP2</e:AK404-2>
+          <e:AK404-01>AK404-R2-COMP1</e:AK404-01>
+          <e:AK404-02>AK404-R2-COMP2</e:AK404-02>
         </c:AK404>
       </s:AK4>
       <s:AK5>
