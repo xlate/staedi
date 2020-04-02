@@ -22,7 +22,6 @@ import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Deque;
-import java.util.NoSuchElementException;
 import java.util.Queue;
 
 import javax.xml.namespace.NamespaceContext;
@@ -31,26 +30,33 @@ import javax.xml.stream.Location;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
-import io.xlate.edi.stream.EDIStreamEvent;
-import io.xlate.edi.stream.EDIStreamException;
-import io.xlate.edi.stream.EDIStreamReader;
 import io.xlate.edi.stream.EDINamespaces;
+import io.xlate.edi.stream.EDIStreamEvent;
+import io.xlate.edi.stream.EDIStreamReader;
 
 final class StaEDIXMLStreamReader implements XMLStreamReader {
 
-    private static final Location location = new DefaultLocation();
     private static final QName DUMMY_QNAME = new QName("DUMMY");
     private static final QName INTERCHANGE = new QName(EDINamespaces.LOOPS, "INTERCHANGE", prefixOf(EDINamespaces.LOOPS));
 
     private final EDIStreamReader ediReader;
+    private final Location location = new ProxyLocation();
     private boolean autoAdvance;
+
     private final Queue<Integer> eventQueue = new ArrayDeque<>(3);
     private final Queue<QName> elementQueue = new ArrayDeque<>(3);
-
     private final Deque<QName> elementStack = new ArrayDeque<>();
 
     private NamespaceContext namespaceContext;
+
     private final StringBuilder cdataBuilder = new StringBuilder();
+    private final OutputStream cdataStream = new OutputStream() {
+        @Override
+        public void write(int b) throws IOException {
+            cdataBuilder.append((char) b);
+        }
+    };
+
     private char[] cdata;
 
     StaEDIXMLStreamReader(EDIStreamReader ediReader) throws XMLStreamException {
@@ -138,21 +144,13 @@ final class StaEDIXMLStreamReader implements XMLStreamReader {
 
             // This only will work if using a validation filter!
             InputStream input = ediReader.getBinaryData();
-            OutputStream output = Base64.getEncoder().wrap(new OutputStream() {
-                @Override
-                public void write(int b) throws IOException {
-                    cdataBuilder.append((char) b);
-                }
-            });
             byte[] buffer = new byte[4096];
             int amount;
 
-            try {
+            try (OutputStream output = Base64.getEncoder().wrap(cdataStream)) {
                 while ((amount = input.read(buffer)) > -1) {
                     output.write(buffer, 0, amount);
                 }
-
-                output.close();
             } catch (IOException e) {
                 throw new XMLStreamException(e);
             }
@@ -232,7 +230,7 @@ final class StaEDIXMLStreamReader implements XMLStreamReader {
         if (eventQueue.isEmpty()) {
             try {
                 enqueueEvent(ediReader.next());
-            } catch (EDIStreamException | NoSuchElementException e) {
+            } catch (Exception e) {
                 throw new XMLStreamException(e);
             }
         }
@@ -320,7 +318,7 @@ final class StaEDIXMLStreamReader implements XMLStreamReader {
     public boolean hasNext() throws XMLStreamException {
         try {
             return ediReader.hasNext();
-        } catch (EDIStreamException e) {
+        } catch (Exception e) {
             throw new XMLStreamException(e);
         }
     }
@@ -328,6 +326,9 @@ final class StaEDIXMLStreamReader implements XMLStreamReader {
     @Override
     public void close() throws XMLStreamException {
         try {
+            eventQueue.clear();
+            elementQueue.clear();
+            elementStack.clear();
             ediReader.close();
         } catch (IOException e) {
             throw new XMLStreamException(e);
@@ -336,7 +337,10 @@ final class StaEDIXMLStreamReader implements XMLStreamReader {
 
     @Override
     public String getNamespaceURI(String prefix) {
-        throw new UnsupportedOperationException();
+        if (namespaceContext != null) {
+            return namespaceContext.getNamespaceURI(prefix);
+        }
+        return null;
     }
 
     @Override
@@ -602,20 +606,20 @@ final class StaEDIXMLStreamReader implements XMLStreamReader {
         return String.valueOf(namespace.substring(namespace.lastIndexOf(':') + 1).charAt(0));
     }
 
-    private static class DefaultLocation implements Location {
+    private class ProxyLocation implements Location {
         @Override
         public int getLineNumber() {
-            return -1;
+            return ediReader.getLocation().getLineNumber();
         }
 
         @Override
         public int getColumnNumber() {
-            return -1;
+            return ediReader.getLocation().getColumnNumber();
         }
 
         @Override
         public int getCharacterOffset() {
-            return -1;
+            return ediReader.getLocation().getCharacterOffset();
         }
 
         @Override

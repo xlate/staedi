@@ -81,10 +81,12 @@ public class StaEDIXMLStreamReaderTest {
     static byte[] TINY_X12 = ("ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~"
             + "IEA*1*508121953~").getBytes();
 
+    private EDIStreamReader ediReader;
+
     XMLStreamReader getXmlReader(String resource) throws XMLStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = getClass().getResourceAsStream(resource);
-        EDIStreamReader ediReader = factory.createEDIStreamReader(stream);
+        ediReader = factory.createEDIStreamReader(stream);
         return new StaEDIXMLStreamReader(ediReader);
     }
 
@@ -92,7 +94,7 @@ public class StaEDIXMLStreamReaderTest {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         factory.setProperty(EDIInputFactory.EDI_VALIDATE_CONTROL_STRUCTURE, "false");
         InputStream stream = new ByteArrayInputStream(bytes);
-        EDIStreamReader ediReader = factory.createEDIStreamReader(stream);
+        ediReader = factory.createEDIStreamReader(stream);
         assertEquals(EDIStreamEvent.START_INTERCHANGE, ediReader.next());
         return new StaEDIXMLStreamReader(ediReader);
     }
@@ -111,8 +113,11 @@ public class StaEDIXMLStreamReaderTest {
 
     @Test
     public void testHasNext() throws Exception {
-        XMLStreamReader xmlReader = getXmlReader(DUMMY_X12);
+        XMLStreamReader xmlReader = getXmlReader(TINY_X12);
         assertTrue(xmlReader.hasNext());
+        xmlReader.close();
+        assertThrows(XMLStreamException.class, () -> xmlReader.hasNext());
+        assertThrows(XMLStreamException.class, () -> xmlReader.next());
     }
 
     private static void assertSegmentBoundaries(XMLStreamReader xmlReader, String tag, int elementCount)
@@ -192,6 +197,12 @@ public class StaEDIXMLStreamReaderTest {
         assertEquals("          ", xmlReader.getElementText());
         assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.next()); // ISA03;
         assertEquals("00", xmlReader.getElementText());
+
+        assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.next()); // ISA04;
+        xmlReader.next(); // CHARACTERS
+        thrown = assertThrows(XMLStreamException.class, () -> xmlReader.getElementText());
+        assertEquals("Element text only available on START_ELEMENT", thrown.getMessage());
+
     }
 
     @Test
@@ -199,7 +210,11 @@ public class StaEDIXMLStreamReaderTest {
         XMLStreamReader xmlReader = getXmlReader(TINY_X12);
 
         assertEquals(XMLStreamConstants.START_DOCUMENT, xmlReader.next());
+        assertNull(xmlReader.getNamespaceURI());
+        assertThrows(IllegalStateException.class, () -> xmlReader.getName());
+
         assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.next());
+        assertEquals(EDINamespaces.LOOPS, xmlReader.getNamespaceURI("l"));
         assertEquals("INTERCHANGE", xmlReader.getLocalName());
         assertEquals(EDINamespaces.LOOPS, xmlReader.getName().getNamespaceURI());
         assertEquals("l", xmlReader.getName().getPrefix());
@@ -247,6 +262,7 @@ public class StaEDIXMLStreamReaderTest {
         assertEquals(EDINamespaces.LOOPS, xmlReader.getNamespaceURI());
 
         assertEquals(XMLStreamConstants.END_DOCUMENT, xmlReader.next());
+        assertNull(xmlReader.getNamespaceURI("l"));
     }
 
     private void assertElement(XMLStreamReader xmlReader, String tag, String value) throws Exception {
@@ -458,11 +474,15 @@ public class StaEDIXMLStreamReaderTest {
         assertEquals("ISA", xmlReader.getLocalName());
         assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.next()); // ISA01;
         assertEquals(XMLStreamConstants.CHARACTERS, xmlReader.next()); // ISA01 content;
+        assertNull(xmlReader.getNamespaceURI());
+        assertThrows(IllegalStateException.class, () -> xmlReader.getName());
 
         String textString = xmlReader.getText();
         assertEquals("00", textString);
         char[] textArray = xmlReader.getTextCharacters();
         assertArrayEquals(new char[] {'0', '0'}, textArray);
+        char[] textArray2 = xmlReader.getTextCharacters(); // 2nd call should be the same characters
+        assertArrayEquals(textArray, textArray2);
         char[] textArrayLocal = new char[3];
         xmlReader.getTextCharacters(xmlReader.getTextStart(), textArrayLocal, 0, xmlReader.getTextLength());
         assertArrayEquals(new char[] {'0', '0', '\0'}, textArrayLocal);
@@ -561,6 +581,8 @@ public class StaEDIXMLStreamReaderTest {
         assertEquals(XMLStreamConstants.CDATA, xmlReader.next()); // BIN02 content;
         String expected2 = Base64.getEncoder().encodeToString("12345678901234567890\n1234".getBytes());
         assertArrayEquals(expected2.toCharArray(), xmlReader.getTextCharacters());
+        assertArrayEquals(expected2.toCharArray(), xmlReader.getTextCharacters()); // 2nd call should be the same characters
+
         assertEquals(XMLStreamConstants.END_ELEMENT, xmlReader.next()); // BIN02;
 
         assertEquals(XMLStreamConstants.END_ELEMENT, xmlReader.next());
@@ -681,5 +703,21 @@ public class StaEDIXMLStreamReaderTest {
         XMLStreamReader xmlReader = getXmlReader(DUMMY_X12);
         assertNull(xmlReader.getProperty("DUMMY"));
         assertThrows(IllegalArgumentException.class, () -> xmlReader.getProperty(null));
+    }
+
+    @Test
+    void testLocationParity() throws Exception {
+        XMLStreamReader xmlReader = getXmlReader(DUMMY_X12);
+        boolean hasEvents = false;
+
+        while (xmlReader.hasNext()) {
+            hasEvents = true;
+            xmlReader.next();
+            assertEquals(ediReader.getLocation().getLineNumber(), xmlReader.getLocation().getLineNumber());
+            assertEquals(ediReader.getLocation().getColumnNumber(), xmlReader.getLocation().getColumnNumber());
+            assertEquals(ediReader.getLocation().getCharacterOffset(), xmlReader.getLocation().getCharacterOffset());
+        }
+
+        assertTrue(hasEvents);
     }
 }
