@@ -19,7 +19,6 @@ import io.xlate.edi.stream.EDIStreamConstants.Standards;
 
 public class EDIFACTDialect implements Dialect {
 
-    //TODO: Implement interactive and batch message types, support UNO/UNP for binary "packages"
     private static final String UNB = "UNB";
 
     private static final String[] EMPTY = new String[0];

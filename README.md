@@ -14,6 +14,7 @@ using a "pull" processing flow for EDI parsing and an emit flow for EDI generati
 - EDI Schema that allows for user-specified **validation** rules
 - Validation of **EDI standards** (segment occurrences, element type, element length constraints, etc.)
 - Validation of **industry implementations**, for example HIPAA
+- Read and write EDI data using standard Java XML interfaces (StAX)
 
 ## Using `EDIStreamReader`
 How to bootstrap the reader:
@@ -45,7 +46,7 @@ String segmentName = reader.getText();
 <dependency>
   <groupId>io.xlate</groupId>
   <artifactId>staedi</artifactId>
-  <version>1.2.1</version>
+  <version>1.3.0</version>
 </dependency>
 ```
 
