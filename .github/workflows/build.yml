@@ -58,7 +58,7 @@ jobs:
     needs: [build, javadoc]
     if: github.event_name == 'push' && github.repository == 'xlate/staedi'
     runs-on: ubuntu-latest
-    name: Quality
+    name: Verify Quality
 
     steps:
       - uses: actions/checkout@v2
@@ -66,7 +66,8 @@ jobs:
         with:
           java-version: 11
 
-      - name: Sonar
+      - name: Quality Analysis
         env:
           SONAR_TOKEN: ${{secrets.SONAR_TOKEN}}
-        run: mvn -B verify --file pom.xml -Pcoverage sonar:sonar -Dsonar.projectKey=xlate_staedi -Dsonar.login=$SONAR_TOKEN
+          COVERALLS_TOKEN: ${{secrets.COVERALLS_TOKEN}}
+        run: mvn -B verify --file pom.xml -Pcoverage sonar:sonar -Dsonar.projectKey=xlate_staedi -Dsonar.login=$SONAR_TOKEN -DrepoToken=COVERALLS_TOKEN
