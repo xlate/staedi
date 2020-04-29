@@ -38,10 +38,24 @@ jobs:
           java-version: ${{matrix.java}}
 
       - name: Maven build
-        run: mvn -B verify package javadoc:javadoc --file pom.xml
+        run: mvn -B verify package --file pom.xml
+
+  javadoc:
+    needs: [build]
+    runs-on: ubuntu-latest
+    name: Verify JavaDocs
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-java@v1.3.0
+        with:
+          java-version: 11
+
+      - name: Sonar
+        run: mvn -B javadoc:javadoc --file pom.xml
 
   quality:
-    needs: [build]
+    needs: [build, javadoc]
     if: github.event_name == 'push' && github.repository == 'xlate/staedi'
     runs-on: ubuntu-latest
     name: Quality
