@@ -632,6 +632,107 @@ public class StaEDIStreamWriterTest {
     }
 
     @Test
+    public void testInputEquivalenceEDIFACT_IATA_PNRGOV() throws Exception {
+        EDIInputFactory inputFactory = EDIInputFactory.newFactory();
+        final ByteArrayOutputStream expected = new ByteArrayOutputStream(16384);
+
+        InputStream source = new InputStream() {
+            final InputStream delegate;
+            {
+                delegate = getClass().getResourceAsStream("/EDIFACT/pnrgov.edi");
+            }
+
+            @Override
+            public int read() throws IOException {
+                int value = delegate.read();
+
+                if (value != -1) {
+                    expected.write(value);
+                    return value;
+                }
+
+                return -1;
+            }
+        };
+        EDIStreamReader reader = inputFactory.createEDIStreamReader(source);
+
+        EDIOutputFactory outputFactory = EDIOutputFactory.newFactory();
+        outputFactory.setProperty(EDIOutputFactory.PRETTY_PRINT, true);
+        ByteArrayOutputStream result = new ByteArrayOutputStream(16384);
+        EDIStreamWriter writer = null;
+
+        EDIStreamEvent event;
+        String tag = null;
+        boolean composite = false;
+
+        try {
+            while (reader.hasNext()) {
+                event = reader.next();
+
+                switch (event) {
+                case START_INTERCHANGE:
+                    for (Map.Entry<String, Character> delim : reader.getDelimiters().entrySet()) {
+                        outputFactory.setProperty(delim.getKey(), delim.getValue());
+                    }
+                    writer = outputFactory.createEDIStreamWriter(result);
+                    writer.startInterchange();
+                    break;
+                case END_INTERCHANGE:
+                    writer.endInterchange();
+                    break;
+                case START_SEGMENT:
+                    tag = reader.getText();
+                    writer.writeStartSegment(tag);
+                    break;
+                case END_SEGMENT:
+                    writer.writeEndSegment();
+                    break;
+                case START_COMPOSITE:
+                    writer.writeStartElement();
+                    composite = true;
+                    break;
+                case END_COMPOSITE:
+                    writer.endElement();
+                    composite = false;
+                    break;
+                case ELEMENT_DATA:
+                    String text = reader.getText();
+
+                    if ("UNA".equals(tag)) {
+                        continue;
+                    }
+
+                    if (composite) {
+                        writer.startComponent();
+                        writer.writeElementData(text);
+                        writer.endComponent();
+                    } else {
+                        if (reader.getLocation().getElementOccurrence() > 1) {
+                            writer.writeRepeatElement();
+                        } else {
+                            writer.writeStartElement();
+                        }
+                        writer.writeElementData(text);
+                        writer.endElement();
+                    }
+                    break;
+                case ELEMENT_DATA_BINARY:
+                    writer.writeStartElementBinary();
+                    writer.writeBinaryData(reader.getBinaryData());
+                    writer.endElement();
+                    break;
+                default:
+                    break;
+                }
+            }
+        } finally {
+            reader.close();
+        }
+
+        assertEquals(expected.toString().trim(), result.toString().trim());
+    }
+
+    @Test
     public void testInputEquivalenceEDIFACTB() throws Exception {
         EDIInputFactory inputFactory = EDIInputFactory.newFactory();
         final ByteArrayOutputStream expected = new ByteArrayOutputStream(16384);

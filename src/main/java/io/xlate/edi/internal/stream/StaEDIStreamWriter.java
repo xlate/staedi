@@ -495,9 +495,15 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         ensureLevelAtLeast(LEVEL_ELEMENT);
         for (int i = 0, m = text.length(); i < m; i++) {
             char curr = text.charAt(i);
+
             if (characters.isDelimiter(curr)) {
-                throw new IllegalArgumentException("Value contains separator");
+                if (releaseIndicator > 0) {
+                    write(releaseIndicator);
+                } else {
+                    throw new IllegalArgumentException("Value contains separator: " + curr);
+                }
             }
+
             write(curr);
             elementBuffer.put(curr);
         }
