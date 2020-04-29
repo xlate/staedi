@@ -61,6 +61,7 @@ public enum State {
     ELEMENT_END_BINARY(17),
 
     SEGMENT_END(10),
+    SEGMENT_EMPTY(10),
 
     TRAILER_TAG_I(18),
     TRAILER_TAG_E(19),
@@ -111,6 +112,7 @@ public enum State {
     private static final State ER = State.ELEMENT_REPEAT;
     private static final State EE = State.ELEMENT_END;
     private static final State SE = State.SEGMENT_END;
+    private static final State SY = State.SEGMENT_EMPTY;
 
     private static final State ZI = State.TRAILER_TAG_I;
     private static final State ZE = State.TRAILER_TAG_E;
@@ -157,8 +159,8 @@ public enum State {
 
         /* SE+TS Tag Search */{ TS, T1, T1, T1, ZI, T1, T1, ZU, T1, T1, __, __, __, __, __, TS, __, __, __ },
         /* T1  Tag Char 1 * */{ __, T2, T2, T2, T2, T2, T2, T2, T2, T2, __, __, __, __, __, __, __, __, __ },
-        /* T2  Tag Char 2 * */{ __, T3, T3, T3, T3, T3, T3, T3, T3, T3, __, SB, __, __, __, __, __, __, __ },
-        /* T3  Tag Char 3 * */{ __, __, __, __, __, __, __, __, __, __, __, SB, __, __, __, __, __, __, __ },
+        /* T2  Tag Char 2 * */{ __, T3, T3, T3, T3, T3, T3, T3, T3, T3, SY, SB, __, __, __, __, __, __, __ },
+        /* T3  Tag Char 3 * */{ __, __, __, __, __, __, __, __, __, __, SY, SB, __, __, __, __, __, __, __ },
 
         /* Element Process  */{ ED, ED, ED, ED, ED, ED, ED, ED, ED, ED, SE, EE, CE, ER, DR, EI, EI, ED, EI },
         /* Data Release     */{ ED, ED, ED, ED, ED, ED, ED, ED, ED, ED, ED, ED, ED, ED, ED, EI, EI, ED, EI },

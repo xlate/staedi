@@ -232,6 +232,10 @@ public class Lexer {
                 closeSegment();
                 eventsReady = nextEvent();
                 break;
+            case SEGMENT_EMPTY:
+                emptySegment();
+                eventsReady = nextEvent();
+                break;
             case COMPONENT_END:
                 handleComponent();
                 eventsReady = nextEvent();
@@ -265,12 +269,12 @@ public class Lexer {
     }
 
     void handleStateHeaderTag(int input) {
-    	buffer.put((char) input);
+        buffer.put((char) input);
         dialect.appendHeader(characters, (char) input);
     }
 
     void handleStateElementDataBinary() {
-    	/*
+        /*
          * Not all of the binary data has been consumed. I.e. #next was
          * called before completion.
          */
@@ -280,7 +284,7 @@ public class Lexer {
     }
 
     void handleStateInterchangeCandidate(int input) throws EDIException {
-    	stream.mark(500);
+        stream.mark(500);
         buffer.put((char) input);
         final char[] header = buffer.array();
         final int length = buffer.position();
@@ -293,7 +297,7 @@ public class Lexer {
     }
 
     void handleStateHeaderData(int input) throws EDIException {
-    	dialect.appendHeader(characters, (char) input);
+        dialect.appendHeader(characters, (char) input);
 
         if (characters.isDelimiter(input)) {
             if (characters.getDelimiter(CharacterClass.SEGMENT_DELIMITER) == input) {
@@ -437,6 +441,12 @@ public class Lexer {
 
     private void closeSegment() throws EDIException {
         handleElement();
+        popMode(Mode.SEGMENT);
+        enqueue(sen, 0);
+    }
+
+    private void emptySegment() throws EDIException {
+        openSegment();
         popMode(Mode.SEGMENT);
         enqueue(sen, 0);
     }
