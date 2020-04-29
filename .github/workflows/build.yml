@@ -51,8 +51,8 @@ jobs:
         with:
           java-version: 11
 
-      - name: Sonar
-        run: mvn -B javadoc:javadoc --file pom.xml
+      - name: Generate JavaDocs
+        run: mvn -B package javadoc:javadoc --file pom.xml
 
   quality:
     needs: [build, javadoc]
