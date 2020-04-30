@@ -33,12 +33,18 @@ jobs:
         name: Checkout
 
       - uses: actions/setup-java@v1.3.0
-        name: Set up JDK ${{matrix.java}}
+        name: Setup JDK ${{matrix.java}}
         with:
           java-version: ${{matrix.java}}
 
       - name: Maven build
         run: mvn -B verify package --file pom.xml
+
+      - name: Coveralls Analysis
+        if: matrix.java == '11'
+        env:
+          COVERALLS_TOKEN: ${{secrets.COVERALLS_TOKEN}}
+        run: mvn coveralls:report -Pcoverage -DrepoToken=$COVERALLS_TOKEN
 
   javadoc:
     runs-on: ubuntu-latest
@@ -52,26 +58,6 @@ jobs:
 
       - name: Generate JavaDocs
         run: mvn -B verify javadoc:javadoc --file pom.xml
-
-  coverage:
-    needs: [build, javadoc]
-    runs-on: ubuntu-latest
-    name: Verify Coverage
-
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-java@v1.3.0
-        with:
-          java-version: 11
-
-      - name: Generate Coveralls Report
-        run: mvn -B verify --file pom.xml -Pcoverage -DdryRun=true
-
-      - name: Coveralls Analysis
-        uses: coverallsapp/github-action@master
-        with:
-          github-token: ${{secrets.GITHUB_TOKEN}}
-          path-to-lcov: ./target/coveralls.json
 
   quality:
     needs: [build, javadoc]
