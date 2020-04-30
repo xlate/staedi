@@ -44,7 +44,7 @@ jobs:
         if: matrix.java == '11'
         env:
           COVERALLS_TOKEN: ${{secrets.COVERALLS_TOKEN}}
-        run: mvn coveralls:report -Pcoverage -DrepoToken=$COVERALLS_TOKEN
+        run: mvn -B coveralls:report -Pcoverage -DrepoToken=$COVERALLS_TOKEN -DserviceName=GitHub
 
   javadoc:
     runs-on: ubuntu-latest
