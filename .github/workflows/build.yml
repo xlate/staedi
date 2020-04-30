@@ -4,7 +4,7 @@ on:
   push:
     paths-ignore:
       - '.gitignore'
-      - '.travis.yml'
+      - '.travis.yml*'
       - 'ci_build.sh'
       - 'ci_coverage.sh'
       - 'LICENSE'
@@ -13,7 +13,7 @@ on:
   pull_request:
     paths-ignore:
       - '.gitignore'
-      - '.travis.yml'
+      - '.travis.yml*'
       - 'ci_build.sh'
       - 'ci_coverage.sh'
       - 'LICENSE'
@@ -41,9 +41,8 @@ jobs:
         run: mvn -B verify package --file pom.xml
 
   javadoc:
-    needs: [build]
     runs-on: ubuntu-latest
-    name: Verify Coverage and JavaDocs
+    name: Verify JavaDocs
 
     steps:
       - uses: actions/checkout@v2
@@ -51,13 +50,8 @@ jobs:
         with:
           java-version: 11
 
-      - name: Maven build
-        run: mvn -B -Pcoverage verify javadoc:javadoc --file pom.xml
-
-      - name: Coveralls
-        uses: coverallsapp/github-action@master
-        with:
-          github-token: ${{secrets.GITHUB_TOKEN}}
+      - name: Generate JavaDocs
+        run: mvn -B verify javadoc:javadoc --file pom.xml
 
   quality:
     needs: [build, javadoc]
@@ -71,7 +65,12 @@ jobs:
         with:
           java-version: 11
 
-      - name: Quality Analysis
+      - name: SonarCloud Analysis
         env:
           SONAR_TOKEN: ${{secrets.SONAR_TOKEN}}
         run: mvn -B verify --file pom.xml sonar:sonar -Dsonar.projectKey=xlate_staedi -Dsonar.login=$SONAR_TOKEN
+
+      - name: Coveralls Analysis
+        uses: coverallsapp/github-action@master
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
