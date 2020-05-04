@@ -43,7 +43,7 @@ public class ProxyEventHandler implements EventHandler {
     private boolean transaction = false;
 
     private InputStream binary;
-    private CharArraySequence segmentHolder = new CharArraySequence();
+    private String segmentTag;
     private CharArraySequence elementHolder = new CharArraySequence();
 
     private StreamEvent[] events = new StreamEvent[99];
@@ -166,23 +166,23 @@ public class ProxyEventHandler implements EventHandler {
     }
 
     @Override
-    public boolean segmentBegin(char[] text, int start, int length) {
-        segmentHolder.set(text, start, length);
+    public boolean segmentBegin(String segmentTag) {
+        this.segmentTag = segmentTag;
 
         Validator validator = validator();
         boolean eventsReady = true;
 
         if (validator != null) {
-            validator.validateSegment(this, segmentHolder);
+            validator.validateSegment(this, segmentTag);
             eventsReady = !validator.isPendingDiscrimination();
         }
 
-        if (exitTransaction(segmentHolder)) {
+        if (exitTransaction(segmentTag)) {
             transaction = false;
-            validator().validateSegment(this, segmentHolder);
+            validator().validateSegment(this, segmentTag);
         }
 
-        enqueueEvent(EDIStreamEvent.START_SEGMENT, EDIStreamValidationError.NONE, segmentHolder, null, location);
+        enqueueEvent(EDIStreamEvent.START_SEGMENT, EDIStreamValidationError.NONE, segmentTag, null, location);
         return eventsReady;
     }
 
@@ -198,7 +198,7 @@ public class ProxyEventHandler implements EventHandler {
         }
 
         location.clearSegmentLocations();
-        enqueueEvent(EDIStreamEvent.END_SEGMENT, EDIStreamValidationError.NONE, segmentHolder, null, location);
+        enqueueEvent(EDIStreamEvent.END_SEGMENT, EDIStreamValidationError.NONE, segmentTag, null, location);
         transactionSchemaAllowed = false;
         return true;
     }
@@ -370,7 +370,7 @@ public class ProxyEventHandler implements EventHandler {
 
     private void enqueueEvent(EDIStreamEvent event,
                               EDIStreamValidationError error,
-                              CharArraySequence holder,
+                              CharSequence holder,
                               CharSequence code,
                               Location location) {
 

@@ -59,7 +59,16 @@
     <elementType name="IK402" base="string" maxLength="4"/>
     <elementType name="IK403" base="string" maxLength="3"/>
     <elementType name="IK404" base="string" maxLength="99"/>
-    <elementType name="IK501" base="string"/>
+    <elementType name="IK501" base="identifier">
+      <enumeration>
+        <value>A</value>
+        <value>E</value>
+        <value>M</value>
+        <value>R</value>
+        <value>W</value>
+        <value>X</value>
+      </enumeration>
+    </elementType>
     <elementType name="IK502" base="string" maxLength="3"/>
     <elementType name="IK503" base="string" maxLength="3"/>
     <elementType name="IK504" base="string" maxLength="3"/>

@@ -35,6 +35,7 @@ public class StaEDIStreamLocation extends LocationView implements Location {
         copy.columnNumber = this.columnNumber;
         copy.characterOffset = this.characterOffset;
         copy.segmentPosition = this.segmentPosition;
+        copy.segmentTag = this.segmentTag;
         copy.elementPosition = this.elementPosition;
         copy.elementOccurrence = this.elementOccurrence;
         copy.componentPosition = this.componentPosition;
@@ -47,6 +48,7 @@ public class StaEDIStreamLocation extends LocationView implements Location {
         columnNumber = source.getColumnNumber();
         characterOffset = source.getCharacterOffset();
         segmentPosition = source.getSegmentPosition();
+        segmentTag = source.getSegmentTag();
         elementPosition = source.getElementPosition();
         componentPosition = source.getComponentPosition();
         elementOccurrence = source.getElementOccurrence();
@@ -73,12 +75,14 @@ public class StaEDIStreamLocation extends LocationView implements Location {
         this.columnNumber++;
     }
 
-    public void incrementSegmentPosition() {
+    public void incrementSegmentPosition(String segmentTag) {
         if (this.segmentPosition < 0) {
             this.segmentPosition = 1;
         } else {
             this.segmentPosition++;
         }
+
+        this.segmentTag = segmentTag;
 
         clearSegmentLocations();
     }

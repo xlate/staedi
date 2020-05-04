@@ -21,7 +21,7 @@ public interface EventHandler extends ElementDataHandler, ValidationEventHandler
 
     void interchangeEnd();
 
-    boolean segmentBegin(char[] text, int start, int length);
+    boolean segmentBegin(String tag);
 
     boolean segmentEnd();
 

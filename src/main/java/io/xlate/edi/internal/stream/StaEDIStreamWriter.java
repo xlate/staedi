@@ -287,7 +287,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     @Override
     public EDIStreamWriter writeStartSegment(String name) throws EDIStreamException {
         ensureLevel(LEVEL_INTERCHANGE);
-        location.incrementSegmentPosition();
+        location.incrementSegmentPosition(name);
         validate(validator -> validator.validateSegment(this, name));
 
         if (exitTransaction(name)) {

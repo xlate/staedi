@@ -34,6 +34,7 @@ import io.xlate.edi.internal.stream.tokenization.ProxyEventHandler;
 import io.xlate.edi.schema.EDISchemaException;
 import io.xlate.edi.schema.Schema;
 import io.xlate.edi.stream.EDIInputFactory;
+import io.xlate.edi.stream.EDIReporter;
 import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamException;
 import io.xlate.edi.stream.EDIStreamReader;
@@ -49,6 +50,7 @@ public class StaEDIStreamReader implements EDIStreamReader {
     private final String encoding;
     private Schema controlSchema;
     private final Map<String, Object> properties;
+    private final EDIReporter reporter;
     private final StaEDIStreamLocation location = new StaEDIStreamLocation();
     private final ProxyEventHandler proxy;
     private final Lexer lexer;
@@ -60,11 +62,13 @@ public class StaEDIStreamReader implements EDIStreamReader {
             InputStream stream,
             String encoding,
             Schema schema,
-            Map<String, Object> properties) {
+            Map<String, Object> properties,
+            EDIReporter reporter) {
         this.stream = stream;
         this.encoding = encoding;
         this.controlSchema = schema;
         this.properties = new HashMap<>(properties);
+        this.reporter = reporter;
         this.proxy = new ProxyEventHandler(location, this.controlSchema);
         this.lexer = new Lexer(this.stream, proxy, location);
     }
@@ -119,8 +123,7 @@ public class StaEDIStreamReader implements EDIStreamReader {
         return Collections.unmodifiableMap(delimiters);
     }
 
-    @Override
-    public EDIStreamEvent next() throws EDIStreamException {
+    private EDIStreamEvent nextEvent() throws EDIStreamException {
         ensureOpen();
         ensureIncomplete();
 
@@ -161,6 +164,24 @@ public class StaEDIStreamReader implements EDIStreamReader {
                 throw new EDIStreamException("Failed to parse binary element length", location, e);
             }
         }
+
+        return event;
+    }
+
+    @Override
+    public EDIStreamEvent next() throws EDIStreamException {
+        EDIStreamEvent event = null;
+        boolean eventFound = false;
+
+        do {
+            event = nextEvent();
+
+            if (this.reporter != null && event.isError()) {
+                reporter.report(getErrorType(), this);
+            } else {
+                eventFound = true;
+            }
+        } while (!complete && !eventFound);
 
         return event;
     }

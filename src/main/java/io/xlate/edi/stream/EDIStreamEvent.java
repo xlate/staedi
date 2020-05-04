@@ -22,7 +22,21 @@ public enum EDIStreamEvent {
     START_LOOP,
     END_LOOP,
 
-    SEGMENT_ERROR,
-    ELEMENT_DATA_ERROR,
-    ELEMENT_OCCURRENCE_ERROR;
+    SEGMENT_ERROR(true),
+    ELEMENT_DATA_ERROR(true),
+    ELEMENT_OCCURRENCE_ERROR(true);
+
+    private final boolean error;
+
+    private EDIStreamEvent(boolean error) {
+        this.error = error;
+    }
+
+    private EDIStreamEvent() {
+        this(false);
+    }
+
+    public boolean isError() {
+        return error;
+    }
 }

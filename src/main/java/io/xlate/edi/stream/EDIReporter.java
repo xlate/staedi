@@ -14,9 +14,9 @@ public interface EDIReporter {
      *
      * @param errorType
      *            the type of error detected
-     * @param location
-     *            the location of the error, if available
+     * @param reader
+     *            the EDIStreamReader that encountered the error
      * @throws EDIStreamException
      */
-    public void report(EDIStreamValidationError errorType, Location location) throws EDIStreamException;
+    void report(EDIStreamValidationError errorType, EDIStreamReader reader) throws EDIStreamException;
 }

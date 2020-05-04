@@ -33,6 +33,12 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.xml.namespace.NamespaceContext;
@@ -43,6 +49,7 @@ import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stax.StAXResult;
 import javax.xml.transform.stax.StAXSource;
@@ -59,13 +66,15 @@ import org.xmlunit.diff.Diff;
 import io.xlate.edi.schema.Schema;
 import io.xlate.edi.schema.SchemaFactory;
 import io.xlate.edi.stream.EDIInputFactory;
+import io.xlate.edi.stream.EDINamespaces;
 import io.xlate.edi.stream.EDIOutputFactory;
 import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamException;
 import io.xlate.edi.stream.EDIStreamFilter;
 import io.xlate.edi.stream.EDIStreamReader;
+import io.xlate.edi.stream.EDIStreamValidationError;
 import io.xlate.edi.stream.EDIStreamWriter;
-import io.xlate.edi.stream.EDINamespaces;
+import io.xlate.edi.stream.Location;
 
 @SuppressWarnings("resource")
 public class StaEDIXMLStreamReaderTest {
@@ -362,9 +371,7 @@ public class StaEDIXMLStreamReaderTest {
         SchemaFactory schemaFactory = SchemaFactory.newFactory();
         Schema schema = schemaFactory.createSchema(getClass().getResource("/x12/EDISchema997.xml"));
         EDIStreamReader ediReader = factory.createEDIStreamReader(stream);
-        EDIStreamFilter ediFilter = new EDIStreamFilter() {
-            @Override
-            public boolean accept(EDIStreamReader reader) {
+        EDIStreamFilter ediFilter = (reader) -> {
                 switch (reader.getEventType()) {
                 case START_INTERCHANGE:
                 case START_GROUP:
@@ -380,8 +387,7 @@ public class StaEDIXMLStreamReaderTest {
                 default:
                     return false;
                 }
-            }
-        };
+            };
         ediReader = factory.createFilteredReader(ediReader, ediFilter);
         XMLStreamReader xmlReader = new StaEDIXMLStreamReader(ediReader);
 
@@ -494,9 +500,7 @@ public class StaEDIXMLStreamReaderTest {
         InputStream stream = getClass().getResourceAsStream("/x12/simple_with_binary_segment.edi");
         EDIStreamReader ediReader = factory.createEDIStreamReader(stream);
         AtomicReference<String> segmentName = new AtomicReference<>();
-        EDIStreamFilter ediFilter = new EDIStreamFilter() {
-            @Override
-            public boolean accept(EDIStreamReader reader) {
+        EDIStreamFilter ediFilter = (reader) -> {
                 switch (reader.getEventType()) {
                 case START_SEGMENT:
                 	segmentName.set(reader.getText());
@@ -515,8 +519,7 @@ public class StaEDIXMLStreamReaderTest {
                 default:
                     return "BIN".equals(segmentName.get());
                 }
-            }
-        };
+            };
         ediReader = factory.createFilteredReader(ediReader, ediFilter);
         XMLStreamReader xmlReader = new StaEDIXMLStreamReader(ediReader);
 
@@ -719,5 +722,112 @@ public class StaEDIXMLStreamReaderTest {
         }
 
         assertTrue(hasEvents);
+    }
+
+    @Test
+    void testEDIReporterSet() throws Exception {
+        EDIInputFactory ediFactory = EDIInputFactory.newFactory();
+        Map<String, Set<EDIStreamValidationError>> errors = new LinkedHashMap<>();
+        ediFactory.setEDIReporter((errorEvent, reader) -> {
+            Location location = reader.getLocation();
+            String key;
+
+            if (location.getElementPosition() > 0) {
+                key = String.format("%s%02d@%d",
+                                       location.getSegmentTag(),
+                                       location.getElementPosition(),
+                                       location.getSegmentPosition());
+            } else {
+                key = String.format("%s@%d",
+                                    location.getSegmentTag(),
+                                    location.getSegmentPosition());
+            }
+
+            if (!errors.containsKey(key)) {
+                errors.put(key, new HashSet<EDIStreamValidationError>(2));
+            }
+
+            errors.get(key).add(errorEvent);
+        });
+        InputStream stream = getClass().getResourceAsStream("/x12/invalid999.edi");
+        SchemaFactory schemaFactory = SchemaFactory.newFactory();
+        Schema schema = schemaFactory.createSchema(getClass().getResource("/x12/EDISchema999.xml"));
+
+        EDIStreamReader ediReader = ediFactory.createEDIStreamReader(stream);
+        ediReader = ediFactory.createFilteredReader(ediReader, (reader) -> {
+            if (reader.getEventType() == EDIStreamEvent.START_TRANSACTION) {
+                reader.setTransactionSchema(schema);
+            }
+            return true;
+        });
+
+        XMLStreamReader xmlReader = new StaEDIXMLStreamReader(ediReader);
+
+        xmlReader.next(); // Per StAXSource JavaDoc, put in START_DOCUMENT state
+        TransformerFactory factory = TransformerFactory.newInstance();
+        Transformer transformer = factory.newTransformer();
+        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+        transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
+        StringWriter result = new StringWriter();
+        transformer.transform(new StAXSource(xmlReader), new StreamResult(result));
+        String resultString = result.toString();
+        System.out.println("Errors: " + errors);
+        System.out.println(resultString);
+
+        Iterator<Entry<String, Set<EDIStreamValidationError>>> errorSet = errors.entrySet().iterator();
+        Entry<String, Set<EDIStreamValidationError>> error = errorSet.next();
+        assertEquals("IK5@4", error.getKey());
+        assertEquals(EDIStreamValidationError.UNEXPECTED_SEGMENT, error.getValue().iterator().next());
+        error = errorSet.next();
+        assertEquals("AK101@5", error.getKey());
+        assertEquals(EDIStreamValidationError.DATA_ELEMENT_TOO_LONG, error.getValue().iterator().next());
+        error = errorSet.next();
+        assertEquals("AK204@6", error.getKey());
+        assertEquals(EDIStreamValidationError.TOO_MANY_DATA_ELEMENTS, error.getValue().iterator().next());
+        error = errorSet.next();
+        assertEquals("AK205@6", error.getKey());
+        assertEquals(EDIStreamValidationError.TOO_MANY_DATA_ELEMENTS, error.getValue().iterator().next());
+        error = errorSet.next();
+        assertEquals("IK501@7", error.getKey());
+        assertEquals(EDIStreamValidationError.INVALID_CODE_VALUE, error.getValue().iterator().next());
+        error = errorSet.next();
+        assertEquals("IK5@8", error.getKey());
+        assertEquals(EDIStreamValidationError.SEGMENT_EXCEEDS_MAXIMUM_USE, error.getValue().iterator().next());
+
+        Diff d = DiffBuilder.compare(Input.fromFile("src/test/resources/x12/invalid999_transformed.xml"))
+                   .withTest(resultString).build();
+        assertTrue(!d.hasDifferences(), () -> "XML unexpectedly different:\n" + d.toString(new DefaultComparisonFormatter()));
+    }
+
+    @Test
+    void testEDIReporterUnset() throws Exception {
+        EDIInputFactory ediFactory = EDIInputFactory.newFactory();
+        InputStream stream = getClass().getResourceAsStream("/x12/invalid999.edi");
+        SchemaFactory schemaFactory = SchemaFactory.newFactory();
+        Schema schema = schemaFactory.createSchema(getClass().getResource("/x12/EDISchema999.xml"));
+
+        EDIStreamReader ediReader = ediFactory.createEDIStreamReader(stream);
+        ediReader = ediFactory.createFilteredReader(ediReader, (reader) -> {
+            if (reader.getEventType() == EDIStreamEvent.START_TRANSACTION) {
+                reader.setTransactionSchema(schema);
+            }
+            return true;
+        });
+
+        XMLStreamReader xmlReader = new StaEDIXMLStreamReader(ediReader);
+
+        xmlReader.next(); // Per StAXSource JavaDoc, put in START_DOCUMENT state
+        TransformerFactory factory = TransformerFactory.newInstance();
+        Transformer transformer = factory.newTransformer();
+        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+        transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
+        StringWriter result = new StringWriter();
+        TransformerException thrown = assertThrows(TransformerException.class, () -> transformer.transform(new StAXSource(xmlReader), new StreamResult(result)));
+        Throwable cause = thrown.getCause();
+        assertTrue(cause instanceof XMLStreamException);
+        javax.xml.stream.Location l = ((XMLStreamException) cause).getLocation();
+        assertEquals("ParseError at [row,col]:["+l.getLineNumber()+","+
+                l.getColumnNumber()+"]\n"+
+                "Message: "+"Segment IK5 has error UNEXPECTED_SEGMENT", cause.getMessage());
     }
 }

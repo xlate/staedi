@@ -23,6 +23,7 @@ public class LocationView implements Location {
     protected int columnNumber;
     protected int characterOffset;
     protected int segmentPosition;
+    protected String segmentTag;
     protected int elementPosition;
     protected int componentPosition;
     protected int elementOccurrence;
@@ -32,6 +33,7 @@ public class LocationView implements Location {
         columnNumber = source.getColumnNumber();
         characterOffset = source.getCharacterOffset();
         segmentPosition = source.getSegmentPosition();
+        segmentTag = source.getSegmentTag();
         elementPosition = source.getElementPosition();
         componentPosition = source.getComponentPosition();
         elementOccurrence = source.getElementOccurrence();
@@ -65,6 +67,11 @@ public class LocationView implements Location {
     @Override
     public int getSegmentPosition() {
         return segmentPosition;
+    }
+
+    @Override
+    public String getSegmentTag() {
+        return segmentTag;
     }
 
     @Override
