@@ -169,4 +169,19 @@ public abstract class EDIInputFactory extends PropertySupport {
      * @see EDINamespaces
      */
     public abstract XMLStreamReader createXMLStreamReader(EDIStreamReader reader) throws XMLStreamException;
+
+    /**
+     * The reporter that will be set on any EDIStreamReader created by this factory instance.
+     *
+     * @since 1.4
+     */
+    public abstract EDIReporter getEDIReporter();
+
+    /**
+     * The reporter that will be set on any EDIStreamReader created by this factory instance.
+     * @param reporter the resolver to use to report non fatal errors
+     *
+     * @since 1.4
+     */
+    public abstract void setEDIReporter(EDIReporter reporter);
 }
