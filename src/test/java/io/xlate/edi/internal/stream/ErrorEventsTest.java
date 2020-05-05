@@ -21,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.net.URL;
 
 import org.junit.jupiter.api.Test;
 
@@ -298,5 +299,78 @@ public class ErrorEventsTest {
         assertEquals(8, reader.getLocation().getElementPosition());
 
         assertTrue(!reader.hasNext(), "Unexpected errors exist");
+    }
+
+    @Test
+    public void testValidEmptySegment() throws EDISchemaException, EDIStreamException {
+        EDIInputFactory factory = EDIInputFactory.newFactory();
+        InputStream stream = new ByteArrayInputStream((""
+                + "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~"
+                + "S01*X~"
+                + "ETY~"
+                + "S11*X~"
+                + "S12*X~"
+                + "S19*X~"
+                + "S09*X~"
+                + "IEA*1*508121953~").getBytes());
+
+        SchemaFactory schemaFactory = SchemaFactory.newFactory();
+        URL schemaLocation = getClass().getResource("/x12/EDISchemaSegmentValidation.xml");
+        Schema schema = schemaFactory.createSchema(schemaLocation);
+
+        EDIStreamReader reader = factory.createEDIStreamReader(stream, schema);
+        reader = factory.createFilteredReader(reader, (r) -> {
+            switch (r.getEventType()) {
+            case SEGMENT_ERROR:
+            case ELEMENT_DATA_ERROR:
+            case ELEMENT_OCCURRENCE_ERROR:
+            case START_TRANSACTION:
+                return true;
+            default:
+                break;
+            }
+            return false;
+        });
+
+        assertEquals(EDIStreamEvent.START_TRANSACTION, reader.next(), "Expecting start of transaction");
+        reader.setTransactionSchema(schemaFactory.createSchema(getClass().getResource("/x12/EDISchemaSegmentValidationTx.xml")));
+        assertTrue(!reader.hasNext(), "Unexpected errors exist");
+    }
+
+    @Test
+    public void testEmptySegmentSchemaWithData() throws EDISchemaException, EDIStreamException {
+        EDIInputFactory factory = EDIInputFactory.newFactory();
+        InputStream stream = new ByteArrayInputStream((""
+                + "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~"
+                + "S01*X~"
+                + "ETY*DATA_SHOULD_NOT_BE_HERE~"
+                + "S11*X~"
+                + "S12*X~"
+                + "S19*X~"
+                + "S09*X~"
+                + "IEA*1*508121953~").getBytes());
+
+        SchemaFactory schemaFactory = SchemaFactory.newFactory();
+        URL schemaLocation = getClass().getResource("/x12/EDISchemaSegmentValidation.xml");
+        Schema schema = schemaFactory.createSchema(schemaLocation);
+
+        EDIStreamReader reader = factory.createEDIStreamReader(stream, schema);
+        reader = factory.createFilteredReader(reader, (r) -> {
+            switch (r.getEventType()) {
+            case SEGMENT_ERROR:
+            case ELEMENT_DATA_ERROR:
+            case ELEMENT_OCCURRENCE_ERROR:
+            case START_TRANSACTION:
+                return true;
+            default:
+                break;
+            }
+            return false;
+        });
+
+        assertEquals(EDIStreamEvent.START_TRANSACTION, reader.next(), "Expecting start of transaction");
+        reader.setTransactionSchema(schemaFactory.createSchema(getClass().getResource("/x12/EDISchemaSegmentValidationTx.xml")));
+        assertTrue(reader.hasNext(), "Expected error missing");
+        assertEquals(EDIStreamValidationError.TOO_MANY_DATA_ELEMENTS, reader.getErrorType());
     }
 }

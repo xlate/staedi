@@ -579,29 +579,4 @@ public class SegmentValidationTest {
 
         assertTrue(!reader.hasNext(), "Unexpected segment errors exist");
     }
-
-    @Test
-    public void testValidEmptySegment() throws EDISchemaException, EDIStreamException {
-        EDIInputFactory factory = EDIInputFactory.newFactory();
-        InputStream stream = new ByteArrayInputStream((""
-                + "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~"
-                + "S01*X~"
-                + "ETY~"
-                + "S11*X~"
-                + "S12*X~"
-                + "S19*X~"
-                + "S09*X~"
-                + "IEA*1*508121953~").getBytes());
-
-        SchemaFactory schemaFactory = SchemaFactory.newFactory();
-        URL schemaLocation = getClass().getResource("/x12/EDISchemaSegmentValidation.xml");
-        Schema schema = schemaFactory.createSchema(schemaLocation);
-
-        EDIStreamReader reader = factory.createEDIStreamReader(stream, schema);
-        reader = factory.createFilteredReader(reader, segmentErrorFilter);
-
-        assertEquals(EDIStreamEvent.START_TRANSACTION, reader.next(), "Expecting start of transaction");
-        reader.setTransactionSchema(schemaFactory.createSchema(getClass().getResource("/x12/EDISchemaSegmentValidationTx.xml")));
-        assertTrue(!reader.hasNext(), "Unexpected segment errors exist");
-    }
 }

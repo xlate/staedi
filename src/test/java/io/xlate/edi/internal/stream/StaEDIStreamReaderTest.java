@@ -953,9 +953,7 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
         String textOnError = null;
 
         try {
-
             while (reader.hasNext()) {
-
                 switch (reader.next()) {
                 case START_TRANSACTION:
                     reader.setTransactionSchema(transSchema);
@@ -978,12 +976,23 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
                             && "UNA".equals(reader.getText())) {
                         break;
                     }
+                    break;
+
                 case ELEMENT_DATA_ERROR:
                     // TODO Change "control schema", because it does not recognise "IATA" (UNB), "PNRGOV:11" (UNH)
-                    if ("UNB".equals(segmentName) || "UNH".equals(segmentName)) {
+                    if ("DE0001".equals(reader.getReferenceCode()) && "IATA".equals(reader.getText())) {
                         break;
                     }
+                    if ("DE0065".equals(reader.getReferenceCode()) && "PNRGOV".equals(reader.getText())) {
+                        break;
+                    }
+                    if ("DE0052".equals(reader.getReferenceCode())) {
+                        break;
+                    }
+
                     textOnError = reader.getText();
+                    break;
+
                 case ELEMENT_OCCURRENCE_ERROR:
 
                     Location loc = reader.getLocation();
