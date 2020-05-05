@@ -950,7 +950,6 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
 
         EDIStreamReader reader = factory.createEDIStreamReader(getClass().getResourceAsStream("/EDIFACT/empty-segment-example.edi"));
         String segmentName = null;
-        String textOnError = null;
 
         try {
             while (reader.hasNext()) {
@@ -970,14 +969,15 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
                 case ELEMENT_DATA:
                     break;
 
-                case SEGMENT_ERROR:
-                    // TODO Change "control schema", because it does not recognise UNA
-                    if ((reader.getErrorType() == EDIStreamValidationError.SEGMENT_NOT_IN_DEFINED_TRANSACTION_SET)
-                            && "UNA".equals(reader.getText())) {
-                        break;
-                    }
+                case SEGMENT_ERROR: {
+                    Location loc = reader.getLocation();
+                    EDIStreamValidationError error = reader.getErrorType();
+                    fail(String.format("%s: %s (seg=%s)",
+                                       error.getCategory(),
+                                       error,
+                                       segmentName));
                     break;
-
+                }
                 case ELEMENT_DATA_ERROR:
                     // TODO Change "control schema", because it does not recognise "IATA" (UNB), "PNRGOV:11" (UNH)
                     if ("DE0001".equals(reader.getReferenceCode()) && "IATA".equals(reader.getText())) {
@@ -990,11 +990,9 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
                         break;
                     }
 
-                    textOnError = reader.getText();
                     break;
 
-                case ELEMENT_OCCURRENCE_ERROR:
-
+                case ELEMENT_OCCURRENCE_ERROR: {
                     Location loc = reader.getLocation();
                     EDIStreamValidationError error = reader.getErrorType();
 
@@ -1005,7 +1003,9 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
                                        segmentName,
                                        loc.getElementPosition(),
                                        loc.getComponentPosition(),
-                                       textOnError));
+                                       reader.getText()));
+                    break;
+                }
                 default:
                     break;
                 }
