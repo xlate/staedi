@@ -939,4 +939,70 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
             reader.close();
         }
     }
+
+    @Test
+    public void testEmptySegmentValidation() throws Exception {
+
+        EDIInputFactory factory = EDIInputFactory.newFactory();
+        Schema transSchema = SchemaFactory.newFactory()
+                                          .createSchema(getClass().getResourceAsStream("/EDIFACT/empty-segment-schema.xml"));
+        factory.setProperty(EDIInputFactory.EDI_VALIDATE_CONTROL_STRUCTURE, true);
+
+        EDIStreamReader reader = factory.createEDIStreamReader(getClass().getResourceAsStream("/EDIFACT/empty-segment-example.edi"));
+        String segmentName = null;
+        String textOnError = null;
+
+        try {
+
+            while (reader.hasNext()) {
+
+                switch (reader.next()) {
+                case START_TRANSACTION:
+                    reader.setTransactionSchema(transSchema);
+                    break;
+
+                case START_SEGMENT:
+                    segmentName = reader.getText();
+                    break;
+
+                case END_SEGMENT:
+                    segmentName = null;
+                    break;
+
+                case ELEMENT_DATA:
+                    break;
+
+                case SEGMENT_ERROR:
+                    // TODO Change "control schema", because it does not recognise UNA
+                    if ((reader.getErrorType() == EDIStreamValidationError.SEGMENT_NOT_IN_DEFINED_TRANSACTION_SET)
+                            && "UNA".equals(reader.getText())) {
+                        break;
+                    }
+                case ELEMENT_DATA_ERROR:
+                    // TODO Change "control schema", because it does not recognise "IATA" (UNB), "PNRGOV:11" (UNH)
+                    if ("UNB".equals(segmentName) || "UNH".equals(segmentName)) {
+                        break;
+                    }
+                    textOnError = reader.getText();
+                case ELEMENT_OCCURRENCE_ERROR:
+
+                    Location loc = reader.getLocation();
+                    EDIStreamValidationError error = reader.getErrorType();
+
+                    // FIXME when the empty segment is reached, TOO_MANY_DATA_ELEMENTS is returned
+                    fail(String.format("%s: %s (seg=%s, elemPos=%d, compoPos=%d, textOnError=%s)",
+                                       error.getCategory(),
+                                       error,
+                                       segmentName,
+                                       loc.getElementPosition(),
+                                       loc.getComponentPosition(),
+                                       textOnError));
+                default:
+                    break;
+                }
+            }
+        } finally {
+            reader.close();
+        }
+    }
 }

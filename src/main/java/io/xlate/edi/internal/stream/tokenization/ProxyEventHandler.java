@@ -172,7 +172,7 @@ public class ProxyEventHandler implements EventHandler {
         Validator validator = validator();
         boolean eventsReady = true;
 
-        if (validator != null) {
+        if (validator != null && !dialect.isServiceAdviceSegment(segmentTag)) {
             validator.validateSegment(this, segmentTag);
             eventsReady = !validator.isPendingDiscrimination();
         }
