@@ -353,7 +353,7 @@ abstract class SchemaReaderBase implements SchemaReader {
         final List<EDIReference> refs = new ArrayList<>(8);
         final List<EDISyntaxRule> rules = new ArrayList<>(2);
 
-        reader.nextTag();
+        readDescription(reader);
         requireElementStart(qnSequence, reader);
         readReferences(reader, types, refs);
 
@@ -579,7 +579,11 @@ abstract class SchemaReaderBase implements SchemaReader {
     }
 
     void requireElementStart(QName element, XMLStreamReader reader) {
-        requireEvent(XMLStreamConstants.START_ELEMENT, reader);
+        Integer event = reader.getEventType();
+
+        if (event != XMLStreamConstants.START_ELEMENT) {
+            throw schemaException("Expected XML element [" + element + "] not found", reader);
+        }
 
         if (!element.equals(reader.getName())) {
             throw schemaException("Unexpected XML element [" + reader.getName() + "]", reader);

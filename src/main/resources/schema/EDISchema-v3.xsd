@@ -214,7 +214,7 @@
             </annotation>
             <complexType>
               <sequence>
-                <choice maxOccurs="unbounded">
+                <choice minOccurs="0" maxOccurs="unbounded">
                   <element name="element" type="tns:elementImpl" />
                   <element name="composite" type="tns:compositeImpl" />
                 </choice>
@@ -540,7 +540,7 @@
                 </documentation>
               </annotation>
               <complexType>
-                <choice maxOccurs="unbounded">
+                <choice minOccurs="0" maxOccurs="unbounded">
                   <element name="element" type="tns:elementStandard" />
                   <element name="composite" type="tns:compositeStandard" />
                 </choice>

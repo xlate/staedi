@@ -14,13 +14,13 @@
   License for the specific language governing permissions and limitations under
   the License.
 -->
-<schema xmlns="http://xlate.io/EDISchema/v2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://xlate.io/EDISchema/v2 ../../../../src/main/resources/schema/EDISchema-v2.xsd">
+<schema xmlns="http://xlate.io/EDISchema/v3">
 
   <transaction>
     <sequence>
       <segment ref="S0A" />
-      <loop code="0000">
+      <segment ref="ETY" />
+      <loop code="L0000">
         <sequence>
           <segment ref="S11" minOccurs="1" />
           <segment ref="S12" minOccurs="1" />
@@ -29,7 +29,7 @@
           <segment ref="S19" minOccurs="1" />
         </sequence>
       </loop>
-      <loop code="0001" maxOccurs="5">
+      <loop code="L0001" maxOccurs="5">
         <sequence>
           <segment ref="S20" minOccurs="1" />
           <segment ref="S21" />
@@ -98,5 +98,10 @@
     <sequence>
       <element ref="E999" minOccurs="1" />
     </sequence>
+  </segmentType>
+
+  <segmentType name="ETY">
+    <description>An EmpTY segment</description>
+    <sequence />
   </segmentType>
 </schema>

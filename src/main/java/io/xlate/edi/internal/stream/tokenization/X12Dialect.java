@@ -111,6 +111,11 @@ public class X12Dialect implements Dialect {
     }
 
     @Override
+    public boolean isServiceAdviceSegment(String tag) {
+        return false; // X12 does not use a service advice string
+    }
+
+    @Override
     public boolean appendHeader(CharacterSet characters, char value) {
         index++;
 

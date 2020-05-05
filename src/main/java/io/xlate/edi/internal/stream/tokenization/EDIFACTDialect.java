@@ -19,6 +19,7 @@ import io.xlate.edi.stream.EDIStreamConstants.Standards;
 
 public class EDIFACTDialect implements Dialect {
 
+    private static final String UNA = "UNA";
     private static final String UNB = "UNB";
 
     private static final String[] EMPTY = new String[0];
@@ -127,6 +128,11 @@ public class EDIFACTDialect implements Dialect {
     @Override
     public boolean isRejected() {
         return rejected;
+    }
+
+    @Override
+    public boolean isServiceAdviceSegment(String tag) {
+        return UNA.equals(tag);
     }
 
     @Override

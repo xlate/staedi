@@ -29,6 +29,8 @@ public interface Dialect {
 
     boolean isRejected();
 
+    boolean isServiceAdviceSegment(String tag);
+
     boolean appendHeader(CharacterSet characters, char value);
 
     char getSegmentTerminator();

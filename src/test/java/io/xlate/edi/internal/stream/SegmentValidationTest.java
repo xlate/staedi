@@ -303,15 +303,15 @@ public class SegmentValidationTest {
         reader.setTransactionSchema(schemaFactory.createSchema(getClass().getResource("/x12/EDISchemaSegmentValidationTx.xml")));
 
         assertEquals(EDIStreamEvent.START_LOOP, reader.next());
-        assertEquals("0000", reader.getReferenceCode());
+        assertEquals("L0000", reader.getReferenceCode());
         assertEquals(EDIStreamEvent.END_LOOP, reader.next());
-        assertEquals("0000", reader.getReferenceCode());
+        assertEquals("L0000", reader.getReferenceCode());
 
         for (int i = 0; i < 2; i++) {
             assertEquals(EDIStreamEvent.START_LOOP, reader.next());
-            assertEquals("0001", reader.getReferenceCode());
+            assertEquals("L0001", reader.getReferenceCode());
             assertEquals(EDIStreamEvent.END_LOOP, reader.next());
-            assertEquals("0001", reader.getReferenceCode());
+            assertEquals("L0001", reader.getReferenceCode());
         }
 
         assertTrue(!reader.hasNext(), "Unexpected segment errors exist");
