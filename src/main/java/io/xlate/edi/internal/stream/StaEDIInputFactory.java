@@ -25,6 +25,7 @@ import javax.xml.stream.XMLStreamReader;
 
 import io.xlate.edi.schema.Schema;
 import io.xlate.edi.stream.EDIInputFactory;
+import io.xlate.edi.stream.EDIReporter;
 import io.xlate.edi.stream.EDIStreamException;
 import io.xlate.edi.stream.EDIStreamFilter;
 import io.xlate.edi.stream.EDIStreamReader;
@@ -34,6 +35,7 @@ public class StaEDIInputFactory extends EDIInputFactory {
     private static final String DEFAULT_ENCODING = "US-ASCII";
 
     private final Set<String> supportedCharsets;
+    private EDIReporter reporter;
 
     public StaEDIInputFactory() {
         supportedProperties.add(EDI_VALIDATE_CONTROL_STRUCTURE);
@@ -54,7 +56,7 @@ public class StaEDIInputFactory extends EDIInputFactory {
 
     @Override
     public EDIStreamReader createEDIStreamReader(InputStream stream, Schema schema) {
-        return new StaEDIStreamReader(stream, DEFAULT_ENCODING, schema, properties);
+        return new StaEDIStreamReader(stream, DEFAULT_ENCODING, schema, properties, getEDIReporter());
     }
 
     @SuppressWarnings("resource")
@@ -63,7 +65,7 @@ public class StaEDIInputFactory extends EDIInputFactory {
         Objects.requireNonNull(stream);
 
         if (supportedCharsets.contains(encoding)) {
-            return new StaEDIStreamReader(stream, encoding, schema, properties);
+            return new StaEDIStreamReader(stream, encoding, schema, properties, getEDIReporter());
         }
 
         throw new EDIStreamException("Unsupported encoding: " + encoding);
@@ -77,5 +79,15 @@ public class StaEDIInputFactory extends EDIInputFactory {
     @Override
     public XMLStreamReader createXMLStreamReader(EDIStreamReader reader) throws XMLStreamException {
         return new StaEDIXMLStreamReader(reader);
+    }
+
+    @Override
+    public EDIReporter getEDIReporter() {
+        return reporter;
+    }
+
+    @Override
+    public void setEDIReporter(EDIReporter reporter) {
+        this.reporter = reporter;
     }
 }

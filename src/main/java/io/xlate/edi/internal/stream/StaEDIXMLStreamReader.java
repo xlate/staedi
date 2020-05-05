@@ -198,17 +198,20 @@ final class StaEDIXMLStreamReader implements XMLStreamReader {
         case SEGMENT_ERROR:
             throw new XMLStreamException(String.format("Segment %s has error %s",
                                                        ediReader.getText(),
-                                                       ediReader.getErrorType()));
+                                                       ediReader.getErrorType()),
+                                         this.location);
 
         case ELEMENT_OCCURRENCE_ERROR:
             throw new XMLStreamException(String.format("Element %s has error %s",
                                                        ediReader.getText(),
-                                                       ediReader.getErrorType()));
+                                                       ediReader.getErrorType()),
+                                         this.location);
 
         case ELEMENT_DATA_ERROR:
             throw new XMLStreamException(String.format("Element %s has error %s",
                                                        ediReader.getText(),
-                                                       ediReader.getErrorType()));
+                                                       ediReader.getErrorType()),
+                                         this.location);
 
         default:
             throw new IllegalStateException("Unknown state: " + ediEvent);
@@ -230,6 +233,8 @@ final class StaEDIXMLStreamReader implements XMLStreamReader {
         if (eventQueue.isEmpty()) {
             try {
                 enqueueEvent(ediReader.next());
+            } catch (XMLStreamException e) {
+                throw e;
             } catch (Exception e) {
                 throw new XMLStreamException(e);
             }

@@ -61,9 +61,9 @@ public class LexerTest {
         }
 
         @Override
-        public boolean segmentBegin(char[] text, int start, int length) {
+        public boolean segmentBegin(String segmentTag) {
             content.put("LAST", "segmentBegin");
-            content.put("SEGMENT", new String(text, start, length));
+            content.put("SEGMENT", segmentTag);
             return true;
         }
 
@@ -131,8 +131,8 @@ public class LexerTest {
         }
 
         @Override
-        public boolean segmentBegin(char[] text, int start, int length) {
-            segment = new String(text, start, length);
+        public boolean segmentBegin(String segmentTag) {
+            segment = segmentTag;
             return true;
         }
 

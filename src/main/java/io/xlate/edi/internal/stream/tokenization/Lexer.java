@@ -88,8 +88,9 @@ public class Lexer {
         };
 
         ssn = (notifyState, start, length) -> {
-            location.incrementSegmentPosition();
-            return handler.segmentBegin(buffer.array(), start, length);
+            String segmentTag = new String(buffer.array(), start, length);
+            location.incrementSegmentPosition(segmentTag);
+            return handler.segmentBegin(segmentTag);
         };
 
         sen = (notifyState, start, length) -> {
