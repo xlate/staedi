@@ -143,6 +143,32 @@ stream.close();
 
 ```
 
+### Disable Validation of Control Codes
+
+Out of the box, instances of `EDIStreamReader` will validate the control structures
+of X12 and EDIFACT messages (interchange, group, and transaction headers and trailers).
+This validation includes checking that some fields contain one of an enumerated list
+of values (e.g. a known transaction set code in X12 segment `ST`, element 1).
+
+If you wish to disable the validation of the code values but keep the validation of the
+structure, including field sizes and types, set the `EDIInputFactory.EDI_VALIDATE_CONTROL_CODE_VALUES`
+property to `false` on an instance of `EDIInputFactory` prior to creating a new `EDIStreamReader`,
+as shown below.
+
+```java
+// Create an EDIInputFactory
+EDIInputFactory factory = EDIInputFactory.newFactory();
+factory.setProperty(EDIInputFactory.EDI_VALIDATE_CONTROL_CODE_VALUES, false);
+
+// Obtain an InputStream of the EDI document to read.
+InputStream stream = new FileInputStream(...);
+
+// Create an EDIStreamReader from the stream using the factory
+EDIStreamReader reader = factory.createEDIStreamReader(stream);
+
+// Continue processing with the reader...
+```
+
 ## Sample Writing X12 EDI
 
 ```java
