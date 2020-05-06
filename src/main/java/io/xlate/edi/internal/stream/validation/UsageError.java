@@ -30,6 +30,10 @@ public class UsageError {
         this.error = error;
     }
 
+    boolean isDepthGreaterThan(int depth) {
+        return this.depth > depth;
+    }
+
     void handle(BiConsumer<String, EDIStreamValidationError> handler) {
         handler.accept(code, error);
     }
@@ -40,9 +44,5 @@ public class UsageError {
 
     public EDIStreamValidationError getError() {
         return error;
-    }
-
-    public int getDepth() {
-        return depth;
     }
 }

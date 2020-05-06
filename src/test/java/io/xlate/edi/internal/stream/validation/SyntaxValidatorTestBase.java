@@ -21,8 +21,6 @@ abstract class SyntaxValidatorTestBase {
     @BeforeEach
     public void setUp() {
         syntax = mock(EDISyntaxRule.class);
-        when(syntax.getType()).thenReturn(EDISyntaxRule.Type.CONDITIONAL);
-
         handler = mock(ValidationEventHandler.class);
 
         structureType = mock(EDIType.class);
@@ -32,7 +30,7 @@ abstract class SyntaxValidatorTestBase {
         when(structureRef.getReferencedType()).thenReturn(structureType);
 
         structure = mock(UsageNode.class);
-        when(structure.getReferencedType()).thenReturn(structureType);
+        when(structure.isNodeType(EDIType.Type.SEGMENT)).thenReturn(true);
     }
 
     protected UsageNode mockUsageNode(String referenceCode, boolean used, int index) {
