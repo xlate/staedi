@@ -46,7 +46,7 @@ jobs:
 
       - name: Coveralls Analysis
         if: matrix.java == '11'
-        uses: MikeEdgar/github-action@master
+        uses: MikeEdgar/github-action@raw_coverage_file
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           path-to-file: ./target/coveralls.json
