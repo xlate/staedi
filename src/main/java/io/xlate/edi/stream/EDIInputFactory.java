@@ -25,6 +25,7 @@ import io.xlate.edi.schema.Schema;
 public abstract class EDIInputFactory extends PropertySupport {
 
     public static final String EDI_VALIDATE_CONTROL_STRUCTURE = "io.xlate.edi.stream.EDI_VALIDATE_CONTROL_STRUCTURE";
+    public static final String EDI_VALIDATE_CONTROL_CODE_VALUES = "io.xlate.edi.stream.EDI_VALIDATE_CONTROL_CODE_VALUES";
 
     /**
      * Create a new instance of the factory. This static method creates a new

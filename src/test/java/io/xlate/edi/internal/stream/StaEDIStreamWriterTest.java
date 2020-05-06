@@ -519,7 +519,16 @@ public class StaEDIStreamWriterTest {
                     writer.writeBinaryData(reader.getBinaryData());
                     writer.endElement();
                     break;
+                case START_TRANSACTION:
+                case START_GROUP:
+                case START_LOOP:
+                case END_LOOP:
+                case END_GROUP:
+                case END_TRANSACTION:
+                    // Ignored
+                    break;
                 default:
+                    fail("Unexpected event type: " + event);
                     break;
                 }
             }
@@ -620,7 +629,16 @@ public class StaEDIStreamWriterTest {
                     writer.writeBinaryData(reader.getBinaryData());
                     writer.endElement();
                     break;
+                case START_TRANSACTION:
+                case START_GROUP:
+                case START_LOOP:
+                case END_LOOP:
+                case END_GROUP:
+                case END_TRANSACTION:
+                    // Ignored
+                    break;
                 default:
+                    fail("Unexpected event type: " + event);
                     break;
                 }
             }
@@ -634,6 +652,7 @@ public class StaEDIStreamWriterTest {
     @Test
     public void testInputEquivalenceEDIFACT_IATA_PNRGOV() throws Exception {
         EDIInputFactory inputFactory = EDIInputFactory.newFactory();
+        inputFactory.setProperty(EDIInputFactory.EDI_VALIDATE_CONTROL_CODE_VALUES, false);
         final ByteArrayOutputStream expected = new ByteArrayOutputStream(16384);
 
         InputStream source = new InputStream() {
@@ -721,7 +740,16 @@ public class StaEDIStreamWriterTest {
                     writer.writeBinaryData(reader.getBinaryData());
                     writer.endElement();
                     break;
+                case START_TRANSACTION:
+                case START_GROUP:
+                case START_LOOP:
+                case END_LOOP:
+                case END_GROUP:
+                case END_TRANSACTION:
+                    // Ignored
+                    break;
                 default:
+                    fail("Unexpected event type: " + event);
                     break;
                 }
             }
@@ -814,7 +842,16 @@ public class StaEDIStreamWriterTest {
                     writer.writeBinaryData(reader.getBinaryData());
                     writer.endElement();
                     break;
+                case START_TRANSACTION:
+                case START_GROUP:
+                case START_LOOP:
+                case END_LOOP:
+                case END_GROUP:
+                case END_TRANSACTION:
+                    // Ignored
+                    break;
                 default:
+                    fail("Unexpected event type: " + event);
                     break;
                 }
             }

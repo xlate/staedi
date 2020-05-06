@@ -18,6 +18,7 @@ package io.xlate.edi.internal.stream.validation;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import io.xlate.edi.internal.stream.tokenization.Dialect;
 import io.xlate.edi.schema.EDIComplexType;
@@ -137,7 +138,7 @@ class UsageNode {
         return referencedNode.getId();
     }
 
-    void validate(Dialect dialect, CharSequence value, List<EDIStreamValidationError> errors) {
+    void validate(Dialect dialect, CharSequence value, boolean validateCodeValues, List<EDIStreamValidationError> errors) {
         if (validator == null) {
             throw new UnsupportedOperationException("simple type only");
         }
@@ -150,7 +151,11 @@ class UsageNode {
             element = (EDISimpleType) link.getReferencedType();
         }
 
-        validator.validate(dialect, element, value, errors);
+        if (validateCodeValues) {
+            validator.validate(dialect, element, value, errors);
+        } else {
+            validator.validate(dialect, UnenumeratedElement.from(element), value, errors);
+        }
     }
 
     List<EDISyntaxRule> getSyntaxRules() {
@@ -235,5 +240,47 @@ class UsageNode {
 
     UsageNode getSiblingById(CharSequence id) {
         return parent != null ? parent.getChildById(id) : null;
+    }
+
+    private static class UnenumeratedElement implements EDISimpleType {
+        final EDISimpleType target;
+
+        static EDISimpleType from(EDISimpleType target) {
+            return new UnenumeratedElement(target);
+        }
+
+        private UnenumeratedElement(EDISimpleType target) {
+            this.target = target;
+        }
+
+        @Override
+        public String getId() {
+            return target.getId();
+        }
+
+        @Override
+        public Base getBase() {
+            return target.getBase();
+        }
+
+        @Override
+        public int getNumber() {
+            return target.getNumber();
+        }
+
+        @Override
+        public long getMinLength() {
+            return target.getMinLength();
+        }
+
+        @Override
+        public long getMaxLength() {
+            return target.getMaxLength();
+        }
+
+        @Override
+        public Set<String> getValueSet() {
+            return Collections.emptySet();
+        }
     }
 }

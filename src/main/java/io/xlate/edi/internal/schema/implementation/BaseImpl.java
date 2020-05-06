@@ -26,7 +26,7 @@ public abstract class BaseImpl<T extends EDIType> implements EDITypeImplementati
 
     @Override
     public EDIType getReferencedType() {
-        return standard;
+        return getStandard();
     }
 
     @Override

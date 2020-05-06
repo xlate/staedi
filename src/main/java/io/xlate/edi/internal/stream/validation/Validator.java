@@ -48,6 +48,7 @@ public class Validator {
 
     private Schema containerSchema;
     private Schema schema;
+    private final boolean validateCodeValues;
 
     private final UsageNode root;
     private final UsageNode implRoot;
@@ -96,8 +97,9 @@ public class Validator {
         }
     }
 
-    public Validator(Schema schema, Schema containerSchema) {
+    public Validator(Schema schema, boolean validateCodeValues, Schema containerSchema) {
         this.schema = schema;
+        this.validateCodeValues = validateCodeValues;
         this.containerSchema = containerSchema;
 
         root = buildTree(schema.getStandard());
@@ -562,7 +564,7 @@ public class Validator {
 
         while (errors.hasNext()) {
             UsageError e = errors.next();
-            if (e.depth > depth) {
+            if (e.isDepthGreaterThan(depth)) {
                 e.handle(handler::segmentError);
                 errors.remove();
             }
@@ -868,14 +870,14 @@ public class Validator {
         }
 
         List<EDIStreamValidationError> errors = new ArrayList<>();
-        this.element.validate(dialect, value, errors);
+        this.element.validate(dialect, value, this.validateCodeValues, errors);
 
         for (EDIStreamValidationError error : errors) {
             elementErrors.add(new UsageError(this.element, error));
         }
 
         if (errors.isEmpty() && implSegmentSelected && implElement != null) {
-            this.implElement.validate(dialect, value, errors);
+            this.implElement.validate(dialect, value, this.validateCodeValues, errors);
 
             for (EDIStreamValidationError error : errors) {
                 if (error == INVALID_CODE_VALUE) {

@@ -259,7 +259,7 @@ public class StaEDIStreamReader implements EDIStreamReader {
         }
 
         this.controlSchema = schema;
-        proxy.setControlSchema(schema);
+        proxy.setControlSchema(schema, validateControlCodeValues());
     }
 
     @Override
@@ -423,15 +423,23 @@ public class StaEDIStreamReader implements EDIStreamReader {
 
     /**************************************************************************/
 
+    boolean validateControlCodeValues() {
+        return getBooleanProperty(EDIInputFactory.EDI_VALIDATE_CONTROL_CODE_VALUES, true);
+    }
+
     boolean useInternalControlSchema() {
         if (this.controlSchema != null) {
             return false;
         }
 
-        Object property = properties.get(EDIInputFactory.EDI_VALIDATE_CONTROL_STRUCTURE);
+        return getBooleanProperty(EDIInputFactory.EDI_VALIDATE_CONTROL_STRUCTURE, true);
+    }
+
+    boolean getBooleanProperty(String propertyName, boolean defaultValue) {
+        Object property = properties.get(propertyName);
 
         if (property == null) {
-            return true;
+            return defaultValue;
         }
 
         return Boolean.parseBoolean(property.toString());

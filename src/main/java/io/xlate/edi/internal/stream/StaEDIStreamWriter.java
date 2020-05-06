@@ -192,12 +192,12 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     public void setControlSchema(Schema controlSchema) {
         ensureLevel(LEVEL_INITIAL);
         this.controlSchema = controlSchema;
-        controlValidator = controlSchema != null ? new Validator(controlSchema, null) : null;
+        controlValidator = controlSchema != null ? new Validator(controlSchema, true, null) : null;
     }
 
     @Override
     public void setTransactionSchema(Schema transactionSchema) {
-        transactionValidator = transactionSchema != null ? new Validator(transactionSchema, controlSchema) : null;
+        transactionValidator = transactionSchema != null ? new Validator(transactionSchema, true, controlSchema) : null;
     }
 
     @Override

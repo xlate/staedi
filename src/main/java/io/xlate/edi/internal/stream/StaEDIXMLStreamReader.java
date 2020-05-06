@@ -292,14 +292,9 @@ final class StaEDIXMLStreamReader implements XMLStreamReader {
             throw streamException("Element text only available on START_ELEMENT");
         }
 
-        int eventType = next();
-
-        if (eventType != CHARACTERS) {
-            throw streamException("Unexpected event type: " + eventType);
-        }
-
+        next(); // Advance to the text/CDATA
         final String text = getText();
-        eventType = next();
+        int eventType = next();
 
         if (eventType != END_ELEMENT) {
             throw streamException("Unexpected event type after text " + eventType);

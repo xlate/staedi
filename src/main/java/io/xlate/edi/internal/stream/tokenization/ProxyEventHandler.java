@@ -53,19 +53,19 @@ public class ProxyEventHandler implements EventHandler {
 
     public ProxyEventHandler(StaEDIStreamLocation location, Schema controlSchema) {
         this.location = location;
-        setControlSchema(controlSchema);
+        setControlSchema(controlSchema, true);
         for (int i = 0; i < 99; i++) {
             events[i] = new StreamEvent();
         }
     }
 
-    public void setControlSchema(Schema controlSchema) {
+    public void setControlSchema(Schema controlSchema, boolean validateCodeValues) {
         if (controlValidator != null) {
             throw new IllegalStateException("control validator already created");
         }
 
         this.controlSchema = controlSchema;
-        controlValidator = controlSchema != null ? new Validator(controlSchema, null) : null;
+        controlValidator = controlSchema != null ? new Validator(controlSchema, validateCodeValues, null) : null;
     }
 
     public boolean isTransactionSchemaAllowed() {
@@ -73,7 +73,7 @@ public class ProxyEventHandler implements EventHandler {
     }
 
     public void setTransactionSchema(Schema transactionSchema) {
-        transactionValidator = transactionSchema != null ? new Validator(transactionSchema, controlSchema) : null;
+        transactionValidator = transactionSchema != null ? new Validator(transactionSchema, true, controlSchema) : null;
     }
 
     public void resetEvents() {
