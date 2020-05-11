@@ -38,6 +38,19 @@ public interface SchemaFactory {
     public abstract Schema createSchema(InputStream stream) throws EDISchemaException;
 
     /**
+     * Retrieve the control schema for the provided standard and version. This method
+     * loads an internal, immutable schema provided by StAEDI.
+     *
+     * @param standard the standard, e.g. X12 or EDIFACT
+     * @param version the version of the standard
+     * @return the control schema corresponding to the standard and version
+     * @throws EDISchemaException when the schema can not be loaded.
+     *
+     * @since 1.5
+     */
+    public Schema getControlSchema(String standard, String[] version) throws EDISchemaException;
+
+    /**
      * Query the set of properties that this factory supports.
      *
      * @param name
