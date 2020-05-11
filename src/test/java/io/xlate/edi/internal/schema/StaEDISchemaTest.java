@@ -28,6 +28,7 @@ import javax.xml.stream.XMLStreamReader;
 
 import org.junit.jupiter.api.Test;
 
+import io.xlate.edi.schema.EDIComplexType;
 import io.xlate.edi.schema.EDISchemaException;
 import io.xlate.edi.schema.EDIType;
 
@@ -68,5 +69,20 @@ public class StaEDISchemaTest {
         schema.setTypes(types);
 
         assertEquals(EDIType.Type.INTERCHANGE, schema.getType(INTERCHANGE_V3).getType());
+    }
+
+    @Test
+    public void testLoadV3TransactionMultipleSyntaxElements_EDIFACT_CONTRL() throws EDISchemaException, XMLStreamException, FactoryConfigurationError {
+        StaEDISchema schema = new StaEDISchema(INTERCHANGE_V3, TRANSACTION_V3);
+        InputStream schemaStream = getClass().getResourceAsStream("/EDIFACT/CONTRL-v4r02.xml");
+        XMLStreamReader reader = XMLInputFactory.newInstance().createXMLStreamReader(schemaStream);
+        reader.nextTag(); // Pass by <schema> element
+        Map<String, EDIType> types = new SchemaReaderV3(reader).readTypes();
+        schema.setTypes(types);
+
+        assertEquals(EDIType.Type.TRANSACTION, schema.getType(TRANSACTION_V3).getType());
+        assertEquals(4, ((EDIComplexType) schema.getType("UCF")).getSyntaxRules().size());
+        assertEquals(4, ((EDIComplexType) schema.getType("UCI")).getSyntaxRules().size());
+        assertEquals(7, ((EDIComplexType) schema.getType("UCM")).getSyntaxRules().size());
     }
 }

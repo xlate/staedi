@@ -223,4 +223,34 @@ public class StaEDISchemaFactoryTest {
         assertNotNull(cause);
         assertEquals("Discriminator element does not specify value enumeration: 2.2", cause.getMessage());
     }
+
+    @Test
+    public void testInvalidSyntaxTypeValue() {
+        SchemaFactory factory = SchemaFactory.newFactory();
+        InputStream stream = getClass().getResourceAsStream("/EDIFACT/fragment-uci-invalid-syntax-type.xml");
+        EDISchemaException thrown = assertThrows(EDISchemaException.class, () -> factory.createSchema(stream));
+        Throwable cause = thrown.getCause();
+        assertNotNull(cause);
+        assertEquals("Invalid syntax 'type': [conditional-junk]", cause.getMessage());
+    }
+
+    @Test
+    public void testInvalidMinOccursValue() {
+        SchemaFactory factory = SchemaFactory.newFactory();
+        InputStream stream = getClass().getResourceAsStream("/EDIFACT/fragment-uci-invalid-min-occurs.xml");
+        EDISchemaException thrown = assertThrows(EDISchemaException.class, () -> factory.createSchema(stream));
+        Throwable cause = thrown.getCause();
+        assertNotNull(cause);
+        assertEquals("Invalid minOccurs", cause.getMessage());
+    }
+
+    @Test
+    public void testDuplicateElementTypeNames() {
+        SchemaFactory factory = SchemaFactory.newFactory();
+        InputStream stream = getClass().getResourceAsStream("/EDIFACT/fragment-uci-duplicate-element-names.xml");
+        EDISchemaException thrown = assertThrows(EDISchemaException.class, () -> factory.createSchema(stream));
+        Throwable cause = thrown.getCause();
+        assertNotNull(cause);
+        assertEquals("duplicate name: DE0004", cause.getMessage());
+    }
 }
