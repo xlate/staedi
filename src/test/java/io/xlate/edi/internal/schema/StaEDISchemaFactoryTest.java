@@ -27,6 +27,7 @@ import java.net.URL;
 import org.junit.jupiter.api.Test;
 
 import io.xlate.edi.schema.EDISchemaException;
+import io.xlate.edi.schema.EDIType;
 import io.xlate.edi.schema.Schema;
 import io.xlate.edi.schema.SchemaFactory;
 import io.xlate.edi.stream.EDIStreamConstants.Standards;
@@ -252,5 +253,15 @@ public class StaEDISchemaFactoryTest {
         Throwable cause = thrown.getCause();
         assertNotNull(cause);
         assertEquals("duplicate name: DE0004", cause.getMessage());
+    }
+
+    @Test
+    public void testGetControlSchema() throws EDISchemaException {
+        SchemaFactory factory = SchemaFactory.newFactory();
+        Schema schema = factory.getControlSchema(Standards.X12, new String[] { "00501" });
+        assertNotNull(schema);
+        assertEquals(EDIType.Type.SEGMENT, schema.getType("ISA").getType());
+        assertEquals(EDIType.Type.SEGMENT, schema.getType("GS").getType());
+        assertEquals(EDIType.Type.SEGMENT, schema.getType("ST").getType());
     }
 }

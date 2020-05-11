@@ -3,7 +3,7 @@
 
   <groupId>io.xlate</groupId>
   <artifactId>staedi</artifactId>
-  <version>1.4.2-SNAPSHOT</version>
+  <version>1.5.0-SNAPSHOT</version>
 
   <name>StAEDI : Streaming API for EDI for Java</name>
   <description>Streaming API for EDI for Java</description>
@@ -106,6 +106,13 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-jar-plugin</artifactId>
           <version>3.2.0</version>
+          <configuration>
+            <archive>
+              <manifestEntries>
+                <Multi-Release>true</Multi-Release>
+              </manifestEntries>
+            </archive>
+          </configuration>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>

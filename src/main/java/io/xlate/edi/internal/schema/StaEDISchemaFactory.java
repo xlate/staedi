@@ -108,6 +108,11 @@ public class StaEDISchemaFactory implements SchemaFactory {
     }
 
     @Override
+    public Schema getControlSchema(String standard, String[] version) throws EDISchemaException {
+        return SchemaUtils.getControlSchema(standard, version);
+    }
+
+    @Override
     public boolean isPropertySupported(String name) {
         return supportedProperties.contains(name);
     }
