@@ -362,8 +362,10 @@ abstract class SchemaReaderBase implements SchemaReader {
 
         if (event == XMLStreamConstants.START_ELEMENT) {
             requireElementStart(qnSyntax, reader);
-            readSyntax(reader, rules);
-            event = reader.nextTag();
+            do {
+                readSyntax(reader, rules);
+                event = reader.nextTag();
+            } while (event == XMLStreamConstants.START_ELEMENT && qnSyntax.equals(reader.getName()));
         }
 
         if (event == XMLStreamConstants.END_ELEMENT) {
