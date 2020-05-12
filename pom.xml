@@ -3,7 +3,7 @@
 
   <groupId>io.xlate</groupId>
   <artifactId>staedi</artifactId>
-  <version>1.5.0</version>
+  <version>1.5.1-SNAPSHOT</version>
 
   <name>StAEDI : Streaming API for EDI for Java</name>
   <description>Streaming API for EDI for Java</description>
@@ -18,7 +18,7 @@
     <url>https://github.com/xlate/staedi</url>
     <connection>scm:git:https://github.com/xlate/staedi.git</connection>
     <developerConnection>scm:git:ssh://git@github.com/xlate/staedi.git</developerConnection>
-    <tag>v1.5.0</tag>
+    <tag>HEAD</tag>
   </scm>
 
   <licenses>
