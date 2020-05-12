@@ -37,6 +37,7 @@ public class ProxyEventHandler implements EventHandler {
     private Schema controlSchema;
     private Validator controlValidator;
 
+    private Schema transactionSchema;
     private Validator transactionValidator;
 
     private boolean transactionSchemaAllowed = false;
@@ -72,7 +73,12 @@ public class ProxyEventHandler implements EventHandler {
         return transactionSchemaAllowed;
     }
 
+    public Schema getTransactionSchema() {
+        return this.transactionSchema;
+    }
+
     public void setTransactionSchema(Schema transactionSchema) {
+        this.transactionSchema = transactionSchema;
         transactionValidator = transactionSchema != null ? new Validator(transactionSchema, true, controlSchema) : null;
     }
 

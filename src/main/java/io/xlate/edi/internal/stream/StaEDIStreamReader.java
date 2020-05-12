@@ -249,6 +249,11 @@ public class StaEDIStreamReader implements EDIStreamReader {
     }
 
     @Override
+    public Schema getControlSchema() {
+        return this.controlSchema;
+    }
+
+    @Override
     public void setControlSchema(Schema schema) {
         if (getEventType() != EDIStreamEvent.START_INTERCHANGE) {
             throw new IllegalStateException("control schema set after interchange start");
@@ -260,6 +265,11 @@ public class StaEDIStreamReader implements EDIStreamReader {
 
         this.controlSchema = schema;
         proxy.setControlSchema(schema, validateControlCodeValues());
+    }
+
+    @Override
+    public Schema getTransactionSchema() {
+        return proxy.getTransactionSchema();
     }
 
     @Override

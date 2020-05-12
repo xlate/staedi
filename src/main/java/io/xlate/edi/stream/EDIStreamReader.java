@@ -124,6 +124,16 @@ public interface EDIStreamReader extends Closeable, EDIStreamConstants {
     String[] getVersion();
 
     /**
+     * Returns the control schema currently set on the reader. If none has been
+     * set, then null will be returned.
+     *
+     * @return the control schema current set on this reader, may be null
+     *
+     * @since 1.5
+     */
+    Schema getControlSchema();
+
+    /**
      * <p>
      * Sets the schema to be used for validation of the control structure for
      * this stream reader. This schema will be used to validate interchange,
@@ -139,6 +149,17 @@ public interface EDIStreamReader extends Closeable, EDIStreamConstants {
      *             when the current event type is not START_INTERCHANGE
      */
     void setControlSchema(Schema schema);
+
+    /**
+     * Returns the schema currently set on the reader to be used for
+     * validation of the business transaction. If none has been set, then
+     * null will be returned.
+     *
+     * @return the transaction schema current set on this reader, may be null
+     *
+     * @since 1.5
+     */
+    Schema getTransactionSchema();
 
     /**
      * <p>

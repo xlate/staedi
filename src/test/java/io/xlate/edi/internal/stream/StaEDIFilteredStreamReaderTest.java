@@ -17,6 +17,7 @@ package io.xlate.edi.internal.stream;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -28,10 +29,12 @@ import java.util.NoSuchElementException;
 
 import org.junit.jupiter.api.Test;
 
+import io.xlate.edi.schema.EDISchemaException;
+import io.xlate.edi.schema.Schema;
+import io.xlate.edi.schema.SchemaFactory;
 import io.xlate.edi.stream.EDIInputFactory;
 import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamException;
-import io.xlate.edi.stream.EDIStreamFilter;
 import io.xlate.edi.stream.EDIStreamReader;
 import io.xlate.edi.stream.Location;
 
@@ -48,19 +51,14 @@ public class StaEDIFilteredStreamReaderTest implements ConstantsTest {
     public void testNext() throws EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = getClass().getResourceAsStream("/x12/extraDelimiter997.edi");
-        EDIStreamFilter filter = new EDIStreamFilter() {
-            @Override
-            public boolean accept(EDIStreamReader reader) {
-                if (reader.getEventType() != EDIStreamEvent.ELEMENT_DATA) {
-                    return false;
-                }
-                Location location = reader.getLocation();
-                return location.getComponentPosition() > 1 ||
-                        location.getElementOccurrence() > 1;
+        EDIStreamReader reader = factory.createFilteredReader(factory.createEDIStreamReader(stream), r -> {
+            if (r.getEventType() != EDIStreamEvent.ELEMENT_DATA) {
+                return false;
             }
-        };
-        EDIStreamReader reader = factory.createEDIStreamReader(stream);
-        reader = factory.createFilteredReader(reader, filter);
+            Location location = r.getLocation();
+            return location.getComponentPosition() > 1 ||
+                    location.getElementOccurrence() > 1;
+        });
 
         EDIStreamEvent event;
         int matches = 0;
@@ -89,18 +87,13 @@ public class StaEDIFilteredStreamReaderTest implements ConstantsTest {
     public void testNextTag() throws EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = getClass().getResourceAsStream("/x12/simple997.edi");
-        EDIStreamFilter filter = new EDIStreamFilter() {
-            @Override
-            public boolean accept(EDIStreamReader reader) {
-                if (reader.getEventType() != EDIStreamEvent.START_SEGMENT) {
-                    return false;
-                }
-                String tag = reader.getText();
-                return tag.matches("^.{0,2}[SG5].{0,2}$");
+        EDIStreamReader reader = factory.createFilteredReader(factory.createEDIStreamReader(stream), r -> {
+            if (r.getEventType() != EDIStreamEvent.START_SEGMENT) {
+                return false;
             }
-        };
-        EDIStreamReader reader = factory.createEDIStreamReader(stream);
-        reader = factory.createFilteredReader(reader, filter);
+            String tag = r.getText();
+            return tag.matches("^.{0,2}[SG5].{0,2}$");
+        });
 
         EDIStreamEvent event;
         int matches = 0;
@@ -138,17 +131,12 @@ public class StaEDIFilteredStreamReaderTest implements ConstantsTest {
     public void testHasNext() throws EDIStreamException, IOException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = getClass().getResourceAsStream("/x12/extraDelimiter997.edi");
-        EDIStreamFilter filter = new EDIStreamFilter() {
-            @Override
-            public boolean accept(EDIStreamReader reader) {
-                if (reader.getEventType() != EDIStreamEvent.ELEMENT_DATA) {
-                    return false;
-                }
-                return reader.getTextLength() == 1;
+        EDIStreamReader reader = factory.createFilteredReader(factory.createEDIStreamReader(stream), r -> {
+            if (r.getEventType() != EDIStreamEvent.ELEMENT_DATA) {
+                return false;
             }
-        };
-        EDIStreamReader reader = factory.createEDIStreamReader(stream);
-        reader = factory.createFilteredReader(reader, filter);
+            return r.getTextLength() == 1;
+        });
 
         EDIStreamEvent event;
         int matches = 0;
@@ -177,37 +165,64 @@ public class StaEDIFilteredStreamReaderTest implements ConstantsTest {
      *
      * @throws EDIStreamException
      */
-    public void testNextTagFilterParityWithUnfiltered() throws EDIStreamException {
+    public void testNextTagFilterParityWithUnfiltered() throws EDIStreamException, EDISchemaException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = getClass().getResourceAsStream("/x12/simple997.edi");
-        EDIStreamFilter filter = new EDIStreamFilter() {
-            @Override
-            public boolean accept(EDIStreamReader reader) {
-                if (reader.getEventType() != EDIStreamEvent.START_SEGMENT) {
-                    return false;
-                }
-                String tag = reader.getText();
-                return tag.matches("^.{0,2}[SG5].{0,2}$");
-            }
-        };
         final String PROP = EDIInputFactory.EDI_VALIDATE_CONTROL_STRUCTURE;
         factory.setProperty(PROP, Boolean.TRUE);
         EDIStreamReader unfiltered = factory.createEDIStreamReader(stream);
-        EDIStreamReader filtered = factory.createFilteredReader(unfiltered, filter);
+        EDIStreamReader filtered = factory.createFilteredReader(unfiltered, r -> {
+            switch (r.getEventType()) {
+            case START_INTERCHANGE:
+            case START_TRANSACTION:
+                return true;
+            case START_SEGMENT:
+                String tag = r.getText();
+                return tag.matches("^.{0,2}[SG5].{0,2}$");
+            default:
+                break;
+            }
+            return false;
+        });
+
+        SchemaFactory schemaFactory = SchemaFactory.newFactory();
 
         assertThrows(IllegalArgumentException.class, () -> unfiltered.getProperty(null));
         assertThrows(IllegalArgumentException.class, () -> filtered.getProperty(null));
 
         assertEquals(unfiltered.getProperty(PROP), filtered.getProperty(PROP));
 
-        filtered.nextTag(); // ISA
+        filtered.next(); // START_INTERCHANGE
+
         assertEquals(filtered.getStandard(), unfiltered.getStandard());
         assertArrayEquals(filtered.getVersion(), unfiltered.getVersion());
         assertEquals(unfiltered.getDelimiters(), filtered.getDelimiters());
+
+        assertNull(filtered.getControlSchema());
+        assertNull(filtered.getTransactionSchema());
+
+        Schema control = schemaFactory.getControlSchema(filtered.getStandard(), filtered.getVersion());
+        filtered.setControlSchema(control);
+        assertEquals(control, filtered.getControlSchema());
+        assertEquals(control, unfiltered.getControlSchema());
+        IllegalStateException thrown = assertThrows(IllegalStateException.class, () -> filtered.setControlSchema(control));
+        assertEquals("control schema already set", thrown.getMessage());
+
+        filtered.nextTag(); // ISA
+        thrown = assertThrows(IllegalStateException.class, () -> filtered.setControlSchema(control));
+        assertEquals("control schema set after interchange start", thrown.getMessage());
+
         assertStatusEquals(unfiltered, filtered);
 
         filtered.nextTag(); // GS
         assertStatusEquals(unfiltered, filtered);
+
+        filtered.next(); // START_TRANSACTION
+        Schema transaction = schemaFactory.createSchema(getClass().getResourceAsStream("/x12/EDISchema997.xml"));
+        filtered.setTransactionSchema(transaction);
+        assertEquals(transaction, filtered.getTransactionSchema());
+        assertEquals(transaction, unfiltered.getTransactionSchema());
+
         filtered.nextTag(); // ST
         assertStatusEquals(unfiltered, filtered);
         filtered.nextTag(); // AK5

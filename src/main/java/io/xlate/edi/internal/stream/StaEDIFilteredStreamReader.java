@@ -116,8 +116,18 @@ class StaEDIFilteredStreamReader implements EDIStreamReader {
     }
 
     @Override
+    public Schema getControlSchema() {
+        return delegate.getControlSchema();
+    }
+
+    @Override
     public void setControlSchema(Schema schema) {
         delegate.setControlSchema(schema);
+    }
+
+    @Override
+    public Schema getTransactionSchema() {
+        return delegate.getTransactionSchema();
     }
 
     @Override
