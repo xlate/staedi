@@ -44,7 +44,34 @@ public class EDIStreamException extends Exception {
     }
 
     private static String displayLocation(Location location) {
-        return location.getSegmentPosition() + " : " + location.getElementPosition();
+        StringBuilder display = new StringBuilder();
+
+        display.append("segment ");
+
+        if (location.getSegmentTag() != null) {
+            display.append(location.getSegmentTag());
+        }
+
+        display.append(" at position ");
+        display.append(String.valueOf(location.getSegmentPosition()));
+
+        if (location.getElementPosition() > -1) {
+            display.append(", element ");
+            display.append(String.valueOf(location.getElementPosition()));
+
+            if (location.getElementOccurrence() > -1) {
+                display.append("(occurrence ");
+                display.append(String.valueOf(location.getElementOccurrence()));
+                display.append(')');
+            }
+        }
+
+        if (location.getComponentPosition() > -1) {
+            display.append(", component ");
+            display.append(String.valueOf(location.getComponentPosition()));
+        }
+
+        return display.toString();
     }
 
     /**
@@ -59,9 +86,7 @@ public class EDIStreamException extends Exception {
      *            a nested error / exception
      */
     public EDIStreamException(String message, Location location, Throwable cause) {
-        super("EDIStreamException at [seg,ele]:[" + displayLocation(location) + "]\n" + "Message: "
-                + message,
-              cause);
+        super(message + " in " + displayLocation(location), cause);
         this.location = location;
     }
 
@@ -75,8 +100,7 @@ public class EDIStreamException extends Exception {
      *            the location of the error
      */
     public EDIStreamException(String message, Location location) {
-        super("EDIStreamException at [seg,ele]:[" + displayLocation(location) + "]\n" + "Message: "
-                + message);
+        super(message + " in " + displayLocation(location));
         this.location = location;
     }
 
