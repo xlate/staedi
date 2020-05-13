@@ -158,7 +158,7 @@ public class Lexer {
         }
 
         CharacterClass clazz;
-        int input;
+        int input = 0;
         boolean eventsReady = false;
 
         while (!eventsReady && (input = stream.read()) > -1) {
@@ -266,6 +266,10 @@ public class Lexer {
                     throw error(EDIException.INVALID_CHARACTER);
                 }
             }
+        }
+
+        if (input < 0) {
+            throw error(EDIException.INCOMPLETE_STREAM);
         }
     }
 

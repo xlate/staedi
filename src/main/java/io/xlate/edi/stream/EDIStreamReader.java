@@ -52,7 +52,7 @@ public interface EDIStreamReader extends Closeable, EDIStreamConstants {
      * @throws NoSuchElementException
      *             if this is called when hasNext() returns false
      * @throws EDIStreamException
-     *             if there is an error processing the underlying XML source
+     *             if there is an error processing the underlying EDI source
      */
     EDIStreamEvent next() throws EDIStreamException;
 

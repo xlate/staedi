@@ -330,4 +330,18 @@ public class LexerTest {
         EDIException thrown = assertThrows(EDIException.class, lexer::parse);
         assertTrue(thrown.getMessage().contains("EDIE004"));
     }
+
+    @Test
+    public void testIncompleteInputText() throws Exception {
+        InputStream stream = new ByteArrayInputStream("ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~".getBytes());
+        TestLexerEventHandler eventHandler = new TestLexerEventHandler();
+        final StaEDIStreamLocation location = new StaEDIStreamLocation();
+        final Lexer lexer = new Lexer(stream, eventHandler, location);
+        for (int i = 0; i < 19; i++) {
+            lexer.parse(); // Interchange start through end of ISA
+        }
+
+        EDIException thrown = assertThrows(EDIException.class, lexer::parse);
+        assertTrue(thrown.getMessage().contains("EDIE005"));
+    }
 }

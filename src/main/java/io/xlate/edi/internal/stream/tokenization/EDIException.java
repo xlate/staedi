@@ -29,6 +29,7 @@ public class EDIException extends EDIStreamException {
     public static final Integer UNSUPPORTED_DIALECT = 2;
     public static final Integer INVALID_STATE = 3;
     public static final Integer INVALID_CHARACTER = 4;
+    public static final Integer INCOMPLETE_STREAM = 5;
 
     private static final Map<Integer, String> exceptionMessages = new HashMap<>();
 
@@ -41,6 +42,8 @@ public class EDIException extends EDIStreamException {
                               "EDIE003 - Invalid processing state");
         exceptionMessages.put(INVALID_CHARACTER,
                               "EDIE004 - Invalid input character");
+        exceptionMessages.put(INCOMPLETE_STREAM,
+                              "EDIE005 - Unexpected end of stream");
     }
 
     public EDIException(String message) {
