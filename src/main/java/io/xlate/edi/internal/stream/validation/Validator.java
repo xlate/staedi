@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.logging.Logger;
 
 import io.xlate.edi.internal.stream.StaEDIStreamLocation;
 import io.xlate.edi.internal.stream.tokenization.Dialect;
@@ -45,6 +46,8 @@ import io.xlate.edi.stream.EDIStreamValidationError;
 import io.xlate.edi.stream.Location;
 
 public class Validator {
+
+    static final Logger LOGGER = Logger.getLogger(Validator.class.getName());
 
     private Schema containerSchema;
     private Schema schema;
@@ -102,7 +105,9 @@ public class Validator {
         this.validateCodeValues = validateCodeValues;
         this.containerSchema = containerSchema;
 
+        LOGGER.finer(() -> "Creating usage tree");
         root = buildTree(schema.getStandard());
+        LOGGER.finer(() -> "Done creating usage tree");
         correctSegment = segment = root.getFirstChild();
 
         if (schema.getImplementation() != null) {

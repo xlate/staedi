@@ -21,12 +21,15 @@ import java.io.InputStream;
 import java.nio.CharBuffer;
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.logging.Logger;
 
 import io.xlate.edi.internal.stream.LocationView;
 import io.xlate.edi.internal.stream.StaEDIStreamLocation;
 import io.xlate.edi.stream.Location;
 
 public class Lexer {
+
+    private static final Logger LOGGER = Logger.getLogger(Lexer.class.getName());
 
     private enum Mode {
         INTERCHANGE,
@@ -157,16 +160,16 @@ public class Lexer {
             return;
         }
 
-        CharacterClass clazz;
         int input = 0;
         boolean eventsReady = false;
 
         while (!eventsReady && (input = stream.read()) > -1) {
             location.incrementOffset(input);
 
-            clazz = characters.getClass(input);
+            CharacterClass clazz = characters.getClass(input);
             previous = state;
             state = state.transition(clazz);
+            LOGGER.finer(() -> "State " + previous + "(" + clazz + ") -> " + state);
 
             switch (state) {
             case INITIAL:

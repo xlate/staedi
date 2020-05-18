@@ -129,7 +129,9 @@ public class StaEDIStreamReader implements EDIStreamReader {
 
         if (EDIStreamEvent.START_INTERCHANGE == proxy.getEvent() && useInternalControlSchema()) {
             try {
+                LOGGER.finer(() -> "Setting control schema: " + getStandard() + ", " + getVersion());
                 setControlSchema(SchemaUtils.getControlSchema(getStandard(), getVersion()));
+                LOGGER.finer(() -> "Done setting control schema: " + getStandard() + ", " + getVersion());
             } catch (EDISchemaException e) {
                 LOGGER.log(Level.WARNING,
                            String.format("Exception loading controlSchema for standard %s, version %s",
@@ -152,6 +154,8 @@ public class StaEDIStreamReader implements EDIStreamReader {
         }
 
         final EDIStreamEvent event = proxy.getEvent();
+
+        LOGGER.finer(() -> "EDI event: " + event);
 
         if (event == EDIStreamEvent.END_INTERCHANGE) {
             complete = true;

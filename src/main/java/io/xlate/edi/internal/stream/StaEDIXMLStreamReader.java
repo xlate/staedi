@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.Deque;
 import java.util.Queue;
+import java.util.logging.Logger;
 
 import javax.xml.namespace.NamespaceContext;
 import javax.xml.namespace.QName;
@@ -36,6 +37,7 @@ import io.xlate.edi.stream.EDIStreamReader;
 
 final class StaEDIXMLStreamReader implements XMLStreamReader {
 
+    private static final Logger LOGGER = Logger.getLogger(StaEDIXMLStreamReader.class.getName());
     private static final QName DUMMY_QNAME = new QName("DUMMY");
     private static final QName INTERCHANGE = new QName(EDINamespaces.LOOPS, "INTERCHANGE", prefixOf(EDINamespaces.LOOPS));
 
@@ -104,6 +106,7 @@ final class StaEDIXMLStreamReader implements XMLStreamReader {
     }
 
     private void enqueueEvent(int xmlEvent, QName element, boolean remember) {
+        LOGGER.finer(() -> "Enqueue XML event: " + xmlEvent + ", element: " + element);
         eventQueue.add(xmlEvent);
         elementQueue.add(element);
 
@@ -121,6 +124,7 @@ final class StaEDIXMLStreamReader implements XMLStreamReader {
     }
 
     private void enqueueEvent(EDIStreamEvent ediEvent) throws XMLStreamException {
+        LOGGER.finer(() -> "Enqueue EDI event: " + ediEvent);
         final QName name;
         cdataBuilder.setLength(0);
         cdata = null;
@@ -231,6 +235,7 @@ final class StaEDIXMLStreamReader implements XMLStreamReader {
         }
 
         if (eventQueue.isEmpty()) {
+            LOGGER.finer(() -> "eventQueue is empty, calling ediReader.next()");
             try {
                 enqueueEvent(ediReader.next());
             } catch (XMLStreamException e) {

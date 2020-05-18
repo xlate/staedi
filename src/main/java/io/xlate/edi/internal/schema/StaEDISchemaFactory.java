@@ -22,6 +22,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.xml.namespace.QName;
 import javax.xml.stream.Location;
@@ -37,6 +39,7 @@ import io.xlate.edi.schema.SchemaFactory;
 
 public class StaEDISchemaFactory implements SchemaFactory {
 
+    static final Logger LOGGER = Logger.getLogger(StaEDISchemaFactory.class.getName());
     static final XMLInputFactory FACTORY = XMLInputFactory.newInstance();
 
     static final String XMLNS_V2 = "http://xlate.io/EDISchema/v2";
@@ -55,6 +58,7 @@ public class StaEDISchemaFactory implements SchemaFactory {
         QName schemaElement;
 
         try {
+            LOGGER.fine(() -> "Creating schema from stream");
             XMLStreamReader reader = FACTORY.createXMLStreamReader(stream);
 
             if (reader.getEventType() != XMLStreamConstants.START_DOCUMENT) {
@@ -85,6 +89,8 @@ public class StaEDISchemaFactory implements SchemaFactory {
                                                    schemaReader.getImplementationName());
 
             schema.setTypes(types);
+
+            LOGGER.log(Level.FINE, "Schema created, contains {0} types", types.size());
 
             return schema;
         } catch (XMLStreamException e) {
