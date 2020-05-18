@@ -26,6 +26,7 @@ import java.net.URL;
 
 import org.junit.jupiter.api.Test;
 
+import io.xlate.edi.schema.EDIComplexType;
 import io.xlate.edi.schema.EDISchemaException;
 import io.xlate.edi.schema.EDIType;
 import io.xlate.edi.schema.Schema;
@@ -38,6 +39,7 @@ public class StaEDISchemaFactoryTest {
     final String INTERCHANGE_V2 = "{http://xlate.io/EDISchema/v2}interchange";
     final String TRANSACTION_V2 = "{http://xlate.io/EDISchema/v2}transaction";
 
+    final String INTERCHANGE_V3 = "{http://xlate.io/EDISchema/v3}interchange";
     final String STANDARD_V3 = "{http://xlate.io/EDISchema/v3}transaction";
     final String IMPL_V3 = "{http://xlate.io/EDISchema/v3}implementation";
 
@@ -104,19 +106,22 @@ public class StaEDISchemaFactoryTest {
     @Test
     public void testExceptionThrownWithoutInterchangeAndTransactionV2() {
         SchemaFactory factory = SchemaFactory.newFactory();
-        InputStream stream = new ByteArrayInputStream(("<schema xmlns='" + StaEDISchemaFactory.XMLNS_V2 + "'><random/></schema>").getBytes());
+        InputStream stream = new ByteArrayInputStream(("<schema xmlns='" + StaEDISchemaFactory.XMLNS_V2
+                + "'><random/></schema>").getBytes());
         EDISchemaException thrown = assertThrows(EDISchemaException.class, () -> factory.createSchema(stream));
-        assertEquals("Unexpected XML element [{"+StaEDISchemaFactory.XMLNS_V2+"}random]", thrown.getOriginalMessage());
+        assertEquals("Unexpected XML element [{" + StaEDISchemaFactory.XMLNS_V2 + "}random]", thrown.getOriginalMessage());
     }
 
     @Test
     public void testInterchangeRequiredAttributesV2() {
         SchemaFactory factory = SchemaFactory.newFactory();
-        InputStream stream1 = new ByteArrayInputStream(("<schema xmlns='" + StaEDISchemaFactory.XMLNS_V2 + "'><interchange _header='ABC' trailer='XYZ' /></schema>").getBytes());
+        InputStream stream1 = new ByteArrayInputStream(("<schema xmlns='" + StaEDISchemaFactory.XMLNS_V2
+                + "'><interchange _header='ABC' trailer='XYZ' /></schema>").getBytes());
         EDISchemaException thrown1 = assertThrows(EDISchemaException.class, () -> factory.createSchema(stream1));
         assertEquals("Missing required attribute: [header]", thrown1.getOriginalMessage());
 
-        InputStream stream2 = new ByteArrayInputStream(("<schema xmlns='" + StaEDISchemaFactory.XMLNS_V2 + "'><interchange header='ABC' _trailer='XYZ' /></schema>").getBytes());
+        InputStream stream2 = new ByteArrayInputStream(("<schema xmlns='" + StaEDISchemaFactory.XMLNS_V2
+                + "'><interchange header='ABC' _trailer='XYZ' /></schema>").getBytes());
         EDISchemaException thrown2 = assertThrows(EDISchemaException.class, () -> factory.createSchema(stream2));
         assertEquals("Missing required attribute: [trailer]", thrown2.getOriginalMessage());
 
@@ -127,14 +132,14 @@ public class StaEDISchemaFactoryTest {
         SchemaFactory factory = SchemaFactory.newFactory();
         InputStream stream = new ByteArrayInputStream((""
                 + "<schema xmlns='" + StaEDISchemaFactory.XMLNS_V2 + "'>"
-                        + "<interchange header='ABC' trailer='XYZ'>"
-                        + "<description><![CDATA[TEXT ALLOWED]]></description>"
-                        + "<unexpected></unexpected>"
-                        + "<sequence></sequence>"
-                        + "</interchange>"
-                        + "</schema>").getBytes());
+                + "<interchange header='ABC' trailer='XYZ'>"
+                + "<description><![CDATA[TEXT ALLOWED]]></description>"
+                + "<unexpected></unexpected>"
+                + "<sequence></sequence>"
+                + "</interchange>"
+                + "</schema>").getBytes());
         EDISchemaException thrown = assertThrows(EDISchemaException.class, () -> factory.createSchema(stream));
-        assertEquals("Unexpected XML element [{"+StaEDISchemaFactory.XMLNS_V2+"}unexpected]", thrown.getOriginalMessage());
+        assertEquals("Unexpected XML element [{" + StaEDISchemaFactory.XMLNS_V2 + "}unexpected]", thrown.getOriginalMessage());
     }
 
     @Test
@@ -263,5 +268,145 @@ public class StaEDISchemaFactoryTest {
         assertEquals(EDIType.Type.SEGMENT, schema.getType("ISA").getType());
         assertEquals(EDIType.Type.SEGMENT, schema.getType("GS").getType());
         assertEquals(EDIType.Type.SEGMENT, schema.getType("ST").getType());
+    }
+
+    @Test
+    public void testReferenceUndeclared() {
+        SchemaFactory factory = SchemaFactory.newFactory();
+        InputStream stream = new ByteArrayInputStream((""
+                + "<schema xmlns='" + StaEDISchemaFactory.XMLNS_V3 + "'>"
+                + "<interchange header='ABC' trailer='XYZ'>"
+                + "<sequence>"
+                + "  <segment type='NUL'/>"
+                + "</sequence>"
+                + "</interchange>"
+                + "</schema>").getBytes());
+        EDISchemaException thrown = assertThrows(EDISchemaException.class, () -> factory.createSchema(stream));
+        assertEquals("Type " + INTERCHANGE_V3 + " references undeclared segment with ref='ABC'", thrown.getOriginalMessage());
+    }
+
+    @Test
+    public void testReferenceIncorrectType() {
+        SchemaFactory factory = SchemaFactory.newFactory();
+        InputStream stream = new ByteArrayInputStream((""
+                + "<schema xmlns='" + StaEDISchemaFactory.XMLNS_V3 + "'>"
+                + "<interchange header='SG1' trailer='SG2'>"
+                + "<sequence>"
+                + "  <segment type='E1'/>"
+                + "</sequence>"
+                + "</interchange>"
+                + "<elementType name=\"E1\" base=\"string\" maxLength=\"5\" />"
+                + "<segmentType name=\"SG1\"><sequence><element type='E1'/></sequence></segmentType>"
+                + "<segmentType name=\"SG2\"><sequence><element type='E1'/></sequence></segmentType>"
+                + "</schema>").getBytes());
+        EDISchemaException thrown = assertThrows(EDISchemaException.class, () -> factory.createSchema(stream));
+        assertEquals("Type 'E1' must not be referenced as 'segment' in definition of type '" + INTERCHANGE_V3 + "'",
+                     thrown.getOriginalMessage());
+    }
+
+    @Test
+    public void testUnexpectedUnknownTypeElement() {
+        SchemaFactory factory = SchemaFactory.newFactory();
+        InputStream stream = new ByteArrayInputStream((""
+                + "<schema xmlns='" + StaEDISchemaFactory.XMLNS_V3 + "'>"
+                + "<interchange header='SG1' trailer='SG2'>"
+                + "<sequence>"
+                + "  <segment type='SG3'/>"
+                + "</sequence>"
+                + "</interchange>"
+                + "<elementType name=\"E1\" base=\"string\" maxLength=\"5\" />"
+                + "<segmentType name=\"SG1\"><sequence><element type='E1'/></sequence></segmentType>"
+                + "<segmentType name=\"SG2\"><sequence><element type='E1'/></sequence></segmentType>"
+                + "<segmentType name=\"SG3\"><sequence><element type='E1'/></sequence></segmentType>"
+                + "<unknownType xmlns='http://xlate.io'/>"
+                + "</schema>").getBytes());
+        EDISchemaException thrown = assertThrows(EDISchemaException.class, () -> factory.createSchema(stream));
+        assertEquals("Unexpected XML element [{http://xlate.io}unknownType]",
+                     thrown.getOriginalMessage());
+    }
+
+    @Test
+    public void testMissingRequiredTransactionElement() {
+        SchemaFactory factory = SchemaFactory.newFactory();
+        InputStream stream = new ByteArrayInputStream((""
+                + "<schema xmlns='" + StaEDISchemaFactory.XMLNS_V3 + "'>"
+                + "<interchange header='SG1' trailer='SG2'>"
+                + "<sequence>"
+                + "  <group header='SG3' trailer='SG4' use='prohibited'></group>"
+                + "</sequence>"
+                + "</interchange>"
+                + "</schema>").getBytes());
+        EDISchemaException thrown = assertThrows(EDISchemaException.class, () -> factory.createSchema(stream));
+        assertEquals("Expected XML element [" + STANDARD_V3 + "] not found",
+                     thrown.getOriginalMessage());
+    }
+
+    @Test
+    public void testProhibitedUseType() throws EDISchemaException {
+        SchemaFactory factory = SchemaFactory.newFactory();
+        InputStream stream = new ByteArrayInputStream((""
+                + "<schema xmlns='" + StaEDISchemaFactory.XMLNS_V3 + "'>"
+                + "<interchange header='SG1' trailer='SG2'>"
+                + "<sequence>"
+                + "  <group header='SG3' trailer='SG4' use='prohibited'>"
+                + "    <transaction header='SG5' trailer='SG6' use='prohibited'></transaction>"
+                + "  </group>"
+                + "</sequence>"
+                + "</interchange>"
+                + "<elementType name=\"E1\" base=\"string\" maxLength=\"5\" />"
+                + "<segmentType name=\"SG1\"><sequence><element type='E1'/></sequence></segmentType>"
+                + "<segmentType name=\"SG2\"><sequence><element type='E1'/></sequence></segmentType>"
+                + "<segmentType name=\"SG3\"><sequence><element type='E1'/></sequence></segmentType>"
+                + "<segmentType name=\"SG4\"><sequence><element type='E1'/></sequence></segmentType>"
+                + "<segmentType name=\"SG5\"><sequence><element type='E1'/></sequence></segmentType>"
+                + "<segmentType name=\"SG6\"><sequence><element type='E1'/></sequence></segmentType>"
+                + "</schema>").getBytes());
+        Schema schema = factory.createSchema(stream);
+        EDIComplexType interchange = schema.getStandard();
+        assertEquals(0, interchange.getReferences().get(1).getMinOccurs());
+        assertEquals(0, interchange.getReferences().get(1).getMaxOccurs());
+    }
+
+    @Test
+    public void testInvalidUseType() {
+        SchemaFactory factory = SchemaFactory.newFactory();
+        InputStream stream = new ByteArrayInputStream((""
+                + "<schema xmlns='" + StaEDISchemaFactory.XMLNS_V3 + "'>"
+                + "<interchange header='SG1' trailer='SG2'>"
+                + "<sequence>"
+                + "  <group header='SG3' trailer='SG4' use='junk'>"
+                + "    <transaction header='SG5' trailer='SG6' use='prohibited'></transaction>"
+                + "  </group>"
+                + "</sequence>"
+                + "</interchange>"
+                + "<elementType name=\"E1\" base=\"string\" maxLength=\"5\" />"
+                + "<segmentType name=\"SG1\"><sequence><element type='E1'/></sequence></segmentType>"
+                + "<segmentType name=\"SG2\"><sequence><element type='E1'/></sequence></segmentType>"
+                + "<segmentType name=\"SG3\"><sequence><element type='E1'/></sequence></segmentType>"
+                + "<segmentType name=\"SG4\"><sequence><element type='E1'/></sequence></segmentType>"
+                + "<segmentType name=\"SG5\"><sequence><element type='E1'/></sequence></segmentType>"
+                + "<segmentType name=\"SG6\"><sequence><element type='E1'/></sequence></segmentType>"
+                + "</schema>").getBytes());
+        EDISchemaException thrown = assertThrows(EDISchemaException.class, () -> factory.createSchema(stream));
+        assertEquals("Invalid value for 'use': junk",
+                     thrown.getOriginalMessage());
+    }
+
+    @Test
+    public void testInvalidSegmentName() {
+        SchemaFactory factory = SchemaFactory.newFactory();
+        InputStream stream = new ByteArrayInputStream((""
+                + "<schema xmlns='" + StaEDISchemaFactory.XMLNS_V3 + "'>"
+                + "<interchange header='sg1' trailer='SG2'>"
+                + "<sequence>"
+                + "</sequence>"
+                + "</interchange>"
+                + "<elementType name=\"E1\" base=\"string\" maxLength=\"5\" />"
+                + "<segmentType name=\"sg1\"><sequence><element type='E1'/></sequence></segmentType>"
+                + "<segmentType name=\"SG2\"><sequence><element type='E1'/></sequence></segmentType>"
+                + "</schema>").getBytes());
+        EDISchemaException thrown = assertThrows(EDISchemaException.class, () -> factory.createSchema(stream));
+        assertEquals("Invalid segment name [sg1]",
+                     thrown.getOriginalMessage());
     }
 }

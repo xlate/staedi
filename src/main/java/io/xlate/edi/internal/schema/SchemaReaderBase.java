@@ -15,7 +15,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLStreamConstants;
@@ -238,10 +237,9 @@ abstract class SchemaReaderBase implements SchemaReader {
         Reference trailerRef = createControlReference(reader, "trailer");
 
         readDescription(reader);
-        QName nextElement = reader.getName();
 
-        if (subelement != null && !subelement.equals(nextElement)) {
-            throw unexpectedElement(nextElement, reader);
+        if (subelement != null) {
+            requireElementStart(subelement, reader);
         }
 
         List<EDIReference> refs = new ArrayList<>(3);
@@ -635,63 +633,11 @@ abstract class SchemaReaderBase implements SchemaReader {
 
             final EDIType.Type refType = target.getType();
 
-            if (refType != refTypeId(impl.getRefTag())) {
+            if (refType != EDIType.Type.valueOf(impl.getRefTag().toUpperCase())) {
                 throw schemaException(String.format(REFERR_ILLEGAL, impl.getRefId(), impl.getRefTag(), struct.getId()));
             }
 
-            switch (struct.getType()) {
-            case INTERCHANGE:
-                // Transactions may be located directly within the interchange in EDIFACT.
-                setReference(struct,
-                             (Reference) ref,
-                             target,
-                             EDIType.Type.GROUP,
-                             EDIType.Type.TRANSACTION,
-                             EDIType.Type.SEGMENT);
-                break;
-            case GROUP:
-                setReference(struct, (Reference) ref, target, EDIType.Type.TRANSACTION, EDIType.Type.SEGMENT);
-                break;
-            case TRANSACTION:
-                setReference(struct, (Reference) ref, target, EDIType.Type.LOOP, EDIType.Type.SEGMENT);
-                break;
-            case LOOP:
-                setReference(struct, (Reference) ref, target, EDIType.Type.LOOP, EDIType.Type.SEGMENT);
-                break;
-            case SEGMENT:
-                setReference(struct, (Reference) ref, target, EDIType.Type.COMPOSITE, EDIType.Type.ELEMENT);
-                break;
-            case COMPOSITE:
-                setReference(struct, (Reference) ref, target, EDIType.Type.ELEMENT);
-                break;
-            default:
-                break;
-            }
-        }
-    }
-
-    EDIType.Type refTypeId(String tag) {
-        if (tag != null) {
-            return EDIType.Type.valueOf(tag.toUpperCase());
-        }
-        throw new IllegalArgumentException("Unexpected element: " + tag);
-    }
-
-    void setReference(StructureType struct, Reference reference, EDIType target, EDIType.Type... allowedTargets) {
-        boolean isAllowed = Arrays.stream(allowedTargets).anyMatch(target.getType()::equals);
-
-        if (isAllowed) {
-            reference.setReferencedType(target);
-        } else {
-            StringBuilder excp = new StringBuilder();
-            excp.append("Structure ");
-            excp.append(struct.getId());
-            excp.append(" attempts to reference type with id = ");
-            excp.append(reference.getRefId());
-            excp.append(". Allowed types: " + Arrays.stream(allowedTargets)
-                                                    .map(Object::toString)
-                                                    .collect(Collectors.joining(", ")));
-            throw schemaException(excp.toString());
+            impl.setReferencedType(target);
         }
     }
 
