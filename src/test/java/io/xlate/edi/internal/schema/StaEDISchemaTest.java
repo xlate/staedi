@@ -49,14 +49,14 @@ public class StaEDISchemaTest {
 
     @Test
     public void testRootTypeIsInterchange() throws EDISchemaException, XMLStreamException, FactoryConfigurationError {
-        StaEDISchema schema = new StaEDISchema(INTERCHANGE_V2, TRANSACTION_V2);
+        StaEDISchema schema = new StaEDISchema(INTERCHANGE_V3, TRANSACTION_V3);
         InputStream schemaStream = getClass().getResourceAsStream("/X12/v00200.xml");
         XMLStreamReader reader = XMLInputFactory.newInstance().createXMLStreamReader(schemaStream);
         reader.nextTag(); // Pass by <schema> element
-        Map<String, EDIType> types = new SchemaReaderV2(reader).readTypes();
+        Map<String, EDIType> types = new SchemaReaderV3(reader).readTypes();
         schema.setTypes(types);
 
-        assertEquals(EDIType.Type.INTERCHANGE, schema.getType(INTERCHANGE_V2).getType());
+        assertEquals(EDIType.Type.INTERCHANGE, schema.getType(INTERCHANGE_V3).getType());
     }
 
     @Test
