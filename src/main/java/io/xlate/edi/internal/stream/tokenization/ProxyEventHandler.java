@@ -175,6 +175,7 @@ public class ProxyEventHandler implements EventHandler {
     public boolean segmentBegin(String segmentTag) {
         this.segmentTag = segmentTag;
 
+        transactionSchemaAllowed = false;
         Validator validator = validator();
         boolean eventsReady = true;
 
@@ -205,7 +206,6 @@ public class ProxyEventHandler implements EventHandler {
 
         location.clearSegmentLocations();
         enqueueEvent(EDIStreamEvent.END_SEGMENT, EDIStreamValidationError.NONE, segmentTag, null, location);
-        transactionSchemaAllowed = false;
         return true;
     }
 

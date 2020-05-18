@@ -151,9 +151,9 @@ public interface EDIStreamReader extends Closeable, EDIStreamConstants {
     void setControlSchema(Schema schema);
 
     /**
-     * Returns the schema currently set on the reader to be used for
-     * validation of the business transaction. If none has been set, then
-     * null will be returned.
+     * Returns the schema currently set on the reader to be used for validation
+     * of the business transaction. If none has been set, then null will be
+     * returned.
      *
      * @return the transaction schema current set on this reader, may be null
      *
@@ -169,8 +169,8 @@ public interface EDIStreamReader extends Closeable, EDIStreamConstants {
      * control structures.
      * <p>
      * Calls to this method are only valid after a START_TRANSACTION event and
-     * before the end of the segment representing the beginning of the
-     * transaction.
+     * up to and including the END_SEGMENT event representing the beginning of
+     * the transaction.
      *
      * @param schema
      *            the schema instance to use for validation of business
