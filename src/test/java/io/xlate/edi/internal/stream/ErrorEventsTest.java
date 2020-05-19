@@ -373,4 +373,244 @@ public class ErrorEventsTest {
         assertTrue(reader.hasNext(), "Expected error missing");
         assertEquals(EDIStreamValidationError.TOO_MANY_DATA_ELEMENTS, reader.getErrorType());
     }
+
+    @Test
+    public void testExtraAnyElementAllowedInAK1() throws EDISchemaException, EDIStreamException {
+        EDIInputFactory factory = EDIInputFactory.newFactory();
+        InputStream stream = new ByteArrayInputStream((""
+                + "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~"
+                + "GS*FA*ReceiverDept*SenderDept*20050812*195335*000005*X*005010X230~"
+                + "ST*997*0001~"
+                + "AK1*HC*000001**ANY1*ANY2~"
+                + "AK9*A*1*1*1~"
+                + "SE*4*0001~"
+                + "GE*1*000005~"
+                + "IEA*1*508121953~").getBytes());
+
+        EDIStreamReader reader = factory.createEDIStreamReader(stream);
+        reader = factory.createFilteredReader(reader, (r) -> {
+            switch (r.getEventType()) {
+            case SEGMENT_ERROR:
+            case ELEMENT_DATA_ERROR:
+            case ELEMENT_OCCURRENCE_ERROR:
+            case START_TRANSACTION: // To set the schema
+            case START_COMPOSITE: // To ensure no composites signaled for "any" elements
+                return true;
+            default:
+                break;
+            }
+            return false;
+        });
+
+        assertEquals(EDIStreamEvent.START_TRANSACTION, reader.next(), "Expecting start of transaction");
+        SchemaFactory schemaFactory = SchemaFactory.newFactory();
+        URL schemaLocation = getClass().getResource("/x12/EDISchema997_support_any_elements.xml");
+        Schema schema = schemaFactory.createSchema(schemaLocation);
+        reader.setTransactionSchema(schema);
+        assertFalse(reader.hasNext(), "Unexpected errors in transaction");
+    }
+
+    @Test
+    public void testTooManyExtraAnyElementAllowedInAK1() throws EDISchemaException, EDIStreamException {
+        EDIInputFactory factory = EDIInputFactory.newFactory();
+        InputStream stream = new ByteArrayInputStream((""
+                + "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~"
+                + "GS*FA*ReceiverDept*SenderDept*20050812*195335*000005*X*005010X230~"
+                + "ST*997*0001~"
+                + "AK1*HC*000001**ANY1*ANY2*ANY3~"
+                + "AK9*A*1*1*1~"
+                + "SE*4*0001~"
+                + "GE*1*000005~"
+                + "IEA*1*508121953~").getBytes());
+
+        EDIStreamReader reader = factory.createEDIStreamReader(stream);
+        reader = factory.createFilteredReader(reader, (r) -> {
+            switch (r.getEventType()) {
+            case SEGMENT_ERROR:
+            case ELEMENT_DATA_ERROR:
+            case ELEMENT_OCCURRENCE_ERROR:
+            case START_TRANSACTION: // To set the schema
+            case START_COMPOSITE: // To ensure no composites signaled for "any" elements
+                return true;
+            default:
+                break;
+            }
+            return false;
+        });
+
+        assertEquals(EDIStreamEvent.START_TRANSACTION, reader.next(), "Expecting start of transaction");
+        SchemaFactory schemaFactory = SchemaFactory.newFactory();
+        URL schemaLocation = getClass().getResource("/x12/EDISchema997_support_any_elements.xml");
+        Schema schema = schemaFactory.createSchema(schemaLocation);
+        reader.setTransactionSchema(schema);
+
+        assertTrue(reader.hasNext(), "Expected error missing");
+        assertEquals(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR, reader.getEventType());
+        assertEquals(EDIStreamValidationError.TOO_MANY_DATA_ELEMENTS, reader.getErrorType());
+        assertEquals("AK1", reader.getLocation().getSegmentTag());
+        assertEquals(6, reader.getLocation().getElementPosition());
+        assertEquals(1, reader.getLocation().getElementOccurrence());
+        assertEquals(-1, reader.getLocation().getComponentPosition());
+    }
+
+    @Test
+    public void testNoExtraAnyElementInAK1() throws EDISchemaException, EDIStreamException {
+        EDIInputFactory factory = EDIInputFactory.newFactory();
+        InputStream stream = new ByteArrayInputStream((""
+                + "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~"
+                + "GS*FA*ReceiverDept*SenderDept*20050812*195335*000005*X*005010X230~"
+                + "ST*997*0001~"
+                + "AK1*HC*000001~"
+                + "AK9*A*1*1*1~"
+                + "SE*4*0001~"
+                + "GE*1*000005~"
+                + "IEA*1*508121953~").getBytes());
+
+        EDIStreamReader reader = factory.createEDIStreamReader(stream);
+        reader = factory.createFilteredReader(reader, (r) -> {
+            switch (r.getEventType()) {
+            case SEGMENT_ERROR:
+            case ELEMENT_DATA_ERROR:
+            case ELEMENT_OCCURRENCE_ERROR:
+            case START_TRANSACTION: // To set the schema
+            case START_COMPOSITE: // To ensure no composites signaled for "any" elements
+                return true;
+            default:
+                break;
+            }
+            return false;
+        });
+
+        assertEquals(EDIStreamEvent.START_TRANSACTION, reader.next(), "Expecting start of transaction");
+        SchemaFactory schemaFactory = SchemaFactory.newFactory();
+        URL schemaLocation = getClass().getResource("/x12/EDISchema997_support_any_elements.xml");
+        Schema schema = schemaFactory.createSchema(schemaLocation);
+        reader.setTransactionSchema(schema);
+
+        assertFalse(reader.hasNext(), "Unexpected errors in transaction");
+    }
+
+    @Test
+    public void testCompositesSupportedInAnyElementInAK1() throws EDISchemaException, EDIStreamException {
+        EDIInputFactory factory = EDIInputFactory.newFactory();
+        InputStream stream = new ByteArrayInputStream((""
+                + "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~"
+                + "GS*FA*ReceiverDept*SenderDept*20050812*195335*000005*X*005010X230~"
+                + "ST*997*0001~"
+                + "AK1*HC*000001**ANY1:ANY2~"
+                + "AK9*A*1*1*1~"
+                + "SE*4*0001~"
+                + "GE*1*000005~"
+                + "IEA*1*508121953~").getBytes());
+
+        EDIStreamReader reader = factory.createEDIStreamReader(stream);
+        reader = factory.createFilteredReader(reader, (r) -> {
+            switch (r.getEventType()) {
+            case SEGMENT_ERROR:
+            case ELEMENT_DATA_ERROR:
+            case ELEMENT_OCCURRENCE_ERROR:
+            case START_TRANSACTION: // To set the schema
+                return true;
+            default:
+                break;
+            }
+            return false;
+        });
+
+        assertEquals(EDIStreamEvent.START_TRANSACTION, reader.next(), "Expecting start of transaction");
+        SchemaFactory schemaFactory = SchemaFactory.newFactory();
+        URL schemaLocation = getClass().getResource("/x12/EDISchema997_support_any_elements.xml");
+        Schema schema = schemaFactory.createSchema(schemaLocation);
+        reader.setTransactionSchema(schema);
+
+        assertFalse(reader.hasNext(), "Unexpected errors in transaction");
+    }
+
+    @Test
+    public void testRequiredComponentInC030InAnyElementInAK4() throws EDISchemaException, EDIStreamException {
+        EDIInputFactory factory = EDIInputFactory.newFactory();
+        InputStream stream = new ByteArrayInputStream((""
+                + "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~"
+                + "GS*FA*ReceiverDept*SenderDept*20050812*195335*000005*X*005010X230~"
+                + "ST*997*0001~"
+                + "AK1*HC*000001~"
+                + "AK2*837*0021~"
+                + "AK3*NM1*8**8~"
+                + "AK4*8:::ANYCOMPONENT*66*7*MI~"
+                + "AK5*R*5~"
+                + "AK9*R*1*1*0~"
+                + "SE*4*0001~"
+                + "GE*1*000005~"
+                + "IEA*1*508121953~").getBytes());
+
+        EDIStreamReader reader = factory.createEDIStreamReader(stream);
+        reader = factory.createFilteredReader(reader, (r) -> {
+            switch (r.getEventType()) {
+            case SEGMENT_ERROR:
+            case ELEMENT_DATA_ERROR:
+            case ELEMENT_OCCURRENCE_ERROR:
+            case START_TRANSACTION: // To set the schema
+                return true;
+            default:
+                break;
+            }
+            return false;
+        });
+
+        assertEquals(EDIStreamEvent.START_TRANSACTION, reader.next(), "Expecting start of transaction");
+        SchemaFactory schemaFactory = SchemaFactory.newFactory();
+        URL schemaLocation = getClass().getResource("/x12/EDISchema997_support_any_elements.xml");
+        Schema schema = schemaFactory.createSchema(schemaLocation);
+        reader.setTransactionSchema(schema);
+
+        assertFalse(reader.hasNext(), "Unexpected errors in transaction");
+    }
+
+    @Test
+    public void testMissingRequiredComponentInC030InAnyElementInAK4() throws EDISchemaException, EDIStreamException {
+        EDIInputFactory factory = EDIInputFactory.newFactory();
+        InputStream stream = new ByteArrayInputStream((""
+                + "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~"
+                + "GS*FA*ReceiverDept*SenderDept*20050812*195335*000005*X*005010X230~"
+                + "ST*997*0001~"
+                + "AK1*HC*000001~"
+                + "AK2*837*0021~"
+                + "AK3*NM1*8**8~"
+                + "AK4*8:::*66*7*MI~"
+                + "AK5*R*5~"
+                + "AK9*R*1*1*0~"
+                + "SE*4*0001~"
+                + "GE*1*000005~"
+                + "IEA*1*508121953~").getBytes());
+
+        EDIStreamReader reader = factory.createEDIStreamReader(stream);
+        reader = factory.createFilteredReader(reader, (r) -> {
+            switch (r.getEventType()) {
+            case SEGMENT_ERROR:
+            case ELEMENT_DATA_ERROR:
+            case ELEMENT_OCCURRENCE_ERROR:
+            case START_TRANSACTION: // To set the schema
+                return true;
+            default:
+                break;
+            }
+            return false;
+        });
+
+        assertEquals(EDIStreamEvent.START_TRANSACTION, reader.next(), "Expecting start of transaction");
+        SchemaFactory schemaFactory = SchemaFactory.newFactory();
+        URL schemaLocation = getClass().getResource("/x12/EDISchema997_support_any_elements.xml");
+        Schema schema = schemaFactory.createSchema(schemaLocation);
+        reader.setTransactionSchema(schema);
+
+        assertTrue(reader.hasNext(), "Expected error missing");
+        assertEquals(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR, reader.getEventType());
+        assertEquals(EDIStreamValidationError.REQUIRED_DATA_ELEMENT_MISSING, reader.getErrorType());
+        assertEquals("AK4", reader.getLocation().getSegmentTag());
+        assertEquals(1, reader.getLocation().getElementPosition());
+        assertEquals(1, reader.getLocation().getElementOccurrence());
+        assertEquals(4, reader.getLocation().getComponentPosition());
+
+        assertFalse(reader.hasNext(), "Unexpected errors in transaction");
+    }
 }

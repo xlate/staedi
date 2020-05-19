@@ -25,7 +25,10 @@ import io.xlate.edi.schema.EDIType;
 import io.xlate.edi.schema.Schema;
 import io.xlate.edi.schema.implementation.LoopImplementation;
 
-class StaEDISchema implements Schema {
+public class StaEDISchema implements Schema {
+
+    public static final String ANY_ELEMENT_ID = "io.xlate.edi.internal.schema.ANY_ELEMENT";
+    public static final String ANY_COMPOSITE_ID = "io.xlate.edi.internal.schema.ANY_COMPOSITE";
 
     final String interchangeName;
     final String transactionStandardName;
