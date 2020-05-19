@@ -39,7 +39,7 @@ import io.xlate.edi.stream.EDIStreamReader;
 import io.xlate.edi.stream.Location;
 
 @SuppressWarnings("resource")
-public class StaEDIFilteredStreamReaderTest implements ConstantsTest {
+class StaEDIFilteredStreamReaderTest implements ConstantsTest {
 
     @Test
     /**

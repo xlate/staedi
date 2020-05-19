@@ -37,7 +37,7 @@ import io.xlate.edi.stream.EDIStreamReader;
 import io.xlate.edi.stream.EDIStreamValidationError;
 
 @SuppressWarnings("resource")
-public class CompositeValidationTest {
+class CompositeValidationTest {
 
     @Test
     void testInvalidCompositeOccurrences() throws EDISchemaException, EDIStreamException {

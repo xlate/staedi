@@ -41,7 +41,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
-public class TransactionBindTest {
+class TransactionBindTest {
 
     final String XSD = "http://www.w3.org/2001/XMLSchema";
     Map<String, Element> complexTypes;

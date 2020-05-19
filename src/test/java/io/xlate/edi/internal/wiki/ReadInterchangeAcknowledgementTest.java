@@ -11,7 +11,7 @@ import io.xlate.edi.stream.EDIInputFactory;
 import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamReader;
 
-public class ReadInterchangeAcknowledgementTest {
+class ReadInterchangeAcknowledgementTest {
 
     @Test
     void testAcknowledgementSuccess() throws Exception {

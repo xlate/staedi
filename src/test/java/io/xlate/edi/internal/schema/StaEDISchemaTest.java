@@ -33,7 +33,7 @@ import io.xlate.edi.schema.EDISchemaException;
 import io.xlate.edi.schema.EDIType;
 
 @SuppressWarnings("resource")
-public class StaEDISchemaTest {
+class StaEDISchemaTest {
 
     final String INTERCHANGE_V2 = "{http://xlate.io/EDISchema/v2}interchange";
     final String TRANSACTION_V2 = "{http://xlate.io/EDISchema/v2}transaction";

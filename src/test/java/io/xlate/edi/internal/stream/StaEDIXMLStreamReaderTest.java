@@ -77,7 +77,7 @@ import io.xlate.edi.stream.EDIStreamWriter;
 import io.xlate.edi.stream.Location;
 
 @SuppressWarnings("resource")
-public class StaEDIXMLStreamReaderTest {
+class StaEDIXMLStreamReaderTest {
 
     static byte[] DUMMY_X12 = ("ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~"
             + "S01*X~"

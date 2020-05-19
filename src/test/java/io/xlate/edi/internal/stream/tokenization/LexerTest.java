@@ -34,7 +34,7 @@ import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamValidationError;
 
 @SuppressWarnings("resource")
-public class LexerTest {
+class LexerTest {
 
     class TestLexerEventHandler implements EventHandler, ConstantsTest {
         final Map<String, Object> content = new HashMap<>(2);

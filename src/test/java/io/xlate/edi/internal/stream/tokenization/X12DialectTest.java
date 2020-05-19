@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 import org.junit.jupiter.api.Test;
 
-public class X12DialectTest {
+class X12DialectTest {
 
     @Test
     void testX12Dialect() throws EDIException {

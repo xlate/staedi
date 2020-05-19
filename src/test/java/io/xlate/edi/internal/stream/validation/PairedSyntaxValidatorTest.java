@@ -21,7 +21,7 @@ import io.xlate.edi.schema.EDISyntaxRule.Type;
 import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamValidationError;
 
-public class PairedSyntaxValidatorTest extends SyntaxValidatorTestBase {
+class PairedSyntaxValidatorTest extends SyntaxValidatorTestBase {
 
     PairedSyntaxValidator validator;
 

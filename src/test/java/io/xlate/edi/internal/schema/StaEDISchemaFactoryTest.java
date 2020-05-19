@@ -35,7 +35,7 @@ import io.xlate.edi.schema.SchemaFactory;
 import io.xlate.edi.stream.EDIStreamConstants.Standards;
 
 @SuppressWarnings("resource")
-public class StaEDISchemaFactoryTest {
+class StaEDISchemaFactoryTest {
 
     final String INTERCHANGE_V2 = '{' + StaEDISchemaFactory.XMLNS_V2 + "}interchange";
     final String TRANSACTION_V2 = '{' + StaEDISchemaFactory.XMLNS_V2 + "}transaction";

@@ -21,7 +21,7 @@ import io.xlate.edi.schema.EDIType;
 import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamValidationError;
 
-public class ListSyntaxValidatorTest extends SyntaxValidatorTestBase {
+class ListSyntaxValidatorTest extends SyntaxValidatorTestBase {
 
     ListSyntaxValidator validator;
 

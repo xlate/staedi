@@ -23,7 +23,7 @@ import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamReader;
 import io.xlate.edi.stream.EDIStreamWriter;
 
-public class AcknowledgementBindTest {
+class AcknowledgementBindTest {
 
     @Test
     void testEDIBinding() throws Exception {

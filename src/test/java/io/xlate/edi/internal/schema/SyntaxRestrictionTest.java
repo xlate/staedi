@@ -5,16 +5,18 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
 import io.xlate.edi.schema.EDISyntaxRule;
 
-public class SyntaxRestrictionTest {
+class SyntaxRestrictionTest {
 
     @Test
     void testConstructorEmptyList() {
-        assertThrows(IllegalArgumentException.class, () -> new SyntaxRestriction(EDISyntaxRule.Type.PAIRED, Collections.emptyList()));
+        List<Integer> positions = Collections.emptyList();
+        assertThrows(IllegalArgumentException.class, () -> new SyntaxRestriction(EDISyntaxRule.Type.PAIRED, positions));
     }
 
     @Test

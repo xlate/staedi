@@ -19,7 +19,7 @@ import io.xlate.edi.schema.EDISimpleType;
 import io.xlate.edi.stream.EDIStreamValidationError;
 import io.xlate.edi.stream.EDIValidationException;
 
-public class NumericValidatorTest implements ValueSetTester {
+class NumericValidatorTest implements ValueSetTester {
 
     Dialect dialect;
 

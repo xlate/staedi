@@ -10,7 +10,7 @@ import io.xlate.edi.internal.stream.tokenization.Dialect;
 import io.xlate.edi.internal.stream.tokenization.DialectFactory;
 import io.xlate.edi.internal.stream.tokenization.EDIException;
 
-public class DecimalValidatorTest {
+class DecimalValidatorTest {
 
     Dialect dialectEdifact;
     Dialect dialectX12;

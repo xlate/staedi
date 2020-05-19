@@ -20,7 +20,7 @@ import io.xlate.edi.schema.EDISimpleType;
 import io.xlate.edi.stream.EDIStreamValidationError;
 import io.xlate.edi.stream.EDIValidationException;
 
-public class DateValidatorTest implements ValueSetTester {
+class DateValidatorTest implements ValueSetTester {
 
     Dialect dialect;
 

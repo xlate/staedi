@@ -33,7 +33,7 @@ import io.xlate.edi.stream.EDIStreamException;
 import io.xlate.edi.stream.EDIStreamReader;
 
 @SuppressWarnings("resource")
-public class StaEDIInputFactoryTest {
+class StaEDIInputFactoryTest {
 
     @Test
     void testNewFactory() {

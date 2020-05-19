@@ -37,7 +37,7 @@ import io.xlate.edi.stream.EDIStreamReader;
 import io.xlate.edi.stream.EDIStreamValidationError;
 
 @SuppressWarnings("resource")
-public class ErrorEventsTest {
+class ErrorEventsTest {
 
     EDIStreamFilter errorFilter = new EDIStreamFilter() {
         @Override

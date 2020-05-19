@@ -35,7 +35,7 @@ import io.xlate.edi.stream.EDIStreamException;
 import io.xlate.edi.stream.EDIStreamReader;
 import io.xlate.edi.stream.EDIStreamValidationError;
 
-public class EventSequenceTest {
+class EventSequenceTest {
 
     @Test
     void testValidatedTagSequence() throws EDISchemaException,

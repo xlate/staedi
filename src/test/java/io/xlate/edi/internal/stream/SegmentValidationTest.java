@@ -39,7 +39,7 @@ import io.xlate.edi.stream.EDIStreamValidationError;
 import io.xlate.edi.stream.EDIStreamConstants.Standards;
 
 @SuppressWarnings("resource")
-public class SegmentValidationTest {
+class SegmentValidationTest {
 
     EDIStreamFilter segmentErrorFilter = new EDIStreamFilter() {
         @Override

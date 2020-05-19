@@ -56,7 +56,7 @@ import io.xlate.edi.stream.Location;
 import io.xlate.edi.stream.EDIStreamConstants.Delimiters;
 
 @SuppressWarnings({ "resource", "unused" })
-public class StaEDIStreamReaderTest implements ConstantsTest {
+class StaEDIStreamReaderTest implements ConstantsTest {
 
     private Set<EDIStreamEvent> possible = new HashSet<>();
 

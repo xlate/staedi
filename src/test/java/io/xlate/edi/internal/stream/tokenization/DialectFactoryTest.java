@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.junit.jupiter.api.Test;
 
-public class DialectFactoryTest {
+class DialectFactoryTest {
 
     static char[] X12 = { '\0', 'I', 'S', 'A', '\0' };
     static char[] EDIFACT_A = { '\0', 'U', 'N', 'A', '\0' };

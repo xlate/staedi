@@ -30,7 +30,7 @@ import io.xlate.edi.stream.EDIStreamConstants;
 import io.xlate.edi.stream.EDIStreamException;
 import io.xlate.edi.stream.EDIStreamWriter;
 
-public class StaEDIOutputFactoryTest {
+class StaEDIOutputFactoryTest {
 
     @Test
     void testNewFactory() {

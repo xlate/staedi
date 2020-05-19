@@ -20,7 +20,7 @@ import io.xlate.edi.schema.EDISyntaxRule.Type;
 import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamValidationError;
 
-public class RequiredSyntaxValidatorTest extends SyntaxValidatorTestBase {
+class RequiredSyntaxValidatorTest extends SyntaxValidatorTestBase {
 
     RequiredSyntaxValidator validator;
 

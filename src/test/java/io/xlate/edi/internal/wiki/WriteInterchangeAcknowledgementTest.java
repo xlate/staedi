@@ -12,7 +12,7 @@ import io.xlate.edi.stream.EDIOutputFactory;
 import io.xlate.edi.stream.EDIStreamConstants;
 import io.xlate.edi.stream.EDIStreamWriter;
 
-public class WriteInterchangeAcknowledgementTest {
+class WriteInterchangeAcknowledgementTest {
 
     @Test
     void testAcknowledgementWrite() throws Exception {
