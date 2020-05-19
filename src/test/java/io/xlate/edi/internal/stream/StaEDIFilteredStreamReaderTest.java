@@ -48,7 +48,7 @@ public class StaEDIFilteredStreamReaderTest implements ConstantsTest {
      *
      * @throws EDIStreamException
      */
-    public void testNext() throws EDIStreamException {
+    void testNext() throws EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = getClass().getResourceAsStream("/x12/extraDelimiter997.edi");
         EDIStreamReader reader = factory.createFilteredReader(factory.createEDIStreamReader(stream), r -> {
@@ -84,7 +84,7 @@ public class StaEDIFilteredStreamReaderTest implements ConstantsTest {
      *
      * @throws EDIStreamException
      */
-    public void testNextTag() throws EDIStreamException {
+    void testNextTag() throws EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = getClass().getResourceAsStream("/x12/simple997.edi");
         EDIStreamReader reader = factory.createFilteredReader(factory.createEDIStreamReader(stream), r -> {
@@ -128,7 +128,7 @@ public class StaEDIFilteredStreamReaderTest implements ConstantsTest {
      *
      * @throws EDIStreamException
      */
-    public void testHasNext() throws EDIStreamException, IOException {
+    void testHasNext() throws EDIStreamException, IOException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = getClass().getResourceAsStream("/x12/extraDelimiter997.edi");
         EDIStreamReader reader = factory.createFilteredReader(factory.createEDIStreamReader(stream), r -> {
@@ -149,7 +149,7 @@ public class StaEDIFilteredStreamReaderTest implements ConstantsTest {
             }
 
             String text = reader.getText();
-            assertTrue(text.length() == 1, "Wrong length: " + text);
+            assertEquals(1, text.length(), "Wrong length: " + text);
             matches++;
         }
 
@@ -165,7 +165,7 @@ public class StaEDIFilteredStreamReaderTest implements ConstantsTest {
      *
      * @throws EDIStreamException
      */
-    public void testNextTagFilterParityWithUnfiltered() throws EDIStreamException, EDISchemaException {
+    void testNextTagFilterParityWithUnfiltered() throws EDIStreamException, EDISchemaException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = getClass().getResourceAsStream("/x12/simple997.edi");
         final String PROP = EDIInputFactory.EDI_VALIDATE_CONTROL_STRUCTURE;

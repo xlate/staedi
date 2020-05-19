@@ -38,7 +38,7 @@ import io.xlate.edi.stream.EDIStreamValidationError;
 public class EventSequenceTest {
 
     @Test
-    public void testValidatedTagSequence() throws EDISchemaException,
+    void testValidatedTagSequence() throws EDISchemaException,
                                            EDIStreamException,
                                            IllegalStateException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
@@ -174,7 +174,7 @@ public class EventSequenceTest {
     }
 
     @Test
-    public void testMissingTagSequence() throws EDISchemaException,
+    void testMissingTagSequence() throws EDISchemaException,
                                          EDIStreamException,
                                          IllegalStateException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
@@ -259,7 +259,7 @@ public class EventSequenceTest {
     }
 
     @Test
-    public void testValidSequenceEDIFACT() throws EDISchemaException, EDIStreamException {
+    void testValidSequenceEDIFACT() throws EDISchemaException, EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = new ByteArrayInputStream((""
                 + "UNB+UNOA:3+005435656:1+006415160:1+060515:1434+00000000000778'"
@@ -358,7 +358,7 @@ public class EventSequenceTest {
     }
 
     @Test
-    public void testElementErrorSequence() throws EDISchemaException, EDIStreamException, IllegalStateException {
+    void testElementErrorSequence() throws EDISchemaException, EDIStreamException, IllegalStateException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = new ByteArrayInputStream((""
                 + "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~"

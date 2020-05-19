@@ -26,13 +26,13 @@ public class ListSyntaxValidatorTest extends SyntaxValidatorTestBase {
     ListSyntaxValidator validator;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         validator = (ListSyntaxValidator) SyntaxValidator.getInstance(Type.LIST);
         super.setUp();
     }
 
     @Test
-    public void testValidateListConditionalAllUsed() {
+    void testValidateListConditionalAllUsed() {
         when(syntax.getPositions()).thenReturn(Arrays.asList(1, 3, 4));
         List<UsageNode> children = Arrays.asList(mockUsageNode(true, 1),
                                                  mockUsageNode(false, 2),
@@ -57,7 +57,7 @@ public class ListSyntaxValidatorTest extends SyntaxValidatorTestBase {
     }
 
     @Test
-    public void testValidateListConditionalAnchorUnused() {
+    void testValidateListConditionalAnchorUnused() {
         when(syntax.getPositions()).thenReturn(Arrays.asList(1, 3, 4));
         List<UsageNode> children = Arrays.asList(mockUsageNode(false, 1),
                                                  mockUsageNode(false, 2),
@@ -81,7 +81,7 @@ public class ListSyntaxValidatorTest extends SyntaxValidatorTestBase {
     }
 
     @Test
-    public void testValidateListConditionalMissingRequired() {
+    void testValidateListConditionalMissingRequired() {
         when(syntax.getPositions()).thenReturn(Arrays.asList(1, 3, 4));
         List<UsageNode> children = Arrays.asList(mockUsageNode(true, 1),
                                                  mockUsageNode(false, 2),
@@ -107,7 +107,7 @@ public class ListSyntaxValidatorTest extends SyntaxValidatorTestBase {
 
 
     @Test
-    public void testValidateListConditionalMissingRequired_Composite() {
+    void testValidateListConditionalMissingRequired_Composite() {
         when(structure.isNodeType(EDIType.Type.COMPOSITE)).thenReturn(true);
 
         UsageNode parent = mock(UsageNode.class);

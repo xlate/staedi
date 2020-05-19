@@ -33,13 +33,13 @@ import io.xlate.edi.stream.EDIStreamWriter;
 public class StaEDIOutputFactoryTest {
 
     @Test
-    public void testNewFactory() {
+    void testNewFactory() {
         EDIOutputFactory factory = EDIOutputFactory.newFactory();
         assertTrue(factory instanceof StaEDIOutputFactory);
     }
 
     @Test
-    public void testCreateEDIStreamWriterOutputStream() {
+    void testCreateEDIStreamWriterOutputStream() {
         EDIOutputFactory factory = EDIOutputFactory.newFactory();
         OutputStream stream = System.out;
         EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
@@ -47,7 +47,7 @@ public class StaEDIOutputFactoryTest {
     }
 
     @Test
-    public void testCreateEDIStreamWriterOutputStreamString() throws EDIStreamException {
+    void testCreateEDIStreamWriterOutputStreamString() throws EDIStreamException {
         EDIOutputFactory factory = EDIOutputFactory.newFactory();
         OutputStream stream = System.out;
         String encoding = "US-ASCII";
@@ -56,7 +56,7 @@ public class StaEDIOutputFactoryTest {
     }
 
     @Test
-    public void testCreateEDIStreamWriterInvalidEncoding() {
+    void testCreateEDIStreamWriterInvalidEncoding() {
         EDIOutputFactory factory = EDIOutputFactory.newFactory();
         OutputStream stream = System.out;
         String encoding = "EBCDIC";
@@ -65,31 +65,31 @@ public class StaEDIOutputFactoryTest {
     }
 
     @Test
-    public void testIsPropertySupported() {
+    void testIsPropertySupported() {
         EDIOutputFactory factory = EDIOutputFactory.newFactory();
         assertTrue(!factory.isPropertySupported("FOO"), "FOO supported");
     }
 
     @Test
-    public void testGetPropertyUnsupported() {
+    void testGetPropertyUnsupported() {
         EDIOutputFactory factory = EDIOutputFactory.newFactory();
         assertThrows(IllegalArgumentException.class, () -> factory.getProperty("FOO"));
     }
 
     @Test()
-    public void testGetPropertySupported() {
+    void testGetPropertySupported() {
         EDIOutputFactory factory = EDIOutputFactory.newFactory();
         assertNull(factory.getProperty(EDIStreamConstants.Delimiters.DATA_ELEMENT));
     }
 
     @Test
-    public void testSetPropertyUnsupported() {
+    void testSetPropertyUnsupported() {
         EDIOutputFactory factory = EDIOutputFactory.newFactory();
         assertThrows(IllegalArgumentException.class, () -> factory.setProperty("FOO", null));
     }
 
     @Test
-    public void testSetPropertySupported() {
+    void testSetPropertySupported() {
         EDIOutputFactory factory = EDIOutputFactory.newFactory();
         factory.setProperty(EDIStreamConstants.Delimiters.REPETITION, '`');
         assertEquals('`', factory.getProperty(EDIStreamConstants.Delimiters.REPETITION));

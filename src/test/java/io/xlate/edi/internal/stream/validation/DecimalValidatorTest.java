@@ -16,7 +16,7 @@ public class DecimalValidatorTest {
     Dialect dialectX12;
 
     @BeforeEach
-    public void setUp() throws EDIException {
+    void setUp() throws EDIException {
         dialectEdifact = DialectFactory.getDialect("UNA");
         CharacterSet charsEdifact = new CharacterSet();
         "UNA=*,?^~UNB*UNOA=3*005435656=1*006415160=1*060515=1434*00000000000778~".chars().forEach(c -> dialectEdifact.appendHeader(charsEdifact, (char) c));
@@ -28,29 +28,29 @@ public class DecimalValidatorTest {
     }
 
     @Test
-    public void testValidateInvalidNegative() {
+    void testValidateInvalidNegative() {
         assertEquals(-2, DecimalValidator.getInstance().validate(dialectEdifact, "20-"));
     }
 
     @Test
-    public void testValidateValidNegative() {
+    void testValidateValidNegative() {
         assertEquals(10, DecimalValidator.getInstance().validate(dialectEdifact, "-1234567890"));
     }
 
     @Test
-    public void testValidateValidDecimal() {
+    void testValidateValidDecimal() {
         assertEquals(4, DecimalValidator.getInstance().validate(dialectEdifact, "20,00"));
         assertEquals(4, DecimalValidator.getInstance().validate(dialectX12, "20.00"));
     }
 
     @Test
-    public void testValidateInvalidTooManyDecimalPoints() {
+    void testValidateInvalidTooManyDecimalPoints() {
         assertEquals(-4, DecimalValidator.getInstance().validate(dialectEdifact, "20,00,"));
         assertEquals(-4, DecimalValidator.getInstance().validate(dialectX12, "20.00."));
     }
 
     @Test
-    public void testValidateExponentialsValid() {
+    void testValidateExponentialsValid() {
         DecimalValidator v = DecimalValidator.getInstance();
         assertEquals(6, v.validate(dialectEdifact, "1,234E-56"));
         assertEquals(6, v.validate(dialectEdifact, "-1,234E-56"));
@@ -62,7 +62,7 @@ public class DecimalValidatorTest {
     }
 
     @Test
-    public void testValidateExponentialsInvalid() {
+    void testValidateExponentialsInvalid() {
         DecimalValidator v = DecimalValidator.getInstance();
         assertEquals(-6, v.validate(dialectEdifact, "1,234E-5,6"));
         assertEquals(-6, v.validate(dialectEdifact, "-1,234E-5E-6"));
@@ -74,7 +74,7 @@ public class DecimalValidatorTest {
     }
 
     @Test
-    public void testValidateBadExponentialCharacter() {
+    void testValidateBadExponentialCharacter() {
         DecimalValidator v = DecimalValidator.getInstance();
         assertEquals(-7, v.validate(dialectEdifact, "1,234e56"));
         assertEquals(-7, v.validate(dialectX12, "1.234e56"));

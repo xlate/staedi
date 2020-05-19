@@ -68,7 +68,7 @@ public class StaEDIStreamWriterTest {
     }
 
     @Test
-    public void testGetProperty() {
+    void testGetProperty() {
         EDIOutputFactory factory = EDIOutputFactory.newFactory();
         factory.setProperty(EDIStreamConstants.Delimiters.SEGMENT, '~');
         OutputStream stream = new ByteArrayOutputStream(4096);
@@ -78,7 +78,7 @@ public class StaEDIStreamWriterTest {
     }
 
     @Test
-    public void testGetNullProperty() {
+    void testGetNullProperty() {
         EDIOutputFactory factory = EDIOutputFactory.newFactory();
         OutputStream stream = new ByteArrayOutputStream(1);
         EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
@@ -86,7 +86,7 @@ public class StaEDIStreamWriterTest {
     }
 
     @Test
-    public void testStartInterchange() {
+    void testStartInterchange() {
         try {
             EDIOutputFactory factory = EDIOutputFactory.newFactory();
             OutputStream stream = new ByteArrayOutputStream(4096);
@@ -98,7 +98,7 @@ public class StaEDIStreamWriterTest {
     }
 
     @Test
-    public void testStartInterchangeIllegalX12() throws EDIStreamException {
+    void testStartInterchangeIllegalX12() throws EDIStreamException {
         EDIOutputFactory factory = EDIOutputFactory.newFactory();
         OutputStream stream = new ByteArrayOutputStream(4096);
         EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
@@ -108,7 +108,7 @@ public class StaEDIStreamWriterTest {
     }
 
     @Test
-    public void testStartInterchangeIllegalEDIFACTA() throws EDIStreamException {
+    void testStartInterchangeIllegalEDIFACTA() throws EDIStreamException {
         EDIOutputFactory factory = EDIOutputFactory.newFactory();
         OutputStream stream = new ByteArrayOutputStream(4096);
         EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
@@ -118,7 +118,7 @@ public class StaEDIStreamWriterTest {
     }
 
     @Test
-    public void testStartInterchangeIllegalEDIFACTB() throws EDIStreamException {
+    void testStartInterchangeIllegalEDIFACTB() throws EDIStreamException {
         EDIOutputFactory factory = EDIOutputFactory.newFactory();
         OutputStream stream = new ByteArrayOutputStream(4096);
         EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
@@ -128,7 +128,7 @@ public class StaEDIStreamWriterTest {
     }
 
     @Test
-    public void testEndInterchange() {
+    void testEndInterchange() {
         try {
             EDIOutputFactory factory = EDIOutputFactory.newFactory();
             OutputStream stream = new ByteArrayOutputStream(4096);
@@ -141,7 +141,7 @@ public class StaEDIStreamWriterTest {
     }
 
     @Test
-    public void testEndInterchangeIllegal() {
+    void testEndInterchangeIllegal() {
         EDIOutputFactory factory = EDIOutputFactory.newFactory();
         OutputStream stream = new ByteArrayOutputStream(4096);
         EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
@@ -149,7 +149,7 @@ public class StaEDIStreamWriterTest {
     }
 
     @Test
-    public void testWriteStartSegment() throws EDIStreamException {
+    void testWriteStartSegment() throws EDIStreamException {
         EDIOutputFactory factory = EDIOutputFactory.newFactory();
         OutputStream stream = new ByteArrayOutputStream(4096);
         EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
@@ -159,7 +159,7 @@ public class StaEDIStreamWriterTest {
     }
 
     @Test
-    public void testWriteStartSegmentIllegal() throws EDIStreamException {
+    void testWriteStartSegmentIllegal() throws EDIStreamException {
         EDIOutputFactory factory = EDIOutputFactory.newFactory();
         OutputStream stream = new ByteArrayOutputStream(4096);
         EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
@@ -170,7 +170,7 @@ public class StaEDIStreamWriterTest {
     }
 
     @Test
-    public void testWriteEndSegment() throws EDIStreamException {
+    void testWriteEndSegment() throws EDIStreamException {
         EDIOutputFactory factory = EDIOutputFactory.newFactory();
         OutputStream stream = new ByteArrayOutputStream(4096);
         EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
@@ -182,7 +182,7 @@ public class StaEDIStreamWriterTest {
     }
 
     @Test
-    public void testWriteEndSegmentIllegal() throws EDIStreamException {
+    void testWriteEndSegmentIllegal() throws EDIStreamException {
         EDIOutputFactory factory = EDIOutputFactory.newFactory();
         OutputStream stream = new ByteArrayOutputStream(4096);
         EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
@@ -191,7 +191,7 @@ public class StaEDIStreamWriterTest {
     }
 
     @Test
-    public void testWriteStartElement() throws EDIStreamException {
+    void testWriteStartElement() throws EDIStreamException {
         EDIOutputFactory factory = EDIOutputFactory.newFactory();
         OutputStream stream = new ByteArrayOutputStream(4096);
         EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
@@ -209,19 +209,19 @@ public class StaEDIStreamWriterTest {
     }
 
     @Test
-    public void testWriteStartElementIllegal() throws EDIStreamException {
+    void testWriteStartElementIllegal() throws EDIStreamException {
         EDIOutputFactory factory = EDIOutputFactory.newFactory();
         OutputStream stream = new ByteArrayOutputStream(4096);
         EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
         writer.startInterchange();
         writer.writeStartSegment("ISA");
-        assertThrows(IllegalStateException.class, () -> writer.writeStartElement()
-                     .startComponent()
-                     .writeStartElement());
+        writer.writeStartElement();
+        writer.startComponent();
+        assertThrows(IllegalStateException.class, () -> writer.writeStartElement());
     }
 
     @Test
-    public void testWriteStartElementBinary() throws IllegalStateException, EDIStreamException {
+    void testWriteStartElementBinary() throws IllegalStateException, EDIStreamException {
         EDIOutputFactory factory = EDIOutputFactory.newFactory();
         ByteArrayOutputStream stream = new ByteArrayOutputStream(4096);
         EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
@@ -234,17 +234,18 @@ public class StaEDIStreamWriterTest {
     }
 
     @Test
-    public void testWriteStartElementBinaryIllegal() throws IllegalStateException, EDIStreamException {
+    void testWriteStartElementBinaryIllegal() throws IllegalStateException, EDIStreamException {
         EDIOutputFactory factory = EDIOutputFactory.newFactory();
         OutputStream stream = new ByteArrayOutputStream(4096);
         EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
         writer.startInterchange();
         writer.writeStartSegment("ISA");
-        assertThrows(IllegalStateException.class, () -> writer.writeStartElement().writeStartElementBinary().writeEndSegment());
+        writer.writeStartElement();
+        assertThrows(IllegalStateException.class, () -> writer.writeStartElementBinary());
     }
 
     @Test
-    public void testComponent() throws IllegalStateException, EDIStreamException {
+    void testComponent() throws IllegalStateException, EDIStreamException {
         EDIOutputFactory factory = EDIOutputFactory.newFactory();
         OutputStream stream = new ByteArrayOutputStream(4096);
         EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
@@ -259,20 +260,19 @@ public class StaEDIStreamWriterTest {
     }
 
     @Test
-    public void testComponentIllegal() throws IllegalStateException, EDIStreamException {
+    void testComponentIllegal() throws IllegalStateException, EDIStreamException {
         EDIOutputFactory factory = EDIOutputFactory.newFactory();
         OutputStream stream = new ByteArrayOutputStream(4096);
         EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
         writer.startInterchange();
         writer.writeStartSegment("ISA");
-        assertThrows(IllegalStateException.class, () -> writer.writeStartElement()
-              .startComponent()
-              .startComponent() // Double
-              .writeEndSegment());
+        writer.writeStartElement();
+        writer.startComponent();
+        assertThrows(IllegalStateException.class, () -> writer.startComponent()); // Double
     }
 
     @Test
-    public void testWriteRepeatElement() throws EDIStreamException {
+    void testWriteRepeatElement() throws EDIStreamException {
         EDIOutputFactory factory = EDIOutputFactory.newFactory();
         ByteArrayOutputStream stream = new ByteArrayOutputStream(4096);
         EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
@@ -289,7 +289,7 @@ public class StaEDIStreamWriterTest {
     }
 
     @Test
-    public void testWriteEmptyElement() throws IllegalStateException, EDIStreamException {
+    void testWriteEmptyElement() throws IllegalStateException, EDIStreamException {
         EDIOutputFactory factory = EDIOutputFactory.newFactory();
         OutputStream stream = new ByteArrayOutputStream(4096);
         EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
@@ -304,7 +304,7 @@ public class StaEDIStreamWriterTest {
     }
 
     @Test
-    public void testWriteEmptyComponent() throws IllegalStateException, EDIStreamException {
+    void testWriteEmptyComponent() throws IllegalStateException, EDIStreamException {
         EDIOutputFactory factory = EDIOutputFactory.newFactory();
         OutputStream stream = new ByteArrayOutputStream(4096);
         EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
@@ -320,7 +320,7 @@ public class StaEDIStreamWriterTest {
     }
 
     @Test
-    public void testWriteElementDataCharSequence() throws EDIStreamException {
+    void testWriteElementDataCharSequence() throws EDIStreamException {
         EDIOutputFactory factory = EDIOutputFactory.newFactory();
         OutputStream stream = new ByteArrayOutputStream(4096);
         EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
@@ -333,7 +333,7 @@ public class StaEDIStreamWriterTest {
     }
 
     @Test
-    public void testWriteElementDataCharSequenceIllegal() throws EDIStreamException {
+    void testWriteElementDataCharSequenceIllegal() throws EDIStreamException {
         EDIOutputFactory factory = EDIOutputFactory.newFactory();
         OutputStream stream = new ByteArrayOutputStream(4096);
         EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
@@ -345,7 +345,7 @@ public class StaEDIStreamWriterTest {
     }
 
     @Test
-    public void testWriteElementDataCharArray() throws EDIStreamException {
+    void testWriteElementDataCharArray() throws EDIStreamException {
         EDIOutputFactory factory = EDIOutputFactory.newFactory();
         OutputStream stream = new ByteArrayOutputStream(4096);
         EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
@@ -358,7 +358,7 @@ public class StaEDIStreamWriterTest {
     }
 
     @Test
-    public void testWriteElementDataCharArrayIllegal() throws EDIStreamException {
+    void testWriteElementDataCharArrayIllegal() throws EDIStreamException {
         EDIOutputFactory factory = EDIOutputFactory.newFactory();
         OutputStream stream = new ByteArrayOutputStream(4096);
         EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
@@ -370,7 +370,7 @@ public class StaEDIStreamWriterTest {
     }
 
     @Test
-    public void testWriteBinaryDataInputStream() throws EDIStreamException {
+    void testWriteBinaryDataInputStream() throws EDIStreamException {
         EDIOutputFactory factory = EDIOutputFactory.newFactory();
         ByteArrayOutputStream stream = new ByteArrayOutputStream(4096);
         EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
@@ -391,7 +391,7 @@ public class StaEDIStreamWriterTest {
     }
 
     @Test
-    public void testWriteBinaryDataByteArray() throws EDIStreamException {
+    void testWriteBinaryDataByteArray() throws EDIStreamException {
         EDIOutputFactory factory = EDIOutputFactory.newFactory();
         ByteArrayOutputStream stream = new ByteArrayOutputStream(4096);
         EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
@@ -411,7 +411,7 @@ public class StaEDIStreamWriterTest {
     }
 
     @Test
-    public void testWriteBinaryDataByteBuffer() throws EDIStreamException {
+    void testWriteBinaryDataByteBuffer() throws EDIStreamException {
         EDIOutputFactory factory = EDIOutputFactory.newFactory();
         ByteArrayOutputStream stream = new ByteArrayOutputStream(4096);
         EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
@@ -432,7 +432,7 @@ public class StaEDIStreamWriterTest {
     }
 
     @Test
-    public void testInputEquivalenceX12() throws Exception {
+    void testInputEquivalenceX12() throws Exception {
         EDIInputFactory inputFactory = EDIInputFactory.newFactory();
         final ByteArrayOutputStream expected = new ByteArrayOutputStream(16384);
 
@@ -540,7 +540,7 @@ public class StaEDIStreamWriterTest {
     }
 
     @Test
-    public void testInputEquivalenceEDIFACTA() throws Exception {
+    void testInputEquivalenceEDIFACTA() throws Exception {
         EDIInputFactory inputFactory = EDIInputFactory.newFactory();
         final ByteArrayOutputStream expected = new ByteArrayOutputStream(16384);
 
@@ -650,7 +650,7 @@ public class StaEDIStreamWriterTest {
     }
 
     @Test
-    public void testInputEquivalenceEDIFACT_IATA_PNRGOV() throws Exception {
+    void testInputEquivalenceEDIFACT_IATA_PNRGOV() throws Exception {
         EDIInputFactory inputFactory = EDIInputFactory.newFactory();
         inputFactory.setProperty(EDIInputFactory.EDI_VALIDATE_CONTROL_CODE_VALUES, false);
         final ByteArrayOutputStream expected = new ByteArrayOutputStream(16384);
@@ -761,7 +761,7 @@ public class StaEDIStreamWriterTest {
     }
 
     @Test
-    public void testInputEquivalenceEDIFACTB() throws Exception {
+    void testInputEquivalenceEDIFACTB() throws Exception {
         EDIInputFactory inputFactory = EDIInputFactory.newFactory();
         final ByteArrayOutputStream expected = new ByteArrayOutputStream(16384);
 
@@ -863,7 +863,7 @@ public class StaEDIStreamWriterTest {
     }
 
     @Test
-    public void testValidatedSegmentTags() throws EDISchemaException, EDIStreamException {
+    void testValidatedSegmentTags() throws EDISchemaException, EDIStreamException {
         EDIOutputFactory outputFactory = EDIOutputFactory.newFactory();
         outputFactory.setProperty(EDIOutputFactory.PRETTY_PRINT, true);
         ByteArrayOutputStream result = new ByteArrayOutputStream(16384);
@@ -886,7 +886,7 @@ public class StaEDIStreamWriterTest {
     }
 
     @Test
-    public void testElementValidationThrown() throws EDISchemaException, EDIStreamException {
+    void testElementValidationThrown() throws EDISchemaException, EDIStreamException {
         EDIOutputFactory outputFactory = EDIOutputFactory.newFactory();
         outputFactory.setProperty(EDIOutputFactory.PRETTY_PRINT, true);
         ByteArrayOutputStream result = new ByteArrayOutputStream(16384);
@@ -919,7 +919,7 @@ public class StaEDIStreamWriterTest {
     }
 
     @Test
-    public void testInputEquivalenceValidatedX12() throws Exception {
+    void testInputEquivalenceValidatedX12() throws Exception {
         EDIInputFactory inputFactory = EDIInputFactory.newFactory();
         final ByteArrayOutputStream expected = new ByteArrayOutputStream(16384);
         Schema control = SchemaUtils.getControlSchema("X12", new String[] { "00501" });

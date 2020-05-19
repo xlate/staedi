@@ -24,13 +24,13 @@ public class SingleSyntaxValidatorTest extends SyntaxValidatorTestBase {
     SingleSyntaxValidator validator;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         validator = (SingleSyntaxValidator) SyntaxValidator.getInstance(Type.SINGLE);
         super.setUp();
     }
 
     @Test
-    public void testValidateExclusionAllUsed() {
+    void testValidateExclusionAllUsed() {
         when(syntax.getPositions()).thenReturn(Arrays.asList(1, 3, 4));
         List<UsageNode> children = Arrays.asList(mockUsageNode(true, 1),
                                                  mockUsageNode(false, 2),
@@ -56,7 +56,7 @@ public class SingleSyntaxValidatorTest extends SyntaxValidatorTestBase {
     }
 
     @Test
-    public void testValidateExclusionNonAnchorUsed() {
+    void testValidateExclusionNonAnchorUsed() {
         when(syntax.getPositions()).thenReturn(Arrays.asList(1, 3, 4));
         List<UsageNode> children = Arrays.asList(mockUsageNode(false, 1),
                                                  mockUsageNode(false, 2),
@@ -80,7 +80,7 @@ public class SingleSyntaxValidatorTest extends SyntaxValidatorTestBase {
     }
 
     @Test
-    public void testValidateExclusionNoneUsed() {
+    void testValidateExclusionNoneUsed() {
         when(syntax.getPositions()).thenReturn(Arrays.asList(1, 3, 4));
         List<UsageNode> children = Arrays.asList(mockUsageNode(false, 1),
                                                  mockUsageNode(false, 2),

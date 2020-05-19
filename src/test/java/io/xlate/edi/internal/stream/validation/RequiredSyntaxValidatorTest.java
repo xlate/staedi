@@ -25,13 +25,13 @@ public class RequiredSyntaxValidatorTest extends SyntaxValidatorTestBase {
     RequiredSyntaxValidator validator;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         validator = (RequiredSyntaxValidator) SyntaxValidator.getInstance(Type.REQUIRED);
         super.setUp();
     }
 
     @Test
-    public void testValidateRequiredAllUsed() {
+    void testValidateRequiredAllUsed() {
         when(syntax.getPositions()).thenReturn(Arrays.asList(1, 3, 4));
         List<UsageNode> children = Arrays.asList(mockUsageNode(true, 1),
                                                  mockUsageNode(false, 2),
@@ -56,7 +56,7 @@ public class RequiredSyntaxValidatorTest extends SyntaxValidatorTestBase {
     }
 
     @Test
-    public void testValidateRequiredNoneUsed() {
+    void testValidateRequiredNoneUsed() {
         when(syntax.getPositions()).thenReturn(Arrays.asList(1, 3, 4));
         List<UsageNode> children = Arrays.asList(mockUsageNode("E001", false, 1),
                                                  mockUsageNode("E002", false, 2),
@@ -81,7 +81,7 @@ public class RequiredSyntaxValidatorTest extends SyntaxValidatorTestBase {
     }
 
     @Test
-    public void testValidateRequiredAnchorUnused() {
+    void testValidateRequiredAnchorUnused() {
         when(syntax.getPositions()).thenReturn(Arrays.asList(1, 3, 4));
         List<UsageNode> children = Arrays.asList(mockUsageNode(false, 1),
                                                  mockUsageNode(false, 2),
@@ -105,7 +105,7 @@ public class RequiredSyntaxValidatorTest extends SyntaxValidatorTestBase {
     }
 
     @Test
-    public void testValidateRequiredNonmemberUsed() {
+    void testValidateRequiredNonmemberUsed() {
         when(syntax.getPositions()).thenReturn(Arrays.asList(1, 3, 4));
         List<UsageNode> children = Arrays.asList(mockUsageNode(false, 1),
                                                  mockUsageNode(true, 2),

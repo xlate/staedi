@@ -26,13 +26,13 @@ public class PairedSyntaxValidatorTest extends SyntaxValidatorTestBase {
     PairedSyntaxValidator validator;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         validator = (PairedSyntaxValidator) SyntaxValidator.getInstance(Type.PAIRED);
         super.setUp();
     }
 
     @Test
-    public void testValidatePairedAllUsed() {
+    void testValidatePairedAllUsed() {
         when(syntax.getPositions()).thenReturn(Arrays.asList(1, 3, 4));
         List<UsageNode> children = Arrays.asList(mockUsageNode(true, 1),
                                                  mockUsageNode(false, 2),
@@ -57,7 +57,7 @@ public class PairedSyntaxValidatorTest extends SyntaxValidatorTestBase {
     }
 
     @Test
-    public void testValidatePairedNoneUsed() {
+    void testValidatePairedNoneUsed() {
         when(syntax.getPositions()).thenReturn(Arrays.asList(1, 3, 4));
         List<UsageNode> children = Arrays.asList(mockUsageNode(false, 1),
                                                  mockUsageNode(false, 2),
@@ -82,7 +82,7 @@ public class PairedSyntaxValidatorTest extends SyntaxValidatorTestBase {
     }
 
     @Test
-    public void testValidatePairedAnchorUnused() {
+    void testValidatePairedAnchorUnused() {
         when(syntax.getPositions()).thenReturn(Arrays.asList(1, 3, 4));
         List<UsageNode> children = Arrays.asList(mockUsageNode("E001", false, 1),
                                                  mockUsageNode(false, 2),
@@ -106,7 +106,7 @@ public class PairedSyntaxValidatorTest extends SyntaxValidatorTestBase {
     }
 
     @Test
-    public void testValidatePairedMissingRequired() {
+    void testValidatePairedMissingRequired() {
         when(syntax.getPositions()).thenReturn(Arrays.asList(1, 3, 4));
         List<UsageNode> children = Arrays.asList(mockUsageNode(true, 1),
                                                  mockUsageNode(false, 2),

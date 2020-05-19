@@ -25,19 +25,19 @@ import org.junit.jupiter.api.Test;
 public class X12DialectTest {
 
     @Test
-    public void testX12Dialect() throws EDIException {
+    void testX12Dialect() throws EDIException {
         Dialect x12 = DialectFactory.getDialect("ISA".toCharArray(), 0, 3);
         assertTrue(x12 instanceof X12Dialect, "Incorrect type");
     }
 
     @Test
-    public void testGetEnvelopeTag() throws EDIException {
+    void testGetEnvelopeTag() throws EDIException {
         Dialect x12 = DialectFactory.getDialect("ISA".toCharArray(), 0, 3);
         assertEquals("ISA", x12.getHeaderTag(), "Incorrect header tag");
     }
 
     @Test
-    public void testInitialize() {
+    void testInitialize() {
         try {
             X12Dialect x12 = (X12Dialect) DialectFactory.getDialect("ISA".toCharArray(), 0, 3);
             x12.header = "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~".toCharArray();
@@ -48,7 +48,7 @@ public class X12DialectTest {
     }
 
     @Test
-    public void testGetVersion() throws EDIException {
+    void testGetVersion() throws EDIException {
         X12Dialect x12 = (X12Dialect) DialectFactory.getDialect("ISA".toCharArray(), 0, 3);
         x12.header = "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~".toCharArray();
         x12.initialize(new CharacterSet());

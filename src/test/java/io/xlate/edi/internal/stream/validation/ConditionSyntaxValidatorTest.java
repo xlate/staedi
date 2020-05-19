@@ -24,13 +24,13 @@ public class ConditionSyntaxValidatorTest extends SyntaxValidatorTestBase {
     ConditionSyntaxValidator validator;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         validator = (ConditionSyntaxValidator) SyntaxValidator.getInstance(Type.CONDITIONAL);
         super.setUp();
     }
 
     @Test
-    public void testValidateConditionalAllUsed() {
+    void testValidateConditionalAllUsed() {
         when(syntax.getPositions()).thenReturn(Arrays.asList(1, 3, 4));
         List<UsageNode> children = Arrays.asList(mockUsageNode(true, 1),
                                                  mockUsageNode(false, 2),
@@ -55,7 +55,7 @@ public class ConditionSyntaxValidatorTest extends SyntaxValidatorTestBase {
     }
 
     @Test
-    public void testValidateConditionalAnchorUnused() {
+    void testValidateConditionalAnchorUnused() {
         when(syntax.getPositions()).thenReturn(Arrays.asList(1, 3, 4));
         List<UsageNode> children = Arrays.asList(mockUsageNode(false, 1),
                                                  mockUsageNode(false, 2),
@@ -79,7 +79,7 @@ public class ConditionSyntaxValidatorTest extends SyntaxValidatorTestBase {
     }
 
     @Test
-    public void testValidateConditionalMissingRequired() {
+    void testValidateConditionalMissingRequired() {
         when(syntax.getPositions()).thenReturn(Arrays.asList(1, 3, 4));
         List<UsageNode> children = Arrays.asList(mockUsageNode(true, 1),
                                                  mockUsageNode(false, 2),

@@ -12,7 +12,7 @@ class CharArraySequenceTest {
     CharArraySequence target;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         target = new CharArraySequence();
     }
 

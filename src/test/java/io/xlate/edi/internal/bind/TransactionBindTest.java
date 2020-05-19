@@ -48,7 +48,7 @@ public class TransactionBindTest {
     Map<String, Element> simpleTypes;
 
     @Test
-    public void testElementBinding() throws Exception {
+    void testElementBinding() throws Exception {
         JAXBContext context = JAXBContext.newInstance(TestTx.class);
         final Map<String, DOMResult> results = new HashMap<>();
         context.generateSchema(new SchemaOutputResolver() {

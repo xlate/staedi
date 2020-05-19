@@ -40,7 +40,7 @@ import io.xlate.edi.stream.EDIStreamValidationError;
 public class CompositeValidationTest {
 
     @Test
-    public void testInvalidCompositeOccurrences() throws EDISchemaException, EDIStreamException {
+    void testInvalidCompositeOccurrences() throws EDISchemaException, EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = new ByteArrayInputStream((""
                 + "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~"

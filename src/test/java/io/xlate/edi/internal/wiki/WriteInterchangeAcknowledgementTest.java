@@ -15,7 +15,7 @@ import io.xlate.edi.stream.EDIStreamWriter;
 public class WriteInterchangeAcknowledgementTest {
 
     @Test
-    public void testAcknowledgementWrite() throws Exception {
+    void testAcknowledgementWrite() throws Exception {
         EDIOutputFactory factory = EDIOutputFactory.newFactory();
         // Optionally specify delimiters - here the given values are the same as default
         factory.setProperty(EDIStreamConstants.Delimiters.SEGMENT, '~');

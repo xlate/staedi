@@ -26,14 +26,14 @@ public class AlphaNumericValidatorTest implements ValueSetTester {
     Dialect dialect;
 
     @BeforeEach
-    public void setUp() throws EDIException {
+    void setUp() throws EDIException {
         dialect = DialectFactory.getDialect("UNA");
         CharacterSet chars = new CharacterSet();
         "UNA=*.?^~UNB*UNOA=3*005435656=1*006415160=1*060515=1434*00000000000778~".chars().forEach(c -> dialect.appendHeader(chars, (char) c));
     }
 
     @Test
-    public void testValidateLengthTooShort() {
+    void testValidateLengthTooShort() {
         EDISimpleType element = mock(EDISimpleType.class);
         when(element.getMinLength()).thenReturn(5L);
         when(element.getMaxLength()).thenReturn(5L);
@@ -46,7 +46,7 @@ public class AlphaNumericValidatorTest implements ValueSetTester {
     }
 
     @Test
-    public void testValidateLengthTooLong() {
+    void testValidateLengthTooLong() {
         EDISimpleType element = mock(EDISimpleType.class);
         when(element.getMinLength()).thenReturn(5L);
         when(element.getMaxLength()).thenReturn(5L);
@@ -59,7 +59,7 @@ public class AlphaNumericValidatorTest implements ValueSetTester {
     }
 
     @Test
-    public void testValidateValueNotInSet() {
+    void testValidateValueNotInSet() {
         EDISimpleType element = mock(EDISimpleType.class);
         when(element.getMinLength()).thenReturn(4L);
         when(element.getMaxLength()).thenReturn(5L);
@@ -72,7 +72,7 @@ public class AlphaNumericValidatorTest implements ValueSetTester {
     }
 
     @Test
-    public void testValidateValueInSetBadCharacter() {
+    void testValidateValueInSetBadCharacter() {
         EDISimpleType element = mock(EDISimpleType.class);
         when(element.getMinLength()).thenReturn(4L);
         when(element.getMaxLength()).thenReturn(5L);
@@ -85,7 +85,7 @@ public class AlphaNumericValidatorTest implements ValueSetTester {
     }
 
     @Test
-    public void testFormatValueTooLong() {
+    void testFormatValueTooLong() {
         EDISimpleType element = mock(EDISimpleType.class);
         when(element.getMinLength()).thenReturn(4L);
         when(element.getMaxLength()).thenReturn(5L);
@@ -96,7 +96,7 @@ public class AlphaNumericValidatorTest implements ValueSetTester {
     }
 
     @Test
-    public void testFormatValueNotInSet() {
+    void testFormatValueNotInSet() {
         EDISimpleType element = mock(EDISimpleType.class);
         when(element.getMinLength()).thenReturn(4L);
         when(element.getMaxLength()).thenReturn(8L);
@@ -108,7 +108,7 @@ public class AlphaNumericValidatorTest implements ValueSetTester {
     }
 
     @Test
-    public void testFormatValueInSet() throws EDIException {
+    void testFormatValueInSet() throws EDIException {
         EDISimpleType element = mock(EDISimpleType.class);
         when(element.getMinLength()).thenReturn(4L);
         when(element.getMaxLength()).thenReturn(8L);
@@ -120,7 +120,7 @@ public class AlphaNumericValidatorTest implements ValueSetTester {
     }
 
     @Test
-    public void testFormatInvalidCharacterData() {
+    void testFormatInvalidCharacterData() {
         EDISimpleType element = mock(EDISimpleType.class);
         when(element.getMinLength()).thenReturn(4L);
         when(element.getMaxLength()).thenReturn(4L);
@@ -135,7 +135,7 @@ public class AlphaNumericValidatorTest implements ValueSetTester {
     }
 
     @Test
-    public void testFormatValidValuePaddedLength() throws EDIException {
+    void testFormatValidValuePaddedLength() throws EDIException {
         EDISimpleType element = mock(EDISimpleType.class);
         when(element.getMinLength()).thenReturn(10L);
         when(element.getMaxLength()).thenReturn(10L);

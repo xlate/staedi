@@ -17,6 +17,7 @@ package io.xlate.edi.internal.stream;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -76,7 +77,7 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
     }
 
     @Test
-    public void testGetProperty() throws EDIStreamException {
+    void testGetProperty() throws EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = getClass().getResourceAsStream("/x12/simple997.edi");
         EDIStreamReader reader = factory.createEDIStreamReader(stream);
@@ -85,7 +86,7 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
     }
 
     @Test
-    public void testGetDelimitersX12() throws EDIStreamException {
+    void testGetDelimitersX12() throws EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = getClass().getResourceAsStream("/x12/simple997.edi");
         EDIStreamReader reader = factory.createEDIStreamReader(stream);
@@ -112,11 +113,11 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
         }
 
         assertEquals(expected, delimiters, "Unexpected delimiters");
-        assertTrue(delimiterExceptions == 1, "Unexpected exceptions");
+        assertEquals(1, delimiterExceptions, "Unexpected exceptions");
     }
 
     @Test
-    public void testGetDelimitersEDIFACTA() throws EDIStreamException {
+    void testGetDelimitersEDIFACTA() throws EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = getClass().getResourceAsStream("/EDIFACT/invoic_d93a_una.edi");
         EDIStreamReader reader = factory.createEDIStreamReader(stream);
@@ -144,11 +145,11 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
         }
 
         assertEquals(expected, delimiters, "Unexpected delimiters");
-        assertTrue(delimiterExceptions == 1, "Unexpected exceptions");
+        assertEquals(1, delimiterExceptions, "Unexpected exceptions");
     }
 
     @Test
-    public void testGetDelimitersEDIFACTB() throws EDIStreamException {
+    void testGetDelimitersEDIFACTB() throws EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = getClass().getResourceAsStream("/EDIFACT/invoic_d97b.edi");
         EDIStreamReader reader = factory.createEDIStreamReader(stream);
@@ -176,11 +177,11 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
         }
 
         assertEquals(expected, delimiters, "Unexpected delimiters");
-        assertTrue(delimiterExceptions == 1, "Unexpected exceptions");
+        assertEquals(1, delimiterExceptions, "Unexpected exceptions");
     }
 
     @Test
-    public void testNext() throws EDIStreamException {
+    void testNext() throws EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = getClass().getResourceAsStream("/x12/simple997.edi");
         EDIStreamReader reader = factory.createEDIStreamReader(stream);
@@ -198,7 +199,7 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
     }
 
     @Test
-    public void testNextTag() throws EDIStreamException {
+    void testNextTag() throws EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         factory.setProperty(EDIInputFactory.EDI_VALIDATE_CONTROL_STRUCTURE, "false");
         InputStream stream = getClass().getResourceAsStream("/x12/simple997.edi");
@@ -228,7 +229,7 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
     }
 
     @Test
-    public void testHasNext() throws EDIStreamException {
+    void testHasNext() throws EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = getClass().getResourceAsStream("/x12/simple997.edi");
         EDIStreamReader reader = factory.createEDIStreamReader(stream);
@@ -243,13 +244,13 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
     }
 
     @Test
-    public void testClose() throws Exception {
+    void testClose() throws Exception {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = getClass().getResourceAsStream("/x12/simple997.edi");
         EDIStreamReader reader = factory.createEDIStreamReader(stream);
         reader.close();
         try {
-            assertTrue(stream.available() != 0, "Stream was closed");
+            assertNotEquals(0, stream.available(), "Stream was closed");
         } catch (IOException e) {
             fail("IO Exception: " + e);
         }
@@ -257,7 +258,7 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
     }
 
     @Test
-    public void testGetEventType() throws EDIStreamException {
+    void testGetEventType() throws EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = getClass().getResourceAsStream("/x12/simple997.edi");
         EDIStreamReader reader = factory.createEDIStreamReader(stream);
@@ -271,7 +272,7 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
     }
 
     @Test
-    public void testGetStandard() throws EDIStreamException {
+    void testGetStandard() throws EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = getClass().getResourceAsStream("/x12/simple997.edi");
         EDIStreamReader reader = factory.createEDIStreamReader(stream);
@@ -292,7 +293,7 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
     }
 
     @Test
-    public void testGetVersion() throws EDIStreamException {
+    void testGetVersion() throws EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = getClass().getResourceAsStream("/x12/simple997.edi");
         EDIStreamReader reader = factory.createEDIStreamReader(stream);
@@ -313,7 +314,7 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
     }
 
     @Test
-    public void testSetSchema() throws EDIStreamException, EDISchemaException, IOException {
+    void testSetSchema() throws EDIStreamException, EDISchemaException, IOException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = getClass().getResourceAsStream("/x12/invalid997.edi");
         SchemaFactory schemaFactory = SchemaFactory.newFactory();
@@ -365,7 +366,7 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
     }
 
     @Test
-    public void testAddSchema() throws EDIStreamException, EDISchemaException, IOException {
+    void testAddSchema() throws EDIStreamException, EDISchemaException, IOException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         factory.setProperty(EDIInputFactory.EDI_VALIDATE_CONTROL_STRUCTURE, "false");
         InputStream stream = getClass().getResourceAsStream("/x12/invalid997.edi");
@@ -459,7 +460,7 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
     }
 
     @Test
-    public void testGetErrorType()
+    void testGetErrorType()
                                    throws EDIStreamException,
                                    EDISchemaException,
                                    IOException {
@@ -495,7 +496,7 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
     }
 
     @Test
-    public void testGetText() throws EDIStreamException {
+    void testGetText() throws EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = getClass().getResourceAsStream("/x12/simple997.edi");
         EDIStreamReader reader = factory.createEDIStreamReader(stream);
@@ -511,7 +512,7 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
     }
 
     @Test
-    public void testGetTextCharacters() throws EDIStreamException {
+    void testGetTextCharacters() throws EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = getClass().getResourceAsStream("/x12/simple997.edi");
         EDIStreamReader reader = factory.createEDIStreamReader(stream);
@@ -530,7 +531,7 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
     }
 
     @Test
-    public void testGetTextCharactersIntCharArrayIntInt() throws EDIStreamException {
+    void testGetTextCharactersIntCharArrayIntInt() throws EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = getClass().getResourceAsStream("/x12/simple997.edi");
         EDIStreamReader reader = factory.createEDIStreamReader(stream);
@@ -559,7 +560,7 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
     }
 
     @Test
-    public void testGetTextStart() throws EDIStreamException {
+    void testGetTextStart() throws EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = getClass().getResourceAsStream("/x12/simple997.edi");
         EDIStreamReader reader = factory.createEDIStreamReader(stream);
@@ -595,7 +596,7 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
     }
 
     @Test
-    public void testGetTextLength() throws EDIStreamException {
+    void testGetTextLength() throws EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = getClass().getResourceAsStream("/x12/simple997.edi");
         EDIStreamReader reader = factory.createEDIStreamReader(stream);
@@ -631,7 +632,7 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
     }
 
     @Test
-    public void testGetLocation() throws EDIStreamException {
+    void testGetLocation() throws EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = getClass().getResourceAsStream("/x12/extraDelimiter997.edi");
         EDIStreamReader reader = factory.createEDIStreamReader(stream);
@@ -765,7 +766,7 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
     }
 
     @Test
-    public void testGetLocationSingleComponent() throws EDIStreamException, EDISchemaException {
+    void testGetLocationSingleComponent() throws EDIStreamException, EDISchemaException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = getClass().getResourceAsStream("/x12/simple997.edi");
         SchemaFactory schemaFactory = SchemaFactory.newFactory();
@@ -823,7 +824,7 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
     }
 
     @Test
-    public void testGetBinaryDataInvalid() throws Exception {
+    void testGetBinaryDataInvalid() throws Exception {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = getClass().getResourceAsStream("/x12/sample275_with_HL7_invalid_BIN01.edi");
         EDIStreamReader reader = factory.createEDIStreamReader(stream);
@@ -861,7 +862,7 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
     }
 
     @Test
-    public void testGetBinaryDataInvalidLength() throws Exception {
+    void testGetBinaryDataInvalidLength() throws Exception {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = getClass().getResourceAsStream("/x12/nonnumeric_BIN01.edi");
         EDIStreamReader reader = factory.createEDIStreamReader(stream);
@@ -898,7 +899,7 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
     }
 
     @Test
-    public void testGetBinaryDataValid()
+    void testGetBinaryDataValid()
                                          throws EDIStreamException,
                                          IOException,
                                          ParserConfigurationException,
@@ -945,7 +946,7 @@ public class StaEDIStreamReaderTest implements ConstantsTest {
     }
 
     @Test
-    public void testEmptySegmentValidation() throws Exception {
+    void testEmptySegmentValidation() throws Exception {
 
         EDIInputFactory factory = EDIInputFactory.newFactory();
         factory.setProperty(EDIInputFactory.EDI_VALIDATE_CONTROL_STRUCTURE, true);

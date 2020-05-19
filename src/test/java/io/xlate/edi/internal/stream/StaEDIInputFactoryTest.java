@@ -36,13 +36,13 @@ import io.xlate.edi.stream.EDIStreamReader;
 public class StaEDIInputFactoryTest {
 
     @Test
-    public void testNewFactory() {
+    void testNewFactory() {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         assertTrue(factory instanceof StaEDIInputFactory);
     }
 
     @Test
-    public void testCreateEDIStreamReader() {
+    void testCreateEDIStreamReader() {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = getClass().getResourceAsStream("/x12/simple997.edi");
         EDIStreamReader reader = factory.createEDIStreamReader(stream);
@@ -50,7 +50,7 @@ public class StaEDIInputFactoryTest {
     }
 
     @Test
-    public void testCreateEDIStreamReaderEncoded() throws EDIStreamException {
+    void testCreateEDIStreamReaderEncoded() throws EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = getClass().getResourceAsStream("/x12/simple997.edi");
         String encoding = "US-ASCII";
@@ -59,7 +59,7 @@ public class StaEDIInputFactoryTest {
     }
 
     @Test
-    public void testCreateEDIStreamReaderInvalidEncoding() {
+    void testCreateEDIStreamReaderInvalidEncoding() {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = getClass().getResourceAsStream("/x12/simple997.edi");
         String encoding = "EBCDIC";
@@ -68,7 +68,7 @@ public class StaEDIInputFactoryTest {
     }
 
     @Test
-    public void testCreateEDIStreamReaderValidated() throws EDISchemaException {
+    void testCreateEDIStreamReaderValidated() throws EDISchemaException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = getClass().getResourceAsStream("/x12/simple997.edi");
         SchemaFactory schemaFactory = SchemaFactory.newFactory();
@@ -78,7 +78,7 @@ public class StaEDIInputFactoryTest {
     }
 
     @Test
-    public void testCreateEDIStreamReaderEncodedValidated() throws EDIStreamException, EDISchemaException {
+    void testCreateEDIStreamReaderEncodedValidated() throws EDIStreamException, EDISchemaException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = getClass().getResourceAsStream("/x12/simple997.edi");
         String encoding = "US-ASCII";
@@ -89,7 +89,7 @@ public class StaEDIInputFactoryTest {
     }
 
     @Test
-    public void testCreateFilteredReader() {
+    void testCreateFilteredReader() {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         EDIStreamReader reader = null;
         // EDIStreamFilter is a functional interface
@@ -98,19 +98,19 @@ public class StaEDIInputFactoryTest {
     }
 
     @Test
-    public void testIsPropertySupported() {
+    void testIsPropertySupported() {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         assertFalse(factory.isPropertySupported("FOO"), "Reporter property not supported");
     }
 
     @Test
-    public void testGetPropertyUnsupported() {
+    void testGetPropertyUnsupported() {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         assertThrows(IllegalArgumentException.class, () -> factory.getProperty("FOO"));
     }
 
     @Test
-    public void testSetPropertyUnsupported() {
+    void testSetPropertyUnsupported() {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         assertThrows(IllegalArgumentException.class, () -> factory.setProperty("FOO", null));
     }

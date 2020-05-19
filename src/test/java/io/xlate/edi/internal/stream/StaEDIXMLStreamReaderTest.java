@@ -115,13 +115,13 @@ public class StaEDIXMLStreamReaderTest {
     }
 
     @Test
-    public void testCreateEDIXMLStreamReader() throws XMLStreamException {
+    void testCreateEDIXMLStreamReader() throws XMLStreamException {
         XMLStreamReader xmlReader = getXmlReader("/x12/simple997.edi");
         assertNotNull(xmlReader, "xmlReader was null");
     }
 
     @Test
-    public void testHasNext() throws Exception {
+    void testHasNext() throws Exception {
         XMLStreamReader xmlReader = getXmlReader(TINY_X12);
         assertTrue(xmlReader.hasNext());
         xmlReader.close();
@@ -141,7 +141,7 @@ public class StaEDIXMLStreamReaderTest {
     }
 
     @Test
-    public void testSegmentSequence() throws Exception {
+    void testSegmentSequence() throws Exception {
         XMLStreamReader xmlReader = getXmlReader(DUMMY_X12);
 
         assertEquals(XMLStreamConstants.START_DOCUMENT, xmlReader.next());
@@ -162,7 +162,7 @@ public class StaEDIXMLStreamReaderTest {
     }
 
     @Test
-    public void testRequire() throws Exception {
+    void testRequire() throws Exception {
         XMLStreamReader xmlReader = getXmlReader(DUMMY_X12);
         XMLStreamException thrown;
 
@@ -187,7 +187,7 @@ public class StaEDIXMLStreamReaderTest {
     }
 
     @Test
-    public void testGetElementText() throws Exception {
+    void testGetElementText() throws Exception {
         XMLStreamReader xmlReader = getXmlReader(DUMMY_X12);
         XMLStreamException thrown;
 
@@ -215,7 +215,7 @@ public class StaEDIXMLStreamReaderTest {
     }
 
     @Test
-    public void testNamespaces() throws Exception {
+    void testNamespaces() throws Exception {
         XMLStreamReader xmlReader = getXmlReader(TINY_X12);
 
         assertEquals(XMLStreamConstants.START_DOCUMENT, xmlReader.next());
@@ -283,7 +283,7 @@ public class StaEDIXMLStreamReaderTest {
     }
 
     @Test
-    public void testElementEvents() throws Exception {
+    void testElementEvents() throws Exception {
         XMLStreamReader xmlReader = getXmlReader(TINY_X12);
         assertEquals(XMLStreamConstants.START_DOCUMENT, xmlReader.next());
 
@@ -327,7 +327,7 @@ public class StaEDIXMLStreamReaderTest {
     }
 
     @Test
-    public void testReadXml() throws Exception {
+    void testReadXml() throws Exception {
         XMLStreamReader xmlReader = getXmlReader("/x12/extraDelimiter997.edi");
         xmlReader.next(); // Per StAXSource JavaDoc, put in START_DOCUMENT state
         TransformerFactory factory = TransformerFactory.newInstance();
@@ -343,7 +343,7 @@ public class StaEDIXMLStreamReaderTest {
     }
 
     @Test
-    public void testTransactionElementWithXmlns() throws Exception {
+    void testTransactionElementWithXmlns() throws Exception {
         EDIInputFactory ediFactory = EDIInputFactory.newFactory();
         ediFactory.setProperty(EDIInputFactory.XML_DECLARE_TRANSACTION_XMLNS, Boolean.TRUE);
         InputStream stream = getClass().getResourceAsStream("/x12/extraDelimiter997.edi");
@@ -364,7 +364,7 @@ public class StaEDIXMLStreamReaderTest {
     }
 
     @Test
-    public void testXmlIOEquivalence() throws Exception {
+    void testXmlIOEquivalence() throws Exception {
         XMLStreamReader xmlReader = getXmlReader("/x12/extraDelimiter997.edi");
         xmlReader.next(); // Per StAXSource JavaDoc, put in START_DOCUMENT state
         TransformerFactory factory = TransformerFactory.newInstance();
@@ -386,7 +386,7 @@ public class StaEDIXMLStreamReaderTest {
     }
 
     @Test
-    public void testSchemaValidatedInput() throws Exception {
+    void testSchemaValidatedInput() throws Exception {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = getClass().getResourceAsStream("/x12/simple997.edi");
         SchemaFactory schemaFactory = SchemaFactory.newFactory();
@@ -444,7 +444,7 @@ public class StaEDIXMLStreamReaderTest {
 
     @Test
     @SuppressWarnings("unused")
-    public void testUnsupportedOperations() throws Exception {
+    void testUnsupportedOperations() throws Exception {
         EDIStreamReader ediReader = Mockito.mock(EDIStreamReader.class);
         XMLStreamReader xmlReader = new StaEDIXMLStreamReader(ediReader);
         try {
@@ -490,7 +490,7 @@ public class StaEDIXMLStreamReaderTest {
     }
 
     @Test
-    public void testGetTextString() throws Exception {
+    void testGetTextString() throws Exception {
         XMLStreamReader xmlReader = getXmlReader(DUMMY_X12);
 
         assertEquals(XMLStreamConstants.START_DOCUMENT, xmlReader.next());
@@ -516,7 +516,7 @@ public class StaEDIXMLStreamReaderTest {
     }
 
     @Test
-    public void testGetCdataBinary() throws Exception {
+    void testGetCdataBinary() throws Exception {
     	EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = getClass().getResourceAsStream("/x12/simple_with_binary_segment.edi");
         EDIStreamReader ediReader = factory.createEDIStreamReader(stream);
@@ -635,7 +635,7 @@ public class StaEDIXMLStreamReaderTest {
     }
 
     @Test
-    public void testGetCdataBinary_BoundsChecks() throws Exception {
+    void testGetCdataBinary_BoundsChecks() throws Exception {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = getClass().getResourceAsStream("/x12/simple_with_binary_segment.edi");
         EDIStreamReader ediReader = factory.createEDIStreamReader(stream);

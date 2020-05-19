@@ -14,7 +14,7 @@ import io.xlate.edi.stream.EDIStreamReader;
 public class ReadInterchangeAcknowledgementTest {
 
     @Test
-    public void testAcknowledgementSuccess() throws Exception {
+    void testAcknowledgementSuccess() throws Exception {
         assertTrue(isAcknowledgementSuccess());
     }
 

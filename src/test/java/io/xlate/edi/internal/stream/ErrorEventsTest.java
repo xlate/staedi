@@ -55,7 +55,7 @@ public class ErrorEventsTest {
     };
 
     @Test
-    public void testInvalidElements1() throws EDIStreamException, EDISchemaException {
+    void testInvalidElements1() throws EDIStreamException, EDISchemaException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = getClass().getResourceAsStream("/x12/extraDelimiter997.edi");
         SchemaFactory schemaFactory = SchemaFactory.newFactory();
@@ -169,7 +169,7 @@ public class ErrorEventsTest {
     }
 
     @Test
-    public void testListSyntaxValid() throws EDIStreamException {
+    void testListSyntaxValid() throws EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = new ByteArrayInputStream((""
                 + "UNB+UNOA:4:::02+005435656:1+006415160:1+20060515:1434+00000000000778'"
@@ -186,7 +186,7 @@ public class ErrorEventsTest {
     }
 
     @Test
-    public void testListSyntaxMissingFirst() throws EDIStreamException {
+    void testListSyntaxMissingFirst() throws EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = new ByteArrayInputStream((""
                 + "UNB+UNOA:4:::02+005435656:1+006415160:1+20060515:1434+00000000000778'"
@@ -209,7 +209,7 @@ public class ErrorEventsTest {
     }
 
     @Test
-    public void testListSyntaxMissingSecond() throws EDIStreamException {
+    void testListSyntaxMissingSecond() throws EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = new ByteArrayInputStream((""
                 + "UNB+UNOA:4:::02+005435656:1+006415160:1+20060515:1434+00000000000778'"
@@ -232,7 +232,7 @@ public class ErrorEventsTest {
     }
 
     @Test
-    public void testTooManyOccurrencesComposite() throws EDIStreamException {
+    void testTooManyOccurrencesComposite() throws EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = new ByteArrayInputStream((""
                 + "UNB+UNOA:4:::02+005435656:1+006415160:1+20060515:1434+00000000000778'"
@@ -256,7 +256,7 @@ public class ErrorEventsTest {
     }
 
     @Test
-    public void testTooManyElementsComposite() throws EDIStreamException {
+    void testTooManyElementsComposite() throws EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = new ByteArrayInputStream((""
                 + "UNB+UNOA:4:::02+005435656:1+006415160:1+20060515:1434+00000000000778'"
@@ -279,7 +279,7 @@ public class ErrorEventsTest {
     }
 
     @Test
-    public void testTooManySimpleElements() throws EDIStreamException {
+    void testTooManySimpleElements() throws EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = new ByteArrayInputStream((""
                 + "UNB+UNOA:4:::02+005435656:1+006415160:1+20060515:1434+00000000000778'"
@@ -302,7 +302,7 @@ public class ErrorEventsTest {
     }
 
     @Test
-    public void testValidEmptySegment() throws EDISchemaException, EDIStreamException {
+    void testValidEmptySegment() throws EDISchemaException, EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = new ByteArrayInputStream((""
                 + "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~"
@@ -338,7 +338,7 @@ public class ErrorEventsTest {
     }
 
     @Test
-    public void testEmptySegmentSchemaWithData() throws EDISchemaException, EDIStreamException {
+    void testEmptySegmentSchemaWithData() throws EDISchemaException, EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = new ByteArrayInputStream((""
                 + "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~"
@@ -375,7 +375,7 @@ public class ErrorEventsTest {
     }
 
     @Test
-    public void testExtraAnyElementAllowedInAK1() throws EDISchemaException, EDIStreamException {
+    void testExtraAnyElementAllowedInAK1() throws EDISchemaException, EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = new ByteArrayInputStream((""
                 + "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~"
@@ -411,7 +411,7 @@ public class ErrorEventsTest {
     }
 
     @Test
-    public void testTooManyExtraAnyElementAllowedInAK1() throws EDISchemaException, EDIStreamException {
+    void testTooManyExtraAnyElementAllowedInAK1() throws EDISchemaException, EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = new ByteArrayInputStream((""
                 + "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~"
@@ -454,7 +454,7 @@ public class ErrorEventsTest {
     }
 
     @Test
-    public void testNoExtraAnyElementInAK1() throws EDISchemaException, EDIStreamException {
+    void testNoExtraAnyElementInAK1() throws EDISchemaException, EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = new ByteArrayInputStream((""
                 + "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~"
@@ -491,7 +491,7 @@ public class ErrorEventsTest {
     }
 
     @Test
-    public void testCompositesSupportedInAnyElementInAK1() throws EDISchemaException, EDIStreamException {
+    void testCompositesSupportedInAnyElementInAK1() throws EDISchemaException, EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = new ByteArrayInputStream((""
                 + "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~"
@@ -527,7 +527,7 @@ public class ErrorEventsTest {
     }
 
     @Test
-    public void testRequiredComponentInC030InAnyElementInAK4() throws EDISchemaException, EDIStreamException {
+    void testRequiredComponentInC030InAnyElementInAK4() throws EDISchemaException, EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = new ByteArrayInputStream((""
                 + "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~"
@@ -567,7 +567,7 @@ public class ErrorEventsTest {
     }
 
     @Test
-    public void testMissingRequiredComponentInC030InAnyElementInAK4() throws EDISchemaException, EDIStreamException {
+    void testMissingRequiredComponentInC030InAnyElementInAK4() throws EDISchemaException, EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = new ByteArrayInputStream((""
                 + "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~"

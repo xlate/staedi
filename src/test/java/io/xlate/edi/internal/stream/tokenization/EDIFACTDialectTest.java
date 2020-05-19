@@ -24,31 +24,31 @@ import org.junit.jupiter.api.Test;
 public class EDIFACTDialectTest {
 
     @Test
-    public void testEDIFACTADialect() throws EDIException {
+    void testEDIFACTADialect() throws EDIException {
         Dialect edifact = DialectFactory.getDialect("UNA".toCharArray(), 0, 3);
         assertTrue(edifact instanceof EDIFACTDialect, "Incorrect type");
     }
 
     @Test
-    public void testEDIFACTBDialect() throws EDIException {
+    void testEDIFACTBDialect() throws EDIException {
         Dialect edifact = DialectFactory.getDialect("UNB".toCharArray(), 0, 3);
         assertTrue(edifact instanceof EDIFACTDialect, "Incorrect type");
     }
 
     @Test
-    public void testGetEnvelopeTagA() throws EDIException {
+    void testGetEnvelopeTagA() throws EDIException {
         Dialect edifact = DialectFactory.getDialect("UNA".toCharArray(), 0, 3);
         assertEquals("UNA", edifact.getHeaderTag(), "Incorrect header tag");
     }
 
     @Test
-    public void testGetEnvelopeTagB() throws EDIException {
+    void testGetEnvelopeTagB() throws EDIException {
         Dialect edifact = DialectFactory.getDialect("UNB".toCharArray(), 0, 3);
         assertEquals("UNB", edifact.getHeaderTag(), "Incorrect header tag");
     }
 
     @Test
-    public void testGetVersionA() throws EDIException {
+    void testGetVersionA() throws EDIException {
         EDIFACTDialect edifact = (EDIFACTDialect) DialectFactory.getDialect("UNA".toCharArray(), 0, 3);
         edifact.header = new StringBuilder("UNA:+.?*'          UNB+UNOA:1+005435656:1+006415160:1+060515:1434+00000000000778'");
         CharacterSet characters = new CharacterSet();
@@ -57,7 +57,7 @@ public class EDIFACTDialectTest {
     }
 
     @Test
-    public void testGetVersionB() throws EDIException {
+    void testGetVersionB() throws EDIException {
         EDIFACTDialect edifact = (EDIFACTDialect) DialectFactory.getDialect("UNB".toCharArray(), 0, 3);
         edifact.header = new StringBuilder("UNB+UNOA:1+005435656:1+006415160:1+060515:1434+00000000000778'");
         CharacterSet characters = new CharacterSet();

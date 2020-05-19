@@ -19,7 +19,7 @@ abstract class SyntaxValidatorTestBase {
     protected EDIType structureType;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         syntax = mock(EDISyntaxRule.class);
         handler = mock(ValidationEventHandler.class);
 

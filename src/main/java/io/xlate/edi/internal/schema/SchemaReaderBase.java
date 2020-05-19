@@ -37,11 +37,14 @@ abstract class SchemaReaderBase implements SchemaReader {
     static final String REFERR_UNDECLARED = "Type %s references undeclared %s with ref='%s'";
     static final String REFERR_ILLEGAL = "Type '%s' must not be referenced as '%s' in definition of type '%s'";
 
-    static final EDIReference ANY_ELEMENT_REF_OPT = new Reference(StaEDISchema.ANY_ELEMENT_ID, "element", 0, 1);
-    static final EDIReference ANY_COMPOSITE_REF_OPT = new Reference(StaEDISchema.ANY_COMPOSITE_ID, "composite", 0, 99);
+    static final String LOCALNAME_ELEMENT = "element";
+    static final String LOCALNAME_COMPOSITE = "composite";
 
-    static final EDIReference ANY_ELEMENT_REF_REQ = new Reference(StaEDISchema.ANY_ELEMENT_ID, "element", 1, 1);
-    static final EDIReference ANY_COMPOSITE_REF_REQ = new Reference(StaEDISchema.ANY_COMPOSITE_ID, "composite", 1, 99);
+    static final EDIReference ANY_ELEMENT_REF_OPT = new Reference(StaEDISchema.ANY_ELEMENT_ID, LOCALNAME_ELEMENT, 0, 1);
+    static final EDIReference ANY_COMPOSITE_REF_OPT = new Reference(StaEDISchema.ANY_COMPOSITE_ID, LOCALNAME_COMPOSITE, 0, 99);
+
+    static final EDIReference ANY_ELEMENT_REF_REQ = new Reference(StaEDISchema.ANY_ELEMENT_ID, LOCALNAME_ELEMENT, 1, 1);
+    static final EDIReference ANY_COMPOSITE_REF_REQ = new Reference(StaEDISchema.ANY_COMPOSITE_ID, LOCALNAME_COMPOSITE, 1, 99);
 
     static final EDISimpleType ANY_ELEMENT = new ElementType(StaEDISchema.ANY_ELEMENT_ID,
                                                              Base.STRING,
@@ -94,8 +97,8 @@ abstract class SchemaReaderBase implements SchemaReader {
         qnTransaction = new QName(xmlns, "transaction");
         qnLoop = new QName(xmlns, "loop");
         qnSegment = new QName(xmlns, "segment");
-        qnComposite = new QName(xmlns, "composite");
-        qnElement = new QName(xmlns, "element");
+        qnComposite = new QName(xmlns, LOCALNAME_COMPOSITE);
+        qnElement = new QName(xmlns, LOCALNAME_ELEMENT);
         qnSyntax = new QName(xmlns, "syntax");
         qnPosition = new QName(xmlns, "position");
         qnSequence = new QName(xmlns, "sequence");

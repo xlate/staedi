@@ -25,14 +25,14 @@ public class DateValidatorTest implements ValueSetTester {
     Dialect dialect;
 
     @BeforeEach
-    public void setUp() throws EDIException {
+    void setUp() throws EDIException {
         dialect = DialectFactory.getDialect("UNA");
         CharacterSet chars = new CharacterSet();
         "UNA=*.?^~UNB*UNOA=3*005435656=1*006415160=1*060515=1434*00000000000778~".chars().forEach(c -> dialect.appendHeader(chars, (char) c));
     }
 
     @Test
-    public void testValidateLengthTooShort() {
+    void testValidateLengthTooShort() {
         EDISimpleType element = mock(EDISimpleType.class);
         when(element.getMinLength()).thenReturn(6L);
         when(element.getMaxLength()).thenReturn(8L);
@@ -46,7 +46,7 @@ public class DateValidatorTest implements ValueSetTester {
     }
 
     @Test
-    public void testValidateInvalidLength() {
+    void testValidateInvalidLength() {
         EDISimpleType element = mock(EDISimpleType.class);
         when(element.getMinLength()).thenReturn(6L);
         when(element.getMaxLength()).thenReturn(8L);
@@ -59,7 +59,7 @@ public class DateValidatorTest implements ValueSetTester {
     }
 
     @Test
-    public void testValidateInvalidValue() {
+    void testValidateInvalidValue() {
         EDISimpleType element = mock(EDISimpleType.class);
         when(element.getMinLength()).thenReturn(6L);
         when(element.getMaxLength()).thenReturn(8L);
@@ -72,7 +72,7 @@ public class DateValidatorTest implements ValueSetTester {
     }
 
     @Test
-    public void testValidateValidValue() {
+    void testValidateValidValue() {
         EDISimpleType element = mock(EDISimpleType.class);
         when(element.getMinLength()).thenReturn(6L);
         when(element.getMaxLength()).thenReturn(8L);
@@ -84,7 +84,7 @@ public class DateValidatorTest implements ValueSetTester {
     }
 
     @Test
-    public void testValidateSixDigitDate() {
+    void testValidateSixDigitDate() {
         EDISimpleType element = mock(EDISimpleType.class);
         when(element.getMinLength()).thenReturn(6L);
         when(element.getMaxLength()).thenReturn(8L);
@@ -96,7 +96,7 @@ public class DateValidatorTest implements ValueSetTester {
     }
 
     @Test
-    public void testValidateSixDigitDatePreviousCentury() {
+    void testValidateSixDigitDatePreviousCentury() {
         EDISimpleType element = mock(EDISimpleType.class);
         when(element.getMinLength()).thenReturn(6L);
         when(element.getMaxLength()).thenReturn(8L);
@@ -109,7 +109,7 @@ public class DateValidatorTest implements ValueSetTester {
     }
 
     @Test
-    public void testValidateDayAfterMonthEnd() {
+    void testValidateDayAfterMonthEnd() {
         EDISimpleType element = mock(EDISimpleType.class);
         when(element.getMinLength()).thenReturn(6L);
         when(element.getMaxLength()).thenReturn(8L);
@@ -125,7 +125,7 @@ public class DateValidatorTest implements ValueSetTester {
     }
 
     @Test
-    public void testValidateFebruaryLeapYears() {
+    void testValidateFebruaryLeapYears() {
         EDISimpleType element = mock(EDISimpleType.class);
         when(element.getMinLength()).thenReturn(6L);
         when(element.getMaxLength()).thenReturn(8L);
@@ -141,7 +141,7 @@ public class DateValidatorTest implements ValueSetTester {
     }
 
     @Test
-    public void testValidateInvalidMonth() {
+    void testValidateInvalidMonth() {
         EDISimpleType element = mock(EDISimpleType.class);
         when(element.getMinLength()).thenReturn(6L);
         when(element.getMaxLength()).thenReturn(8L);
@@ -154,7 +154,7 @@ public class DateValidatorTest implements ValueSetTester {
     }
 
     @Test
-    public void testFormatValueTooShort() {
+    void testFormatValueTooShort() {
         EDISimpleType element = mock(EDISimpleType.class);
         when(element.getMinLength()).thenReturn(6L);
         when(element.getMaxLength()).thenReturn(8L);
@@ -165,7 +165,7 @@ public class DateValidatorTest implements ValueSetTester {
     }
 
     @Test
-    public void testFormatValueTooLong() {
+    void testFormatValueTooLong() {
         EDISimpleType element = mock(EDISimpleType.class);
         when(element.getMinLength()).thenReturn(6L);
         when(element.getMaxLength()).thenReturn(8L);
@@ -176,7 +176,7 @@ public class DateValidatorTest implements ValueSetTester {
     }
 
     @Test
-    public void testFormatInvalidDate() {
+    void testFormatInvalidDate() {
         EDISimpleType element = mock(EDISimpleType.class);
         when(element.getMinLength()).thenReturn(6L);
         when(element.getMaxLength()).thenReturn(8L);
@@ -187,7 +187,7 @@ public class DateValidatorTest implements ValueSetTester {
     }
 
     @Test
-    public void testFormatValidDate() throws EDIException {
+    void testFormatValidDate() throws EDIException {
         EDISimpleType element = mock(EDISimpleType.class);
         when(element.getMinLength()).thenReturn(6L);
         when(element.getMaxLength()).thenReturn(8L);

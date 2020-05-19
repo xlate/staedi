@@ -13,25 +13,25 @@ public class DialectFactoryTest {
     static char[] BAD = { 'B', 'A', 'D', '\0' };
 
     @Test
-    public void testX12() throws EDIException {
+    void testX12() throws EDIException {
         Dialect d1 = DialectFactory.getDialect(X12, 1, 3);
         assertEquals("ISA", d1.getHeaderTag());
     }
 
     @Test
-    public void testEDIFACT_A() throws EDIException {
+    void testEDIFACT_A() throws EDIException {
         Dialect d1 = DialectFactory.getDialect(EDIFACT_A, 1, 3);
         assertEquals("UNA", d1.getHeaderTag());
     }
 
     @Test
-    public void testEDIFACT_B() throws EDIException {
+    void testEDIFACT_B() throws EDIException {
         Dialect d1 = DialectFactory.getDialect(EDIFACT_B, 1, 3);
         assertEquals("UNB", d1.getHeaderTag());
     }
 
     @Test
-    public void testInvalidTag() {
+    void testInvalidTag() {
         assertThrows(EDIException.class, () -> DialectFactory.getDialect(BAD, 1, 3));
     }
 }

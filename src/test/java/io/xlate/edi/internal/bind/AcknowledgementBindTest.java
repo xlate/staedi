@@ -26,7 +26,7 @@ import io.xlate.edi.stream.EDIStreamWriter;
 public class AcknowledgementBindTest {
 
     @Test
-    public void testEDIBinding() throws Exception {
+    void testEDIBinding() throws Exception {
         JAXBContext context = JAXBContext.newInstance(Interchange.class);
         Marshaller m = context.createMarshaller();
         EDIOutputFactory oFactory = EDIOutputFactory.newFactory();

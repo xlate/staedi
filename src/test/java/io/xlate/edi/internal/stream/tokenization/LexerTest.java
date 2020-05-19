@@ -186,7 +186,7 @@ public class LexerTest {
     String element;
 
     @Test
-    public void testParseX12() throws EDIException, IOException {
+    void testParseX12() throws EDIException, IOException {
         InputStream stream = getClass().getResourceAsStream("/x12/simple997.edi");
         interchangeStarted = false;
         interchangeEnded = false;
@@ -207,7 +207,7 @@ public class LexerTest {
     }
 
     @Test
-    public void testParseEDIFACT() throws EDIException, IOException {
+    void testParseEDIFACT() throws EDIException, IOException {
         InputStream stream = getClass().getResourceAsStream("/EDIFACT/invoic_d97b.edi");
         interchangeStarted = false;
         interchangeEnded = false;
@@ -230,7 +230,7 @@ public class LexerTest {
     }
 
     @Test
-    public void testParseTagsX12() throws EDIException, IOException {
+    void testParseTagsX12() throws EDIException, IOException {
         InputStream stream = getClass().getResourceAsStream("/x12/simple997.edi");
         TestLexerEventHandler eventHandler = new TestLexerEventHandler();
         final StaEDIStreamLocation location = new StaEDIStreamLocation();
@@ -258,7 +258,7 @@ public class LexerTest {
     }
 
     @Test
-    public void testParseTagsEDIFACTA() throws EDIException, IOException {
+    void testParseTagsEDIFACTA() throws EDIException, IOException {
         InputStream stream = getClass().getResourceAsStream("/EDIFACT/invoic_d97b_una.edi");
         TestLexerEventHandler eventHandler = new TestLexerEventHandler();
         final StaEDIStreamLocation location = new StaEDIStreamLocation();
@@ -285,7 +285,7 @@ public class LexerTest {
     }
 
     @Test
-    public void testParseTagsEDIFACTB() throws EDIException, IOException {
+    void testParseTagsEDIFACTB() throws EDIException, IOException {
         InputStream stream = getClass().getResourceAsStream("/EDIFACT/invoic_d97b.edi");
         TestLexerEventHandler eventHandler = new TestLexerEventHandler();
         final StaEDIStreamLocation location = new StaEDIStreamLocation();
@@ -312,7 +312,7 @@ public class LexerTest {
     }
 
     @Test
-    public void testRejectedX12Dialect() {
+    void testRejectedX12Dialect() {
         InputStream stream = new ByteArrayInputStream("ISA*00?          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~".getBytes());
         TestLexerEventHandler eventHandler = new TestLexerEventHandler();
         final StaEDIStreamLocation location = new StaEDIStreamLocation();
@@ -322,7 +322,7 @@ public class LexerTest {
     }
 
     @Test
-    public void testInvalidCharacter() {
+    void testInvalidCharacter() {
         InputStream stream = new ByteArrayInputStream("ISA*00*\u0008         *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~".getBytes());
         TestLexerEventHandler eventHandler = new TestLexerEventHandler();
         final StaEDIStreamLocation location = new StaEDIStreamLocation();
@@ -332,7 +332,7 @@ public class LexerTest {
     }
 
     @Test
-    public void testIncompleteInputText() throws Exception {
+    void testIncompleteInputText() throws Exception {
         InputStream stream = new ByteArrayInputStream("ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~".getBytes());
         TestLexerEventHandler eventHandler = new TestLexerEventHandler();
         final StaEDIStreamLocation location = new StaEDIStreamLocation();

@@ -42,13 +42,13 @@ public class StaEDISchemaTest {
     final String TRANSACTION_V3 = "{http://xlate.io/EDISchema/v3}transaction";
 
     @Test
-    public void testSetTypesNullTypes() {
+    void testSetTypesNullTypes() {
         StaEDISchema schema = new StaEDISchema(INTERCHANGE_V2, TRANSACTION_V2);
         assertThrows(NullPointerException.class, () -> schema.setTypes(null));
     }
 
     @Test
-    public void testRootTypeIsInterchange() throws EDISchemaException, XMLStreamException, FactoryConfigurationError {
+    void testRootTypeIsInterchange() throws EDISchemaException, XMLStreamException, FactoryConfigurationError {
         StaEDISchema schema = new StaEDISchema(INTERCHANGE_V3, TRANSACTION_V3);
         InputStream schemaStream = getClass().getResourceAsStream("/X12/v00200.xml");
         XMLStreamReader reader = XMLInputFactory.newInstance().createXMLStreamReader(schemaStream);
@@ -60,7 +60,7 @@ public class StaEDISchemaTest {
     }
 
     @Test
-    public void testRootTypeIsInterchangeV3() throws EDISchemaException, XMLStreamException, FactoryConfigurationError {
+    void testRootTypeIsInterchangeV3() throws EDISchemaException, XMLStreamException, FactoryConfigurationError {
         StaEDISchema schema = new StaEDISchema(INTERCHANGE_V3, TRANSACTION_V3);
         InputStream schemaStream = getClass().getResourceAsStream("/X12/v00402.xml");
         XMLStreamReader reader = XMLInputFactory.newInstance().createXMLStreamReader(schemaStream);
@@ -72,7 +72,7 @@ public class StaEDISchemaTest {
     }
 
     @Test
-    public void testLoadV3TransactionMultipleSyntaxElements_EDIFACT_CONTRL() throws EDISchemaException, XMLStreamException, FactoryConfigurationError {
+    void testLoadV3TransactionMultipleSyntaxElements_EDIFACT_CONTRL() throws EDISchemaException, XMLStreamException, FactoryConfigurationError {
         StaEDISchema schema = new StaEDISchema(INTERCHANGE_V3, TRANSACTION_V3);
         InputStream schemaStream = getClass().getResourceAsStream("/EDIFACT/CONTRL-v4r02.xml");
         XMLStreamReader reader = XMLInputFactory.newInstance().createXMLStreamReader(schemaStream);

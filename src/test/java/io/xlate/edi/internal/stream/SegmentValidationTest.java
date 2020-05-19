@@ -55,7 +55,7 @@ public class SegmentValidationTest {
     };
 
     @Test
-    public void testValidSequenceXml() throws EDISchemaException, EDIStreamException {
+    void testValidSequenceXml() throws EDISchemaException, EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = new ByteArrayInputStream((""
                 + "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~"
@@ -79,7 +79,7 @@ public class SegmentValidationTest {
     }
 
     @Test
-    public void testValidSequenceEdifact() throws EDISchemaException, EDIStreamException {
+    void testValidSequenceEdifact() throws EDISchemaException, EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = new ByteArrayInputStream((""
                 + "UNB+UNOA:1+005435656:1+006415160:1+060515:1434+00000000000778'"
@@ -99,7 +99,7 @@ public class SegmentValidationTest {
     }
 
     @Test
-    public void testMissingMandatoryXml() throws EDISchemaException, EDIStreamException {
+    void testMissingMandatoryXml() throws EDISchemaException, EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = new ByteArrayInputStream((""
                 + "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~"
@@ -131,7 +131,7 @@ public class SegmentValidationTest {
     }
 
     @Test
-    public void testMissingMandatoryEdifact() throws EDISchemaException, EDIStreamException {
+    void testMissingMandatoryEdifact() throws EDISchemaException, EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = new ByteArrayInputStream((""
                 + "UNB+UNOA:1+005435656:1+006415160:1+060515:1434+00000000000778'"
@@ -156,7 +156,7 @@ public class SegmentValidationTest {
     }
 
     @Test
-    public void testUnexpected() throws EDISchemaException, EDIStreamException {
+    void testUnexpected() throws EDISchemaException, EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = new ByteArrayInputStream((""
                 + "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~"
@@ -187,7 +187,7 @@ public class SegmentValidationTest {
     }
 
     @Test
-    public void testImproperSequence()
+    void testImproperSequence()
                                        throws EDISchemaException,
                                        EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
@@ -232,7 +232,7 @@ public class SegmentValidationTest {
     }
 
     @Test
-    public void testSegmentNotDefined()
+    void testSegmentNotDefined()
                                         throws EDISchemaException,
                                         EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
@@ -265,7 +265,7 @@ public class SegmentValidationTest {
     }
 
     @Test
-    public void testLoopMultiOccurrenceSingleSegment() throws EDISchemaException, EDIStreamException {
+    void testLoopMultiOccurrenceSingleSegment() throws EDISchemaException, EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = new ByteArrayInputStream((""
                 + "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~"
@@ -318,7 +318,7 @@ public class SegmentValidationTest {
     }
 
     @Test
-    public void testLoopOccurrence() throws EDISchemaException, EDIStreamException {
+    void testLoopOccurrence() throws EDISchemaException, EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = new ByteArrayInputStream((""
                 + "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~"
@@ -351,7 +351,7 @@ public class SegmentValidationTest {
     }
 
     @Test
-    public void testOptionalLoopNotUsed() throws EDISchemaException, EDIStreamException {
+    void testOptionalLoopNotUsed() throws EDISchemaException, EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = new ByteArrayInputStream((""
                 + "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~"
@@ -371,7 +371,7 @@ public class SegmentValidationTest {
     }
 
     @Test
-    public void testRequiredLoopNotUsed() throws EDISchemaException, EDIStreamException {
+    void testRequiredLoopNotUsed() throws EDISchemaException, EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = new ByteArrayInputStream((""
                 + "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~"
@@ -393,7 +393,7 @@ public class SegmentValidationTest {
     }
 
     @Test
-    public void testImplementationValidSequence() throws EDISchemaException, EDIStreamException {
+    void testImplementationValidSequence() throws EDISchemaException, EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = new ByteArrayInputStream((""
                 + "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~"
@@ -510,7 +510,7 @@ public class SegmentValidationTest {
     }
 
     @Test
-    public void testImplementationValidSequenceWithCompositeDiscr() throws EDISchemaException, EDIStreamException {
+    void testImplementationValidSequenceWithCompositeDiscr() throws EDISchemaException, EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = new ByteArrayInputStream((""
                 + "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~"

@@ -26,14 +26,14 @@ public class TimeValidatorTest implements ValueSetTester {
     Dialect dialect;
 
     @BeforeEach
-    public void setUp() throws EDIException {
+    void setUp() throws EDIException {
         dialect = DialectFactory.getDialect("UNA");
         CharacterSet chars = new CharacterSet();
         "UNA=*.?^~UNB*UNOA=3*005435656=1*006415160=1*060515=1434*00000000000778~".chars().forEach(c -> dialect.appendHeader(chars, (char) c));
     }
 
     @Test
-    public void testValidateValueTooShort() {
+    void testValidateValueTooShort() {
         EDISimpleType element = mock(EDISimpleType.class);
         when(element.getMinLength()).thenReturn(4L);
         when(element.getMaxLength()).thenReturn(8L);
@@ -47,7 +47,7 @@ public class TimeValidatorTest implements ValueSetTester {
     }
 
     @Test
-    public void testValidateValueTooLong() {
+    void testValidateValueTooLong() {
         EDISimpleType element = mock(EDISimpleType.class);
         when(element.getMinLength()).thenReturn(4L);
         when(element.getMaxLength()).thenReturn(8L);
@@ -61,7 +61,7 @@ public class TimeValidatorTest implements ValueSetTester {
     }
 
     @Test
-    public void testValidateInvalidValue() {
+    void testValidateInvalidValue() {
         EDISimpleType element = mock(EDISimpleType.class);
         when(element.getMinLength()).thenReturn(4L);
         when(element.getMaxLength()).thenReturn(8L);
@@ -74,7 +74,7 @@ public class TimeValidatorTest implements ValueSetTester {
     }
 
     @Test
-    public void testValidateValidValue() {
+    void testValidateValidValue() {
         EDISimpleType element = mock(EDISimpleType.class);
         when(element.getMinLength()).thenReturn(4L);
         when(element.getMaxLength()).thenReturn(8L);
@@ -86,13 +86,13 @@ public class TimeValidatorTest implements ValueSetTester {
     }
 
     @Test
-    public void testValidValues() {
+    void testValidValues() {
         assertTrue(TimeValidator.validValue("003059"));
         assertTrue(TimeValidator.validValue("00305999"));
     }
 
     @Test
-    public void testInvalidValues() {
+    void testInvalidValues() {
         assertFalse(TimeValidator.validValue("A03059"));
         assertFalse(TimeValidator.validValue("003060"));
         assertFalse(TimeValidator.validValue("006059"));
@@ -100,7 +100,7 @@ public class TimeValidatorTest implements ValueSetTester {
     }
 
     @Test
-    public void testFormatValueTooLong() {
+    void testFormatValueTooLong() {
         EDISimpleType element = mock(EDISimpleType.class);
         when(element.getMinLength()).thenReturn(4L);
         when(element.getMaxLength()).thenReturn(8L);
@@ -112,7 +112,7 @@ public class TimeValidatorTest implements ValueSetTester {
     }
 
     @Test
-    public void testFormatInvalidTime() {
+    void testFormatInvalidTime() {
         EDISimpleType element = mock(EDISimpleType.class);
         when(element.getMinLength()).thenReturn(4L);
         when(element.getMaxLength()).thenReturn(8L);
@@ -124,7 +124,7 @@ public class TimeValidatorTest implements ValueSetTester {
     }
 
     @Test
-    public void testFormatValidTime() throws EDIException {
+    void testFormatValidTime() throws EDIException {
         EDISimpleType element = mock(EDISimpleType.class);
         when(element.getMinLength()).thenReturn(4L);
         when(element.getMaxLength()).thenReturn(8L);
@@ -136,7 +136,7 @@ public class TimeValidatorTest implements ValueSetTester {
     }
 
     @Test
-    public void testFormatValidTimePadded() throws EDIException {
+    void testFormatValidTimePadded() throws EDIException {
         EDISimpleType element = mock(EDISimpleType.class);
         when(element.getMinLength()).thenReturn(6L);
         when(element.getMaxLength()).thenReturn(8L);

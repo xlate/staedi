@@ -17,6 +17,7 @@ package io.xlate.edi.internal.schema;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -44,7 +45,7 @@ public class StaEDISchemaFactoryTest {
     final String IMPL_V3 = '{' + StaEDISchemaFactory.XMLNS_V3 + "}implementation";
 
     @Test
-    public void testCreateSchemaByURL() throws EDISchemaException {
+    void testCreateSchemaByURL() throws EDISchemaException {
         SchemaFactory factory = SchemaFactory.newFactory();
         assertTrue(factory instanceof StaEDISchemaFactory, "Not an instance");
         URL schemaURL = getClass().getResource("/x12/EDISchema997.xml");
@@ -54,7 +55,7 @@ public class StaEDISchemaFactoryTest {
     }
 
     @Test
-    public void testCreateSchemaByStream() throws EDISchemaException {
+    void testCreateSchemaByStream() throws EDISchemaException {
         SchemaFactory factory = SchemaFactory.newFactory();
         assertTrue(factory instanceof StaEDISchemaFactory, "Not an instance");
         InputStream schemaStream = getClass().getResourceAsStream("/x12/EDISchema997.xml");
@@ -64,7 +65,7 @@ public class StaEDISchemaFactoryTest {
     }
 
     @Test
-    public void testCreateEdifactInterchangeSchema() throws EDISchemaException {
+    void testCreateEdifactInterchangeSchema() throws EDISchemaException {
         Schema schema = SchemaUtils.getControlSchema(Standards.EDIFACT, new String[] { "UNOA", "4", "", "", "02" });
         assertNotNull(schema, "schema was null");
         assertEquals(INTERCHANGE_V2, schema.getStandard().getId(), "Incorrect root id");
@@ -72,31 +73,31 @@ public class StaEDISchemaFactoryTest {
 
     //TODO: no supported properties for now
     /*@Test
-    public void testIsPropertySupported() {
+    void testIsPropertySupported() {
     	SchemaFactory factory = SchemaFactory.newFactory();
     	assertTrue("FOO *is* supported", !factory.isPropertySupported("FOO"));
     }*/
 
     @Test
-    public void testIsPropertyUnsupported() {
+    void testIsPropertyUnsupported() {
         SchemaFactory factory = SchemaFactory.newFactory();
         assertTrue(!factory.isPropertySupported("FOO"), "FOO *is* supported");
     }
 
     @Test
-    public void testGetProperty() {
+    void testGetProperty() {
         SchemaFactory factory = SchemaFactory.newFactory();
         assertThrows(IllegalArgumentException.class, () -> factory.getProperty("FOO"));
     }
 
     @Test
-    public void testSetProperty() {
+    void testSetProperty() {
         SchemaFactory factory = SchemaFactory.newFactory();
         assertThrows(IllegalArgumentException.class, () -> factory.setProperty("BAR", "BAZ"));
     }
 
     @Test
-    public void testExceptionThrownWithoutSchema() {
+    void testExceptionThrownWithoutSchema() {
         SchemaFactory factory = SchemaFactory.newFactory();
         InputStream stream = new ByteArrayInputStream("<noschema></noschema>".getBytes());
         EDISchemaException thrown = assertThrows(EDISchemaException.class, () -> factory.createSchema(stream));
@@ -104,7 +105,7 @@ public class StaEDISchemaFactoryTest {
     }
 
     @Test
-    public void testExceptionThrownWithoutInterchangeAndTransactionV2() {
+    void testExceptionThrownWithoutInterchangeAndTransactionV2() {
         SchemaFactory factory = SchemaFactory.newFactory();
         InputStream stream = new ByteArrayInputStream(("<schema xmlns='" + StaEDISchemaFactory.XMLNS_V2
                 + "'><random/></schema>").getBytes());
@@ -113,7 +114,7 @@ public class StaEDISchemaFactoryTest {
     }
 
     @Test
-    public void testInterchangeRequiredAttributesV2() {
+    void testInterchangeRequiredAttributesV2() {
         SchemaFactory factory = SchemaFactory.newFactory();
         InputStream stream1 = new ByteArrayInputStream(("<schema xmlns='" + StaEDISchemaFactory.XMLNS_V2
                 + "'><interchange _header='ABC' trailer='XYZ' /></schema>").getBytes());
@@ -128,7 +129,7 @@ public class StaEDISchemaFactoryTest {
     }
 
     @Test
-    public void testUnexpectedElementBeforeSequenceV2() {
+    void testUnexpectedElementBeforeSequenceV2() {
         SchemaFactory factory = SchemaFactory.newFactory();
         InputStream stream = new ByteArrayInputStream((""
                 + "<schema xmlns='" + StaEDISchemaFactory.XMLNS_V2 + "'>"
@@ -143,7 +144,7 @@ public class StaEDISchemaFactoryTest {
     }
 
     @Test
-    public void testCreateSchemaByStreamV3() throws EDISchemaException {
+    void testCreateSchemaByStreamV3() throws EDISchemaException {
         SchemaFactory factory = SchemaFactory.newFactory();
         assertTrue(factory instanceof StaEDISchemaFactory, "Not an instance");
         InputStream schemaStream = getClass().getResourceAsStream("/x12/IG-999.xml");
@@ -154,7 +155,7 @@ public class StaEDISchemaFactoryTest {
     }
 
     @Test
-    public void testDuplicateImplPositionSpecified() {
+    void testDuplicateImplPositionSpecified() {
         SchemaFactory factory = SchemaFactory.newFactory();
         assertTrue(factory instanceof StaEDISchemaFactory, "Not an instance");
         InputStream stream = getClass().getResourceAsStream("/x12/implSchemaDuplicatePosition.xml");
@@ -165,7 +166,7 @@ public class StaEDISchemaFactoryTest {
     }
 
     @Test
-    public void testDiscriminatorElementTooLarge() {
+    void testDiscriminatorElementTooLarge() {
         SchemaFactory factory = SchemaFactory.newFactory();
         assertTrue(factory instanceof StaEDISchemaFactory, "Not an instance");
         InputStream stream = getClass().getResourceAsStream("/x12/discriminators/element-too-large.xml");
@@ -176,7 +177,7 @@ public class StaEDISchemaFactoryTest {
     }
 
     @Test
-    public void testDiscriminatorElementTooSmall() {
+    void testDiscriminatorElementTooSmall() {
         SchemaFactory factory = SchemaFactory.newFactory();
         assertTrue(factory instanceof StaEDISchemaFactory, "Not an instance");
         InputStream stream = getClass().getResourceAsStream("/x12/discriminators/element-too-small.xml");
@@ -187,7 +188,7 @@ public class StaEDISchemaFactoryTest {
     }
 
     @Test
-    public void testDiscriminatorElementNotSpecified() {
+    void testDiscriminatorElementNotSpecified() {
         SchemaFactory factory = SchemaFactory.newFactory();
         assertTrue(factory instanceof StaEDISchemaFactory, "Not an instance");
         InputStream stream = getClass().getResourceAsStream("/x12/discriminators/element-not-specified.xml");
@@ -198,7 +199,7 @@ public class StaEDISchemaFactoryTest {
     }
 
     @Test
-    public void testDiscriminatorComponentTooLarge() {
+    void testDiscriminatorComponentTooLarge() {
         SchemaFactory factory = SchemaFactory.newFactory();
         assertTrue(factory instanceof StaEDISchemaFactory, "Not an instance");
         InputStream stream = getClass().getResourceAsStream("/x12/discriminators/component-too-large.xml");
@@ -209,7 +210,7 @@ public class StaEDISchemaFactoryTest {
     }
 
     @Test
-    public void testDiscriminatorComponentTooSmall() {
+    void testDiscriminatorComponentTooSmall() {
         SchemaFactory factory = SchemaFactory.newFactory();
         assertTrue(factory instanceof StaEDISchemaFactory, "Not an instance");
         InputStream stream = getClass().getResourceAsStream("/x12/discriminators/component-too-small.xml");
@@ -220,7 +221,7 @@ public class StaEDISchemaFactoryTest {
     }
 
     @Test
-    public void testDiscriminatorMissingEnumeration() {
+    void testDiscriminatorMissingEnumeration() {
         SchemaFactory factory = SchemaFactory.newFactory();
         assertTrue(factory instanceof StaEDISchemaFactory, "Not an instance");
         InputStream stream = getClass().getResourceAsStream("/x12/discriminators/element-without-enumeration.xml");
@@ -231,7 +232,7 @@ public class StaEDISchemaFactoryTest {
     }
 
     @Test
-    public void testInvalidSyntaxTypeValue() {
+    void testInvalidSyntaxTypeValue() {
         SchemaFactory factory = SchemaFactory.newFactory();
         InputStream stream = getClass().getResourceAsStream("/EDIFACT/fragment-uci-invalid-syntax-type.xml");
         EDISchemaException thrown = assertThrows(EDISchemaException.class, () -> factory.createSchema(stream));
@@ -241,7 +242,7 @@ public class StaEDISchemaFactoryTest {
     }
 
     @Test
-    public void testInvalidMinOccursValue() {
+    void testInvalidMinOccursValue() {
         SchemaFactory factory = SchemaFactory.newFactory();
         InputStream stream = getClass().getResourceAsStream("/EDIFACT/fragment-uci-invalid-min-occurs.xml");
         EDISchemaException thrown = assertThrows(EDISchemaException.class, () -> factory.createSchema(stream));
@@ -251,7 +252,7 @@ public class StaEDISchemaFactoryTest {
     }
 
     @Test
-    public void testDuplicateElementTypeNames() {
+    void testDuplicateElementTypeNames() {
         SchemaFactory factory = SchemaFactory.newFactory();
         InputStream stream = getClass().getResourceAsStream("/EDIFACT/fragment-uci-duplicate-element-names.xml");
         EDISchemaException thrown = assertThrows(EDISchemaException.class, () -> factory.createSchema(stream));
@@ -261,7 +262,7 @@ public class StaEDISchemaFactoryTest {
     }
 
     @Test
-    public void testGetControlSchema() throws EDISchemaException {
+    void testGetControlSchema() throws EDISchemaException {
         SchemaFactory factory = SchemaFactory.newFactory();
         Schema schema = factory.getControlSchema(Standards.X12, new String[] { "00501" });
         assertNotNull(schema);
@@ -271,7 +272,7 @@ public class StaEDISchemaFactoryTest {
     }
 
     @Test
-    public void testReferenceUndeclared() {
+    void testReferenceUndeclared() {
         SchemaFactory factory = SchemaFactory.newFactory();
         InputStream stream = new ByteArrayInputStream((""
                 + "<schema xmlns='" + StaEDISchemaFactory.XMLNS_V3 + "'>"
@@ -286,7 +287,7 @@ public class StaEDISchemaFactoryTest {
     }
 
     @Test
-    public void testReferenceIncorrectType() {
+    void testReferenceIncorrectType() {
         SchemaFactory factory = SchemaFactory.newFactory();
         InputStream stream = new ByteArrayInputStream((""
                 + "<schema xmlns='" + StaEDISchemaFactory.XMLNS_V3 + "'>"
@@ -305,7 +306,7 @@ public class StaEDISchemaFactoryTest {
     }
 
     @Test
-    public void testUnexpectedUnknownTypeElement() {
+    void testUnexpectedUnknownTypeElement() {
         SchemaFactory factory = SchemaFactory.newFactory();
         InputStream stream = new ByteArrayInputStream((""
                 + "<schema xmlns='" + StaEDISchemaFactory.XMLNS_V3 + "'>"
@@ -326,7 +327,7 @@ public class StaEDISchemaFactoryTest {
     }
 
     @Test
-    public void testMissingRequiredTransactionElement() {
+    void testMissingRequiredTransactionElement() {
         SchemaFactory factory = SchemaFactory.newFactory();
         InputStream stream = new ByteArrayInputStream((""
                 + "<schema xmlns='" + StaEDISchemaFactory.XMLNS_V3 + "'>"
@@ -342,7 +343,7 @@ public class StaEDISchemaFactoryTest {
     }
 
     @Test
-    public void testProhibitedUseType() throws EDISchemaException {
+    void testProhibitedUseType() throws EDISchemaException {
         SchemaFactory factory = SchemaFactory.newFactory();
         InputStream stream = new ByteArrayInputStream((""
                 + "<schema xmlns='" + StaEDISchemaFactory.XMLNS_V3 + "'>"
@@ -368,7 +369,7 @@ public class StaEDISchemaFactoryTest {
     }
 
     @Test
-    public void testInvalidUseType() {
+    void testInvalidUseType() {
         SchemaFactory factory = SchemaFactory.newFactory();
         InputStream stream = new ByteArrayInputStream((""
                 + "<schema xmlns='" + StaEDISchemaFactory.XMLNS_V3 + "'>"
@@ -393,7 +394,7 @@ public class StaEDISchemaFactoryTest {
     }
 
     @Test
-    public void testInvalidSegmentName() {
+    void testInvalidSegmentName() {
         SchemaFactory factory = SchemaFactory.newFactory();
         InputStream stream = new ByteArrayInputStream((""
                 + "<schema xmlns='" + StaEDISchemaFactory.XMLNS_V3 + "'>"
@@ -411,7 +412,7 @@ public class StaEDISchemaFactoryTest {
     }
 
     @Test
-    public void testAnyCompositeType() throws EDISchemaException {
+    void testAnyCompositeType() throws EDISchemaException {
         SchemaFactory factory = SchemaFactory.newFactory();
         InputStream stream = new ByteArrayInputStream((""
                 + "<schema xmlns='" + StaEDISchemaFactory.XMLNS_V3 + "'>"
@@ -437,11 +438,11 @@ public class StaEDISchemaFactoryTest {
         EDIComplexType segmentSG1 = (EDIComplexType) schema.getType("SG1");
         assertEquals(3, segmentSG1.getReferences().size());
         // Two "ANY" references refer to the same object
-        assertTrue(segmentSG1.getReferences().get(1) == segmentSG1.getReferences().get(2));
+        assertSame(segmentSG1.getReferences().get(1), segmentSG1.getReferences().get(2));
     }
 
     @Test
-    public void testAnyElementType() throws EDISchemaException {
+    void testAnyElementType() throws EDISchemaException {
         SchemaFactory factory = SchemaFactory.newFactory();
         InputStream stream = new ByteArrayInputStream((""
                 + "<schema xmlns='" + StaEDISchemaFactory.XMLNS_V3 + "'>"
@@ -470,7 +471,7 @@ public class StaEDISchemaFactoryTest {
     }
 
     @Test
-    public void testAnySegmentTypeInvalid() throws EDISchemaException {
+    void testAnySegmentTypeInvalid() throws EDISchemaException {
         SchemaFactory factory = SchemaFactory.newFactory();
         InputStream stream = new ByteArrayInputStream((""
                 + "<schema xmlns='" + StaEDISchemaFactory.XMLNS_V3 + "'>"
