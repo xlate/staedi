@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
 
+import io.xlate.edi.internal.schema.StaEDISchema;
 import io.xlate.edi.internal.stream.StaEDIStreamLocation;
 import io.xlate.edi.internal.stream.tokenization.Dialect;
 import io.xlate.edi.internal.stream.tokenization.ElementDataHandler;
@@ -765,7 +766,7 @@ public class Validator {
     }
 
     public boolean isComposite() {
-        return composite != null;
+        return composite != null && !StaEDISchema.ANY_COMPOSITE_ID.equals(composite.getId());
     }
 
     public boolean validateElement(Dialect dialect, StaEDIStreamLocation position, CharSequence value) {

@@ -3,6 +3,7 @@ package io.xlate.edi.internal.schema;
 import static io.xlate.edi.internal.schema.StaEDISchemaFactory.schemaException;
 import static io.xlate.edi.internal.schema.StaEDISchemaFactory.unexpectedElement;
 import static io.xlate.edi.internal.schema.StaEDISchemaFactory.unexpectedEvent;
+import static java.util.stream.Collectors.toList;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -15,22 +16,46 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.IntStream;
 
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
+import io.xlate.edi.schema.EDIComplexType;
 import io.xlate.edi.schema.EDIReference;
 import io.xlate.edi.schema.EDISchemaException;
 import io.xlate.edi.schema.EDISimpleType;
+import io.xlate.edi.schema.EDISimpleType.Base;
 import io.xlate.edi.schema.EDISyntaxRule;
 import io.xlate.edi.schema.EDIType;
+import io.xlate.edi.schema.EDIType.Type;
 
 abstract class SchemaReaderBase implements SchemaReader {
 
     static final String REFERR_UNDECLARED = "Type %s references undeclared %s with ref='%s'";
     static final String REFERR_ILLEGAL = "Type '%s' must not be referenced as '%s' in definition of type '%s'";
+
+    static final EDIReference ANY_ELEMENT_REF_OPT = new Reference(StaEDISchema.ANY_ELEMENT_ID, "element", 0, 1);
+    static final EDIReference ANY_COMPOSITE_REF_OPT = new Reference(StaEDISchema.ANY_COMPOSITE_ID, "composite", 0, 99);
+
+    static final EDIReference ANY_ELEMENT_REF_REQ = new Reference(StaEDISchema.ANY_ELEMENT_ID, "element", 1, 1);
+    static final EDIReference ANY_COMPOSITE_REF_REQ = new Reference(StaEDISchema.ANY_COMPOSITE_ID, "composite", 1, 99);
+
+    static final EDISimpleType ANY_ELEMENT = new ElementType(StaEDISchema.ANY_ELEMENT_ID,
+                                                             Base.STRING,
+                                                             0,
+                                                             0,
+                                                             99_999,
+                                                             Collections.emptySet());
+
+    static final EDIComplexType ANY_COMPOSITE = new StructureType(StaEDISchema.ANY_COMPOSITE_ID,
+                                                                  Type.COMPOSITE,
+                                                                  "ANY",
+                                                                  IntStream.rangeClosed(0, 99).mapToObj(i -> ANY_ELEMENT_REF_OPT)
+                                                                           .collect(toList()),
+                                                                  Collections.emptyList());
 
     final String xmlns;
 
@@ -48,6 +73,7 @@ abstract class SchemaReaderBase implements SchemaReader {
     final QName qnSequence;
     final QName qnEnumeration;
     final QName qnValue;
+    final QName qnAny;
 
     final QName qnCompositeType;
     final QName qnElementType;
@@ -75,6 +101,7 @@ abstract class SchemaReaderBase implements SchemaReader {
         qnSequence = new QName(xmlns, "sequence");
         qnEnumeration = new QName(xmlns, "enumeration");
         qnValue = new QName(xmlns, "value");
+        qnAny = new QName(xmlns, "any");
 
         qnCompositeType = new QName(xmlns, "compositeType");
         qnElementType = new QName(xmlns, "elementType");
@@ -114,6 +141,9 @@ abstract class SchemaReaderBase implements SchemaReader {
     @Override
     public Map<String, EDIType> readTypes() throws EDISchemaException {
         Map<String, EDIType> types = new HashMap<>(100);
+
+        types.put(StaEDISchema.ANY_ELEMENT_ID, ANY_ELEMENT);
+        types.put(StaEDISchema.ANY_COMPOSITE_ID, ANY_COMPOSITE);
 
         try {
             if (isInterchangeSchema(reader)) {
@@ -181,7 +211,7 @@ abstract class SchemaReaderBase implements SchemaReader {
         refs.add(headerRef);
 
         while (qnSegment.equals(element)) {
-            refs.add(readReference(reader, types));
+            addReferences(reader, EDIType.Type.SEGMENT, refs, readReference(reader, types));
             reader.nextTag(); // Advance to end element
             reader.nextTag(); // Advance to next start element
             element = reader.getName();
@@ -203,10 +233,10 @@ abstract class SchemaReaderBase implements SchemaReader {
         refs.add(trailerRef);
 
         StructureType interchange = new StructureType(qnInterchange.toString(),
-                                              EDIType.Type.INTERCHANGE,
-                                              "INTERCHANGE",
-                                              refs,
-                                              Collections.emptyList());
+                                                      EDIType.Type.INTERCHANGE,
+                                                      "INTERCHANGE",
+                                                      refs,
+                                                      Collections.emptyList());
 
         types.put(interchange.getId(), interchange);
     }
@@ -214,7 +244,8 @@ abstract class SchemaReaderBase implements SchemaReader {
     Reference readControlStructure(XMLStreamReader reader,
                                    QName element,
                                    QName subelement,
-                                   Map<String, EDIType> types) throws XMLStreamException {
+                                   Map<String, EDIType> types)
+            throws XMLStreamException {
         int minOccurs = 0;
         int maxOccurs = 99999;
         String use = parseAttribute(reader, "use", String::valueOf, "optional");
@@ -250,10 +281,10 @@ abstract class SchemaReaderBase implements SchemaReader {
         refs.add(trailerRef);
 
         StructureType struct = new StructureType(element.toString(),
-                                         complex.get(element),
-                                         complex.get(element).toString(),
-                                         refs,
-                                         Collections.emptyList());
+                                                 complex.get(element),
+                                                 complex.get(element).toString(),
+                                                 refs,
+                                                 Collections.emptyList());
 
         types.put(struct.getId(), struct);
 
@@ -326,8 +357,9 @@ abstract class SchemaReaderBase implements SchemaReader {
     }
 
     StructureType readComplexType(XMLStreamReader reader,
-                               QName complexType,
-                               Map<String, EDIType> types) throws XMLStreamException {
+                                  QName complexType,
+                                  Map<String, EDIType> types)
+            throws XMLStreamException {
 
         final EDIType.Type type = complex.get(complexType);
         final String id;
@@ -354,7 +386,7 @@ abstract class SchemaReaderBase implements SchemaReader {
 
         readDescription(reader);
         requireElementStart(qnSequence, reader);
-        readReferences(reader, types, refs);
+        readReferences(reader, types, type, refs);
 
         int event = reader.nextTag();
 
@@ -374,14 +406,15 @@ abstract class SchemaReaderBase implements SchemaReader {
     }
 
     void readReferences(XMLStreamReader reader,
-                       Map<String, EDIType> types,
-                       List<EDIReference> refs) {
+                        Map<String, EDIType> types,
+                        EDIType.Type parentType,
+                        List<EDIReference> refs) {
 
         try {
             while (reader.hasNext()) {
                 switch (reader.next()) {
                 case XMLStreamConstants.START_ELEMENT:
-                    refs.add(readReference(reader, types));
+                    addReferences(reader, parentType, refs, readReference(reader, types));
                     break;
 
                 case XMLStreamConstants.END_ELEMENT:
@@ -400,11 +433,42 @@ abstract class SchemaReaderBase implements SchemaReader {
         }
     }
 
+    void addReferences(XMLStreamReader reader, EDIType.Type parentType, List<EDIReference> refs, Reference reference) {
+        if ("ANY".equals(reference.getRefId())) {
+            final EDIReference optRef;
+            final EDIReference reqRef;
+
+            switch (parentType) {
+            case SEGMENT:
+                optRef = ANY_COMPOSITE_REF_OPT;
+                reqRef = ANY_COMPOSITE_REF_REQ;
+                break;
+            case COMPOSITE:
+                optRef = ANY_ELEMENT_REF_OPT;
+                reqRef = ANY_ELEMENT_REF_REQ;
+                break;
+            default:
+                throw schemaException("Element " + qnAny + " may only be present for segmentType and compositeType", reader);
+            }
+
+            final int min = reference.getMinOccurs();
+            final int max = reference.getMaxOccurs();
+
+            for (int i = 0; i < max; i++) {
+                refs.add(i < min ? reqRef : optRef);
+            }
+        } else {
+            refs.add(reference);
+        }
+    }
+
     Reference readReference(XMLStreamReader reader, Map<String, EDIType> types) {
         QName element = reader.getName();
         String refId = null;
 
-        if (references.contains(element)) {
+        if (qnAny.equals(element)) {
+            refId = "ANY";
+        } else if (references.contains(element)) {
             refId = readReferencedId(reader);
             Objects.requireNonNull(refId);
         } else if (qnLoop.equals(element)) {

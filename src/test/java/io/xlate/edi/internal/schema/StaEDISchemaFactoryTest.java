@@ -36,12 +36,12 @@ import io.xlate.edi.stream.EDIStreamConstants.Standards;
 @SuppressWarnings("resource")
 public class StaEDISchemaFactoryTest {
 
-    final String INTERCHANGE_V2 = "{http://xlate.io/EDISchema/v2}interchange";
-    final String TRANSACTION_V2 = "{http://xlate.io/EDISchema/v2}transaction";
+    final String INTERCHANGE_V2 = '{' + StaEDISchemaFactory.XMLNS_V2 + "}interchange";
+    final String TRANSACTION_V2 = '{' + StaEDISchemaFactory.XMLNS_V2 + "}transaction";
 
-    final String INTERCHANGE_V3 = "{http://xlate.io/EDISchema/v3}interchange";
-    final String STANDARD_V3 = "{http://xlate.io/EDISchema/v3}transaction";
-    final String IMPL_V3 = "{http://xlate.io/EDISchema/v3}implementation";
+    final String INTERCHANGE_V3 = '{' + StaEDISchemaFactory.XMLNS_V3 + "}interchange";
+    final String STANDARD_V3 = '{' + StaEDISchemaFactory.XMLNS_V3 + "}transaction";
+    final String IMPL_V3 = '{' + StaEDISchemaFactory.XMLNS_V3 + "}implementation";
 
     @Test
     public void testCreateSchemaByURL() throws EDISchemaException {
@@ -407,6 +407,88 @@ public class StaEDISchemaFactoryTest {
                 + "</schema>").getBytes());
         EDISchemaException thrown = assertThrows(EDISchemaException.class, () -> factory.createSchema(stream));
         assertEquals("Invalid segment name [sg1]",
+                     thrown.getOriginalMessage());
+    }
+
+    @Test
+    public void testAnyCompositeType() throws EDISchemaException {
+        SchemaFactory factory = SchemaFactory.newFactory();
+        InputStream stream = new ByteArrayInputStream((""
+                + "<schema xmlns='" + StaEDISchemaFactory.XMLNS_V3 + "'>"
+                + "<interchange header='SG1' trailer='SG2'>"
+                + "<sequence>"
+                + "  <group header='SG3' trailer='SG4'>"
+                + "    <transaction header='SG5' trailer='SG6'></transaction>"
+                + "  </group>"
+                + "</sequence>"
+                + "</interchange>"
+                + "<elementType name=\"E1\" base=\"string\" maxLength=\"5\" />"
+                + "<segmentType name=\"SG1\"><sequence>"
+                + "<element type='E1'/>"
+                + "<any minOccurs='0' maxOccurs='2'/>"
+                + "</sequence></segmentType>"
+                + "<segmentType name=\"SG2\"><sequence><element type='E1'/></sequence></segmentType>"
+                + "<segmentType name=\"SG3\"><sequence><element type='E1'/></sequence></segmentType>"
+                + "<segmentType name=\"SG4\"><sequence><element type='E1'/></sequence></segmentType>"
+                + "<segmentType name=\"SG5\"><sequence><element type='E1'/></sequence></segmentType>"
+                + "<segmentType name=\"SG6\"><sequence><element type='E1'/></sequence></segmentType>"
+                + "</schema>").getBytes());
+        Schema schema = factory.createSchema(stream);
+        EDIComplexType segmentSG1 = (EDIComplexType) schema.getType("SG1");
+        assertEquals(3, segmentSG1.getReferences().size());
+        // Two "ANY" references refer to the same object
+        assertTrue(segmentSG1.getReferences().get(1) == segmentSG1.getReferences().get(2));
+    }
+
+    @Test
+    public void testAnyElementType() throws EDISchemaException {
+        SchemaFactory factory = SchemaFactory.newFactory();
+        InputStream stream = new ByteArrayInputStream((""
+                + "<schema xmlns='" + StaEDISchemaFactory.XMLNS_V3 + "'>"
+                + "<interchange header='SG1' trailer='SG2'>"
+                + "<sequence>"
+                + "  <group header='SG3' trailer='SG4'>"
+                + "    <transaction header='SG5' trailer='SG6'></transaction>"
+                + "  </group>"
+                + "</sequence>"
+                + "</interchange>"
+                + "<elementType name=\"E1\" base=\"string\" maxLength=\"5\" />"
+                + "<compositeType name=\"C001\"><sequence><any maxOccurs='5'/></sequence></compositeType>"
+                + "<segmentType name=\"SG1\"><sequence><element type='E1'/></sequence></segmentType>"
+                + "<segmentType name=\"SG2\"><sequence><element type='E1'/></sequence></segmentType>"
+                + "<segmentType name=\"SG3\"><sequence><element type='E1'/></sequence></segmentType>"
+                + "<segmentType name=\"SG4\"><sequence><element type='E1'/></sequence></segmentType>"
+                + "<segmentType name=\"SG5\"><sequence><element type='E1'/></sequence></segmentType>"
+                + "<segmentType name=\"SG6\"><sequence><composite type='C001'/></sequence></segmentType>"
+                + "</schema>").getBytes());
+        Schema schema = factory.createSchema(stream);
+        EDIComplexType segmentSG6 = (EDIComplexType) schema.getType("SG6");
+        assertEquals(1, segmentSG6.getReferences().size());
+        // Two "ANY" references refer to the same object
+        assertEquals("C001", segmentSG6.getReferences().get(0).getReferencedType().getId());
+        assertEquals(5, ((EDIComplexType) segmentSG6.getReferences().get(0).getReferencedType()).getReferences().size());
+    }
+
+    @Test
+    public void testAnySegmentTypeInvalid() throws EDISchemaException {
+        SchemaFactory factory = SchemaFactory.newFactory();
+        InputStream stream = new ByteArrayInputStream((""
+                + "<schema xmlns='" + StaEDISchemaFactory.XMLNS_V3 + "'>"
+                + "<transaction header='SG1' trailer='SG2'>"
+                + "<sequence>"
+                + "  <segment type='SG3'/>"
+                + "  <any maxOccurs='2' />"
+                + "</sequence>"
+                + "</transaction>"
+                + "<elementType name=\"E1\" base=\"string\" maxLength=\"5\" />"
+                + "<segmentType name=\"SG1\"><sequence><element type='E1'/></sequence></segmentType>"
+                + "<segmentType name=\"SG2\"><sequence><element type='E1'/></sequence></segmentType>"
+                + "<segmentType name=\"SG3\"><sequence><element type='E1'/></sequence></segmentType>"
+                + "<segmentType name=\"SG4\"><sequence><element type='E1'/></sequence></segmentType>"
+                + "<segmentType name=\"SG5\"><sequence><element type='E1'/></sequence></segmentType>"
+                + "</schema>").getBytes());
+        EDISchemaException thrown = assertThrows(EDISchemaException.class, () -> factory.createSchema(stream));
+        assertEquals("Element {" + StaEDISchemaFactory.XMLNS_V3 + "}any may only be present for segmentType and compositeType",
                      thrown.getOriginalMessage());
     }
 }
