@@ -21,7 +21,10 @@ import java.io.OutputStream;
 import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.Deque;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Queue;
 import java.util.logging.Logger;
 
@@ -31,6 +34,7 @@ import javax.xml.stream.Location;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
+import io.xlate.edi.stream.EDIInputFactory;
 import io.xlate.edi.stream.EDINamespaces;
 import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamReader;
@@ -40,8 +44,11 @@ final class StaEDIXMLStreamReader implements XMLStreamReader {
     private static final Logger LOGGER = Logger.getLogger(StaEDIXMLStreamReader.class.getName());
     private static final QName DUMMY_QNAME = new QName("DUMMY");
     private static final QName INTERCHANGE = new QName(EDINamespaces.LOOPS, "INTERCHANGE", prefixOf(EDINamespaces.LOOPS));
+    private static final QName TRANSACTION = new QName(EDINamespaces.LOOPS, "TRANSACTION", prefixOf(EDINamespaces.LOOPS));
 
     private final EDIStreamReader ediReader;
+    private final Map<String, Object> properties;
+    private final boolean transactionDeclaresXmlns;
     private final Location location = new ProxyLocation();
     private boolean autoAdvance;
 
@@ -61,8 +68,10 @@ final class StaEDIXMLStreamReader implements XMLStreamReader {
 
     private char[] cdata;
 
-    StaEDIXMLStreamReader(EDIStreamReader ediReader) throws XMLStreamException {
+    StaEDIXMLStreamReader(EDIStreamReader ediReader, Map<String, Object> properties) throws XMLStreamException {
         this.ediReader = ediReader;
+        this.properties = new HashMap<>(properties);
+        transactionDeclaresXmlns = Boolean.valueOf(String.valueOf(properties.get(EDIInputFactory.XML_DECLARE_TRANSACTION_XMLNS)));
 
         if (ediReader.getEventType() == EDIStreamEvent.START_INTERCHANGE) {
             autoAdvance = false;
@@ -72,12 +81,23 @@ final class StaEDIXMLStreamReader implements XMLStreamReader {
         }
     }
 
+    StaEDIXMLStreamReader(EDIStreamReader ediReader) throws XMLStreamException {
+        this(ediReader, Collections.emptyMap());
+    }
+
     @Override
     public Object getProperty(String name) {
         if (name == null) {
             throw new IllegalArgumentException("name must not be null");
         }
-        return null;
+        return properties.get(name);
+    }
+
+    boolean declareNamespaces(QName element) {
+        if (INTERCHANGE.equals(element)) {
+            return true;
+        }
+        return this.transactionDeclaresXmlns && TRANSACTION.equals(element);
     }
 
     private boolean isEvent(int... eventTypes) {
@@ -415,7 +435,7 @@ final class StaEDIXMLStreamReader implements XMLStreamReader {
 
     @Override
     public int getNamespaceCount() {
-        if (INTERCHANGE.equals(elementQueue.element())) {
+        if (declareNamespaces(elementQueue.element())) {
             return EDINamespaces.all().size();
         }
         return 0;
@@ -423,7 +443,7 @@ final class StaEDIXMLStreamReader implements XMLStreamReader {
 
     @Override
     public String getNamespacePrefix(int index) {
-        if (INTERCHANGE.equals(elementQueue.element())) {
+        if (declareNamespaces(elementQueue.element())) {
             String namespace = EDINamespaces.all().get(index);
             return prefixOf(namespace);
         }
@@ -432,7 +452,7 @@ final class StaEDIXMLStreamReader implements XMLStreamReader {
 
     @Override
     public String getNamespaceURI(int index) {
-        if (INTERCHANGE.equals(elementQueue.element())) {
+        if (declareNamespaces(elementQueue.element())) {
             return EDINamespaces.all().get(index);
         }
         return null;

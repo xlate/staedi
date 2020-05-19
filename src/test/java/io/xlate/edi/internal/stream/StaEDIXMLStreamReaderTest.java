@@ -343,6 +343,27 @@ public class StaEDIXMLStreamReaderTest {
     }
 
     @Test
+    public void testTransactionElementWithXmlns() throws Exception {
+        EDIInputFactory ediFactory = EDIInputFactory.newFactory();
+        ediFactory.setProperty(EDIInputFactory.XML_DECLARE_TRANSACTION_XMLNS, Boolean.TRUE);
+        InputStream stream = getClass().getResourceAsStream("/x12/extraDelimiter997.edi");
+        ediReader = ediFactory.createEDIStreamReader(stream);
+        XMLStreamReader xmlReader = ediFactory.createXMLStreamReader(ediReader);
+
+        xmlReader.next(); // Per StAXSource JavaDoc, put in START_DOCUMENT state
+        TransformerFactory factory = TransformerFactory.newInstance();
+        Transformer transformer = factory.newTransformer();
+        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+        transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
+        StringWriter result = new StringWriter();
+        transformer.transform(new StAXSource(xmlReader), new StreamResult(result));
+        String resultString = result.toString();
+        Diff d = DiffBuilder.compare(Input.fromFile("src/test/resources/x12/extraDelimiter997-transaction-xmlns.xml"))
+                   .withTest(resultString).build();
+        assertTrue(!d.hasDifferences(), () -> "XML unexpectedly different:\n" + d.toString(new DefaultComparisonFormatter()));
+    }
+
+    @Test
     public void testXmlIOEquivalence() throws Exception {
         XMLStreamReader xmlReader = getXmlReader("/x12/extraDelimiter997.edi");
         xmlReader.next(); // Per StAXSource JavaDoc, put in START_DOCUMENT state

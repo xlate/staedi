@@ -40,6 +40,7 @@ public class StaEDIInputFactory extends EDIInputFactory {
     public StaEDIInputFactory() {
         supportedProperties.add(EDI_VALIDATE_CONTROL_STRUCTURE);
         supportedProperties.add(EDI_VALIDATE_CONTROL_CODE_VALUES);
+        supportedProperties.add(XML_DECLARE_TRANSACTION_XMLNS);
 
         supportedCharsets = new HashSet<>();
         supportedCharsets.add(DEFAULT_ENCODING);
@@ -79,7 +80,7 @@ public class StaEDIInputFactory extends EDIInputFactory {
 
     @Override
     public XMLStreamReader createXMLStreamReader(EDIStreamReader reader) throws XMLStreamException {
-        return new StaEDIXMLStreamReader(reader);
+        return new StaEDIXMLStreamReader(reader, properties);
     }
 
     @Override

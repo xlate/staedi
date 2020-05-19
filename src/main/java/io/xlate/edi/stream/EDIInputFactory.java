@@ -25,7 +25,19 @@ import io.xlate.edi.schema.Schema;
 public abstract class EDIInputFactory extends PropertySupport {
 
     public static final String EDI_VALIDATE_CONTROL_STRUCTURE = "io.xlate.edi.stream.EDI_VALIDATE_CONTROL_STRUCTURE";
+
+    /**
+     * When set to false, enumerated code values of control structure elements will be ignore. Element size and type
+     * validation will still occur.
+     */
     public static final String EDI_VALIDATE_CONTROL_CODE_VALUES = "io.xlate.edi.stream.EDI_VALIDATE_CONTROL_CODE_VALUES";
+
+    /**
+     * When set to true, XMLStreamReader instances created from an EDIInputFactory
+     * will generate XMLNS attributes on the TRANSACTION element in addition to the
+     * INTERCHANGE element.
+     */
+    public static final String XML_DECLARE_TRANSACTION_XMLNS = "io.xlate.edi.stream.XML_DECLARE_TRANSACTION_XMLNS";
 
     /**
      * Create a new instance of the factory. This static method creates a new

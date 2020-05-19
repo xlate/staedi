@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE INTERCHANGE>
+<l:INTERCHANGE xmlns:l="urn:xlate.io:staedi:names:loops" xmlns:s="urn:xlate.io:staedi:names:segments" xmlns:c="urn:xlate.io:staedi:names:composites" xmlns:e="urn:xlate.io:staedi:names:elements">
+  <s:ISA>
+    <e:ISA01>00</e:ISA01>
+    <e:ISA02>          </e:ISA02>
+    <e:ISA03>00</e:ISA03>
+    <e:ISA04>          </e:ISA04>
+    <e:ISA05>ZZ</e:ISA05>
+    <e:ISA06>ReceiverID     </e:ISA06>
+    <e:ISA07>ZZ</e:ISA07>
+    <e:ISA08>Sender         </e:ISA08>
+    <e:ISA09>050812</e:ISA09>
+    <e:ISA10>1953</e:ISA10>
+    <e:ISA11>^</e:ISA11>
+    <e:ISA12>00501</e:ISA12>
+    <e:ISA13>508121953</e:ISA13>
+    <e:ISA14>0</e:ISA14>
+    <e:ISA15>P</e:ISA15>
+    <e:ISA16>:</e:ISA16>
+  </s:ISA>
+  <l:GROUP>
+    <s:GS>
+      <e:GS01>FA</e:GS01>
+      <e:GS02>ReceiverDept</e:GS02>
+      <e:GS03>SenderDept</e:GS03>
+      <e:GS04>20050812</e:GS04>
+      <e:GS05>195335</e:GS05>
+      <e:GS06>000005</e:GS06>
+      <e:GS07>X</e:GS07>
+      <e:GS08>005010X230</e:GS08>
+    </s:GS>
+    <l:TRANSACTION xmlns:l="urn:xlate.io:staedi:names:loops" xmlns:s="urn:xlate.io:staedi:names:segments" xmlns:c="urn:xlate.io:staedi:names:composites" xmlns:e="urn:xlate.io:staedi:names:elements">
+      <s:ST>
+        <e:ST01>997</e:ST01>
+        <e:ST02>0001</e:ST02>
+      </s:ST>
+      <s:AK1>
+        <e:AK101>HC</e:AK101>
+        <e:AK102>000001</e:AK102>
+      </s:AK1>
+      <s:AK2>
+        <e:AK201>837</e:AK201>
+        <e:AK202>0021</e:AK202>
+      </s:AK2>
+      <s:AK3>
+        <e:AK301>NM1</e:AK301>
+        <e:AK302>AK302-R1</e:AK302>
+        <e:AK302>AK302-R2</e:AK302>
+        <c:AK302>
+          <e:AK302-01>AK302-R3-COMP1</e:AK302-01>
+          <e:AK302-02>AK302-R3-COMP2</e:AK302-02>
+        </c:AK302>
+        <e:AK303/>
+        <e:AK304>AK304-R1</e:AK304>
+        <e:AK304>AK304-R2</e:AK304>
+        <e:AK304>AK304-R3</e:AK304>
+      </s:AK3>
+      <s:AK4>
+        <e:AK401>8</e:AK401>
+        <e:AK402>66</e:AK402>
+        <e:AK403>7</e:AK403>
+        <c:AK404>
+          <e:AK404-01>AK404-R1-COMP1</e:AK404-01>
+          <e:AK404-02>AK404-R1-COMP2</e:AK404-02>
+          <e:AK404-03>AK404-R1-COMP3</e:AK404-03>
+        </c:AK404>
+        <c:AK404>
+          <e:AK404-01>AK404-R2-COMP1</e:AK404-01>
+          <e:AK404-02>AK404-R2-COMP2</e:AK404-02>
+        </c:AK404>
+      </s:AK4>
+      <s:AK5>
+        <e:AK501>R</e:AK501>
+        <e:AK502>5</e:AK502>
+      </s:AK5>
+      <s:AK9>
+        <e:AK901>R</e:AK901>
+        <e:AK902>1</e:AK902>
+        <e:AK903>1</e:AK903>
+        <e:AK904>0</e:AK904>
+      </s:AK9>
+      <s:SE>
+        <e:SE01>8</e:SE01>
+        <e:SE02>0001</e:SE02>
+      </s:SE>
+    </l:TRANSACTION>
+    <s:GE>
+      <e:GE01>1</e:GE01>
+      <e:GE02>000005</e:GE02>
+    </s:GE>
+  </l:GROUP>
+  <s:IEA>
+    <e:IEA01>1</e:IEA01>
+    <e:IEA02>508121953</e:IEA02>
+  </s:IEA>
+</l:INTERCHANGE>
