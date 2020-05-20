@@ -132,7 +132,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     }
 
     private static void ensureArgs(int arrayLength, int start, int end) {
-        if (start < 0 || start > arrayLength || end > arrayLength) {
+        if (start < 0 || start >= arrayLength || end > arrayLength) {
             throw new IndexOutOfBoundsException();
         }
 
@@ -207,7 +207,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
 
     @Override
     public String getStandard() {
-        if (dialect == null || dialect.getStandard() == null) {
+        if (dialect == null) {
             throw new IllegalStateException("standard not accessible");
         }
 
@@ -225,10 +225,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         clazz = characters.getClass(output);
 
         if (clazz == CharacterClass.INVALID) {
-            StringBuilder message = new StringBuilder();
-            message.append("Invalid character: 0x");
-            message.append(Integer.toHexString(output));
-            throw new EDIException(message.toString());
+            throw new EDIStreamException(String.format("Invalid character: 0x%04X", output), location);
         }
 
         state = state.transition(clazz);
@@ -260,7 +257,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
                     }
                 }
             } else {
-                throw new EDIException("Unexpected header character: '" + (char) output + "'");
+                throw new EDIStreamException(String.format("Unexpected header character: 0x%04X [%s]", output, (char) output), location);
             }
             break;
         case INVALID:
