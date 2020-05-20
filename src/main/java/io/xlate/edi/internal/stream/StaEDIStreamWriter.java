@@ -205,6 +205,15 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         return location;
     }
 
+    @Override
+    public String getStandard() {
+        if (dialect == null || dialect.getStandard() == null) {
+            throw new IllegalStateException("standard not accessible");
+        }
+
+        return dialect.getStandard();
+    }
+
     private Validator validator() {
         // Do not use the transactionValidator in the period where it may be set/mutated by the user
         return transaction && !transactionSchemaAllowed ? transactionValidator : controlValidator;
