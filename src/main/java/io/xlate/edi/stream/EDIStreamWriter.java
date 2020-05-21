@@ -59,7 +59,8 @@ public interface EDIStreamWriter {
      * Calls to this method are only valid before the interchange is started.
      *
      * @param controlSchema
-     *             the schema instance to use for validation of control structures
+     *            the schema instance to use for validation of control
+     *            structures
      * @throws IllegalStateException
      *             when the writer is not in its initial state
      *
@@ -71,31 +72,47 @@ public interface EDIStreamWriter {
      * <p>
      * Sets the schema to be used for validation of the business transaction for
      * this stream writer. This schema will be used to validate only the
-     * contents of a transaction/message, <em>not including</em> the begin/end control
-     * structures.
+     * contents of a transaction/message, <em>not including</em> the begin/end
+     * control structures.
      * <p>
-     * This method may be called at any time. However, when non-null, the writer will make
-     * use of the transaction schema for output validation. It is the responsibility of the
-     * caller to set the transaction schema to null at the end of the business transaction.
+     * This method may be called at any time. However, when non-null, the writer
+     * will make use of the transaction schema for output validation. It is the
+     * responsibility of the caller to set the transaction schema to null at the
+     * end of the business transaction.
      *
      * @param transactionSchema
-     *             the schema instance to use for validation of business transaction structures
+     *            the schema instance to use for validation of business
+     *            transaction structures
      *
      * @since 1.1
      */
     void setTransactionSchema(Schema transactionSchema);
 
     /**
-     * Return the current location of the writer. If the Location is unknown
-     * the processor should return an implementation of Location that returns -1
-     * for the location values. The location information is only valid until
-     * the next item is written to the output.
+     * Return the current location of the writer. If the Location is unknown the
+     * processor should return an implementation of Location that returns -1 for
+     * the location values. The location information is only valid until the
+     * next item is written to the output.
      *
      * @return current location of the writer
      *
      * @since 1.1
      */
     Location getLocation();
+
+    /**
+     * Get the EDI standard name. Calls to this method are only valid when the
+     * interchange type has been determined, after the full interchange header
+     * segment has been written.
+     *
+     * @return the name of the EDI standard
+     * @throws IllegalStateException
+     *             when the standard has not yet been determined, prior to the
+     *             start of an interchange header segment being fully written
+     *
+     * @since 1.7
+     */
+    String getStandard();
 
     EDIStreamWriter startInterchange() throws EDIStreamException;
 

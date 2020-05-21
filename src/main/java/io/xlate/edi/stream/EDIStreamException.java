@@ -65,8 +65,8 @@ public class EDIStreamException extends Exception {
                 display.append(", element ");
                 display.append(String.valueOf(location.getElementPosition()));
 
-                if (location.getElementOccurrence() > -1) {
-                    display.append("(occurrence ");
+                if (location.getElementOccurrence() > 1) {
+                    display.append(" (occurrence ");
                     display.append(String.valueOf(location.getElementOccurrence()));
                     display.append(')');
                 }

@@ -236,7 +236,7 @@ public class StaEDIStreamReader implements EDIStreamReader {
 
     @Override
     public String getStandard() {
-        if (lexer.getDialect() == null || lexer.getDialect().getStandard() == null) {
+        if (lexer.getDialect() == null) {
             throw new IllegalStateException("standard not accessible");
         }
 

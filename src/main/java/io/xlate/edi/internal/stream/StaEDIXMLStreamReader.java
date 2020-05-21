@@ -226,11 +226,6 @@ final class StaEDIXMLStreamReader implements XMLStreamReader {
                                          this.location);
 
         case ELEMENT_OCCURRENCE_ERROR:
-            throw new XMLStreamException(String.format("Element %s has error %s",
-                                                       ediReader.getText(),
-                                                       ediReader.getErrorType()),
-                                         this.location);
-
         case ELEMENT_DATA_ERROR:
             throw new XMLStreamException(String.format("Element %s has error %s",
                                                        ediReader.getText(),

@@ -17,6 +17,7 @@ package io.xlate.edi.internal.stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -31,6 +32,7 @@ import java.nio.ByteBuffer;
 import java.util.Map;
 
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 import io.xlate.edi.internal.schema.SchemaUtils;
 import io.xlate.edi.schema.EDISchemaException;
@@ -45,6 +47,7 @@ import io.xlate.edi.stream.EDIStreamReader;
 import io.xlate.edi.stream.EDIStreamValidationError;
 import io.xlate.edi.stream.EDIStreamWriter;
 import io.xlate.edi.stream.EDIValidationException;
+import io.xlate.edi.stream.Location;
 
 @SuppressWarnings("resource")
 class StaEDIStreamWriterTest {
@@ -159,6 +162,28 @@ class StaEDIStreamWriterTest {
     }
 
     @Test
+    void testWriteInvalidHeaderElement() throws EDIStreamException {
+        EDIOutputFactory factory = EDIOutputFactory.newFactory();
+        OutputStream stream = new ByteArrayOutputStream(4096);
+        EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
+        writer.startInterchange();
+        writer.writeStartSegment("ISA");
+        writer.writeElement("00").writeElement("           "); // Too long
+        writer.writeElement("00").writeElement("           "); // Too long
+        writer.writeElement("ZZ").writeElement("ReceiverID     ");
+        writer.writeElement("ZZ").writeElement("Sender         ");
+        writer.writeElement("050812");
+        writer.writeElement("1953");
+        writer.writeElement("^");
+        writer.writeElement("00501");
+        writer.writeElement("508121953");
+        writer.writeElement("0");
+        writer.writeElement("P");
+        EDIStreamException thrown = assertThrows(EDIStreamException.class, () -> writer.writeElement(":"));
+        assertEquals("Unexpected header character: 0x002A [*] in segment ISA at position 1, element 15", thrown.getMessage());
+    }
+
+    @Test
     void testWriteStartSegmentIllegal() throws EDIStreamException {
         EDIOutputFactory factory = EDIOutputFactory.newFactory();
         OutputStream stream = new ByteArrayOutputStream(4096);
@@ -218,6 +243,55 @@ class StaEDIStreamWriterTest {
         writer.writeStartElement();
         writer.startComponent();
         assertThrows(IllegalStateException.class, () -> writer.writeStartElement());
+    }
+
+    @Test
+    void testWriteInvalidCharacter() throws EDIStreamException {
+        EDIOutputFactory factory = EDIOutputFactory.newFactory();
+        OutputStream stream = new ByteArrayOutputStream(4096);
+        EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
+        writer.startInterchange();
+        writer.writeStartSegment("ISA");
+        writer.writeStartElement();
+        EDIStreamException thrown = assertThrows(EDIStreamException.class,
+                                                 () -> writer.writeElementData("\u0008\u0010"));
+        assertEquals("Invalid character: 0x0008 in segment ISA at position 1, element 1", thrown.getMessage());
+    }
+
+    @Test
+    void testWriteInvalidCharacterRepeatedComposite() throws EDIStreamException {
+        EDIOutputFactory factory = EDIOutputFactory.newFactory();
+        OutputStream stream = new ByteArrayOutputStream(4096);
+        EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
+        writer.startInterchange();
+        writeHeader(writer);
+        writer.writeStartSegment("FOO");
+        writer.writeElement("BAR1");
+        writer.writeRepeatElement(); // starts new element
+        writer.writeComponent("BAR2");
+        writer.writeComponent("BAR3");
+        EDIStreamException thrown = assertThrows(EDIStreamException.class,
+                                                 () -> writer.writeComponent("\u0008\u0010"));
+        assertEquals("Invalid character: 0x0008 in segment FOO at position 2, element 1 (occurrence 2), component 3", thrown.getMessage());
+        Location l = thrown.getLocation();
+        assertEquals("FOO", l.getSegmentTag());
+        assertEquals(2, l.getSegmentPosition());
+        assertEquals(1, l.getElementPosition());
+        assertEquals(2, l.getElementOccurrence());
+        assertEquals(3, l.getComponentPosition());
+    }
+
+    @Test
+    void testWriteInvalidSegmentTag() throws EDIStreamException {
+        EDIOutputFactory factory = EDIOutputFactory.newFactory();
+        OutputStream stream = new ByteArrayOutputStream(4096);
+        EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
+        writer.startInterchange();
+        writeHeader(writer);
+        writer.writeStartSegment("G");
+        EDIStreamException thrown = assertThrows(EDIStreamException.class,
+                                                 () -> writer.writeElement("FOO"));
+        assertEquals("Invalid state: INVALID; output 0x002A", thrown.getMessage());
     }
 
     @Test
@@ -358,6 +432,21 @@ class StaEDIStreamWriterTest {
     }
 
     @Test
+    void testWriteElementDataCharInvalidBoundaries() throws EDIStreamException {
+        EDIOutputFactory factory = EDIOutputFactory.newFactory();
+        OutputStream stream = new ByteArrayOutputStream(4096);
+        EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
+        writer.startInterchange();
+        writeHeader(writer);
+        writer.writeStartSegment("GS");
+        writer.writeStartElement();
+        assertThrows(IndexOutOfBoundsException.class, () -> writer.writeElementData(new char[] { 'F', 'A' }, -1, 2));
+        assertThrows(IndexOutOfBoundsException.class, () -> writer.writeElementData(new char[] { 'F', 'A' }, 2, 1));
+        assertThrows(IndexOutOfBoundsException.class, () -> writer.writeElementData(new char[] { 'F', 'A' }, 0, 3));
+        assertThrows(IllegalArgumentException.class, () -> writer.writeElementData(new char[] { 'F', 'A' }, 0, -1));
+    }
+
+    @Test
     void testWriteElementDataCharArrayIllegal() throws EDIStreamException {
         EDIOutputFactory factory = EDIOutputFactory.newFactory();
         OutputStream stream = new ByteArrayOutputStream(4096);
@@ -388,6 +477,29 @@ class StaEDIStreamWriterTest {
         writer.endElement();
         writer.writeEndSegment();
         assertEquals("BIN*8*\n\u0000\u0001\u0002\u0003\u0004\u0005\t~", stream.toString());
+    }
+
+    @Test
+    void testWriteBinaryDataInputStreamIOException() throws Exception {
+        EDIOutputFactory factory = EDIOutputFactory.newFactory();
+        ByteArrayOutputStream stream = new ByteArrayOutputStream(4096);
+        EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
+        InputStream binaryStream = Mockito.mock(InputStream.class);
+        IOException ioException = new IOException();
+        Mockito.when(binaryStream.read()).thenThrow(ioException);
+        writer.startInterchange();
+        writeHeader(writer);
+        stream.reset();
+        writer.writeStartSegment("BIN");
+        writer.writeStartElement();
+        writer.writeElementData("4");
+        writer.endElement();
+        writer.writeStartElementBinary();
+        EDIStreamException thrown = assertThrows(EDIStreamException.class,
+                                                 () -> writer.writeBinaryData(binaryStream));
+        assertEquals("Exception writing binary element data in segment BIN at position 2, element 2",
+                     thrown.getMessage());
+        assertSame(ioException, thrown.getCause());
     }
 
     @Test
@@ -1055,19 +1167,42 @@ class StaEDIStreamWriterTest {
                     break;
                 }
 
-                assertEquals(reader.getLocation().getSegmentPosition(), writer.getLocation().getSegmentPosition(), () ->
-                        "Segment position mismatch");
-                assertEquals(reader.getLocation().getElementPosition(), writer.getLocation().getElementPosition(), () ->
-                        "Element position mismatch");
-                assertEquals(reader.getLocation().getElementOccurrence(), writer.getLocation().getElementOccurrence(), () ->
-                        "Element occurrence mismatch");
-                assertEquals(reader.getLocation().getComponentPosition(), writer.getLocation().getComponentPosition(), () ->
-                        "Component position mismatch");
+                assertEquals(reader.getLocation().getSegmentPosition(),
+                             writer.getLocation().getSegmentPosition(),
+                             () -> "Segment position mismatch");
+                assertEquals(reader.getLocation().getElementPosition(),
+                             writer.getLocation().getElementPosition(),
+                             () -> "Element position mismatch");
+                assertEquals(reader.getLocation().getElementOccurrence(),
+                             writer.getLocation().getElementOccurrence(),
+                             () -> "Element occurrence mismatch");
+                assertEquals(reader.getLocation().getComponentPosition(),
+                             writer.getLocation().getComponentPosition(),
+                             () -> "Component position mismatch");
             }
         } finally {
             reader.close();
         }
 
         assertEquals(expected.toString().trim(), result.toString().trim());
+    }
+
+    @Test
+    void testGetStandardNullDialect() {
+        EDIOutputFactory factory = EDIOutputFactory.newFactory();
+        OutputStream stream = new ByteArrayOutputStream(1);
+        EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
+        IllegalStateException thrown = assertThrows(IllegalStateException.class, () -> writer.getStandard());
+        assertEquals("standard not accessible", thrown.getMessage());
+    }
+
+    @Test
+    void testGetStandardX12() throws EDIStreamException {
+        EDIOutputFactory factory = EDIOutputFactory.newFactory();
+        OutputStream stream = new ByteArrayOutputStream(1);
+        EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
+        writer.startInterchange();
+        writer.writeStartSegment("ISA");
+        assertEquals(EDIStreamConstants.Standards.X12, writer.getStandard());
     }
 }
