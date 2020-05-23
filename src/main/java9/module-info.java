@@ -1,6 +1,5 @@
 module io.xlate.staedi {
     requires java.base;
-    requires java.desktop;
     requires java.logging;
     requires transitive java.xml;
 

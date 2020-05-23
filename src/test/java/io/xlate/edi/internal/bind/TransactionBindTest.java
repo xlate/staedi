@@ -2,7 +2,6 @@ package io.xlate.edi.internal.bind;
 
 import static org.junit.jupiter.api.Assertions.fail;
 
-import java.beans.Introspector;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.lang.annotation.Annotation;
@@ -101,7 +100,7 @@ class TransactionBindTest {
 
         if (rootElement != null) {
             if ("##default".equals(rootElement.name())) {
-                localName = Introspector.decapitalize(type.getSimpleName());
+                localName = decapitalize(type.getSimpleName());
             } else {
                 localName = rootElement.name();
             }
@@ -115,6 +114,34 @@ class TransactionBindTest {
         }
 
         throw new IllegalStateException("Missing XmlRootElement annotation on root class");
+    }
+
+    /**
+     * Utility method to take a string and convert it to normal Java variable
+     * name capitalization.  This normally means converting the first
+     * character from upper case to lower case, but in the (unusual) special
+     * case when there is more than one character and both the first and
+     * second characters are upper case, we leave it alone.
+     * <p>
+     * Thus "FooBah" becomes "fooBah" and "X" becomes "x", but "URL" stays
+     * as "URL".
+     *
+     * COPYIED FROM java.beans.Introspector
+     *
+     * @param  name The string to be decapitalized.
+     * @return  The decapitalized version of the string.
+     */
+    static String decapitalize(String name) {
+        if (name == null || name.length() == 0) {
+            return name;
+        }
+        if (name.length() > 1 && Character.isUpperCase(name.charAt(1)) &&
+                        Character.isUpperCase(name.charAt(0))){
+            return name;
+        }
+        char chars[] = name.toCharArray();
+        chars[0] = Character.toLowerCase(chars[0]);
+        return new String(chars);
     }
 
     Stream<Element> elementStream(NodeList nodes) {

@@ -471,7 +471,7 @@ class StaEDISchemaFactoryTest {
     }
 
     @Test
-    void testAnySegmentTypeInvalid() throws EDISchemaException {
+    void testAnySegmentTypeInvalid() {
         SchemaFactory factory = SchemaFactory.newFactory();
         InputStream stream = new ByteArrayInputStream((""
                 + "<schema xmlns='" + StaEDISchemaFactory.XMLNS_V3 + "'>"
