@@ -24,7 +24,6 @@ import static org.junit.jupiter.api.Assertions.fail;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -158,6 +157,7 @@ class StaEDIStreamWriterTest {
         EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
         writer.startInterchange();
         writer.writeStartSegment("ISA");
+        writer.flush();
         assertEquals("ISA", stream.toString());
     }
 
@@ -203,6 +203,7 @@ class StaEDIStreamWriterTest {
         writer.writeStartSegment("ISA");
         writer.writeStartElement().writeElementData("E1").endElement();
         writer.writeEndSegment();
+        writer.flush();
         assertEquals("ISA*E1~", stream.toString());
     }
 
@@ -230,6 +231,7 @@ class StaEDIStreamWriterTest {
               .endElement()
               .writeStartElement()
               .endElement();
+        writer.flush();
         assertEquals("ISA****", stream.toString());
     }
 
@@ -301,9 +303,11 @@ class StaEDIStreamWriterTest {
         EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
         writer.startInterchange();
         writeHeader(writer);
+        writer.flush();
         stream.reset();
         writer.writeStartSegment("BIN");
         writer.writeStartElementBinary().writeEndSegment();
+        writer.flush();
         assertEquals("BIN*~", stream.toString());
     }
 
@@ -330,6 +334,7 @@ class StaEDIStreamWriterTest {
               .endComponent()
               .startComponent()
               .writeEndSegment();
+        writer.flush();
         assertEquals("ISA*:~", stream.toString());
     }
 
@@ -352,6 +357,7 @@ class StaEDIStreamWriterTest {
         EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
         writer.startInterchange();
         writeHeader(writer);
+        writer.flush();
         stream.reset();
         writer.writeStartSegment("SEG");
         writer.writeStartElement()
@@ -359,6 +365,7 @@ class StaEDIStreamWriterTest {
               .writeRepeatElement()
               .writeElementData("R2")
               .writeEndSegment();
+        writer.flush();
         assertEquals("SEG*R1^R2~", stream.toString());
     }
 
@@ -374,6 +381,7 @@ class StaEDIStreamWriterTest {
         writer.writeEmptyElement();
         writer.writeEmptyElement();
         writer.writeEndSegment();
+        writer.flush();
         assertEquals("ISA****~", stream.toString());
     }
 
@@ -390,6 +398,7 @@ class StaEDIStreamWriterTest {
         writer.writeEmptyComponent();
         writer.writeEmptyComponent();
         writer.writeEndSegment();
+        writer.flush();
         assertEquals("ISA*:::~", stream.toString());
     }
 
@@ -403,6 +412,7 @@ class StaEDIStreamWriterTest {
         writer.writeStartElement();
         writer.writeElementData("TEST-ELEMENT");
         writer.writeEndSegment();
+        writer.flush();
         assertEquals("ISA*TEST-ELEMENT~", stream.toString());
     }
 
@@ -428,6 +438,7 @@ class StaEDIStreamWriterTest {
         writer.writeStartElement();
         writer.writeElementData(new char[] { 'C', 'H', 'A', 'R', 'S' }, 0, 5);
         writer.writeEndSegment();
+        writer.flush();
         assertEquals("ISA*CHARS~", stream.toString());
     }
 
@@ -467,6 +478,7 @@ class StaEDIStreamWriterTest {
         InputStream binaryStream = new ByteArrayInputStream(binary);
         writer.startInterchange();
         writeHeader(writer);
+        writer.flush();
         stream.reset();
         writer.writeStartSegment("BIN");
         writer.writeStartElement();
@@ -476,6 +488,7 @@ class StaEDIStreamWriterTest {
         writer.writeBinaryData(binaryStream);
         writer.endElement();
         writer.writeEndSegment();
+        writer.flush();
         assertEquals("BIN*8*\n\u0000\u0001\u0002\u0003\u0004\u0005\t~", stream.toString());
     }
 
@@ -510,6 +523,7 @@ class StaEDIStreamWriterTest {
         byte[] binary = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A' };
         writer.startInterchange();
         writeHeader(writer);
+        writer.flush();
         stream.reset();
         writer.writeStartSegment("BIN");
         writer.writeStartElement();
@@ -519,6 +533,7 @@ class StaEDIStreamWriterTest {
         writer.writeBinaryData(binary, 0, binary.length);
         writer.endElement();
         writer.writeEndSegment();
+        writer.flush();
         assertEquals("BIN*11*0123456789A~", stream.toString());
     }
 
@@ -531,6 +546,7 @@ class StaEDIStreamWriterTest {
         ByteBuffer buffer = ByteBuffer.wrap(binary);
         writer.startInterchange();
         writeHeader(writer);
+        writer.flush();
         stream.reset();
         writer.writeStartSegment("BIN");
         writer.writeStartElement();
@@ -540,6 +556,7 @@ class StaEDIStreamWriterTest {
         writer.writeBinaryData(buffer);
         writer.endElement();
         writer.writeEndSegment();
+        writer.flush();
         assertEquals("BIN*14*BUSTMYBUFFERS\n~", stream.toString());
     }
 
@@ -547,19 +564,17 @@ class StaEDIStreamWriterTest {
     void testInputEquivalenceX12() throws Exception {
         EDIInputFactory inputFactory = EDIInputFactory.newFactory();
         final ByteArrayOutputStream expected = new ByteArrayOutputStream(16384);
+        final InputStream delegate = getClass().getResourceAsStream("/x12/sample275_with_HL7_valid_BIN01.edi");
 
         InputStream source = new InputStream() {
-            final InputStream delegate;
-            {
-                delegate = getClass().getResourceAsStream("/x12/sample275_with_HL7_valid_BIN01.edi");
-            }
-
             @Override
             public int read() throws IOException {
                 int value = delegate.read();
 
                 if (value != -1) {
                     expected.write(value);
+                    System.out.write(value);
+                    System.out.flush();
                     return value;
                 }
 
@@ -971,6 +986,7 @@ class StaEDIStreamWriterTest {
             reader.close();
         }
 
+        System.out.println(expected.toString());
         assertEquals(expected.toString().trim(), result.toString().trim());
     }
 
@@ -1040,7 +1056,7 @@ class StaEDIStreamWriterTest {
         Schema transaction = schemaFactory.createSchema(getClass().getResource("/x12/EDISchema999.xml"));
         final InputStream delegate = new BufferedInputStream(getClass().getResourceAsStream("/x12/simple999.edi"));
 
-        InputStream source = new FilterInputStream(delegate) {
+        InputStream source = new InputStream() {
             @Override
             public int read() throws IOException {
                 int value = delegate.read();
@@ -1204,5 +1220,23 @@ class StaEDIStreamWriterTest {
         writer.startInterchange();
         writer.writeStartSegment("ISA");
         assertEquals(EDIStreamConstants.Standards.X12, writer.getStandard());
+    }
+
+    @Test
+    void testWriteAlternateEncodedElement() throws EDIStreamException {
+        EDIOutputFactory factory = EDIOutputFactory.newFactory();
+        ByteArrayOutputStream stream = new ByteArrayOutputStream(4096);
+        EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
+
+        writer.startInterchange();
+        writeHeader(writer);
+        writer.flush();
+        stream.reset();
+
+        writer.writeStartSegment("SEG");
+        writer.writeElement("BÜTTNER")
+              .writeEndSegment();
+        writer.flush();
+        assertEquals("SEG*BÜTTNER~", stream.toString());
     }
 }

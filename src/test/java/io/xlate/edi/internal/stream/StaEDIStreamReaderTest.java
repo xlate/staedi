@@ -181,6 +181,32 @@ class StaEDIStreamReaderTest implements ConstantsTest {
     }
 
     @Test
+    void testAlternateEncodingEDIFACT() throws EDIStreamException {
+        EDIInputFactory factory = EDIInputFactory.newFactory();
+        InputStream stream = getClass().getResourceAsStream("/EDIFACT/invoic_d97b.edi");
+        EDIStreamReader reader = factory.createEDIStreamReader(stream);
+        int matches = 0;
+
+        while (reader.hasNext()) {
+            switch (reader.next()) {
+            case ELEMENT_DATA:
+                Location location = reader.getLocation();
+                if ("NAD".equals(location.getSegmentTag())
+                        && location.getSegmentPosition() == 7
+                        && location.getElementPosition() == 4) {
+                    assertEquals("BÜTTNER WIDGET COMPANY", reader.getText());
+                    matches++;
+                }
+                break;
+            default:
+                break;
+            }
+        }
+
+        assertEquals(1, matches);
+    }
+
+    @Test
     void testNext() throws EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = getClass().getResourceAsStream("/x12/simple997.edi");

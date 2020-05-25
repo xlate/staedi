@@ -18,6 +18,7 @@ package io.xlate.edi.internal.stream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.CharBuffer;
+import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -45,9 +46,6 @@ public class StaEDIStreamReader implements EDIStreamReader {
 
     private static final Logger LOGGER = Logger.getLogger(StaEDIStreamReader.class.getName());
 
-    private final InputStream stream;
-    @SuppressWarnings("unused")
-    private final String encoding;
     private Schema controlSchema;
     private final Map<String, Object> properties;
     private final EDIReporter reporter;
@@ -60,17 +58,16 @@ public class StaEDIStreamReader implements EDIStreamReader {
 
     public StaEDIStreamReader(
             InputStream stream,
-            String encoding,
+            Charset charset,
             Schema schema,
             Map<String, Object> properties,
             EDIReporter reporter) {
-        this.stream = stream;
-        this.encoding = encoding;
+
         this.controlSchema = schema;
         this.properties = new HashMap<>(properties);
         this.reporter = reporter;
         this.proxy = new ProxyEventHandler(location, this.controlSchema);
-        this.lexer = new Lexer(this.stream, proxy, location);
+        this.lexer = new Lexer(stream, charset, proxy, location);
     }
 
     private void ensureOpen() {

@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -196,7 +197,7 @@ class LexerTest {
         element = null;
 
         final StaEDIStreamLocation location = new StaEDIStreamLocation();
-        final Lexer lexer = new Lexer(stream, handler, location);
+        final Lexer lexer = new Lexer(stream, StandardCharsets.UTF_8, handler, location);
 
         lexer.parse();
         assertTrue(interchangeStarted, "Interchange not started");
@@ -217,7 +218,7 @@ class LexerTest {
         element = null;
 
         final StaEDIStreamLocation location = new StaEDIStreamLocation();
-        final Lexer lexer = new Lexer(stream, handler, location);
+        final Lexer lexer = new Lexer(stream, StandardCharsets.UTF_8, handler, location);
 
         lexer.parse();
         assertTrue(interchangeStarted, "Interchange not started");
@@ -234,7 +235,7 @@ class LexerTest {
         InputStream stream = getClass().getResourceAsStream("/x12/simple997.edi");
         TestLexerEventHandler eventHandler = new TestLexerEventHandler();
         final StaEDIStreamLocation location = new StaEDIStreamLocation();
-        final Lexer lexer = new Lexer(stream, eventHandler, location);
+        final Lexer lexer = new Lexer(stream, StandardCharsets.UTF_8, eventHandler, location);
         String last;
         int s = -1;
 
@@ -262,7 +263,7 @@ class LexerTest {
         InputStream stream = getClass().getResourceAsStream("/EDIFACT/invoic_d97b_una.edi");
         TestLexerEventHandler eventHandler = new TestLexerEventHandler();
         final StaEDIStreamLocation location = new StaEDIStreamLocation();
-        final Lexer lexer = new Lexer(stream, eventHandler, location);
+        final Lexer lexer = new Lexer(stream, StandardCharsets.UTF_8, eventHandler, location);
         String last;
         int s = -1;
 
@@ -289,7 +290,7 @@ class LexerTest {
         InputStream stream = getClass().getResourceAsStream("/EDIFACT/invoic_d97b.edi");
         TestLexerEventHandler eventHandler = new TestLexerEventHandler();
         final StaEDIStreamLocation location = new StaEDIStreamLocation();
-        final Lexer lexer = new Lexer(stream, eventHandler, location);
+        final Lexer lexer = new Lexer(stream, StandardCharsets.UTF_8, eventHandler, location);
         String last;
         int s = -1;
 
@@ -316,7 +317,7 @@ class LexerTest {
         InputStream stream = new ByteArrayInputStream("ISA*00?          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~".getBytes());
         TestLexerEventHandler eventHandler = new TestLexerEventHandler();
         final StaEDIStreamLocation location = new StaEDIStreamLocation();
-        final Lexer lexer = new Lexer(stream, eventHandler, location);
+        final Lexer lexer = new Lexer(stream, StandardCharsets.UTF_8, eventHandler, location);
         EDIException thrown = assertThrows(EDIException.class, lexer::parse);
         assertTrue(thrown.getMessage().contains("EDIE003"));
     }
@@ -326,7 +327,7 @@ class LexerTest {
         InputStream stream = new ByteArrayInputStream("ISA*00*\u0008         *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~".getBytes());
         TestLexerEventHandler eventHandler = new TestLexerEventHandler();
         final StaEDIStreamLocation location = new StaEDIStreamLocation();
-        final Lexer lexer = new Lexer(stream, eventHandler, location);
+        final Lexer lexer = new Lexer(stream, StandardCharsets.UTF_8, eventHandler, location);
         EDIException thrown = assertThrows(EDIException.class, lexer::parse);
         assertTrue(thrown.getMessage().contains("EDIE004"));
     }
@@ -336,7 +337,7 @@ class LexerTest {
         InputStream stream = new ByteArrayInputStream("ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~".getBytes());
         TestLexerEventHandler eventHandler = new TestLexerEventHandler();
         final StaEDIStreamLocation location = new StaEDIStreamLocation();
-        final Lexer lexer = new Lexer(stream, eventHandler, location);
+        final Lexer lexer = new Lexer(stream, StandardCharsets.UTF_8, eventHandler, location);
         for (int i = 0; i < 19; i++) {
             lexer.parse(); // Interchange start through end of ISA
         }
@@ -344,4 +345,24 @@ class LexerTest {
         EDIException thrown = assertThrows(EDIException.class, lexer::parse);
         assertTrue(thrown.getMessage().contains("EDIE005"));
     }
+
+
+    @Test
+    void testIncompleteInputTextEndingWithDoubleByteChar() throws Exception {
+        byte[] data1 = "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~GS*".getBytes();
+        byte[] data2 = new byte[data1.length + 1];
+        System.arraycopy(data1, 0, data2, 0, data1.length);
+        data2[data2.length - 1] = (byte) 195;
+        InputStream stream = new ByteArrayInputStream(data2);
+        TestLexerEventHandler eventHandler = new TestLexerEventHandler();
+        final StaEDIStreamLocation location = new StaEDIStreamLocation();
+        final Lexer lexer = new Lexer(stream, StandardCharsets.UTF_8, eventHandler, location);
+        for (int i = 0; i < 20; i++) {
+            lexer.parse(); // Interchange start through end of ISA + GS start tag
+        }
+
+        EDIException thrown = assertThrows(EDIException.class, lexer::parse);
+        assertTrue(thrown.getMessage().contains("EDIE005"));
+    }
+
 }
