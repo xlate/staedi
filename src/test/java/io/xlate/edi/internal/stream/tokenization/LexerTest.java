@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.MalformedInputException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
@@ -346,7 +347,6 @@ class LexerTest {
         assertTrue(thrown.getMessage().contains("EDIE005"));
     }
 
-
     @Test
     void testIncompleteInputTextEndingWithDoubleByteChar() throws Exception {
         byte[] data1 = "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~GS*".getBytes();
@@ -365,4 +365,16 @@ class LexerTest {
         assertTrue(thrown.getMessage().contains("EDIE005"));
     }
 
+    @Test
+    void testUnmappabledCharacter() throws EDIException, IOException {
+        InputStream stream = new ByteArrayInputStream("ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~😀".getBytes());
+        TestLexerEventHandler eventHandler = new TestLexerEventHandler();
+        final StaEDIStreamLocation location = new StaEDIStreamLocation();
+        final Lexer lexer = new Lexer(stream, StandardCharsets.US_ASCII, eventHandler, location);
+        for (int i = 0; i < 19; i++) {
+            lexer.parse(); // Interchange start through end of ISA
+        }
+        MalformedInputException thrown = assertThrows(MalformedInputException.class, lexer::parse);
+        assertEquals("Input length = 1", thrown.getMessage());
+    }
 }

@@ -171,13 +171,15 @@ public class CharacterSet {
     };
 
     private final CharacterClass[] list;
+    private final int size;
 
     public CharacterSet() {
         list = Arrays.copyOf(prototype, prototype.length);
+        size = list.length;
     }
 
     public CharacterClass getClass(int character) {
-        return (character < 128) ? list[character] : _OTHER;
+        return (character < size) ? list[character] : _OTHER;
     }
 
     public void reset() {
@@ -185,7 +187,7 @@ public class CharacterSet {
     }
 
     public void setClass(int character, CharacterClass clazz) {
-        if (character < 128) {
+        if (character < size) {
             list[character] = clazz;
         } else {
             throw new ArrayIndexOutOfBoundsException(character);
@@ -213,7 +215,7 @@ public class CharacterSet {
     }
 
     public boolean isDelimiter(int character) {
-        if (character < 128) {
+        if (character < size) {
             switch (list[character]) {
             case ELEMENT_DELIMITER:
             case ELEMENT_REPEATER:
@@ -229,13 +231,13 @@ public class CharacterSet {
     }
 
     public boolean isRelease(int character) {
-        if (character >= 128) {
+        if (character >= size) {
             return false;
         }
         return list[character] == CharacterClass.RELEASE_CHARACTER;
     }
 
     public static boolean isValid(int character) {
-        return character >= 128 || prototype[character] != _INVLD;
+        return character >= prototype.length || prototype[character] != _INVLD;
     }
 }

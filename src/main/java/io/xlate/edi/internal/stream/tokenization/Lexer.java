@@ -140,81 +140,6 @@ public class Lexer {
         };
     }
 
-    int readCharacter() throws IOException {
-        int next = stream.read();
-
-        if (next < 0) {
-            return -1;
-        }
-
-        boolean endOfInput = false;
-
-        readCharBuf.clear();
-        readByteBuf.clear();
-        readByteBuf.put((byte) next);
-        int position = 0;
-
-        for (;;) {
-            readByteBuf.flip();
-            CoderResult cr = decoder.decode(readByteBuf, readCharBuf, endOfInput);
-
-            if (cr.isUnderflow()) {
-                if (endOfInput) {
-                    break;
-                }
-
-                if (!readCharBuf.hasRemaining()) {
-                    // Single character successfully written to the CharBuffer
-                    break;
-                }
-
-                if (readCharBuf.position() > 0 && stream.available() <= 0) {
-                    break; // Block at most once
-                }
-
-                next = stream.read();
-
-                if (next < 0) {
-                    endOfInput = true;
-
-                    if ((readCharBuf.position() == 0) && (!readByteBuf.hasRemaining())) {
-                        break;
-                    }
-
-                    decoder.reset();
-                } else {
-                    readByteBuf.limit(readByteBuf.capacity());
-                    readByteBuf.position(++position);
-                    readByteBuf.put((byte) next);
-                }
-
-                continue;
-            }
-
-            if (cr.isOverflow()) {
-                assert readCharBuf.position() > 0;
-                break;
-            }
-
-            cr.throwException();
-        }
-
-        if (endOfInput) {
-            // ## Need to flush decoder
-            decoder.reset();
-        }
-
-        if (readCharBuf.position() == 0) {
-            // Nothing was written to the CharBuffer
-            if (endOfInput) {
-                return -1;
-            }
-            assert false;
-        }
-
-        return readChar[0];
-    }
-
     public Dialect getDialect() {
         return dialect;
     }
@@ -362,6 +287,60 @@ public class Lexer {
         }
     }
 
+    int readCharacter() throws IOException {
+        int next = stream.read();
+
+        if (next < 0) {
+            return -1;
+        }
+
+        boolean endOfInput = false;
+        boolean complete = false;
+        int position = 0;
+
+        readCharBuf.clear();
+        readByteBuf.clear();
+        readByteBuf.put((byte) next);
+
+        do {
+            readByteBuf.flip();
+            CoderResult cr = decoder.decode(readByteBuf, readCharBuf, endOfInput);
+
+            if (!cr.isUnderflow()) {
+                cr.throwException();
+            }
+
+            if (endOfInput) {
+                complete = true;
+            } else if (readCharBuf.position() > 0) {
+                // Single character successfully written to the CharBuffer
+                complete = true;
+            } else {
+                next = stream.read();
+
+                if (next < 0) {
+                    endOfInput = true;
+                    decoder.reset();
+                } else {
+                    readByteBuf.limit(readByteBuf.capacity());
+                    readByteBuf.position(++position);
+                    readByteBuf.put((byte) next);
+                }
+            }
+        } while (!complete);
+
+        if (endOfInput) {
+            decoder.reset();
+        }
+
+        if (readCharBuf.position() == 0 && endOfInput) {
+            // Nothing was written to the CharBuffer
+            return -1;
+        }
+
+        return readChar[0];
+    }
+
     void handleStateHeaderTag(int input) {
         buffer.put((char) input);
         dialect.appendHeader(characters, (char) input);
@@ -402,7 +381,7 @@ public class Lexer {
         }
     }
 
-    private boolean dialectConfirmed(State confirmed) throws IOException, EDIException {
+    private boolean dialectConfirmed(State confirmed) throws EDIException {
         if (dialect.isConfirmed()) {
             state = confirmed;
             nextEvent();
