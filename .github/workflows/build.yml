@@ -73,7 +73,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - run: |
-          git fetch --prune --unshallow --tags
+          git fetch --prune --unshallow --tags --force
 
       - uses: actions/setup-java@v1.3.0
         with:
