@@ -18,7 +18,11 @@ package io.xlate.edi.internal.stream.tokenization;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetDecoder;
+import java.nio.charset.CoderResult;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.logging.Logger;
@@ -51,6 +55,11 @@ public class Lexer {
     private final Deque<Integer> lengthQueue = new ArrayDeque<>(20);
 
     private final InputStream stream;
+    private CharsetDecoder decoder;
+    private char[] readChar = new char[1];
+    private CharBuffer readCharBuf = CharBuffer.wrap(readChar);
+    private ByteBuffer readByteBuf = ByteBuffer.allocate(4);
+
     private final StaEDIStreamLocation location;
 
     private CharacterSet characters = new CharacterSet();
@@ -69,12 +78,14 @@ public class Lexer {
     private Notifier en;
     private Notifier bn;
 
-    public Lexer(InputStream stream, EventHandler handler, StaEDIStreamLocation location) {
+    public Lexer(InputStream stream, Charset charset, EventHandler handler, StaEDIStreamLocation location) {
         if (stream.markSupported()) {
             this.stream = stream;
         } else {
             this.stream = new BufferedInputStream(stream);
         }
+
+        this.decoder = charset.newDecoder();
 
         this.location = location;
 
@@ -163,7 +174,7 @@ public class Lexer {
         int input = 0;
         boolean eventsReady = false;
 
-        while (!eventsReady && (input = stream.read()) > -1) {
+        while (!eventsReady && (input = readCharacter()) > -1) {
             location.incrementOffset(input);
 
             CharacterClass clazz = characters.getClass(input);
@@ -276,6 +287,60 @@ public class Lexer {
         }
     }
 
+    int readCharacter() throws IOException {
+        int next = stream.read();
+
+        if (next < 0) {
+            return -1;
+        }
+
+        boolean endOfInput = false;
+        boolean complete = false;
+        int position = 0;
+
+        readCharBuf.clear();
+        readByteBuf.clear();
+        readByteBuf.put((byte) next);
+
+        do {
+            readByteBuf.flip();
+            CoderResult cr = decoder.decode(readByteBuf, readCharBuf, endOfInput);
+
+            if (!cr.isUnderflow()) {
+                cr.throwException();
+            }
+
+            if (endOfInput) {
+                complete = true;
+            } else if (readCharBuf.position() > 0) {
+                // Single character successfully written to the CharBuffer
+                complete = true;
+            } else {
+                next = stream.read();
+
+                if (next < 0) {
+                    endOfInput = true;
+                    decoder.reset();
+                } else {
+                    readByteBuf.limit(readByteBuf.capacity());
+                    readByteBuf.position(++position);
+                    readByteBuf.put((byte) next);
+                }
+            }
+        } while (!complete);
+
+        if (endOfInput) {
+            decoder.reset();
+        }
+
+        if (readCharBuf.position() == 0 && endOfInput) {
+            // Nothing was written to the CharBuffer
+            return -1;
+        }
+
+        return readChar[0];
+    }
+
     void handleStateHeaderTag(int input) {
         buffer.put((char) input);
         dialect.appendHeader(characters, (char) input);
@@ -292,7 +357,6 @@ public class Lexer {
     }
 
     void handleStateInterchangeCandidate(int input) throws EDIException {
-        stream.mark(500);
         buffer.put((char) input);
         final char[] header = buffer.array();
         final int length = buffer.position();
@@ -317,13 +381,12 @@ public class Lexer {
         }
     }
 
-    private boolean dialectConfirmed(State confirmed) throws IOException, EDIException {
+    private boolean dialectConfirmed(State confirmed) throws EDIException {
         if (dialect.isConfirmed()) {
             state = confirmed;
             nextEvent();
             return true;
         } else if (dialect.isRejected()) {
-            stream.reset();
             buffer.clear();
             clearQueues();
             dialect = null;

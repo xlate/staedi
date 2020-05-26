@@ -16,9 +16,9 @@
 package io.xlate.edi.internal.stream;
 
 import java.io.InputStream;
-import java.util.HashSet;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Objects;
-import java.util.Set;
 
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
@@ -32,18 +32,12 @@ import io.xlate.edi.stream.EDIStreamReader;
 
 public class StaEDIInputFactory extends EDIInputFactory {
 
-    private static final String DEFAULT_ENCODING = "US-ASCII";
-
-    private final Set<String> supportedCharsets;
     private EDIReporter reporter;
 
     public StaEDIInputFactory() {
         supportedProperties.add(EDI_VALIDATE_CONTROL_STRUCTURE);
         supportedProperties.add(EDI_VALIDATE_CONTROL_CODE_VALUES);
         supportedProperties.add(XML_DECLARE_TRANSACTION_XMLNS);
-
-        supportedCharsets = new HashSet<>();
-        supportedCharsets.add(DEFAULT_ENCODING);
     }
 
     @Override
@@ -58,7 +52,7 @@ public class StaEDIInputFactory extends EDIInputFactory {
 
     @Override
     public EDIStreamReader createEDIStreamReader(InputStream stream, Schema schema) {
-        return new StaEDIStreamReader(stream, DEFAULT_ENCODING, schema, properties, getEDIReporter());
+        return new StaEDIStreamReader(stream, StandardCharsets.UTF_8, schema, properties, getEDIReporter());
     }
 
     @SuppressWarnings("resource")
@@ -66,8 +60,8 @@ public class StaEDIInputFactory extends EDIInputFactory {
     public EDIStreamReader createEDIStreamReader(InputStream stream, String encoding, Schema schema) throws EDIStreamException {
         Objects.requireNonNull(stream);
 
-        if (supportedCharsets.contains(encoding)) {
-            return new StaEDIStreamReader(stream, encoding, schema, properties, getEDIReporter());
+        if (Charset.isSupported(encoding)) {
+            return new StaEDIStreamReader(stream, Charset.forName(encoding), schema, properties, getEDIReporter());
         }
 
         throw new EDIStreamException("Unsupported encoding: " + encoding);

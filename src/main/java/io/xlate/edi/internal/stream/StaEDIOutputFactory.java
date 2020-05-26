@@ -16,8 +16,8 @@
 package io.xlate.edi.internal.stream;
 
 import java.io.OutputStream;
-import java.util.HashSet;
-import java.util.Set;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import javax.xml.stream.XMLStreamWriter;
 
@@ -28,14 +28,7 @@ import io.xlate.edi.stream.EDIStreamWriter;
 
 public class StaEDIOutputFactory extends EDIOutputFactory {
 
-    private static final String DEFAULT_ENCODING = "US-ASCII";
-
-    private final Set<String> supportedCharsets;
-
     public StaEDIOutputFactory() {
-        supportedCharsets = new HashSet<>();
-        supportedCharsets.add(DEFAULT_ENCODING);
-
         supportedProperties.add(EDIStreamConstants.Delimiters.SEGMENT);
         supportedProperties.add(EDIStreamConstants.Delimiters.DATA_ELEMENT);
         supportedProperties.add(EDIStreamConstants.Delimiters.COMPONENT_ELEMENT);
@@ -49,13 +42,13 @@ public class StaEDIOutputFactory extends EDIOutputFactory {
 
     @Override
     public EDIStreamWriter createEDIStreamWriter(OutputStream stream) {
-        return new StaEDIStreamWriter(stream, DEFAULT_ENCODING, properties);
+        return new StaEDIStreamWriter(stream, StandardCharsets.UTF_8, properties);
     }
 
     @Override
     public EDIStreamWriter createEDIStreamWriter(OutputStream stream, String encoding) throws EDIStreamException {
-        if (supportedCharsets.contains(encoding)) {
-            return new StaEDIStreamWriter(stream, encoding, properties);
+        if (Charset.isSupported(encoding)) {
+            return new StaEDIStreamWriter(stream, Charset.forName(encoding), properties);
         }
         throw new EDIStreamException("Unsupported encoding: " + encoding);
     }

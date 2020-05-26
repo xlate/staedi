@@ -40,7 +40,7 @@ public abstract class EDIOutputFactory extends PropertySupport {
      * Create a new EDIStreamWriter that writes to a stream
      *
      * @param stream
-     *            - the stream to write to
+     *            {@link OutputStream} to which the EDI data will be written
      * @return the writer instance
      */
     public abstract EDIStreamWriter createEDIStreamWriter(OutputStream stream);
@@ -49,24 +49,29 @@ public abstract class EDIOutputFactory extends PropertySupport {
      * Create a new EDIStreamWriter that writes to a stream
      *
      * @param stream
-     *            - the stream to write to
+     *            {@link OutputStream} to which the EDI data will be written
      * @param encoding
-     *            - the encoding to use
+     *            character encoding of the stream, must be a valid
+     *            {@link java.nio.charset.Charset Charset}.
      * @return the writer instance
      * @throws EDIStreamException
-     *  when encoding is not supported
+     *             when encoding is not supported
      */
     public abstract EDIStreamWriter createEDIStreamWriter(OutputStream stream,
-                                                          String encoding) throws EDIStreamException;
+                                                          String encoding)
+            throws EDIStreamException;
 
     /**
-     * Creates a new {@link XMLStreamWriter} that uses the given writer as its output.
+     * Creates a new {@link XMLStreamWriter} that uses the given writer as its
+     * output.
      *
-     * XML Elements written to the writer must use the namespaces declared by the constants
-     * in {@link EDINamespaces}. The sequence of elements is critical and must align with
-     * the structure of the intended EDI output to be written via the given EDI writer.
+     * XML Elements written to the writer must use the namespaces declared by
+     * the constants in {@link EDINamespaces}. The sequence of elements is
+     * critical and must align with the structure of the intended EDI output to
+     * be written via the given EDI writer.
      *
-     * @param writer the writer used to generate EDI output using the XML writer
+     * @param writer
+     *            the writer used to generate EDI output using the XML writer
      * @return a new {@link XMLStreamWriter}
      */
     public abstract XMLStreamWriter createXMLStreamWriter(EDIStreamWriter writer);

@@ -27,15 +27,15 @@ public abstract class EDIInputFactory extends PropertySupport {
     public static final String EDI_VALIDATE_CONTROL_STRUCTURE = "io.xlate.edi.stream.EDI_VALIDATE_CONTROL_STRUCTURE";
 
     /**
-     * When set to false, enumerated code values of control structure elements will be ignore. Element size and type
-     * validation will still occur.
+     * When set to false, enumerated code values of control structure elements
+     * will be ignore. Element size and type validation will still occur.
      */
     public static final String EDI_VALIDATE_CONTROL_CODE_VALUES = "io.xlate.edi.stream.EDI_VALIDATE_CONTROL_CODE_VALUES";
 
     /**
-     * When set to true, XMLStreamReader instances created from an EDIInputFactory
-     * will generate XMLNS attributes on the TRANSACTION element in addition to the
-     * INTERCHANGE element.
+     * When set to true, XMLStreamReader instances created from an
+     * EDIInputFactory will generate XMLNS attributes on the TRANSACTION element
+     * in addition to the INTERCHANGE element.
      */
     public static final String XML_DECLARE_TRANSACTION_XMLNS = "io.xlate.edi.stream.XML_DECLARE_TRANSACTION_XMLNS";
 
@@ -64,18 +64,21 @@ public abstract class EDIInputFactory extends PropertySupport {
 
     /**
      * Creates a new {@link EDIStreamReader} using the given {@link InputStream}
-     * and encoding.
+     * and encoding. The encoding must be a valid
+     * {@link java.nio.charset.Charset Charset}.
      *
      * @param stream
      *            {@link InputStream} from which the EDI data will be read
      * @param encoding
-     *            character encoding of the stream
+     *            character encoding of the stream, must be a valid
+     *            {@link java.nio.charset.Charset Charset}.
      * @return a new {@link EDIStreamReader} which reads from the stream
      * @throws EDIStreamException
      *             when encoding is not supported
      */
     public abstract EDIStreamReader createEDIStreamReader(InputStream stream,
-                                                          String encoding) throws EDIStreamException;
+                                                          String encoding)
+            throws EDIStreamException;
 
     /**
      * Creates a new {@link EDIStreamReader} using the given {@link InputStream}
@@ -97,7 +100,8 @@ public abstract class EDIInputFactory extends PropertySupport {
     /**
      * Creates a new {@link EDIStreamReader} using the given {@link InputStream}
      * and encoding which uses the {@link Schema} for validation of the input's
-     * control structures (interchange, group, transaction).
+     * control structures (interchange, group, transaction). The encoding must
+     * be a valid {@link java.nio.charset.Charset Charset}.
      *
      * Note that a separate schema for validation of messages/transactions may
      * be passed directly to the {@link EDIStreamReader} once the type and
@@ -106,7 +110,8 @@ public abstract class EDIInputFactory extends PropertySupport {
      * @param stream
      *            {@link InputStream} from which the EDI data will be read
      * @param encoding
-     *            character encoding of the stream
+     *            character encoding of the stream, must be a valid
+     *            {@link java.nio.charset.Charset Charset}.
      * @param schema
      *            {@link Schema} for control structure validation
      * @return a new {@link EDIStreamReader} which reads from the stream
@@ -115,7 +120,8 @@ public abstract class EDIInputFactory extends PropertySupport {
      */
     public abstract EDIStreamReader createEDIStreamReader(InputStream stream,
                                                           String encoding,
-                                                          Schema schema) throws EDIStreamException;
+                                                          Schema schema)
+            throws EDIStreamException;
 
     /**
      * Creates a new {@link EDIStreamReader} by wrapping the given reader with

@@ -59,7 +59,7 @@ public class EDIException extends EDIStreamException {
     }
 
     public EDIException(Integer id, String message) {
-        super(exceptionMessages.get(id) + message);
+        super(exceptionMessages.get(id) + ' ' + message);
     }
 
     public EDIException(Throwable cause) {

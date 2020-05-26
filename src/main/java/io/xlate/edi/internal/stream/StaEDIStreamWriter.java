@@ -18,8 +18,10 @@ package io.xlate.edi.internal.stream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -66,8 +68,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     private CharacterSet characters = new CharacterSet();
 
     private final OutputStream stream;
-    @SuppressWarnings("unused")
-    private final String encoding;
+    private final OutputStreamWriter writer;
     private final Map<String, Object> properties;
     private Dialect dialect;
 
@@ -92,9 +93,9 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     private final boolean prettyPrint;
     private final String lineSeparator;
 
-    public StaEDIStreamWriter(OutputStream stream, String encoding, Map<String, Object> properties) {
+    public StaEDIStreamWriter(OutputStream stream, Charset charset, Map<String, Object> properties) {
         this.stream = stream;
-        this.encoding = encoding;
+        this.writer = new OutputStreamWriter(stream, charset);
         this.properties = new HashMap<>(properties);
         this.prettyPrint = property(EDIOutputFactory.PRETTY_PRINT, Boolean::valueOf);
 
@@ -182,6 +183,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     @Override
     public void flush() throws EDIStreamException {
         try {
+            writer.flush();
             stream.flush();
         } catch (IOException e) {
             throw new EDIStreamException("Exception flushing output stream", location, e);
@@ -268,7 +270,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
 
         try {
             location.incrementOffset(output);
-            stream.write(output);
+            writer.write(output);
         } catch (IOException e) {
             throw new EDIStreamException("Exception to output stream", location, e);
         }
@@ -284,9 +286,9 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
 
     @Override
     public EDIStreamWriter endInterchange() throws EDIStreamException {
-
         ensureLevel(LEVEL_INTERCHANGE);
         level = LEVEL_INITIAL;
+        flush();
         return this;
     }
 
@@ -540,6 +542,8 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         int output;
 
         try {
+            flush(); // Write `Writer` buffers to stream before writing binary
+
             while ((output = binaryStream.read()) != -1) {
                 location.incrementOffset(output);
                 stream.write(output);
@@ -557,8 +561,15 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         ensureState(State.ELEMENT_DATA_BINARY);
         ensureArgs(binary.length, start, end);
 
-        for (int i = start; i < end; i++) {
-            write(binary[i]);
+        try {
+            flush(); // Write `Writer` buffers to stream before writing binary
+
+            for (int i = start; i < end; i++) {
+                location.incrementOffset(binary[i]);
+                stream.write(binary[i]);
+            }
+        } catch (IOException e) {
+            throw new EDIStreamException("Exception writing binary element data", location, e);
         }
 
         return this;
