@@ -43,44 +43,6 @@ public class EDIStreamException extends Exception {
         location = null;
     }
 
-    private static String displayLocation(Location location) {
-        StringBuilder display = new StringBuilder();
-
-        if (location.getSegmentPosition() < 0) {
-            display.append("at offset ");
-            display.append(location.getCharacterOffset());
-        } else {
-            display.append("in segment ");
-
-            if (location.getSegmentTag() != null) {
-                display.append(location.getSegmentTag());
-            } else {
-                display.append("???");
-            }
-
-            display.append(" at position ");
-            display.append(String.valueOf(location.getSegmentPosition()));
-
-            if (location.getElementPosition() > -1) {
-                display.append(", element ");
-                display.append(String.valueOf(location.getElementPosition()));
-
-                if (location.getElementOccurrence() > 1) {
-                    display.append(" (occurrence ");
-                    display.append(String.valueOf(location.getElementOccurrence()));
-                    display.append(')');
-                }
-            }
-
-            if (location.getComponentPosition() > -1) {
-                display.append(", component ");
-                display.append(String.valueOf(location.getComponentPosition()));
-            }
-        }
-
-        return display.toString();
-    }
-
     /**
      * Construct an exception with the associated message, exception and
      * location.
@@ -93,7 +55,7 @@ public class EDIStreamException extends Exception {
      *            a nested error / exception
      */
     public EDIStreamException(String message, Location location, Throwable cause) {
-        super(message + " " + displayLocation(location), cause);
+        super(message + " " + location.toString(), cause);
         this.location = location;
     }
 
@@ -107,7 +69,7 @@ public class EDIStreamException extends Exception {
      *            the location of the error
      */
     public EDIStreamException(String message, Location location) {
-        super(message + " " + displayLocation(location));
+        super(message + " " + location.toString());
         this.location = location;
     }
 
