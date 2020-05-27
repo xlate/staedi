@@ -19,6 +19,7 @@ import java.io.InputStream;
 import java.nio.CharBuffer;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 
 import io.xlate.edi.internal.stream.CharArraySequence;
 import io.xlate.edi.internal.stream.StaEDIStreamLocation;
@@ -78,8 +79,10 @@ public class ProxyEventHandler implements EventHandler {
     }
 
     public void setTransactionSchema(Schema transactionSchema) {
-        this.transactionSchema = transactionSchema;
-        transactionValidator = transactionSchema != null ? new Validator(transactionSchema, true, controlSchema) : null;
+        if (!Objects.equals(this.transactionSchema, transactionSchema)) {
+            this.transactionSchema = transactionSchema;
+            transactionValidator = transactionSchema != null ? new Validator(transactionSchema, true, controlSchema) : null;
+        }
     }
 
     public void resetEvents() {
@@ -152,6 +155,9 @@ public class ProxyEventHandler implements EventHandler {
             transaction = true;
             transactionSchemaAllowed = true;
             enqueueEvent(EDIStreamEvent.START_TRANSACTION, EDIStreamValidationError.NONE, id, null);
+            if (transactionValidator != null) {
+                transactionValidator.reset();
+            }
         } else if (EDIType.Type.GROUP.toString().equals(id)) {
             enqueueEvent(EDIStreamEvent.START_GROUP, EDIStreamValidationError.NONE, id, null);
         } else {

@@ -1,0 +1,1407 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<schema xmlns="http://xlate.io/EDISchema/v3">
+    <!-- Version 004010 -->
+    <transaction>
+        <sequence>
+            <segment type="BIG" minOccurs="1"/>
+            <segment type="NTE" maxOccurs="100"/>
+            <segment type="CUR"/>
+            <segment type="REF" maxOccurs="12"/>
+            <segment type="YNQ" maxOccurs="10"/>
+            <segment type="PER" maxOccurs="3"/>
+            <loop code="L0001" maxOccurs="200">
+                <sequence>
+                    <segment type="N1"/>
+                    <segment type="N2" maxOccurs="2"/>
+                    <segment type="N3" maxOccurs="2"/>
+                    <segment type="N4"/>
+                    <segment type="REF" maxOccurs="12"/>
+                    <segment type="PER" maxOccurs="3"/>
+                    <segment type="DMG"/>
+                </sequence>
+            </loop>
+            <segment type="ITD" maxOccurs="99999"/>
+            <segment type="DTM" maxOccurs="10"/>
+            <segment type="FOB"/>
+            <segment type="PID" maxOccurs="200"/>
+            <segment type="MEA" maxOccurs="40"/>
+            <segment type="PWK" maxOccurs="25"/>
+            <segment type="PKG" maxOccurs="25"/>
+            <segment type="L7"/>
+            <segment type="BAL" maxOccurs="99999"/>
+            <segment type="INC"/>
+            <segment type="PAM" maxOccurs="99999"/>
+            <loop code="L0002" maxOccurs="10">
+                <sequence>
+                    <segment type="LM"/>
+                    <segment type="LQ" minOccurs="1" maxOccurs="100"/>
+                </sequence>
+            </loop>
+            <loop code="L0003">
+                <sequence>
+                    <segment type="N9"/>
+                    <segment type="MSG" minOccurs="1" maxOccurs="10"/>
+                </sequence>
+            </loop>
+            <loop code="L0004" maxOccurs="99999">
+                <sequence>
+                    <segment type="V1"/>
+                    <segment type="R4" maxOccurs="99999"/>
+                    <segment type="DTM" maxOccurs="99999"/>
+                </sequence>
+            </loop>
+            <loop code="L0005" maxOccurs="99999">
+                <sequence>
+                    <segment type="FA1"/>
+                    <segment type="FA2" minOccurs="1" maxOccurs="99999"/>
+                </sequence>
+            </loop>
+            <loop code="L0006" maxOccurs="200000">
+                <sequence>
+                    <segment type="IT1"/>
+                    <segment type="CRC"/>
+                    <segment type="QTY" maxOccurs="5"/>
+                    <segment type="CUR"/>
+                    <segment type="IT3" maxOccurs="5"/>
+                    <segment type="TXI" maxOccurs="10"/>
+                    <segment type="CTP" maxOccurs="25"/>
+                    <segment type="PAM" maxOccurs="10"/>
+                    <segment type="MEA" maxOccurs="40"/>
+                    <loop code="L0007" maxOccurs="1000">
+                        <sequence>
+                            <segment type="PID"/>
+                            <segment type="MEA" maxOccurs="10"/>
+                        </sequence>
+                    </loop>
+                    <segment type="PWK" maxOccurs="25"/>
+                    <segment type="PKG" maxOccurs="25"/>
+                    <segment type="PO4"/>
+                    <segment type="ITD" maxOccurs="2"/>
+                    <segment type="REF" maxOccurs="99999"/>
+                    <segment type="YNQ" maxOccurs="10"/>
+                    <segment type="PER" maxOccurs="5"/>
+                    <segment type="SDQ" maxOccurs="500"/>
+                    <segment type="DTM" maxOccurs="10"/>
+                    <segment type="CAD" maxOccurs="99999"/>
+                    <segment type="L7" maxOccurs="99999"/>
+                    <segment type="SR"/>
+                    <loop code="L0008" maxOccurs="25">
+                        <sequence>
+                            <segment type="SAC"/>
+                            <segment type="TXI" maxOccurs="10"/>
+                        </sequence>
+                    </loop>
+                    <loop code="L0009" maxOccurs="1000">
+                        <sequence>
+                            <segment type="SLN"/>
+                            <segment type="DTM"/>
+                            <segment type="REF" maxOccurs="99999"/>
+                            <segment type="PID" maxOccurs="1000"/>
+                            <segment type="SAC" maxOccurs="25"/>
+                            <segment type="TC2" maxOccurs="2"/>
+                            <segment type="TXI" maxOccurs="10"/>
+                        </sequence>
+                    </loop>
+                    <loop code="L0010" maxOccurs="200">
+                        <sequence>
+                            <segment type="N1"/>
+                            <segment type="N2" maxOccurs="2"/>
+                            <segment type="N3" maxOccurs="2"/>
+                            <segment type="N4"/>
+                            <segment type="REF" maxOccurs="12"/>
+                            <segment type="PER" maxOccurs="3"/>
+                            <segment type="DMG"/>
+                        </sequence>
+                    </loop>
+                    <loop code="L0011" maxOccurs="10">
+                        <sequence>
+                            <segment type="LM"/>
+                            <segment type="LQ" minOccurs="1" maxOccurs="100"/>
+                        </sequence>
+                    </loop>
+                    <loop code="L0012" maxOccurs="99999">
+                        <sequence>
+                            <segment type="V1"/>
+                            <segment type="R4" maxOccurs="99999"/>
+                            <segment type="DTM" maxOccurs="99999"/>
+                        </sequence>
+                    </loop>
+                    <loop code="L0013" maxOccurs="99999">
+                        <sequence>
+                            <segment type="FA1"/>
+                            <segment type="FA2" minOccurs="1" maxOccurs="99999"/>
+                        </sequence>
+                    </loop>
+                </sequence>
+            </loop>
+            <segment type="TDS" minOccurs="1"/>
+            <segment type="TXI" maxOccurs="10"/>
+            <segment type="CAD"/>
+            <segment type="AMT" maxOccurs="99999"/>
+            <loop code="L0014" maxOccurs="25">
+                <sequence>
+                    <segment type="SAC"/>
+                    <segment type="TXI" maxOccurs="10"/>
+                </sequence>
+            </loop>
+            <loop code="L0015" maxOccurs="99999">
+                <sequence>
+                    <segment type="ISS"/>
+                    <segment type="PID"/>
+                </sequence>
+            </loop>
+            <segment type="CTT"/>
+        </sequence>
+    </transaction>
+    <elementType name="AMT01" base="string" maxLength="3"/>
+    <elementType name="AMT02" base="decimal" maxLength="18"/>
+    <elementType name="AMT03" base="string"/>
+    <elementType name="BAL01" base="string" maxLength="2"/>
+    <elementType name="BAL02" base="string" maxLength="3"/>
+    <elementType name="BAL03" base="decimal" maxLength="18"/>
+    <elementType name="BIG01" base="date" minLength="8" maxLength="8"/>
+    <elementType name="BIG02" base="string" maxLength="22"/>
+    <elementType name="BIG03" base="date" minLength="8" maxLength="8"/>
+    <elementType name="BIG04" base="string" maxLength="22"/>
+    <elementType name="BIG05" base="string" maxLength="30"/>
+    <elementType name="BIG06" base="string" maxLength="8"/>
+    <elementType name="BIG07" base="string" minLength="2" maxLength="2"/>
+    <elementType name="BIG08" base="string" minLength="2" maxLength="2"/>
+    <elementType name="BIG09" base="string" maxLength="2"/>
+    <elementType name="BIG10" base="string" maxLength="22"/>
+    <elementType name="CAD01" base="string" maxLength="2"/>
+    <elementType name="CAD02" base="string" maxLength="4"/>
+    <elementType name="CAD03" base="string" maxLength="10"/>
+    <elementType name="CAD04" base="string" minLength="2" maxLength="4"/>
+    <elementType name="CAD05" base="string" maxLength="35"/>
+    <elementType name="CAD06" base="string" minLength="2" maxLength="2"/>
+    <elementType name="CAD07" base="string" minLength="2" maxLength="3"/>
+    <elementType name="CAD08" base="string" maxLength="30"/>
+    <elementType name="CAD09" base="string" minLength="2" maxLength="2"/>
+    <elementType name="CRC01" base="string" minLength="2" maxLength="2"/>
+    <elementType name="CRC02" base="string"/>
+    <elementType name="CRC03" base="string" minLength="2" maxLength="2"/>
+    <elementType name="CRC04" base="string" minLength="2" maxLength="2"/>
+    <elementType name="CRC05" base="string" minLength="2" maxLength="2"/>
+    <elementType name="CRC06" base="string" minLength="2" maxLength="2"/>
+    <elementType name="CRC07" base="string" minLength="2" maxLength="2"/>
+    <elementType name="CTP01" base="string" minLength="2" maxLength="2"/>
+    <elementType name="CTP02" base="string" minLength="3" maxLength="3"/>
+    <elementType name="CTP03" base="decimal" maxLength="17"/>
+    <elementType name="CTP04" base="decimal" maxLength="15"/>
+    <elementType name="CTP0501" base="string" minLength="2" maxLength="2"/>
+    <elementType name="CTP0502" base="decimal" maxLength="15"/>
+    <elementType name="CTP0503" base="decimal" maxLength="10"/>
+    <elementType name="CTP0504" base="string" minLength="2" maxLength="2"/>
+    <elementType name="CTP0505" base="decimal" maxLength="15"/>
+    <elementType name="CTP0506" base="decimal" maxLength="10"/>
+    <elementType name="CTP0507" base="string" minLength="2" maxLength="2"/>
+    <elementType name="CTP0508" base="decimal" maxLength="15"/>
+    <elementType name="CTP0509" base="decimal" maxLength="10"/>
+    <elementType name="CTP0510" base="string" minLength="2" maxLength="2"/>
+    <elementType name="CTP0511" base="decimal" maxLength="15"/>
+    <elementType name="CTP0512" base="decimal" maxLength="10"/>
+    <elementType name="CTP0513" base="string" minLength="2" maxLength="2"/>
+    <elementType name="CTP0514" base="decimal" maxLength="15"/>
+    <elementType name="CTP0515" base="decimal" maxLength="10"/>
+    <elementType name="CTP06" base="string" minLength="3" maxLength="3"/>
+    <elementType name="CTP07" base="decimal" maxLength="10"/>
+    <elementType name="CTP08" base="decimal" maxLength="18"/>
+    <elementType name="CTP09" base="string" minLength="2" maxLength="2"/>
+    <elementType name="CTP10" base="string" maxLength="10"/>
+    <elementType name="CTP11" base="decimal" maxLength="2"/>
+    <elementType name="CTT01" base="decimal" maxLength="6"/>
+    <elementType name="CTT02" base="decimal" maxLength="10"/>
+    <elementType name="CTT03" base="decimal" maxLength="10"/>
+    <elementType name="CTT04" base="string" minLength="2" maxLength="2"/>
+    <elementType name="CTT05" base="decimal" maxLength="8"/>
+    <elementType name="CTT06" base="string" minLength="2" maxLength="2"/>
+    <elementType name="CTT07" base="string" maxLength="80"/>
+    <elementType name="CUR01" base="string" minLength="2" maxLength="3"/>
+    <elementType name="CUR02" base="string" minLength="3" maxLength="3"/>
+    <elementType name="CUR03" base="decimal" minLength="4" maxLength="10"/>
+    <elementType name="CUR04" base="string" minLength="2" maxLength="3"/>
+    <elementType name="CUR05" base="string" minLength="3" maxLength="3"/>
+    <elementType name="CUR06" base="string" minLength="3" maxLength="3"/>
+    <elementType name="CUR07" base="string" minLength="3" maxLength="3"/>
+    <elementType name="CUR08" base="date" minLength="8" maxLength="8"/>
+    <elementType name="CUR09" base="time" minLength="4" maxLength="8"/>
+    <elementType name="CUR10" base="string" minLength="3" maxLength="3"/>
+    <elementType name="CUR11" base="date" minLength="8" maxLength="8"/>
+    <elementType name="CUR12" base="time" minLength="4" maxLength="8"/>
+    <elementType name="CUR13" base="string" minLength="3" maxLength="3"/>
+    <elementType name="CUR14" base="date" minLength="8" maxLength="8"/>
+    <elementType name="CUR15" base="time" minLength="4" maxLength="8"/>
+    <elementType name="CUR16" base="string" minLength="3" maxLength="3"/>
+    <elementType name="CUR17" base="date" minLength="8" maxLength="8"/>
+    <elementType name="CUR18" base="time" minLength="4" maxLength="8"/>
+    <elementType name="CUR19" base="string" minLength="3" maxLength="3"/>
+    <elementType name="CUR20" base="date" minLength="8" maxLength="8"/>
+    <elementType name="CUR21" base="time" minLength="4" maxLength="8"/>
+    <elementType name="DMG01" base="string" minLength="2" maxLength="3"/>
+    <elementType name="DMG02" base="string" maxLength="35"/>
+    <elementType name="DMG03" base="string"/>
+    <elementType name="DMG04" base="string"/>
+    <elementType name="DMG05" base="string"/>
+    <elementType name="DMG06" base="string" maxLength="2"/>
+    <elementType name="DMG07" base="string" minLength="2" maxLength="3"/>
+    <elementType name="DMG08" base="string" maxLength="2"/>
+    <elementType name="DMG09" base="decimal" maxLength="15"/>
+    <elementType name="DTM01" base="string" minLength="3" maxLength="3"/>
+    <elementType name="DTM02" base="date" minLength="8" maxLength="8"/>
+    <elementType name="DTM03" base="time" minLength="4" maxLength="8"/>
+    <elementType name="DTM04" base="string" minLength="2" maxLength="2"/>
+    <elementType name="DTM05" base="string" minLength="2" maxLength="3"/>
+    <elementType name="DTM06" base="string" maxLength="35"/>
+    <elementType name="FA101" base="string" minLength="2" maxLength="2"/>
+    <elementType name="FA102" base="string" minLength="4" maxLength="4"/>
+    <elementType name="FA103" base="string"/>
+    <elementType name="FA201" base="string" minLength="2" maxLength="2"/>
+    <elementType name="FA202" base="string" maxLength="80"/>
+    <elementType name="FOB01" base="string" minLength="2" maxLength="2"/>
+    <elementType name="FOB02" base="string" maxLength="2"/>
+    <elementType name="FOB03" base="string" maxLength="80"/>
+    <elementType name="FOB04" base="string" minLength="2" maxLength="2"/>
+    <elementType name="FOB05" base="string" minLength="3" maxLength="3"/>
+    <elementType name="FOB06" base="string" maxLength="2"/>
+    <elementType name="FOB07" base="string" maxLength="80"/>
+    <elementType name="FOB08" base="string" minLength="2" maxLength="2"/>
+    <elementType name="FOB09" base="string" maxLength="80"/>
+    <elementType name="INC01" base="string" minLength="2" maxLength="2"/>
+    <elementType name="INC0201" base="string" minLength="2" maxLength="2"/>
+    <elementType name="INC0202" base="decimal" maxLength="15"/>
+    <elementType name="INC0203" base="decimal" maxLength="10"/>
+    <elementType name="INC0204" base="string" minLength="2" maxLength="2"/>
+    <elementType name="INC0205" base="decimal" maxLength="15"/>
+    <elementType name="INC0206" base="decimal" maxLength="10"/>
+    <elementType name="INC0207" base="string" minLength="2" maxLength="2"/>
+    <elementType name="INC0208" base="decimal" maxLength="15"/>
+    <elementType name="INC0209" base="decimal" maxLength="10"/>
+    <elementType name="INC0210" base="string" minLength="2" maxLength="2"/>
+    <elementType name="INC0211" base="decimal" maxLength="15"/>
+    <elementType name="INC0212" base="decimal" maxLength="10"/>
+    <elementType name="INC0213" base="string" minLength="2" maxLength="2"/>
+    <elementType name="INC0214" base="decimal" maxLength="15"/>
+    <elementType name="INC0215" base="decimal" maxLength="10"/>
+    <elementType name="INC03" base="decimal" maxLength="15"/>
+    <elementType name="INC04" base="decimal" maxLength="15"/>
+    <elementType name="INC05" base="decimal" maxLength="18"/>
+    <elementType name="ISS01" base="decimal" maxLength="10"/>
+    <elementType name="ISS02" base="string" minLength="2" maxLength="2"/>
+    <elementType name="ISS03" base="decimal" maxLength="10"/>
+    <elementType name="ISS04" base="string" minLength="2" maxLength="2"/>
+    <elementType name="ISS05" base="decimal" maxLength="8"/>
+    <elementType name="ISS06" base="string" minLength="2" maxLength="2"/>
+    <elementType name="ISS07" base="decimal" maxLength="15"/>
+    <elementType name="ISS08" base="decimal" maxLength="10"/>
+    <elementType name="IT101" base="string" maxLength="20"/>
+    <elementType name="IT102" base="decimal" maxLength="10"/>
+    <elementType name="IT103" base="string" minLength="2" maxLength="2"/>
+    <elementType name="IT104" base="decimal" maxLength="17"/>
+    <elementType name="IT105" base="string" minLength="2" maxLength="2"/>
+    <elementType name="IT106" base="string" minLength="2" maxLength="2"/>
+    <elementType name="IT107" base="string" maxLength="48"/>
+    <elementType name="IT108" base="string" minLength="2" maxLength="2"/>
+    <elementType name="IT109" base="string" maxLength="48"/>
+    <elementType name="IT110" base="string" minLength="2" maxLength="2"/>
+    <elementType name="IT111" base="string" maxLength="48"/>
+    <elementType name="IT112" base="string" minLength="2" maxLength="2"/>
+    <elementType name="IT113" base="string" maxLength="48"/>
+    <elementType name="IT114" base="string" minLength="2" maxLength="2"/>
+    <elementType name="IT115" base="string" maxLength="48"/>
+    <elementType name="IT116" base="string" minLength="2" maxLength="2"/>
+    <elementType name="IT117" base="string" maxLength="48"/>
+    <elementType name="IT118" base="string" minLength="2" maxLength="2"/>
+    <elementType name="IT119" base="string" maxLength="48"/>
+    <elementType name="IT120" base="string" minLength="2" maxLength="2"/>
+    <elementType name="IT121" base="string" maxLength="48"/>
+    <elementType name="IT122" base="string" minLength="2" maxLength="2"/>
+    <elementType name="IT123" base="string" maxLength="48"/>
+    <elementType name="IT124" base="string" minLength="2" maxLength="2"/>
+    <elementType name="IT125" base="string" maxLength="48"/>
+    <elementType name="IT301" base="decimal" maxLength="10"/>
+    <elementType name="IT302" base="string" minLength="2" maxLength="2"/>
+    <elementType name="IT303" base="string" minLength="2" maxLength="2"/>
+    <elementType name="IT304" base="decimal" maxLength="9"/>
+    <elementType name="IT305" base="string" minLength="2" maxLength="2"/>
+    <elementType name="ITD01" base="string" minLength="2" maxLength="2"/>
+    <elementType name="ITD02" base="string" maxLength="2"/>
+    <elementType name="ITD03" base="decimal" maxLength="6"/>
+    <elementType name="ITD04" base="date" minLength="8" maxLength="8"/>
+    <elementType name="ITD05" base="decimal" maxLength="3"/>
+    <elementType name="ITD06" base="date" minLength="8" maxLength="8"/>
+    <elementType name="ITD07" base="decimal" maxLength="3"/>
+    <elementType name="ITD08" base="numeric" maxLength="10"/>
+    <elementType name="ITD09" base="date" minLength="8" maxLength="8"/>
+    <elementType name="ITD10" base="numeric" maxLength="10"/>
+    <elementType name="ITD11" base="decimal" maxLength="5"/>
+    <elementType name="ITD12" base="string" maxLength="80"/>
+    <elementType name="ITD13" base="decimal" maxLength="2"/>
+    <elementType name="ITD14" base="string" maxLength="2"/>
+    <elementType name="ITD15" base="decimal" maxLength="10"/>
+    <elementType name="L701" base="decimal" maxLength="3"/>
+    <elementType name="L702" base="string" maxLength="4"/>
+    <elementType name="L703" base="string" maxLength="7"/>
+    <elementType name="L704" base="string" maxLength="2"/>
+    <elementType name="L705" base="string" maxLength="16"/>
+    <elementType name="L706" base="decimal" maxLength="2"/>
+    <elementType name="L707" base="string" minLength="2" maxLength="5"/>
+    <elementType name="L708" base="string" maxLength="4"/>
+    <elementType name="L709" base="string" minLength="4" maxLength="4"/>
+    <elementType name="L710" base="date" minLength="8" maxLength="8"/>
+    <elementType name="L711" base="string" maxLength="6"/>
+    <elementType name="L712" base="string" maxLength="2"/>
+    <elementType name="L713" base="decimal" maxLength="5"/>
+    <elementType name="L714" base="string"/>
+    <elementType name="L715" base="string" minLength="2" maxLength="30"/>
+    <elementType name="L716" base="string" minLength="2" maxLength="2"/>
+    <elementType name="LM01" base="string" minLength="2" maxLength="2"/>
+    <elementType name="LM02" base="string" maxLength="15"/>
+    <elementType name="LQ01" base="string" maxLength="3"/>
+    <elementType name="LQ02" base="string" maxLength="30"/>
+    <elementType name="MEA01" base="string" minLength="2" maxLength="2"/>
+    <elementType name="MEA02" base="string" maxLength="3"/>
+    <elementType name="MEA03" base="decimal" maxLength="20"/>
+    <elementType name="MEA0401" base="string" minLength="2" maxLength="2"/>
+    <elementType name="MEA0402" base="decimal" maxLength="15"/>
+    <elementType name="MEA0403" base="decimal" maxLength="10"/>
+    <elementType name="MEA0404" base="string" minLength="2" maxLength="2"/>
+    <elementType name="MEA0405" base="decimal" maxLength="15"/>
+    <elementType name="MEA0406" base="decimal" maxLength="10"/>
+    <elementType name="MEA0407" base="string" minLength="2" maxLength="2"/>
+    <elementType name="MEA0408" base="decimal" maxLength="15"/>
+    <elementType name="MEA0409" base="decimal" maxLength="10"/>
+    <elementType name="MEA0410" base="string" minLength="2" maxLength="2"/>
+    <elementType name="MEA0411" base="decimal" maxLength="15"/>
+    <elementType name="MEA0412" base="decimal" maxLength="10"/>
+    <elementType name="MEA0413" base="string" minLength="2" maxLength="2"/>
+    <elementType name="MEA0414" base="decimal" maxLength="15"/>
+    <elementType name="MEA0415" base="decimal" maxLength="10"/>
+    <elementType name="MEA05" base="decimal" maxLength="20"/>
+    <elementType name="MEA06" base="decimal" maxLength="20"/>
+    <elementType name="MEA07" base="string" minLength="2" maxLength="2"/>
+    <elementType name="MEA08" base="string" minLength="2" maxLength="2"/>
+    <elementType name="MEA09" base="string" minLength="2" maxLength="2"/>
+    <elementType name="MEA10" base="string" minLength="2" maxLength="4"/>
+    <elementType name="MSG01" base="string" maxLength="264"/>
+    <elementType name="MSG02" base="string" minLength="2" maxLength="2"/>
+    <elementType name="MSG03" base="decimal" maxLength="9"/>
+    <elementType name="N101" base="string" minLength="2" maxLength="3"/>
+    <elementType name="N102" base="string" maxLength="60"/>
+    <elementType name="N103" base="string" maxLength="2"/>
+    <elementType name="N104" base="string" minLength="2" maxLength="80"/>
+    <elementType name="N105" base="string" minLength="2" maxLength="2"/>
+    <elementType name="N106" base="string" minLength="2" maxLength="3"/>
+    <elementType name="N201" base="string" maxLength="60"/>
+    <elementType name="N202" base="string" maxLength="60"/>
+    <elementType name="N301" base="string" maxLength="55"/>
+    <elementType name="N302" base="string" maxLength="55"/>
+    <elementType name="N401" base="string" minLength="2" maxLength="30"/>
+    <elementType name="N402" base="string" minLength="2" maxLength="2"/>
+    <elementType name="N403" base="string" minLength="3" maxLength="15"/>
+    <elementType name="N404" base="string" minLength="2" maxLength="3"/>
+    <elementType name="N405" base="string" maxLength="2"/>
+    <elementType name="N406" base="string" maxLength="30"/>
+    <elementType name="N901" base="string" minLength="2" maxLength="3"/>
+    <elementType name="N902" base="string" maxLength="30"/>
+    <elementType name="N903" base="string" maxLength="45"/>
+    <elementType name="N904" base="date" minLength="8" maxLength="8"/>
+    <elementType name="N905" base="time" minLength="4" maxLength="8"/>
+    <elementType name="N906" base="string" minLength="2" maxLength="2"/>
+    <elementType name="N90701" base="string" minLength="2" maxLength="3"/>
+    <elementType name="N90702" base="string" maxLength="30"/>
+    <elementType name="N90703" base="string" minLength="2" maxLength="3"/>
+    <elementType name="N90704" base="string" maxLength="30"/>
+    <elementType name="N90705" base="string" minLength="2" maxLength="3"/>
+    <elementType name="N90706" base="string" maxLength="30"/>
+    <elementType name="NTE01" base="string" minLength="3" maxLength="3"/>
+    <elementType name="NTE02" base="string" maxLength="80"/>
+    <elementType name="PAM01" base="string" minLength="2" maxLength="2"/>
+    <elementType name="PAM02" base="decimal" maxLength="15"/>
+    <elementType name="PAM0301" base="string" minLength="2" maxLength="2"/>
+    <elementType name="PAM0302" base="decimal" maxLength="15"/>
+    <elementType name="PAM0303" base="decimal" maxLength="10"/>
+    <elementType name="PAM0304" base="string" minLength="2" maxLength="2"/>
+    <elementType name="PAM0305" base="decimal" maxLength="15"/>
+    <elementType name="PAM0306" base="decimal" maxLength="10"/>
+    <elementType name="PAM0307" base="string" minLength="2" maxLength="2"/>
+    <elementType name="PAM0308" base="decimal" maxLength="15"/>
+    <elementType name="PAM0309" base="decimal" maxLength="10"/>
+    <elementType name="PAM0310" base="string" minLength="2" maxLength="2"/>
+    <elementType name="PAM0311" base="decimal" maxLength="15"/>
+    <elementType name="PAM0312" base="decimal" maxLength="10"/>
+    <elementType name="PAM0313" base="string" minLength="2" maxLength="2"/>
+    <elementType name="PAM0314" base="decimal" maxLength="15"/>
+    <elementType name="PAM0315" base="decimal" maxLength="10"/>
+    <elementType name="PAM04" base="string" maxLength="3"/>
+    <elementType name="PAM05" base="decimal" maxLength="18"/>
+    <elementType name="PAM06" base="string" minLength="2" maxLength="2"/>
+    <elementType name="PAM07" base="string" minLength="3" maxLength="3"/>
+    <elementType name="PAM08" base="date" minLength="8" maxLength="8"/>
+    <elementType name="PAM09" base="time" minLength="4" maxLength="8"/>
+    <elementType name="PAM10" base="string" minLength="3" maxLength="3"/>
+    <elementType name="PAM11" base="date" minLength="8" maxLength="8"/>
+    <elementType name="PAM12" base="time" minLength="4" maxLength="8"/>
+    <elementType name="PAM13" base="string" maxLength="2"/>
+    <elementType name="PAM14" base="decimal" maxLength="10"/>
+    <elementType name="PAM15" base="string"/>
+    <elementType name="PER01" base="string" minLength="2" maxLength="2"/>
+    <elementType name="PER02" base="string" maxLength="60"/>
+    <elementType name="PER03" base="string" minLength="2" maxLength="2"/>
+    <elementType name="PER04" base="string" maxLength="80"/>
+    <elementType name="PER05" base="string" minLength="2" maxLength="2"/>
+    <elementType name="PER06" base="string" maxLength="80"/>
+    <elementType name="PER07" base="string" minLength="2" maxLength="2"/>
+    <elementType name="PER08" base="string" maxLength="80"/>
+    <elementType name="PER09" base="string" maxLength="20"/>
+    <elementType name="PID01" base="string"/>
+    <elementType name="PID02" base="string" minLength="2" maxLength="3"/>
+    <elementType name="PID03" base="string" minLength="2" maxLength="2"/>
+    <elementType name="PID04" base="string" maxLength="12"/>
+    <elementType name="PID05" base="string" maxLength="80"/>
+    <elementType name="PID06" base="string" minLength="2" maxLength="2"/>
+    <elementType name="PID07" base="string" maxLength="15"/>
+    <elementType name="PID08" base="string"/>
+    <elementType name="PID09" base="string" minLength="2" maxLength="3"/>
+    <elementType name="PKG01" base="string"/>
+    <elementType name="PKG02" base="string" maxLength="5"/>
+    <elementType name="PKG03" base="string" minLength="2" maxLength="2"/>
+    <elementType name="PKG04" base="string" maxLength="7"/>
+    <elementType name="PKG05" base="string" maxLength="80"/>
+    <elementType name="PKG06" base="string" minLength="2" maxLength="2"/>
+    <elementType name="PO401" base="decimal" maxLength="6"/>
+    <elementType name="PO402" base="decimal" maxLength="8"/>
+    <elementType name="PO403" base="string" minLength="2" maxLength="2"/>
+    <elementType name="PO404" base="string" minLength="3" maxLength="5"/>
+    <elementType name="PO405" base="string" maxLength="2"/>
+    <elementType name="PO406" base="decimal" maxLength="9"/>
+    <elementType name="PO407" base="string" minLength="2" maxLength="2"/>
+    <elementType name="PO408" base="decimal" maxLength="9"/>
+    <elementType name="PO409" base="string" minLength="2" maxLength="2"/>
+    <elementType name="PO410" base="decimal" maxLength="8"/>
+    <elementType name="PO411" base="decimal" maxLength="8"/>
+    <elementType name="PO412" base="decimal" maxLength="8"/>
+    <elementType name="PO413" base="string" minLength="2" maxLength="2"/>
+    <elementType name="PO414" base="decimal" maxLength="6"/>
+    <elementType name="PO415" base="string" minLength="2" maxLength="2"/>
+    <elementType name="PO416" base="string" maxLength="20"/>
+    <elementType name="PO417" base="string" maxLength="20"/>
+    <elementType name="PO418" base="decimal" maxLength="9"/>
+    <elementType name="PWK01" base="string" minLength="2" maxLength="2"/>
+    <elementType name="PWK02" base="string" maxLength="2"/>
+    <elementType name="PWK03" base="decimal" maxLength="2"/>
+    <elementType name="PWK04" base="string" minLength="2" maxLength="3"/>
+    <elementType name="PWK05" base="string" maxLength="2"/>
+    <elementType name="PWK06" base="string" minLength="2" maxLength="80"/>
+    <elementType name="PWK07" base="string" maxLength="80"/>
+    <elementType name="PWK0801" base="string" maxLength="2"/>
+    <elementType name="PWK0802" base="string" maxLength="2"/>
+    <elementType name="PWK0803" base="string" maxLength="2"/>
+    <elementType name="PWK0804" base="string" maxLength="2"/>
+    <elementType name="PWK0805" base="string" maxLength="2"/>
+    <elementType name="PWK09" base="string" maxLength="2"/>
+    <elementType name="QTY01" base="string" minLength="2" maxLength="2"/>
+    <elementType name="QTY02" base="decimal" maxLength="15"/>
+    <elementType name="QTY0301" base="string" minLength="2" maxLength="2"/>
+    <elementType name="QTY0302" base="decimal" maxLength="15"/>
+    <elementType name="QTY0303" base="decimal" maxLength="10"/>
+    <elementType name="QTY0304" base="string" minLength="2" maxLength="2"/>
+    <elementType name="QTY0305" base="decimal" maxLength="15"/>
+    <elementType name="QTY0306" base="decimal" maxLength="10"/>
+    <elementType name="QTY0307" base="string" minLength="2" maxLength="2"/>
+    <elementType name="QTY0308" base="decimal" maxLength="15"/>
+    <elementType name="QTY0309" base="decimal" maxLength="10"/>
+    <elementType name="QTY0310" base="string" minLength="2" maxLength="2"/>
+    <elementType name="QTY0311" base="decimal" maxLength="15"/>
+    <elementType name="QTY0312" base="decimal" maxLength="10"/>
+    <elementType name="QTY0313" base="string" minLength="2" maxLength="2"/>
+    <elementType name="QTY0314" base="decimal" maxLength="15"/>
+    <elementType name="QTY0315" base="decimal" maxLength="10"/>
+    <elementType name="QTY04" base="string" maxLength="30"/>
+    <elementType name="R401" base="string"/>
+    <elementType name="R402" base="string" maxLength="2"/>
+    <elementType name="R403" base="string" maxLength="30"/>
+    <elementType name="R404" base="string" minLength="2" maxLength="24"/>
+    <elementType name="R405" base="string" minLength="2" maxLength="3"/>
+    <elementType name="R406" base="string" minLength="2" maxLength="30"/>
+    <elementType name="R407" base="string" maxLength="4"/>
+    <elementType name="R408" base="string" minLength="2" maxLength="2"/>
+    <elementType name="REF01" base="string" minLength="2" maxLength="3"/>
+    <elementType name="REF02" base="string" maxLength="30"/>
+    <elementType name="REF03" base="string" maxLength="80"/>
+    <elementType name="REF0401" base="string" minLength="2" maxLength="3"/>
+    <elementType name="REF0402" base="string" maxLength="30"/>
+    <elementType name="REF0403" base="string" minLength="2" maxLength="3"/>
+    <elementType name="REF0404" base="string" maxLength="30"/>
+    <elementType name="REF0405" base="string" minLength="2" maxLength="3"/>
+    <elementType name="REF0406" base="string" maxLength="30"/>
+    <elementType name="SAC01" base="string"/>
+    <elementType name="SAC02" base="string" minLength="4" maxLength="4"/>
+    <elementType name="SAC03" base="string" minLength="2" maxLength="2"/>
+    <elementType name="SAC04" base="string" maxLength="10"/>
+    <elementType name="SAC05" base="numeric" maxLength="15"/>
+    <elementType name="SAC06" base="string"/>
+    <elementType name="SAC07" base="decimal" maxLength="6"/>
+    <elementType name="SAC08" base="decimal" maxLength="9"/>
+    <elementType name="SAC09" base="string" minLength="2" maxLength="2"/>
+    <elementType name="SAC10" base="decimal" maxLength="15"/>
+    <elementType name="SAC11" base="decimal" maxLength="15"/>
+    <elementType name="SAC12" base="string" minLength="2" maxLength="2"/>
+    <elementType name="SAC13" base="string" maxLength="30"/>
+    <elementType name="SAC14" base="string" maxLength="20"/>
+    <elementType name="SAC15" base="string" maxLength="80"/>
+    <elementType name="SAC16" base="string" minLength="2" maxLength="3"/>
+    <elementType name="SDQ01" base="string" minLength="2" maxLength="2"/>
+    <elementType name="SDQ02" base="string" maxLength="2"/>
+    <elementType name="SDQ03" base="string" minLength="2" maxLength="80"/>
+    <elementType name="SDQ04" base="decimal" maxLength="15"/>
+    <elementType name="SDQ05" base="string" minLength="2" maxLength="80"/>
+    <elementType name="SDQ06" base="decimal" maxLength="15"/>
+    <elementType name="SDQ07" base="string" minLength="2" maxLength="80"/>
+    <elementType name="SDQ08" base="decimal" maxLength="15"/>
+    <elementType name="SDQ09" base="string" minLength="2" maxLength="80"/>
+    <elementType name="SDQ10" base="decimal" maxLength="15"/>
+    <elementType name="SDQ11" base="string" minLength="2" maxLength="80"/>
+    <elementType name="SDQ12" base="decimal" maxLength="15"/>
+    <elementType name="SDQ13" base="string" minLength="2" maxLength="80"/>
+    <elementType name="SDQ14" base="decimal" maxLength="15"/>
+    <elementType name="SDQ15" base="string" minLength="2" maxLength="80"/>
+    <elementType name="SDQ16" base="decimal" maxLength="15"/>
+    <elementType name="SDQ17" base="string" minLength="2" maxLength="80"/>
+    <elementType name="SDQ18" base="decimal" maxLength="15"/>
+    <elementType name="SDQ19" base="string" minLength="2" maxLength="80"/>
+    <elementType name="SDQ20" base="decimal" maxLength="15"/>
+    <elementType name="SDQ21" base="string" minLength="2" maxLength="80"/>
+    <elementType name="SDQ22" base="decimal" maxLength="15"/>
+    <elementType name="SDQ23" base="string" maxLength="30"/>
+    <elementType name="SLN01" base="string" maxLength="20"/>
+    <elementType name="SLN02" base="string" maxLength="20"/>
+    <elementType name="SLN03" base="string"/>
+    <elementType name="SLN04" base="decimal" maxLength="15"/>
+    <elementType name="SLN0501" base="string" minLength="2" maxLength="2"/>
+    <elementType name="SLN0502" base="decimal" maxLength="15"/>
+    <elementType name="SLN0503" base="decimal" maxLength="10"/>
+    <elementType name="SLN0504" base="string" minLength="2" maxLength="2"/>
+    <elementType name="SLN0505" base="decimal" maxLength="15"/>
+    <elementType name="SLN0506" base="decimal" maxLength="10"/>
+    <elementType name="SLN0507" base="string" minLength="2" maxLength="2"/>
+    <elementType name="SLN0508" base="decimal" maxLength="15"/>
+    <elementType name="SLN0509" base="decimal" maxLength="10"/>
+    <elementType name="SLN0510" base="string" minLength="2" maxLength="2"/>
+    <elementType name="SLN0511" base="decimal" maxLength="15"/>
+    <elementType name="SLN0512" base="decimal" maxLength="10"/>
+    <elementType name="SLN0513" base="string" minLength="2" maxLength="2"/>
+    <elementType name="SLN0514" base="decimal" maxLength="15"/>
+    <elementType name="SLN0515" base="decimal" maxLength="10"/>
+    <elementType name="SLN06" base="decimal" maxLength="17"/>
+    <elementType name="SLN07" base="string" minLength="2" maxLength="2"/>
+    <elementType name="SLN08" base="string"/>
+    <elementType name="SLN09" base="string" minLength="2" maxLength="2"/>
+    <elementType name="SLN10" base="string" maxLength="48"/>
+    <elementType name="SLN11" base="string" minLength="2" maxLength="2"/>
+    <elementType name="SLN12" base="string" maxLength="48"/>
+    <elementType name="SLN13" base="string" minLength="2" maxLength="2"/>
+    <elementType name="SLN14" base="string" maxLength="48"/>
+    <elementType name="SLN15" base="string" minLength="2" maxLength="2"/>
+    <elementType name="SLN16" base="string" maxLength="48"/>
+    <elementType name="SLN17" base="string" minLength="2" maxLength="2"/>
+    <elementType name="SLN18" base="string" maxLength="48"/>
+    <elementType name="SLN19" base="string" minLength="2" maxLength="2"/>
+    <elementType name="SLN20" base="string" maxLength="48"/>
+    <elementType name="SLN21" base="string" minLength="2" maxLength="2"/>
+    <elementType name="SLN22" base="string" maxLength="48"/>
+    <elementType name="SLN23" base="string" minLength="2" maxLength="2"/>
+    <elementType name="SLN24" base="string" maxLength="48"/>
+    <elementType name="SLN25" base="string" minLength="2" maxLength="2"/>
+    <elementType name="SLN26" base="string" maxLength="48"/>
+    <elementType name="SLN27" base="string" minLength="2" maxLength="2"/>
+    <elementType name="SLN28" base="string" maxLength="48"/>
+    <elementType name="SR01" base="string" maxLength="20"/>
+    <elementType name="SR02" base="string" maxLength="7"/>
+    <elementType name="SR03" base="time" minLength="4" maxLength="8"/>
+    <elementType name="SR04" base="time" minLength="4" maxLength="8"/>
+    <elementType name="SR05" base="string" maxLength="60"/>
+    <elementType name="SR06" base="decimal" maxLength="17"/>
+    <elementType name="SR07" base="decimal" maxLength="15"/>
+    <elementType name="SR08" base="date" minLength="8" maxLength="8"/>
+    <elementType name="SR09" base="date" minLength="8" maxLength="8"/>
+    <elementType name="SR10" base="string" maxLength="48"/>
+    <elementType name="SR11" base="string" maxLength="48"/>
+    <elementType name="TC201" base="string"/>
+    <elementType name="TC202" base="string" maxLength="30"/>
+    <elementType name="TDS01" base="numeric" maxLength="15"/>
+    <elementType name="TDS02" base="numeric" maxLength="15"/>
+    <elementType name="TDS03" base="numeric" maxLength="15"/>
+    <elementType name="TDS04" base="numeric" maxLength="15"/>
+    <elementType name="TXI01" base="string" minLength="2" maxLength="2"/>
+    <elementType name="TXI02" base="decimal" maxLength="18"/>
+    <elementType name="TXI03" base="decimal" maxLength="10"/>
+    <elementType name="TXI04" base="string" minLength="2" maxLength="2"/>
+    <elementType name="TXI05" base="string" maxLength="10"/>
+    <elementType name="TXI06" base="string"/>
+    <elementType name="TXI07" base="string"/>
+    <elementType name="TXI08" base="decimal" maxLength="9"/>
+    <elementType name="TXI09" base="string" maxLength="20"/>
+    <elementType name="TXI10" base="string" maxLength="20"/>
+    <elementType name="V101" base="string" maxLength="8"/>
+    <elementType name="V102" base="string" minLength="2" maxLength="28"/>
+    <elementType name="V103" base="string" minLength="2" maxLength="3"/>
+    <elementType name="V104" base="string" minLength="2" maxLength="10"/>
+    <elementType name="V105" base="string" minLength="2" maxLength="4"/>
+    <elementType name="V106" base="string"/>
+    <elementType name="V107" base="string" minLength="2" maxLength="2"/>
+    <elementType name="V108" base="string"/>
+    <elementType name="V109" base="string" maxLength="2"/>
+    <elementType name="YNQ01" base="string" minLength="2" maxLength="2"/>
+    <elementType name="YNQ02" base="string"/>
+    <elementType name="YNQ03" base="string" minLength="2" maxLength="3"/>
+    <elementType name="YNQ04" base="string" maxLength="35"/>
+    <elementType name="YNQ05" base="string" maxLength="264"/>
+    <elementType name="YNQ06" base="string" maxLength="264"/>
+    <elementType name="YNQ07" base="string" maxLength="264"/>
+    <elementType name="YNQ08" base="string" maxLength="3"/>
+    <elementType name="YNQ09" base="string" maxLength="30"/>
+    <elementType name="YNQ10" base="string" maxLength="264"/>
+    <compositeType name="CTP05">
+        <sequence>
+            <element type="CTP0501" minOccurs="1"/>
+            <element type="CTP0502"/>
+            <element type="CTP0503"/>
+            <element type="CTP0504"/>
+            <element type="CTP0505"/>
+            <element type="CTP0506"/>
+            <element type="CTP0507"/>
+            <element type="CTP0508"/>
+            <element type="CTP0509"/>
+            <element type="CTP0510"/>
+            <element type="CTP0511"/>
+            <element type="CTP0512"/>
+            <element type="CTP0513"/>
+            <element type="CTP0514"/>
+            <element type="CTP0515"/>
+        </sequence>
+    </compositeType>
+    <compositeType name="INC02">
+        <sequence>
+            <element type="INC0201" minOccurs="1"/>
+            <element type="INC0202"/>
+            <element type="INC0203"/>
+            <element type="INC0204"/>
+            <element type="INC0205"/>
+            <element type="INC0206"/>
+            <element type="INC0207"/>
+            <element type="INC0208"/>
+            <element type="INC0209"/>
+            <element type="INC0210"/>
+            <element type="INC0211"/>
+            <element type="INC0212"/>
+            <element type="INC0213"/>
+            <element type="INC0214"/>
+            <element type="INC0215"/>
+        </sequence>
+    </compositeType>
+    <compositeType name="MEA04">
+        <sequence>
+            <element type="MEA0401" minOccurs="1"/>
+            <element type="MEA0402"/>
+            <element type="MEA0403"/>
+            <element type="MEA0404"/>
+            <element type="MEA0405"/>
+            <element type="MEA0406"/>
+            <element type="MEA0407"/>
+            <element type="MEA0408"/>
+            <element type="MEA0409"/>
+            <element type="MEA0410"/>
+            <element type="MEA0411"/>
+            <element type="MEA0412"/>
+            <element type="MEA0413"/>
+            <element type="MEA0414"/>
+            <element type="MEA0415"/>
+        </sequence>
+    </compositeType>
+    <compositeType name="N907">
+        <sequence>
+            <element type="N90701" minOccurs="1"/>
+            <element type="N90702" minOccurs="1"/>
+            <element type="N90703"/>
+            <element type="N90704"/>
+            <element type="N90705"/>
+            <element type="N90706"/>
+        </sequence>
+    </compositeType>
+    <compositeType name="PAM03">
+        <sequence>
+            <element type="PAM0301" minOccurs="1"/>
+            <element type="PAM0302"/>
+            <element type="PAM0303"/>
+            <element type="PAM0304"/>
+            <element type="PAM0305"/>
+            <element type="PAM0306"/>
+            <element type="PAM0307"/>
+            <element type="PAM0308"/>
+            <element type="PAM0309"/>
+            <element type="PAM0310"/>
+            <element type="PAM0311"/>
+            <element type="PAM0312"/>
+            <element type="PAM0313"/>
+            <element type="PAM0314"/>
+            <element type="PAM0315"/>
+        </sequence>
+    </compositeType>
+    <compositeType name="PWK08">
+        <sequence>
+            <element type="PWK0801" minOccurs="1"/>
+            <element type="PWK0802"/>
+            <element type="PWK0803"/>
+            <element type="PWK0804"/>
+            <element type="PWK0805"/>
+        </sequence>
+    </compositeType>
+    <compositeType name="QTY03">
+        <sequence>
+            <element type="QTY0301" minOccurs="1"/>
+            <element type="QTY0302"/>
+            <element type="QTY0303"/>
+            <element type="QTY0304"/>
+            <element type="QTY0305"/>
+            <element type="QTY0306"/>
+            <element type="QTY0307"/>
+            <element type="QTY0308"/>
+            <element type="QTY0309"/>
+            <element type="QTY0310"/>
+            <element type="QTY0311"/>
+            <element type="QTY0312"/>
+            <element type="QTY0313"/>
+            <element type="QTY0314"/>
+            <element type="QTY0315"/>
+        </sequence>
+    </compositeType>
+    <compositeType name="REF04">
+        <sequence>
+            <element type="REF0401" minOccurs="1"/>
+            <element type="REF0402" minOccurs="1"/>
+            <element type="REF0403"/>
+            <element type="REF0404"/>
+            <element type="REF0405"/>
+            <element type="REF0406"/>
+        </sequence>
+    </compositeType>
+    <compositeType name="SLN05">
+        <sequence>
+            <element type="SLN0501" minOccurs="1"/>
+            <element type="SLN0502"/>
+            <element type="SLN0503"/>
+            <element type="SLN0504"/>
+            <element type="SLN0505"/>
+            <element type="SLN0506"/>
+            <element type="SLN0507"/>
+            <element type="SLN0508"/>
+            <element type="SLN0509"/>
+            <element type="SLN0510"/>
+            <element type="SLN0511"/>
+            <element type="SLN0512"/>
+            <element type="SLN0513"/>
+            <element type="SLN0514"/>
+            <element type="SLN0515"/>
+        </sequence>
+    </compositeType>
+    <segmentType name="AMT">
+        <sequence>
+            <element type="AMT01" minOccurs="1"/>
+            <element type="AMT02" minOccurs="1"/>
+            <element type="AMT03"/>
+        </sequence>
+    </segmentType>
+    <segmentType name="BAL">
+        <sequence>
+            <element type="BAL01" minOccurs="1"/>
+            <element type="BAL02" minOccurs="1"/>
+            <element type="BAL03" minOccurs="1"/>
+        </sequence>
+    </segmentType>
+    <segmentType name="BIG">
+        <sequence>
+            <element type="BIG01" minOccurs="1"/>
+            <element type="BIG02" minOccurs="1"/>
+            <element type="BIG03"/>
+            <element type="BIG04"/>
+            <element type="BIG05"/>
+            <element type="BIG06"/>
+            <element type="BIG07"/>
+            <element type="BIG08"/>
+            <element type="BIG09"/>
+            <element type="BIG10"/>
+        </sequence>
+    </segmentType>
+    <segmentType name="CAD">
+        <sequence>
+            <element type="CAD01"/>
+            <element type="CAD02"/>
+            <element type="CAD03"/>
+            <element type="CAD04"/>
+            <element type="CAD05"/>
+            <element type="CAD06"/>
+            <element type="CAD07"/>
+            <element type="CAD08"/>
+            <element type="CAD09"/>
+        </sequence>
+    </segmentType>
+    <segmentType name="CRC">
+        <sequence>
+            <element type="CRC01" minOccurs="1"/>
+            <element type="CRC02" minOccurs="1"/>
+            <element type="CRC03" minOccurs="1"/>
+            <element type="CRC04"/>
+            <element type="CRC05"/>
+            <element type="CRC06"/>
+            <element type="CRC07"/>
+        </sequence>
+    </segmentType>
+    <segmentType name="CTP">
+        <sequence>
+            <element type="CTP01"/>
+            <element type="CTP02"/>
+            <element type="CTP03"/>
+            <element type="CTP04"/>
+            <composite type="CTP05"/>
+            <element type="CTP06"/>
+            <element type="CTP07"/>
+            <element type="CTP08"/>
+            <element type="CTP09"/>
+            <element type="CTP10"/>
+            <element type="CTP11"/>
+        </sequence>
+    </segmentType>
+    <segmentType name="CTT">
+        <sequence>
+            <element type="CTT01" minOccurs="1"/>
+            <element type="CTT02"/>
+            <element type="CTT03"/>
+            <element type="CTT04"/>
+            <element type="CTT05"/>
+            <element type="CTT06"/>
+            <element type="CTT07"/>
+        </sequence>
+    </segmentType>
+    <segmentType name="CUR">
+        <sequence>
+            <element type="CUR01" minOccurs="1"/>
+            <element type="CUR02" minOccurs="1"/>
+            <element type="CUR03"/>
+            <element type="CUR04"/>
+            <element type="CUR05"/>
+            <element type="CUR06"/>
+            <element type="CUR07"/>
+            <element type="CUR08"/>
+            <element type="CUR09"/>
+            <element type="CUR10"/>
+            <element type="CUR11"/>
+            <element type="CUR12"/>
+            <element type="CUR13"/>
+            <element type="CUR14"/>
+            <element type="CUR15"/>
+            <element type="CUR16"/>
+            <element type="CUR17"/>
+            <element type="CUR18"/>
+            <element type="CUR19"/>
+            <element type="CUR20"/>
+            <element type="CUR21"/>
+        </sequence>
+    </segmentType>
+    <segmentType name="DMG">
+        <sequence>
+            <element type="DMG01"/>
+            <element type="DMG02"/>
+            <element type="DMG03"/>
+            <element type="DMG04"/>
+            <element type="DMG05"/>
+            <element type="DMG06"/>
+            <element type="DMG07"/>
+            <element type="DMG08"/>
+            <element type="DMG09"/>
+        </sequence>
+    </segmentType>
+    <segmentType name="DTM">
+        <sequence>
+            <element type="DTM01" minOccurs="1"/>
+            <element type="DTM02"/>
+            <element type="DTM03"/>
+            <element type="DTM04"/>
+            <element type="DTM05"/>
+            <element type="DTM06"/>
+        </sequence>
+    </segmentType>
+    <segmentType name="FA1">
+        <sequence>
+            <element type="FA101" minOccurs="1"/>
+            <element type="FA102"/>
+            <element type="FA103"/>
+        </sequence>
+    </segmentType>
+    <segmentType name="FA2">
+        <sequence>
+            <element type="FA201" minOccurs="1"/>
+            <element type="FA202" minOccurs="1"/>
+        </sequence>
+    </segmentType>
+    <segmentType name="FOB">
+        <sequence>
+            <element type="FOB01" minOccurs="1"/>
+            <element type="FOB02"/>
+            <element type="FOB03"/>
+            <element type="FOB04"/>
+            <element type="FOB05"/>
+            <element type="FOB06"/>
+            <element type="FOB07"/>
+            <element type="FOB08"/>
+            <element type="FOB09"/>
+        </sequence>
+    </segmentType>
+    <segmentType name="INC">
+        <sequence>
+            <element type="INC01" minOccurs="1"/>
+            <composite type="INC02" minOccurs="1"/>
+            <element type="INC03" minOccurs="1"/>
+            <element type="INC04" minOccurs="1"/>
+            <element type="INC05"/>
+        </sequence>
+    </segmentType>
+    <segmentType name="ISS">
+        <sequence>
+            <element type="ISS01"/>
+            <element type="ISS02"/>
+            <element type="ISS03"/>
+            <element type="ISS04"/>
+            <element type="ISS05"/>
+            <element type="ISS06"/>
+            <element type="ISS07"/>
+            <element type="ISS08"/>
+        </sequence>
+    </segmentType>
+    <segmentType name="IT1">
+        <sequence>
+            <element type="IT101"/>
+            <element type="IT102"/>
+            <element type="IT103"/>
+            <element type="IT104"/>
+            <element type="IT105"/>
+            <element type="IT106"/>
+            <element type="IT107"/>
+            <element type="IT108"/>
+            <element type="IT109"/>
+            <element type="IT110"/>
+            <element type="IT111"/>
+            <element type="IT112"/>
+            <element type="IT113"/>
+            <element type="IT114"/>
+            <element type="IT115"/>
+            <element type="IT116"/>
+            <element type="IT117"/>
+            <element type="IT118"/>
+            <element type="IT119"/>
+            <element type="IT120"/>
+            <element type="IT121"/>
+            <element type="IT122"/>
+            <element type="IT123"/>
+            <element type="IT124"/>
+            <element type="IT125"/>
+        </sequence>
+    </segmentType>
+    <segmentType name="IT3">
+        <sequence>
+            <element type="IT301"/>
+            <element type="IT302"/>
+            <element type="IT303"/>
+            <element type="IT304"/>
+            <element type="IT305"/>
+        </sequence>
+    </segmentType>
+    <segmentType name="ITD">
+        <sequence>
+            <element type="ITD01"/>
+            <element type="ITD02"/>
+            <element type="ITD03"/>
+            <element type="ITD04"/>
+            <element type="ITD05"/>
+            <element type="ITD06"/>
+            <element type="ITD07"/>
+            <element type="ITD08"/>
+            <element type="ITD09"/>
+            <element type="ITD10"/>
+            <element type="ITD11"/>
+            <element type="ITD12"/>
+            <element type="ITD13"/>
+            <element type="ITD14"/>
+            <element type="ITD15"/>
+        </sequence>
+    </segmentType>
+    <segmentType name="L7">
+        <sequence>
+            <element type="L701"/>
+            <element type="L702"/>
+            <element type="L703"/>
+            <element type="L704"/>
+            <element type="L705"/>
+            <element type="L706"/>
+            <element type="L707"/>
+            <element type="L708"/>
+            <element type="L709"/>
+            <element type="L710"/>
+            <element type="L711"/>
+            <element type="L712"/>
+            <element type="L713"/>
+            <element type="L714"/>
+            <element type="L715"/>
+            <element type="L716"/>
+        </sequence>
+    </segmentType>
+    <segmentType name="LM">
+        <sequence>
+            <element type="LM01" minOccurs="1"/>
+            <element type="LM02"/>
+        </sequence>
+    </segmentType>
+    <segmentType name="LQ">
+        <sequence>
+            <element type="LQ01"/>
+            <element type="LQ02"/>
+        </sequence>
+    </segmentType>
+    <segmentType name="MEA">
+        <sequence>
+            <element type="MEA01"/>
+            <element type="MEA02"/>
+            <element type="MEA03"/>
+            <composite type="MEA04"/>
+            <element type="MEA05"/>
+            <element type="MEA06"/>
+            <element type="MEA07"/>
+            <element type="MEA08"/>
+            <element type="MEA09"/>
+            <element type="MEA10"/>
+        </sequence>
+    </segmentType>
+    <segmentType name="MSG">
+        <sequence>
+            <element type="MSG01" minOccurs="1"/>
+            <element type="MSG02"/>
+            <element type="MSG03"/>
+        </sequence>
+    </segmentType>
+    <segmentType name="N1">
+        <sequence>
+            <element type="N101" minOccurs="1"/>
+            <element type="N102"/>
+            <element type="N103"/>
+            <element type="N104"/>
+            <element type="N105"/>
+            <element type="N106"/>
+        </sequence>
+    </segmentType>
+    <segmentType name="N2">
+        <sequence>
+            <element type="N201" minOccurs="1"/>
+            <element type="N202"/>
+        </sequence>
+    </segmentType>
+    <segmentType name="N3">
+        <sequence>
+            <element type="N301" minOccurs="1"/>
+            <element type="N302"/>
+        </sequence>
+    </segmentType>
+    <segmentType name="N4">
+        <sequence>
+            <element type="N401"/>
+            <element type="N402"/>
+            <element type="N403"/>
+            <element type="N404"/>
+            <element type="N405"/>
+            <element type="N406"/>
+        </sequence>
+    </segmentType>
+    <segmentType name="N9">
+        <sequence>
+            <element type="N901" minOccurs="1"/>
+            <element type="N902"/>
+            <element type="N903"/>
+            <element type="N904"/>
+            <element type="N905"/>
+            <element type="N906"/>
+            <composite type="N907"/>
+        </sequence>
+    </segmentType>
+    <segmentType name="NTE">
+        <sequence>
+            <element type="NTE01"/>
+            <element type="NTE02" minOccurs="1"/>
+        </sequence>
+    </segmentType>
+    <segmentType name="PAM">
+        <sequence>
+            <element type="PAM01"/>
+            <element type="PAM02"/>
+            <composite type="PAM03"/>
+            <element type="PAM04"/>
+            <element type="PAM05"/>
+            <element type="PAM06"/>
+            <element type="PAM07"/>
+            <element type="PAM08"/>
+            <element type="PAM09"/>
+            <element type="PAM10"/>
+            <element type="PAM11"/>
+            <element type="PAM12"/>
+            <element type="PAM13"/>
+            <element type="PAM14"/>
+            <element type="PAM15"/>
+        </sequence>
+    </segmentType>
+    <segmentType name="PER">
+        <sequence>
+            <element type="PER01" minOccurs="1"/>
+            <element type="PER02"/>
+            <element type="PER03"/>
+            <element type="PER04"/>
+            <element type="PER05"/>
+            <element type="PER06"/>
+            <element type="PER07"/>
+            <element type="PER08"/>
+            <element type="PER09"/>
+        </sequence>
+    </segmentType>
+    <segmentType name="PID">
+        <sequence>
+            <element type="PID01" minOccurs="1"/>
+            <element type="PID02"/>
+            <element type="PID03"/>
+            <element type="PID04"/>
+            <element type="PID05"/>
+            <element type="PID06"/>
+            <element type="PID07"/>
+            <element type="PID08"/>
+            <element type="PID09"/>
+        </sequence>
+    </segmentType>
+    <segmentType name="PKG">
+        <sequence>
+            <element type="PKG01"/>
+            <element type="PKG02"/>
+            <element type="PKG03"/>
+            <element type="PKG04"/>
+            <element type="PKG05"/>
+            <element type="PKG06"/>
+        </sequence>
+    </segmentType>
+    <segmentType name="PO4">
+        <sequence>
+            <element type="PO401"/>
+            <element type="PO402"/>
+            <element type="PO403"/>
+            <element type="PO404"/>
+            <element type="PO405"/>
+            <element type="PO406"/>
+            <element type="PO407"/>
+            <element type="PO408"/>
+            <element type="PO409"/>
+            <element type="PO410"/>
+            <element type="PO411"/>
+            <element type="PO412"/>
+            <element type="PO413"/>
+            <element type="PO414"/>
+            <element type="PO415"/>
+            <element type="PO416"/>
+            <element type="PO417"/>
+            <element type="PO418"/>
+        </sequence>
+    </segmentType>
+    <segmentType name="PWK">
+        <sequence>
+            <element type="PWK01" minOccurs="1"/>
+            <element type="PWK02"/>
+            <element type="PWK03"/>
+            <element type="PWK04"/>
+            <element type="PWK05"/>
+            <element type="PWK06"/>
+            <element type="PWK07"/>
+            <composite type="PWK08"/>
+            <element type="PWK09"/>
+        </sequence>
+    </segmentType>
+    <segmentType name="QTY">
+        <sequence>
+            <element type="QTY01" minOccurs="1"/>
+            <element type="QTY02"/>
+            <composite type="QTY03"/>
+            <element type="QTY04"/>
+        </sequence>
+    </segmentType>
+    <segmentType name="R4">
+        <sequence>
+            <element type="R401" minOccurs="1"/>
+            <element type="R402"/>
+            <element type="R403"/>
+            <element type="R404"/>
+            <element type="R405"/>
+            <element type="R406"/>
+            <element type="R407"/>
+            <element type="R408"/>
+        </sequence>
+    </segmentType>
+    <segmentType name="REF">
+        <sequence>
+            <element type="REF01" minOccurs="1"/>
+            <element type="REF02"/>
+            <element type="REF03"/>
+            <composite type="REF04"/>
+        </sequence>
+    </segmentType>
+    <segmentType name="SAC">
+        <sequence>
+            <element type="SAC01" minOccurs="1"/>
+            <element type="SAC02"/>
+            <element type="SAC03"/>
+            <element type="SAC04"/>
+            <element type="SAC05"/>
+            <element type="SAC06"/>
+            <element type="SAC07"/>
+            <element type="SAC08"/>
+            <element type="SAC09"/>
+            <element type="SAC10"/>
+            <element type="SAC11"/>
+            <element type="SAC12"/>
+            <element type="SAC13"/>
+            <element type="SAC14"/>
+            <element type="SAC15"/>
+            <element type="SAC16"/>
+        </sequence>
+    </segmentType>
+    <segmentType name="SDQ">
+        <sequence>
+            <element type="SDQ01" minOccurs="1"/>
+            <element type="SDQ02"/>
+            <element type="SDQ03" minOccurs="1"/>
+            <element type="SDQ04" minOccurs="1"/>
+            <element type="SDQ05"/>
+            <element type="SDQ06"/>
+            <element type="SDQ07"/>
+            <element type="SDQ08"/>
+            <element type="SDQ09"/>
+            <element type="SDQ10"/>
+            <element type="SDQ11"/>
+            <element type="SDQ12"/>
+            <element type="SDQ13"/>
+            <element type="SDQ14"/>
+            <element type="SDQ15"/>
+            <element type="SDQ16"/>
+            <element type="SDQ17"/>
+            <element type="SDQ18"/>
+            <element type="SDQ19"/>
+            <element type="SDQ20"/>
+            <element type="SDQ21"/>
+            <element type="SDQ22"/>
+            <element type="SDQ23"/>
+        </sequence>
+    </segmentType>
+    <segmentType name="SLN">
+        <sequence>
+            <element type="SLN01" minOccurs="1"/>
+            <element type="SLN02"/>
+            <element type="SLN03" minOccurs="1"/>
+            <element type="SLN04"/>
+            <composite type="SLN05"/>
+            <element type="SLN06"/>
+            <element type="SLN07"/>
+            <element type="SLN08"/>
+            <element type="SLN09"/>
+            <element type="SLN10"/>
+            <element type="SLN11"/>
+            <element type="SLN12"/>
+            <element type="SLN13"/>
+            <element type="SLN14"/>
+            <element type="SLN15"/>
+            <element type="SLN16"/>
+            <element type="SLN17"/>
+            <element type="SLN18"/>
+            <element type="SLN19"/>
+            <element type="SLN20"/>
+            <element type="SLN21"/>
+            <element type="SLN22"/>
+            <element type="SLN23"/>
+            <element type="SLN24"/>
+            <element type="SLN25"/>
+            <element type="SLN26"/>
+            <element type="SLN27"/>
+            <element type="SLN28"/>
+        </sequence>
+    </segmentType>
+    <segmentType name="SR">
+        <sequence>
+            <element type="SR01"/>
+            <element type="SR02"/>
+            <element type="SR03"/>
+            <element type="SR04"/>
+            <element type="SR05"/>
+            <element type="SR06"/>
+            <element type="SR07"/>
+            <element type="SR08"/>
+            <element type="SR09"/>
+            <element type="SR10"/>
+            <element type="SR11"/>
+        </sequence>
+    </segmentType>
+    <segmentType name="TC2">
+        <sequence>
+            <element type="TC201" minOccurs="1"/>
+            <element type="TC202" minOccurs="1"/>
+        </sequence>
+    </segmentType>
+    <segmentType name="TDS">
+        <sequence>
+            <element type="TDS01" minOccurs="1"/>
+            <element type="TDS02"/>
+            <element type="TDS03"/>
+            <element type="TDS04"/>
+        </sequence>
+    </segmentType>
+    <segmentType name="TXI">
+        <sequence>
+            <element type="TXI01" minOccurs="1"/>
+            <element type="TXI02"/>
+            <element type="TXI03"/>
+            <element type="TXI04"/>
+            <element type="TXI05"/>
+            <element type="TXI06"/>
+            <element type="TXI07"/>
+            <element type="TXI08"/>
+            <element type="TXI09"/>
+            <element type="TXI10"/>
+        </sequence>
+    </segmentType>
+    <segmentType name="V1">
+        <sequence>
+            <element type="V101"/>
+            <element type="V102"/>
+            <element type="V103"/>
+            <element type="V104"/>
+            <element type="V105"/>
+            <element type="V106"/>
+            <element type="V107"/>
+            <element type="V108"/>
+            <element type="V109"/>
+        </sequence>
+    </segmentType>
+    <segmentType name="YNQ">
+        <sequence>
+            <element type="YNQ01"/>
+            <element type="YNQ02" minOccurs="1"/>
+            <element type="YNQ03"/>
+            <element type="YNQ04"/>
+            <element type="YNQ05"/>
+            <element type="YNQ06"/>
+            <element type="YNQ07"/>
+            <element type="YNQ08"/>
+            <element type="YNQ09"/>
+            <element type="YNQ10"/>
+        </sequence>
+    </segmentType>
+</schema>

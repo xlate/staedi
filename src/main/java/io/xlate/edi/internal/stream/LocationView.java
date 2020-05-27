@@ -49,6 +49,44 @@ public class LocationView implements Location {
         elementOccurrence = -1;
     }
 
+    public String toString() {
+        StringBuilder display = new StringBuilder();
+
+        if (getSegmentPosition() < 0) {
+            display.append("at offset ");
+            display.append(getCharacterOffset());
+        } else {
+            display.append("in segment ");
+
+            if (getSegmentTag() != null) {
+                display.append(getSegmentTag());
+            } else {
+                display.append("???");
+            }
+
+            display.append(" at position ");
+            display.append(String.valueOf(getSegmentPosition()));
+
+            if (getElementPosition() > -1) {
+                display.append(", element ");
+                display.append(String.valueOf(getElementPosition()));
+
+                if (getElementOccurrence() > 1) {
+                    display.append(" (occurrence ");
+                    display.append(String.valueOf(getElementOccurrence()));
+                    display.append(')');
+                }
+            }
+
+            if (getComponentPosition() > -1) {
+                display.append(", component ");
+                display.append(String.valueOf(getComponentPosition()));
+            }
+        }
+
+        return display.toString();
+    }
+
     @Override
     public int getLineNumber() {
         return lineNumber;

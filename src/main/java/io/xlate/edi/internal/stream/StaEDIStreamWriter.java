@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -77,6 +78,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     private Validator controlValidator;
     private boolean transactionSchemaAllowed = false;
     private boolean transaction = false;
+    private Schema transactionSchema;
     private Validator transactionValidator;
     private CharArraySequence dataHolder = new CharArraySequence();
     private boolean atomicElementWrite = false;
@@ -199,7 +201,10 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
 
     @Override
     public void setTransactionSchema(Schema transactionSchema) {
-        transactionValidator = transactionSchema != null ? new Validator(transactionSchema, true, controlSchema) : null;
+        if (!Objects.equals(this.transactionSchema, transactionSchema)) {
+            this.transactionSchema = transactionSchema;
+            transactionValidator = transactionSchema != null ? new Validator(transactionSchema, true, controlSchema) : null;
+        }
     }
 
     @Override
@@ -604,6 +609,9 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         if (EDIType.Type.TRANSACTION.toString().equals(id)) {
             transaction = true;
             transactionSchemaAllowed = true;
+            if (transactionValidator != null) {
+                transactionValidator.reset();
+            }
         }
     }
 
