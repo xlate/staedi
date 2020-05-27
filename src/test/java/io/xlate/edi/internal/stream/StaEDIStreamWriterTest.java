@@ -28,6 +28,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.junit.jupiter.api.Test;
@@ -1189,6 +1192,196 @@ class StaEDIStreamWriterTest {
                 assertEquals(reader.getLocation().getElementPosition(),
                              writer.getLocation().getElementPosition(),
                              () -> "Element position mismatch");
+                assertEquals(reader.getLocation().getElementOccurrence(),
+                             writer.getLocation().getElementOccurrence(),
+                             () -> "Element occurrence mismatch");
+                assertEquals(reader.getLocation().getComponentPosition(),
+                             writer.getLocation().getComponentPosition(),
+                             () -> "Component position mismatch");
+            }
+        } finally {
+            reader.close();
+        }
+
+        assertEquals(expected.toString().trim(), result.toString().trim());
+    }
+
+    @Test
+    void testInputEquivalenceValidatedMultipleX12() throws Exception {
+        EDIInputFactory inputFactory = EDIInputFactory.newFactory();
+        final ByteArrayOutputStream expected = new ByteArrayOutputStream(16384);
+        Schema control = SchemaUtils.getControlSchema("X12", new String[] { "00401" });
+
+        SchemaFactory schemaFactory = SchemaFactory.newFactory();
+        final InputStream delegate = new BufferedInputStream(getClass().getResourceAsStream("/x12/invoice810_po850_dual.edi"));
+
+        InputStream source = new InputStream() {
+            @Override
+            public int read() throws IOException {
+                int value = delegate.read();
+
+                if (value != -1) {
+                    expected.write(value);
+                    System.out.write(value);
+                    System.out.flush();
+                    return value;
+                }
+
+                return -1;
+            }
+        };
+        EDIStreamReader reader = inputFactory.createEDIStreamReader(source);
+
+        EDIOutputFactory outputFactory = EDIOutputFactory.newFactory();
+        outputFactory.setProperty(EDIOutputFactory.PRETTY_PRINT, true);
+        ByteArrayOutputStream result = new ByteArrayOutputStream(16384);
+        EDIStreamWriter writer = outputFactory.createEDIStreamWriter(result);
+        writer.setControlSchema(control);
+
+        EDIStreamEvent event;
+        String tag = null;
+        boolean composite = false;
+        int componentMod = 0;
+        int elementMod = 0;
+        boolean startTxSegment = false;
+        List<String> elements = new ArrayList<>();
+        Map<String, Schema> schemas = new HashMap<>();
+
+        try {
+            while (reader.hasNext()) {
+                event = reader.next();
+
+                switch (event) {
+                case START_INTERCHANGE:
+                    writer.startInterchange();
+                    break;
+                case END_INTERCHANGE:
+                    writer.endInterchange();
+                    break;
+                case START_TRANSACTION:
+                    startTxSegment = true;
+                    elements.clear();
+                    // Continue the loop to avoid segment position comparison for this event type
+                    continue;
+                case START_SEGMENT:
+                    tag = reader.getText();
+                    writer.writeStartSegment(tag);
+                    break;
+                case END_SEGMENT:
+                    if (startTxSegment) {
+                        Schema transaction;
+                        if (!schemas.containsKey(elements.get(0))) {
+                            transaction = schemaFactory.createSchema(getClass().getResource("/x12/EDISchema" + elements.get(0)
+                            + ".xml"));
+                            schemas.put(elements.get(0), transaction);
+                        } else {
+                            transaction = schemas.get(elements.get(0));
+                        }
+
+                        reader.setTransactionSchema(transaction);
+                        writer.setTransactionSchema(transaction);
+                        startTxSegment = false;
+                    }
+                    writer.writeEndSegment();
+                    break;
+                case START_COMPOSITE:
+                    if (reader.getLocation().getElementOccurrence() > 1) {
+                        writer.writeRepeatElement();
+                    } else {
+                        writer.writeStartElement();
+                    }
+                    composite = true;
+                    break;
+                case END_COMPOSITE:
+                    writer.endElement();
+                    composite = false;
+                    break;
+                case ELEMENT_DATA:
+                    String text = reader.getText();
+
+                    if (startTxSegment) {
+                        elements.add(text);
+                    }
+
+                    if (composite) {
+                        if (text == null || text.isEmpty()) {
+                            writer.writeEmptyComponent();
+                        } else {
+                            switch (++componentMod % 3) {
+                            case 0:
+                                writer.startComponent();
+                                writer.writeElementData(text);
+                                writer.endComponent();
+                                break;
+                            case 1:
+                                writer.writeComponent(text);
+                                break;
+                            case 2:
+                                writer.writeComponent(text.toCharArray(), 0, text.length());
+                                break;
+                            }
+                        }
+                    } else {
+                        if (reader.getLocation().getElementOccurrence() > 1) {
+                            writer.writeRepeatElement();
+                            writer.writeElementData(text);
+                            writer.endElement();
+                        } else {
+                            if (text == null || text.isEmpty()) {
+                                writer.writeEmptyElement();
+                            } else {
+                                switch (++elementMod % 3) {
+                                case 0:
+                                    writer.writeStartElement();
+                                    writer.writeElementData(text);
+                                    writer.endElement();
+                                    break;
+                                case 1:
+                                    writer.writeElement(text);
+                                    break;
+                                case 2:
+                                    writer.writeElement(text.toCharArray(), 0, text.length());
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    break;
+                case ELEMENT_DATA_BINARY:
+                    writer.writeStartElementBinary();
+                    writer.writeBinaryData(reader.getBinaryData());
+                    writer.endElement();
+                    break;
+                case START_GROUP:
+                case START_LOOP:
+                case END_LOOP:
+                case END_TRANSACTION:
+                case END_GROUP:
+                    // Ignore control loops
+                    continue;
+                case SEGMENT_ERROR:
+                case ELEMENT_OCCURRENCE_ERROR:
+                case ELEMENT_DATA_ERROR:
+                    System.out.println(event + "[" + reader.getErrorType() + "] error " + reader.getLocation().toString());
+                    break;
+                default:
+                    break;
+                }
+
+                assertEquals(reader.getLocation().getSegmentPosition(),
+                             writer.getLocation().getSegmentPosition(),
+                             () -> "Segment position mismatch writer: " +
+                                 writer.getLocation().toString() +
+                                 ";\nreader: " +
+                                 reader.getLocation().toString());
+                assertEquals(reader.getLocation().getElementPosition(),
+                             writer.getLocation().getElementPosition(),
+                             () -> {
+                                 return "Element position mismatch writer: " +
+                                         writer.getLocation().toString() +
+                                         ";\nreader: " +
+                                         reader.getLocation().toString();
+                             });
                 assertEquals(reader.getLocation().getElementOccurrence(),
                              writer.getLocation().getElementOccurrence(),
                              () -> "Element occurrence mismatch");

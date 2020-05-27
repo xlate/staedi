@@ -15,7 +15,23 @@
  ******************************************************************************/
 package io.xlate.edi.internal.stream.validation;
 
-import static io.xlate.edi.stream.EDIStreamValidationError.*;
+import static io.xlate.edi.stream.EDIStreamValidationError.IMPLEMENTATION_INVALID_CODE_VALUE;
+import static io.xlate.edi.stream.EDIStreamValidationError.IMPLEMENTATION_LOOP_OCCURS_UNDER_MINIMUM_TIMES;
+import static io.xlate.edi.stream.EDIStreamValidationError.IMPLEMENTATION_SEGMENT_BELOW_MINIMUM_USE;
+import static io.xlate.edi.stream.EDIStreamValidationError.IMPLEMENTATION_TOO_FEW_REPETITIONS;
+import static io.xlate.edi.stream.EDIStreamValidationError.IMPLEMENTATION_UNUSED_DATA_ELEMENT_PRESENT;
+import static io.xlate.edi.stream.EDIStreamValidationError.IMPLEMENTATION_UNUSED_SEGMENT_PRESENT;
+import static io.xlate.edi.stream.EDIStreamValidationError.INVALID_CODE_VALUE;
+import static io.xlate.edi.stream.EDIStreamValidationError.LOOP_OCCURS_OVER_MAXIMUM_TIMES;
+import static io.xlate.edi.stream.EDIStreamValidationError.MANDATORY_SEGMENT_MISSING;
+import static io.xlate.edi.stream.EDIStreamValidationError.REQUIRED_DATA_ELEMENT_MISSING;
+import static io.xlate.edi.stream.EDIStreamValidationError.SEGMENT_EXCEEDS_MAXIMUM_USE;
+import static io.xlate.edi.stream.EDIStreamValidationError.SEGMENT_NOT_IN_DEFINED_TRANSACTION_SET;
+import static io.xlate.edi.stream.EDIStreamValidationError.SEGMENT_NOT_IN_PROPER_SEQUENCE;
+import static io.xlate.edi.stream.EDIStreamValidationError.TOO_MANY_COMPONENTS;
+import static io.xlate.edi.stream.EDIStreamValidationError.TOO_MANY_DATA_ELEMENTS;
+import static io.xlate.edi.stream.EDIStreamValidationError.TOO_MANY_REPETITIONS;
+import static io.xlate.edi.stream.EDIStreamValidationError.UNEXPECTED_SEGMENT;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -53,6 +69,7 @@ public class Validator {
     private Schema containerSchema;
     private Schema schema;
     private final boolean validateCodeValues;
+    private boolean initial = true;
 
     private final UsageNode root;
     private final UsageNode implRoot;
@@ -118,6 +135,36 @@ public class Validator {
             implRoot = null;
             implSegment = null;
         }
+    }
+
+    public void reset() {
+        if (initial) {
+            return;
+        }
+
+        root.reset();
+        correctSegment = segment = root.getFirstChild();
+
+        if (implRoot != null) {
+            implRoot.reset();
+            implSegment = implRoot.getFirstChild();
+        }
+
+        cursor.reset(root, implRoot);
+        depth = 1;
+
+        segmentExpected = false;
+        composite = null;
+        element = null;
+
+        implSegmentSelected = false;
+        implComposite = null;
+        implElement = null;
+
+        implSegmentCandidates.clear();
+        useErrors.clear();
+        elementErrors.clear();
+        initial = true;
     }
 
     public boolean isPendingDiscrimination() {
@@ -284,6 +331,7 @@ public class Validator {
     }
 
     public void validateSegment(ValidationEventHandler handler, CharSequence tag) {
+        initial = false;
         segmentExpected = true;
         implSegmentSelected = false;
 
