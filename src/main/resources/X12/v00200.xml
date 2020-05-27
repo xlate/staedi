@@ -202,7 +202,7 @@
   <elementType name="E143" number="143" base="string" minLength="3" maxLength="3" />
   <elementType name="E329" number="329" base="string" minLength="4" maxLength="9" />
   <elementType name="E337" number="337" base="time" minLength="4" maxLength="8" />
-  <elementType name="E373" number="373" base="date" minLength="8" maxLength="8" />
+  <elementType name="E373" number="373" base="date" minLength="6" maxLength="8" />
   <elementType name="E455" number="455" base="string" maxLength="2" />
 
   <elementType name="E479" number="479" base="identifier" minLength="2" maxLength="2">
