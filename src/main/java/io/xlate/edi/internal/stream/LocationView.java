@@ -57,13 +57,7 @@ public class LocationView implements Location {
             display.append(getCharacterOffset());
         } else {
             display.append("in segment ");
-
-            if (getSegmentTag() != null) {
-                display.append(getSegmentTag());
-            } else {
-                display.append("???");
-            }
-
+            display.append(String.valueOf(getSegmentTag()));
             display.append(" at position ");
             display.append(String.valueOf(getSegmentPosition()));
 

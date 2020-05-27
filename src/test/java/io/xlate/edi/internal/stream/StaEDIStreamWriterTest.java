@@ -1230,13 +1230,12 @@ class StaEDIStreamWriterTest {
                 return -1;
             }
         };
-        EDIStreamReader reader = inputFactory.createEDIStreamReader(source);
 
+        EDIStreamReader reader = inputFactory.createEDIStreamReader(source);
         EDIOutputFactory outputFactory = EDIOutputFactory.newFactory();
         outputFactory.setProperty(EDIOutputFactory.PRETTY_PRINT, true);
         ByteArrayOutputStream result = new ByteArrayOutputStream(16384);
-        EDIStreamWriter writer = outputFactory.createEDIStreamWriter(result);
-        writer.setControlSchema(control);
+        EDIStreamWriter writer = null;
 
         EDIStreamEvent event;
         String tag = null;
@@ -1253,6 +1252,11 @@ class StaEDIStreamWriterTest {
 
                 switch (event) {
                 case START_INTERCHANGE:
+                    for (Map.Entry<String, Character> delim : reader.getDelimiters().entrySet()) {
+                        outputFactory.setProperty(delim.getKey(), delim.getValue());
+                    }
+                    writer = outputFactory.createEDIStreamWriter(result);
+                    writer.setControlSchema(control);
                     writer.startInterchange();
                     break;
                 case END_INTERCHANGE:
@@ -1370,18 +1374,10 @@ class StaEDIStreamWriterTest {
 
                 assertEquals(reader.getLocation().getSegmentPosition(),
                              writer.getLocation().getSegmentPosition(),
-                             () -> "Segment position mismatch writer: " +
-                                 writer.getLocation().toString() +
-                                 ";\nreader: " +
-                                 reader.getLocation().toString());
+                             () -> "Segment position mismatch");
                 assertEquals(reader.getLocation().getElementPosition(),
                              writer.getLocation().getElementPosition(),
-                             () -> {
-                                 return "Element position mismatch writer: " +
-                                         writer.getLocation().toString() +
-                                         ";\nreader: " +
-                                         reader.getLocation().toString();
-                             });
+                             () -> "Element position mismatch");
                 assertEquals(reader.getLocation().getElementOccurrence(),
                              writer.getLocation().getElementOccurrence(),
                              () -> "Element occurrence mismatch");

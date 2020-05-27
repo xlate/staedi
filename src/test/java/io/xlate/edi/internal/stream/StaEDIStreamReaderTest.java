@@ -24,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
@@ -42,18 +43,16 @@ import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
 import io.xlate.edi.internal.schema.SchemaUtils;
-import io.xlate.edi.schema.EDIComplexType;
-import io.xlate.edi.schema.EDIReference;
 import io.xlate.edi.schema.EDISchemaException;
 import io.xlate.edi.schema.Schema;
 import io.xlate.edi.schema.SchemaFactory;
 import io.xlate.edi.stream.EDIInputFactory;
+import io.xlate.edi.stream.EDIStreamConstants.Delimiters;
 import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamException;
 import io.xlate.edi.stream.EDIStreamReader;
 import io.xlate.edi.stream.EDIStreamValidationError;
 import io.xlate.edi.stream.Location;
-import io.xlate.edi.stream.EDIStreamConstants.Delimiters;
 
 @SuppressWarnings({ "resource", "unused" })
 class StaEDIStreamReaderTest implements ConstantsTest {
@@ -1032,5 +1031,59 @@ class StaEDIStreamReaderTest implements ConstantsTest {
         } finally {
             reader.close();
         }
+    }
+
+    @Test
+    void testUnresolvedControlSchema() throws IOException, EDIStreamException {
+        ByteArrayInputStream stream = new ByteArrayInputStream((""
+                + "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*U*00000*508121953*0*P*:~"
+                + "IEA*1*508121953~").getBytes());
+
+        EDIInputFactory factory = EDIInputFactory.newFactory();
+        EDIStreamReader reader = factory.createEDIStreamReader(stream);
+        Exception thrown = null;
+
+        try {
+            while (reader.hasNext()) {
+                assertNull(reader.getControlSchema());
+
+                try {
+                    reader.next();
+                } catch (Exception e) {
+                    thrown = e;
+                }
+            }
+        } finally {
+            reader.close();
+        }
+
+        assertNull(thrown);
+    }
+
+    @Test
+    void testControlSchemaParseError() throws IOException, EDIStreamException {
+        ByteArrayInputStream stream = new ByteArrayInputStream((""
+                + "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*U*00001*508121953*0*P*:~"
+                + "IEA*1*508121953~").getBytes());
+
+        EDIInputFactory factory = EDIInputFactory.newFactory();
+        EDIStreamReader reader = factory.createEDIStreamReader(stream);
+        Exception thrown = null;
+
+        try {
+            while (reader.hasNext()) {
+                assertNull(reader.getControlSchema());
+
+                try {
+                    reader.next();
+                } catch (Exception e) {
+                    thrown = e;
+                }
+            }
+        } finally {
+            reader.close();
+        }
+
+        assertNull(thrown);
     }
 }

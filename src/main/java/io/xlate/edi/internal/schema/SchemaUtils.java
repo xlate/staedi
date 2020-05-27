@@ -83,19 +83,29 @@ public class SchemaUtils {
 
         Entry<String, Schema> controlEntry = controlSchemas.floorEntry(key);
 
-        if (controlEntry != null && controlEntry.getValue() != null) {
+        if (isValidEntry(controlEntry, standard)) {
             return controlEntry.getValue();
         }
 
         Entry<String, String> pathEntry = controlVersions.floorEntry(key);
 
-        if (pathEntry != null) {
+        if (isValidEntry(pathEntry, standard)) {
             Schema created = getXmlSchema(pathEntry.getValue());
             controlSchemas.put(pathEntry.getKey(), created);
             return created;
         }
 
         return null;
+    }
+
+    static boolean isValidEntry(Entry<String, ?> entry, String standard) {
+        if (entry == null) {
+            return false;
+        }
+        if (!entry.getKey().startsWith(standard)) {
+            return false;
+        }
+        return entry.getValue() != null;
     }
 
     private static Schema getXmlSchema(String resource) throws EDISchemaException {

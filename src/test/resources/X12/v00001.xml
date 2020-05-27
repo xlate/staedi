@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="yes"?>
+<!--
+  Copyright 2020 xlate.io LLC, http://www.xlate.io
+
+  Licensed under the Apache License, Version 2.0 (the "License"); you may not
+  use this file except in compliance with the License.  You may obtain a copy
+  of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+  License for the specific language governing permissions and limitations under
+  the License.
+-->
+<schema xmlns="http://xlate.io/EDISchema/v3">
+
+  <interchange header="ISA" trailer="IEA1">
+    <sequence>
+      <segment type="TA1" maxOccurs="1" />
+      <group header="GS" trailer="GE">
+        <transaction header="ST" trailer="SE" />
+      </group>
+    </sequence>
+  </interchange>
+
+  <elementType name="I01" base="string" minLength="2" maxLength="2" />
+  <elementType name="I02" base="string" minLength="10" maxLength="10" />
+  <elementType name="I03" base="string" minLength="2" maxLength="2" />
+  <elementType name="I04" base="string" minLength="10" maxLength="10" />
+  <elementType name="I05" base="string" minLength="2" maxLength="2" />
+  <elementType name="I06" base="string" minLength="15" maxLength="15" />
+  <elementType name="I07" base="string" minLength="15" maxLength="15" />
+  <elementType name="I08" base="date" minLength="6" maxLength="6" />
+  <elementType name="I09" base="time" minLength="4" maxLength="4" />
+  <elementType name="I10" base="string" />
+  <elementType name="I11" base="string" minLength="5" maxLength="5" />
+  <elementType name="I12" base="numeric" minLength="9" maxLength="9" />
+  <elementType name="I13" base="string" />
+  <elementType name="I14" base="string" />
+  <elementType name="I15" base="string" />
+  <elementType name="I16" base="numeric" maxLength="5" />
+  <elementType name="I17" base="string" />
+  <elementType name="I18" base="string" minLength="3" maxLength="3" />
+  <elementType name="E28" number="28" base="numeric" maxLength="9" />
+  <elementType name="E96" number="96" base="numeric" maxLength="10" />
+  <elementType name="E97" number="97" base="numeric" maxLength="6" />
+  <elementType name="E124" number="124" base="string" minLength="2" maxLength="15" />
+  <elementType name="E142" number="142" base="string" minLength="2" maxLength="15" />
+  <elementType name="E143" number="143" base="string" minLength="3" maxLength="3" />
+  <elementType name="E329" number="329" base="string" minLength="4" maxLength="9" />
+  <elementType name="E337" number="337" base="time" minLength="4" maxLength="8" />
+  <elementType name="E373" number="373" base="date" minLength="6" maxLength="8" />
+  <elementType name="E455" number="455" base="string" maxLength="2" />
+  <elementType name="E479" number="479" base="string" minLength="2" maxLength="2" />
+  <elementType name="E480" number="480" base="string" maxLength="12" />
+
+  <segmentType name="ST">
+    <sequence>
+      <element type="E143" minOccurs="1" />
+      <element type="E329" minOccurs="1" />
+    </sequence>
+  </segmentType>
+
+  <segmentType name="SE">
+    <sequence>
+      <element type="E96" minOccurs="1" />
+      <element type="E329" minOccurs="1" />
+    </sequence>
+  </segmentType>
+
+  <segmentType name="GS">
+    <sequence>
+      <element type="E479" minOccurs="1" />
+      <element type="E142" minOccurs="1" />
+      <element type="E124" minOccurs="1" />
+      <element type="E373" minOccurs="1" />
+      <element type="E337" minOccurs="1" />
+      <element type="E28" minOccurs="1" />
+      <element type="E455" minOccurs="1" />
+      <element type="E480" minOccurs="1" />
+    </sequence>
+  </segmentType>
+
+  <segmentType name="GE">
+    <sequence>
+      <element type="E28" minOccurs="1" />
+      <element type="E97" minOccurs="1" />
+    </sequence>
+  </segmentType>
+
+  <segmentType name="ISA">
+    <sequence>
+      <element type="I01" minOccurs="1" />
+      <element type="I02" minOccurs="1" />
+      <element type="I03" minOccurs="1" />
+      <element type="I04" minOccurs="1" />
+      <element type="I05" minOccurs="1" />
+      <element type="I06" minOccurs="1" />
+      <element type="I05" minOccurs="1" />
+      <element type="I07" minOccurs="1" />
+      <element type="I08" minOccurs="1" />
+      <element type="I09" minOccurs="1" />
+      <element type="I10" minOccurs="1" />
+      <element type="I11" minOccurs="1" />
+      <element type="I12" minOccurs="1" />
+      <element type="I13" minOccurs="1" />
+      <element type="I14" minOccurs="1" />
+      <element type="I15" minOccurs="1" />
+    </sequence>
+  </segmentType>
+
+  <segmentType name="TA1">
+    <sequence>
+      <element type="I12" minOccurs="1" />
+      <element type="I08" minOccurs="1" />
+      <element type="I09" minOccurs="1" />
+      <element type="I17" minOccurs="1" />
+      <element type="I18" minOccurs="1" />
+    </sequence>
+  </segmentType>
+
+  <segmentType name="IEA">
+    <sequence>
+      <element type="I16" minOccurs="1" />
+      <element type="I12" minOccurs="1" />
+    </sequence>
+  </segmentType>
+</schema>

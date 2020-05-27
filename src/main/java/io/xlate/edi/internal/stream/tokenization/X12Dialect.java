@@ -78,6 +78,8 @@ public class X12Dialect implements Dialect {
 
             if (Integer.parseInt(version[0]) >= 402) {
                 characters.setClass(er, CharacterClass.ELEMENT_REPEATER);
+            } else {
+                er = '\0';
             }
         } catch (@SuppressWarnings("unused") NumberFormatException nfe) {
             /*
