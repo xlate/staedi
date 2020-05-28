@@ -23,6 +23,7 @@ import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -127,11 +128,28 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         releaseIndicator = getDelimiter(properties, Delimiters.RELEASE, dialect::getReleaseIndicator);
     }
 
+    private boolean areDelimitersSpecified() {
+        return Arrays.asList(Delimiters.SEGMENT,
+                             Delimiters.DATA_ELEMENT,
+                             Delimiters.COMPONENT_ELEMENT,
+                             Delimiters.REPETITION,
+                             Delimiters.DECIMAL,
+                             Delimiters.RELEASE)
+                .stream()
+                .anyMatch(properties::containsKey);
+    }
+
     static char getDelimiter(Map<String, Object> properties, String key, Supplier<Character> defaultSupplier) {
         if (properties.containsKey(key)) {
             return (char) properties.get(key);
         }
         return defaultSupplier.get();
+    }
+
+    static void putDelimiter(String key, char value, Map<String, Character> delimiters) {
+        if (value != '\0') {
+            delimiters.put(key, value);
+        }
     }
 
     private static void ensureArgs(int arrayLength, int start, int end) {
@@ -221,6 +239,23 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         return dialect.getStandard();
     }
 
+    @Override
+    public Map<String, Character> getDelimiters() {
+        if (dialect == null) {
+            throw new IllegalStateException("standard not accessible");
+        }
+
+        Map<String, Character> delimiters = new HashMap<>(6);
+        putDelimiter(Delimiters.SEGMENT, segmentTerminator, delimiters);
+        putDelimiter(Delimiters.DATA_ELEMENT, dataElementSeparator, delimiters);
+        putDelimiter(Delimiters.COMPONENT_ELEMENT, componentElementSeparator, delimiters);
+        putDelimiter(Delimiters.REPETITION, repetitionSeparator, delimiters);
+        putDelimiter(Delimiters.DECIMAL, decimalMark, delimiters);
+        putDelimiter(Delimiters.RELEASE, releaseIndicator, delimiters);
+
+        return delimiters;
+    }
+
     private Validator validator() {
         // Do not use the transactionValidator in the period where it may be set/mutated by the user
         return transaction && !transactionSchemaAllowed ? transactionValidator : controlValidator;
@@ -249,6 +284,9 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         case HEADER_COMPONENT_END:
             if (dialect.appendHeader(characters, (char) output)) {
                 if (dialect.isConfirmed()) {
+                    // Set up the delimiters again once the dialect has confirmed them
+                    setupDelimiters();
+
                     switch (state) {
                     case HEADER_DATA:
                         state = State.TAG_SEARCH;
@@ -311,14 +349,36 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         if (state == State.INITIAL) {
             dialect = DialectFactory.getDialect(name);
             setupDelimiters();
-            writeString(name);
 
-            if (dialect instanceof EDIFACTDialect && "UNA".equals(name)) {
-                write(this.componentElementSeparator);
-                write(this.dataElementSeparator);
-                write(this.decimalMark);
-                write(this.releaseIndicator);
-                write(this.repetitionSeparator);
+            if (dialect instanceof EDIFACTDialect) {
+                if (EDIFACTDialect.UNB.equals(name) && areDelimitersSpecified()) {
+                    /*
+                     * Writing the EDIFACT header when delimiters were given via properties requires that
+                     * a UNA is written first.
+                     */
+                    dialect = DialectFactory.getDialect(EDIFACTDialect.UNA);
+                    writeString(EDIFACTDialect.UNA);
+                    write(this.componentElementSeparator);
+                    write(this.dataElementSeparator);
+                    write(this.decimalMark);
+                    write(this.releaseIndicator);
+                    write(this.repetitionSeparator);
+                    write(this.segmentTerminator);
+                    // Now write the UNB
+                    writeString(name);
+                } else {
+                    writeString(name);
+
+                    if (EDIFACTDialect.UNA.equals(name)) {
+                        write(this.componentElementSeparator);
+                        write(this.dataElementSeparator);
+                        write(this.decimalMark);
+                        write(this.releaseIndicator);
+                        write(this.repetitionSeparator);
+                    }
+                }
+            } else {
+                writeString(name);
             }
         } else {
             writeString(name);

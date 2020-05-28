@@ -17,6 +17,7 @@ package io.xlate.edi.stream;
 
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.util.Map;
 
 import io.xlate.edi.schema.Schema;
 
@@ -113,6 +114,18 @@ public interface EDIStreamWriter {
      * @since 1.7
      */
     String getStandard();
+
+    /**
+     * Retrieve a read-only map of delimiters in use for the stream being written.
+     *
+     * @return The value of the property
+     * @throws IllegalStateException
+     *             when the standard has not yet been determined, prior to the
+     *             start of an interchange header segment being fully written
+     *
+     * @since 1.8
+     */
+    Map<String, Character> getDelimiters();
 
     EDIStreamWriter startInterchange() throws EDIStreamException;
 

@@ -17,6 +17,7 @@ package io.xlate.edi.internal.stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -50,6 +51,7 @@ import io.xlate.edi.stream.EDIStreamValidationError;
 import io.xlate.edi.stream.EDIStreamWriter;
 import io.xlate.edi.stream.EDIValidationException;
 import io.xlate.edi.stream.Location;
+import io.xlate.edi.stream.EDIStreamConstants.Delimiters;
 
 @SuppressWarnings("resource")
 class StaEDIStreamWriterTest {
@@ -697,7 +699,7 @@ class StaEDIStreamWriterTest {
         EDIOutputFactory outputFactory = EDIOutputFactory.newFactory();
         outputFactory.setProperty(EDIOutputFactory.PRETTY_PRINT, true);
         ByteArrayOutputStream result = new ByteArrayOutputStream(16384);
-        EDIStreamWriter writer = outputFactory.createEDIStreamWriter(result);
+        EDIStreamWriter writer = null;
 
         EDIStreamEvent event;
         String tag = null;
@@ -1427,5 +1429,191 @@ class StaEDIStreamWriterTest {
               .writeEndSegment();
         writer.flush();
         assertEquals("SEG*BÜTTNER~", stream.toString());
+    }
+
+    @Test
+    void testGetDelimitersX12Pre00402() throws EDIStreamException {
+        EDIOutputFactory factory = EDIOutputFactory.newFactory();
+        ByteArrayOutputStream stream = new ByteArrayOutputStream(4096);
+        EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
+
+        writer.startInterchange();
+        writer.writeStartSegment("ISA");
+        writer.writeElement("00").writeElement("          ");
+        writer.writeElement("00").writeElement("          ");
+        writer.writeElement("ZZ").writeElement("ReceiverID     ");
+        writer.writeElement("ZZ").writeElement("Sender         ");
+        writer.writeElement("050812");
+        writer.writeElement("1953");
+        writer.writeElement("U");
+        writer.writeElement("00401");
+        writer.writeElement("508121953");
+        writer.writeElement("0");
+        writer.writeElement("P");
+        writer.writeElement(":");
+        writer.writeEndSegment();
+
+        Map<String, Character> delimiters = writer.getDelimiters();
+        assertEquals('~', delimiters.get(Delimiters.SEGMENT));
+        assertEquals('*', delimiters.get(Delimiters.DATA_ELEMENT));
+        assertEquals(':', delimiters.get(Delimiters.COMPONENT_ELEMENT));
+        assertEquals('.', delimiters.get(Delimiters.DECIMAL)); // Always '.' for X12
+        assertNull(delimiters.get(Delimiters.RELEASE)); // Always null for X12
+        assertNull(delimiters.get(Delimiters.REPETITION));
+    }
+
+    @Test
+    void testGetDelimitersX12BadVersion() throws EDIStreamException {
+        EDIOutputFactory factory = EDIOutputFactory.newFactory();
+        ByteArrayOutputStream stream = new ByteArrayOutputStream(4096);
+        EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
+
+        writer.startInterchange();
+        writer.writeStartSegment("ISA");
+        writer.writeElement("00").writeElement("          ");
+        writer.writeElement("00").writeElement("          ");
+        writer.writeElement("ZZ").writeElement("ReceiverID     ");
+        writer.writeElement("ZZ").writeElement("Sender         ");
+        writer.writeElement("050812");
+        writer.writeElement("1953");
+        writer.writeElement("&");
+        writer.writeElement("0050X");
+        writer.writeElement("508121953");
+        writer.writeElement("0");
+        writer.writeElement("P");
+        writer.writeElement(":");
+        writer.writeEndSegment();
+
+        Map<String, Character> delimiters = writer.getDelimiters();
+        assertEquals('~', delimiters.get(Delimiters.SEGMENT));
+        assertEquals('*', delimiters.get(Delimiters.DATA_ELEMENT));
+        assertEquals(':', delimiters.get(Delimiters.COMPONENT_ELEMENT));
+        assertEquals('.', delimiters.get(Delimiters.DECIMAL)); // Always '.' for X12
+        assertNull(delimiters.get(Delimiters.RELEASE)); // Always null for X12
+        assertNull(delimiters.get(Delimiters.REPETITION));
+    }
+
+    @Test
+    void testGetDelimitersX12Post00402() throws EDIStreamException {
+        EDIOutputFactory factory = EDIOutputFactory.newFactory();
+        ByteArrayOutputStream stream = new ByteArrayOutputStream(4096);
+        EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
+
+        writer.startInterchange();
+        writer.writeStartSegment("ISA");
+        writer.writeElement("00").writeElement("          ");
+        writer.writeElement("00").writeElement("          ");
+        writer.writeElement("ZZ").writeElement("ReceiverID     ");
+        writer.writeElement("ZZ").writeElement("Sender         ");
+        writer.writeElement("050812");
+        writer.writeElement("1953");
+        writer.writeElement("&");
+        writer.writeElement("00501");
+        writer.writeElement("508121953");
+        writer.writeElement("0");
+        writer.writeElement("P");
+        writer.writeElement(":");
+        writer.writeEndSegment();
+
+        Map<String, Character> delimiters = writer.getDelimiters();
+        assertEquals('~', delimiters.get(Delimiters.SEGMENT));
+        assertEquals('*', delimiters.get(Delimiters.DATA_ELEMENT));
+        assertEquals(':', delimiters.get(Delimiters.COMPONENT_ELEMENT));
+        assertEquals('.', delimiters.get(Delimiters.DECIMAL)); // Always '.' for X12
+        assertNull(delimiters.get(Delimiters.RELEASE)); // Always null for X12
+        assertEquals('&', delimiters.get(Delimiters.REPETITION));
+    }
+
+    @Test
+    void testGetDelimitersEDIFACT_defaults() throws EDIStreamException {
+        EDIOutputFactory factory = EDIOutputFactory.newFactory();
+        ByteArrayOutputStream stream = new ByteArrayOutputStream(4096);
+        EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
+
+        writer.startInterchange();
+        // UNB+UNOA:3+005435656:1+006415160:1+060515:1434+00000000000778'
+        writer.writeStartSegment("UNB");
+
+        writer.writeStartElement();
+        writer.writeComponent("UNOA");
+        writer.writeComponent("3");
+        writer.endElement();
+
+        writer.writeStartElement();
+        writer.writeComponent("005435656");
+        writer.writeComponent("1");
+        writer.endElement();
+
+        writer.writeStartElement();
+        writer.writeComponent("006415160");
+        writer.writeComponent("1");
+        writer.endElement();
+
+        writer.writeStartElement();
+        writer.writeComponent("060515");
+        writer.writeComponent("1434");
+        writer.endElement();
+
+        writer.writeElement("00000000000778");
+        writer.writeEndSegment();
+
+        Map<String, Character> delimiters = writer.getDelimiters();
+        assertEquals('\'', delimiters.get(Delimiters.SEGMENT));
+        assertEquals('+', delimiters.get(Delimiters.DATA_ELEMENT));
+        assertEquals(':', delimiters.get(Delimiters.COMPONENT_ELEMENT));
+        assertEquals('.', delimiters.get(Delimiters.DECIMAL));
+        assertEquals('?', delimiters.get(Delimiters.RELEASE));
+        assertEquals('*', delimiters.get(Delimiters.REPETITION));
+
+        writer.flush();
+        assertEquals("UNB+UNOA:3+005435656:1+006415160:1+060515:1434+00000000000778'",
+                     new String(stream.toByteArray()));
+    }
+
+    @Test
+    void testGetDelimitersEDIFACT_customSegment() throws EDIStreamException {
+        EDIOutputFactory factory = EDIOutputFactory.newFactory();
+        ByteArrayOutputStream stream = new ByteArrayOutputStream(4096);
+        factory.setProperty(Delimiters.SEGMENT, '~');
+        EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
+
+        writer.startInterchange();
+        // UNB+UNOA:3+005435656:1+006415160:1+060515:1434+00000000000778~
+        writer.writeStartSegment("UNB");
+
+        writer.writeStartElement();
+        writer.writeComponent("UNOA");
+        writer.writeComponent("3");
+        writer.endElement();
+
+        writer.writeStartElement();
+        writer.writeComponent("005435656");
+        writer.writeComponent("1");
+        writer.endElement();
+
+        writer.writeStartElement();
+        writer.writeComponent("006415160");
+        writer.writeComponent("1");
+        writer.endElement();
+
+        writer.writeStartElement();
+        writer.writeComponent("060515");
+        writer.writeComponent("1434");
+        writer.endElement();
+
+        writer.writeElement("00000000000778");
+        writer.writeEndSegment();
+
+        Map<String, Character> delimiters = writer.getDelimiters();
+        assertEquals('~', delimiters.get(Delimiters.SEGMENT));
+        assertEquals('+', delimiters.get(Delimiters.DATA_ELEMENT));
+        assertEquals(':', delimiters.get(Delimiters.COMPONENT_ELEMENT));
+        assertEquals('.', delimiters.get(Delimiters.DECIMAL));
+        assertEquals('?', delimiters.get(Delimiters.RELEASE));
+        assertEquals('*', delimiters.get(Delimiters.REPETITION));
+
+        writer.flush();
+        assertEquals("UNA:+.?*~UNB+UNOA:3+005435656:1+006415160:1+060515:1434+00000000000778~",
+                     new String(stream.toByteArray()));
     }
 }

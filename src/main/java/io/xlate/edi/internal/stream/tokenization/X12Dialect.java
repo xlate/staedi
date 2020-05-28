@@ -86,6 +86,7 @@ public class X12Dialect implements Dialect {
              * Ignore exception - the ELEMENT_REPEATER will not be set due to a
              * non-numeric version.
              */
+            er = '\0';
         }
 
         initialized = true;

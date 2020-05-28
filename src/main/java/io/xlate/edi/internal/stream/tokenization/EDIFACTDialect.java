@@ -19,8 +19,8 @@ import io.xlate.edi.stream.EDIStreamConstants.Standards;
 
 public class EDIFACTDialect implements Dialect {
 
-    private static final String UNA = "UNA";
-    private static final String UNB = "UNB";
+    public static final String UNA = "UNA";
+    public static final String UNB = "UNB";
 
     private static final String[] EMPTY = new String[0];
     private static final int EDIFACT_UNA_LENGTH = 9;
