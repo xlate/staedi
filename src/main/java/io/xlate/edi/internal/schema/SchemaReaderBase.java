@@ -6,7 +6,6 @@ import static io.xlate.edi.internal.schema.StaEDISchemaFactory.unexpectedEvent;
 import static java.util.stream.Collectors.toList;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -318,21 +317,13 @@ abstract class SchemaReaderBase implements SchemaReader {
             readTypeDefinition(types, reader);
         }
 
-        while (reader.hasNext() && !schemaEnd) {
-            switch (reader.next()) {
-            case XMLStreamConstants.START_ELEMENT:
+        while (!schemaEnd) {
+            if (nextTag(reader, "reading schema types") == XMLStreamConstants.START_ELEMENT) {
                 readTypeDefinition(types, reader);
-                break;
-
-            case XMLStreamConstants.END_ELEMENT:
+            } else {
                 if (reader.getName().equals(qnSchema)) {
                     schemaEnd = true;
                 }
-                break;
-
-            default:
-                checkEvent(reader);
-                break;
             }
         }
     }
@@ -414,26 +405,18 @@ abstract class SchemaReaderBase implements SchemaReader {
                         EDIType.Type parentType,
                         List<EDIReference> refs) {
 
-        try {
-            while (reader.hasNext()) {
-                switch (reader.next()) {
-                case XMLStreamConstants.START_ELEMENT:
-                    addReferences(reader, parentType, refs, readReference(reader, types));
-                    break;
+        boolean endOfReferences = false;
 
-                case XMLStreamConstants.END_ELEMENT:
-                    if (reader.getName().equals(qnSequence)) {
-                        return;
-                    }
+        while (!endOfReferences) {
+            int event = nextTag(reader, "reading sequence");
 
-                    break;
-                default:
-                    checkEvent(reader);
-                    break;
+            if (event == XMLStreamConstants.START_ELEMENT) {
+                addReferences(reader, parentType, refs, readReference(reader, types));
+            } else {
+                if (reader.getName().equals(qnSequence)) {
+                    endOfReferences = true;
                 }
             }
-        } catch (XMLStreamException xse) {
-            throw schemaException("Exception reading sequence", reader, xse);
         }
     }
 
@@ -656,30 +639,6 @@ abstract class SchemaReaderBase implements SchemaReader {
 
         if (!element.equals(reader.getName())) {
             throw schemaException("Unexpected XML element [" + reader.getName() + "]", reader);
-        }
-    }
-
-    void checkEvent(XMLStreamReader reader, int... expected) {
-        Integer event = reader.getEventType();
-
-        if (Arrays.stream(expected).anyMatch(event::equals)) {
-            return;
-        }
-
-        switch (event) {
-        case XMLStreamConstants.CHARACTERS:
-        case XMLStreamConstants.SPACE:
-            String text = reader.getText().trim();
-
-            if (text.length() > 0) {
-                throw schemaException("Unexpected XML [" + text + "]", reader);
-            }
-            break;
-        case XMLStreamConstants.COMMENT:
-            // Ignore comments
-            break;
-        default:
-            throw schemaException("Unexpected XML event [" + event + ']', reader);
         }
     }
 

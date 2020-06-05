@@ -427,20 +427,12 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
             boolean endOfType = false;
 
             while (!endOfType) {
-                switch (nextTag(reader, "reading sequence")) {
-                case XMLStreamConstants.START_ELEMENT:
+                if (nextTag(reader, "reading sequence") == XMLStreamConstants.START_ELEMENT) {
                     startHandler.accept(reader.getName());
-                    break;
-
-                case XMLStreamConstants.END_ELEMENT:
+                } else {
                     if (reader.getName().equals(element)) {
                         endOfType = true;
                     }
-                    break;
-
-                default:
-                    checkEvent(reader);
-                    break;
                 }
             }
         } else {
