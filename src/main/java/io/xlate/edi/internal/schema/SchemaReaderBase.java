@@ -335,7 +335,6 @@ abstract class SchemaReaderBase implements SchemaReader {
                 break;
             }
         }
-
     }
 
     void readTypeDefinition(Map<String, EDIType> types, XMLStreamReader reader) throws XMLStreamException {
@@ -527,37 +526,28 @@ abstract class SchemaReaderBase implements SchemaReader {
 
     List<Integer> readSyntaxPositions(XMLStreamReader reader) throws XMLStreamException {
         final List<Integer> positions = new ArrayList<>(5);
+        boolean endOfSyntax = false;
 
-        while (reader.hasNext()) {
-            int event = reader.next();
+        while (!endOfSyntax) {
+            final int event = nextTag(reader, "reading syntax positions");
+            final QName element = reader.getName();
 
-            switch (event) {
-            case XMLStreamConstants.START_ELEMENT:
-                QName element = reader.getName();
-
-                if (qnPosition.equals(element)) {
+            if (event == XMLStreamConstants.START_ELEMENT) {
+                if (element.equals(qnPosition)) {
                     String position = reader.getElementText();
 
                     try {
                         positions.add(Integer.parseInt(position));
                     } catch (@SuppressWarnings("unused") NumberFormatException e) {
-                        throw schemaException("invalid position", reader);
+                        throw schemaException("invalid position [" + position + ']', reader);
                     }
                 }
-
-                break;
-            case XMLStreamConstants.END_ELEMENT:
-                if (qnSyntax.equals(reader.getName())) {
-                    return positions;
-                }
-                break;
-            default:
-                checkEvent(reader);
-                break;
+            } else if (qnSyntax.equals(element)) {
+                endOfSyntax = true;
             }
         }
 
-        throw schemaException("missing end element " + qnSyntax, reader);
+        return positions;
     }
 
     ElementType readSimpleType(XMLStreamReader reader) {

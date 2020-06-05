@@ -165,15 +165,15 @@ class StaEDISchemaFactoryTest {
         Schema schemaV3 = factory.createSchema(schemaStreamV3);
 
         List<EDIType> missingV4 = StreamSupport.stream(schemaV3.spliterator(), false)
-                .filter(type -> !(type.equals(schemaV4.getType(type.getId()))
-                        && type.hashCode() == Objects.hashCode(schemaV4.getType(type.getId()))
-                        && type.toString().equals(String.valueOf(schemaV4.getType(type.getId())))))
-                .collect(Collectors.toList());
+                                               .filter(type -> !(type.equals(schemaV4.getType(type.getId()))
+                                                       && type.hashCode() == Objects.hashCode(schemaV4.getType(type.getId()))
+                                                       && type.toString().equals(String.valueOf(schemaV4.getType(type.getId())))))
+                                               .collect(Collectors.toList());
         List<EDIType> missingV3 = StreamSupport.stream(schemaV4.spliterator(), false)
-                .filter(type -> !(type.equals(schemaV3.getType(type.getId()))
-                        && type.hashCode() == Objects.hashCode(schemaV3.getType(type.getId()))
-                        && type.toString().equals(String.valueOf(schemaV3.getType(type.getId())))))
-                .collect(Collectors.toList());
+                                               .filter(type -> !(type.equals(schemaV3.getType(type.getId()))
+                                                       && type.hashCode() == Objects.hashCode(schemaV3.getType(type.getId()))
+                                                       && type.toString().equals(String.valueOf(schemaV3.getType(type.getId())))))
+                                               .collect(Collectors.toList());
 
         assertTrue(missingV4.isEmpty(), () -> "V3 schema contains types not in V4: " + missingV4);
         assertTrue(missingV3.isEmpty(), () -> "V4 schema contains types not in V3: " + missingV3);
@@ -516,5 +516,44 @@ class StaEDISchemaFactoryTest {
         EDISchemaException thrown = assertThrows(EDISchemaException.class, () -> factory.createSchema(stream));
         assertEquals("Element {" + StaEDISchemaFactory.XMLNS_V3 + "}any may only be present for segmentType and compositeType",
                      thrown.getOriginalMessage());
+    }
+
+    @Test
+    void testInvalidIncludeV2() {
+        SchemaFactory factory = SchemaFactory.newFactory();
+        InputStream stream = new ByteArrayInputStream((""
+                + "<schema xmlns='" + StaEDISchemaFactory.XMLNS_V2 + "'>"
+                + "  <include schemaLocation='./src/test/x12/EDISchema997.xml' />"
+                + "</schema>").getBytes());
+
+        EDISchemaException thrown = assertThrows(EDISchemaException.class, () -> factory.createSchema(stream));
+        assertEquals("Unexpected XML element [{" + StaEDISchemaFactory.XMLNS_V2 + "}include]",
+                     thrown.getOriginalMessage());
+    }
+
+    @Test
+    void testInvalidIncludeV3() {
+        SchemaFactory factory = SchemaFactory.newFactory();
+        InputStream stream = new ByteArrayInputStream((""
+                + "<schema xmlns='" + StaEDISchemaFactory.XMLNS_V3 + "'>"
+                + "  <include schemaLocation='./src/test/x12/EDISchema997.xml' />"
+                + "</schema>").getBytes());
+
+        EDISchemaException thrown = assertThrows(EDISchemaException.class, () -> factory.createSchema(stream));
+        assertEquals("Unexpected XML element [{" + StaEDISchemaFactory.XMLNS_V3 + "}include]",
+                     thrown.getOriginalMessage());
+    }
+
+    @Test
+    void testValidIncludeV4() throws EDISchemaException {
+        SchemaFactory factory = SchemaFactory.newFactory();
+        InputStream stream = new ByteArrayInputStream((""
+                + "<schema xmlns='" + StaEDISchemaFactory.XMLNS_V4 + "'>"
+                + "  <include schemaLocation='file:./src/test/resources/x12/EDISchema997.xml' />"
+                + "  <elementType name=\"DUMMY\" base=\"string\" maxLength=\"5\" />"
+                + "</schema>").getBytes());
+
+        Schema schema = factory.createSchema(stream);
+        assertNotNull(schema);
     }
 }
