@@ -578,39 +578,37 @@ abstract class SchemaReaderBase implements SchemaReader {
         return new ElementType(name, intBase, number, minLength, maxLength, readEnumerationValues(reader));
     }
 
-    Set<String> readEnumerationValues(XMLStreamReader reader) throws XMLStreamException {
+    Set<String> readEnumerationValues(XMLStreamReader reader) {
         Set<String> values = null;
-        QName element;
-        boolean enumerationEnd = false;
+        boolean endOfEnumeration = false;
 
-        while (reader.hasNext() && !enumerationEnd) {
-            switch (reader.next()) {
-            case XMLStreamConstants.START_ELEMENT:
-                element = reader.getName();
+        while (!endOfEnumeration) {
+            final int event = nextTag(reader, "reading enumeration");
+            final QName element = reader.getName();
 
+            if (event == XMLStreamConstants.START_ELEMENT) {
                 if (element.equals(qnValue)) {
-                    if (values == null) {
-                        values = new LinkedHashSet<>();
-                    }
-                    values.add(reader.getElementText());
+                    values = readEnumerationValue(reader, values);
                 } else if (!element.equals(qnEnumeration)) {
                     throw unexpectedElement(element, reader);
                 }
-
-                break;
-            case XMLStreamConstants.END_ELEMENT:
-                element = reader.getName();
-
-                if (qnEnumeration.equals(element) || qnElementType.equals(element)) {
-                    if (values == null) {
-                        values = Collections.emptySet();
-                    }
-                    enumerationEnd = true;
-                }
-                break;
-            default:
-                break;
+            } else if (qnElementType.equals(element) || qnEnumeration.equals(element)) {
+                endOfEnumeration = true;
             }
+        }
+
+        return values != null ? values : Collections.emptySet();
+    }
+
+    Set<String> readEnumerationValue(XMLStreamReader reader, Set<String> values) {
+        if (values == null) {
+            values = new LinkedHashSet<>();
+        }
+
+        try {
+            values.add(reader.getElementText());
+        } catch (XMLStreamException xse) {
+            throw schemaException("Exception reading enumeration value", reader, xse);
         }
 
         return values;
@@ -637,6 +635,17 @@ abstract class SchemaReaderBase implements SchemaReader {
             }
         } else {
             throw schemaException("Missing required attribute: [" + attrName + ']', reader);
+        }
+    }
+
+    int nextTag(XMLStreamReader reader, String activity) {
+        try {
+            if (!reader.hasNext()) {
+                throw schemaException("End of stream reached while " + activity, reader, null);
+            }
+            return reader.nextTag();
+        } catch (XMLStreamException xse) {
+            throw schemaException("XMLStreamException while " + activity, reader, xse);
         }
     }
 

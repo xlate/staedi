@@ -29,7 +29,9 @@
     <sequence>
       <segment type="AK1">
         <sequence>
-          <element position="2" minOccurs="1" />
+          <element position="2" minOccurs="1">
+            <description>Element AK102</description>
+          </element>
           <element position="1" minOccurs="1" />
           <element position="3" minOccurs="1" />
         </sequence>
