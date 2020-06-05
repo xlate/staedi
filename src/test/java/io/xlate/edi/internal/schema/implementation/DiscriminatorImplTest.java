@@ -1,9 +1,9 @@
 package io.xlate.edi.internal.schema.implementation;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
+import java.util.Arrays;
 import java.util.Collections;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -39,8 +39,9 @@ class DiscriminatorImplTest {
 
     @Test
     void testEquals_NotInstance() {
-        assertFalse(target.equals(null));
-        assertFalse(target.equals(new Object()));
+        for (Object other : Arrays.asList(new Object(), null)) {
+            assertNotEquals(target, other);
+        }
     }
 
     @Test

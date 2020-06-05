@@ -26,7 +26,7 @@ public abstract class BaseImpl<T extends EDIType> implements EDITypeImplementati
         if (this == o) {
             return true;
         }
-        if (!getClass().isInstance(o)) {
+        if (o == null || !getClass().isInstance(o)) {
             return false;
         }
 
