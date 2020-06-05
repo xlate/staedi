@@ -17,12 +17,14 @@ package io.xlate.edi.internal.schema;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
 import java.util.Objects;
@@ -297,6 +299,13 @@ class StaEDISchemaFactoryTest {
     }
 
     @Test
+    void testGetControlSchema_NotFound() throws EDISchemaException {
+        SchemaFactory factory = SchemaFactory.newFactory();
+        Schema schema = factory.getControlSchema(Standards.EDIFACT, new String[] { "UNOA", "0" });
+        assertNull(schema);
+    }
+
+    @Test
     void testReferenceUndeclared() {
         SchemaFactory factory = SchemaFactory.newFactory();
         InputStream stream = new ByteArrayInputStream((""
@@ -555,5 +564,19 @@ class StaEDISchemaFactoryTest {
 
         Schema schema = factory.createSchema(stream);
         assertNotNull(schema);
+    }
+
+    @Test
+    void testInvalidUrlIncludeV4() {
+        SchemaFactory factory = SchemaFactory.newFactory();
+        InputStream stream = new ByteArrayInputStream((""
+                + "<schema xmlns='" + StaEDISchemaFactory.XMLNS_V4 + "'>"
+                + "  <include schemaLocation='./src/test/resources/x12/EDISchema997.xml' />"
+                + "</schema>").getBytes());
+
+        EDISchemaException thrown = assertThrows(EDISchemaException.class, () -> factory.createSchema(stream));
+        assertEquals("Exception reading included schema", thrown.getOriginalMessage());
+        assertTrue(thrown.getCause() instanceof StaEDISchemaReadException);
+        assertTrue(thrown.getCause().getCause() instanceof MalformedURLException);
     }
 }
