@@ -51,5 +51,12 @@ public interface Schema extends Iterable<EDIType> {
 
     public abstract EDIType getType(String name);
 
+    /**
+     * Determine if the named segment is present in this schema.
+     *
+     * @param name segment tag
+     * @return true if a segment with the given name is present, otherwise false
+     */
     public abstract boolean containsSegment(String name);
+
 }

@@ -1,6 +1,7 @@
 package io.xlate.edi.internal.schema.implementation;
 
 import java.util.List;
+import java.util.Objects;
 
 import io.xlate.edi.schema.implementation.Discriminator;
 import io.xlate.edi.schema.implementation.EDITypeImplementation;
@@ -8,7 +9,7 @@ import io.xlate.edi.schema.implementation.LoopImplementation;
 
 public class LoopImpl extends BaseComplexImpl implements LoopImplementation {
 
-    private static final String TOSTRING_FORMAT = "id: %s, minOccurs: %d, maxOccurs: %d, discriminator: { %s }, standard: { %s }";
+    private static final String TOSTRING_FORMAT = "id: %s, minOccurs: %d, maxOccurs: %d, discriminator: { %s }, sequence { %s }, standard: { %s }";
     private final String id;
     private final Discriminator discriminator;
 
@@ -30,8 +31,20 @@ public class LoopImpl extends BaseComplexImpl implements LoopImplementation {
     }
 
     @Override
+    public boolean equals(Object o) {
+        return super.equals(o) &&
+                Objects.equals(id, ((LoopImpl) o).id) &&
+                Objects.equals(discriminator, ((LoopImpl) o).discriminator);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), id, discriminator);
+    }
+
+    @Override
     public String toString() {
-        return String.format(TOSTRING_FORMAT, id, minOccurs, maxOccurs, discriminator, standard);
+        return String.format(TOSTRING_FORMAT, id, minOccurs, maxOccurs, discriminator, sequence, standard);
     }
 
     @Override

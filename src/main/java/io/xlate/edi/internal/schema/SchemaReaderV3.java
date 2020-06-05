@@ -35,6 +35,7 @@ import io.xlate.edi.internal.schema.implementation.SegmentImpl;
 import io.xlate.edi.internal.schema.implementation.TransactionImpl;
 import io.xlate.edi.schema.EDIComplexType;
 import io.xlate.edi.schema.EDIReference;
+import io.xlate.edi.schema.EDISchemaException;
 import io.xlate.edi.schema.EDIType;
 import io.xlate.edi.schema.EDIType.Type;
 import io.xlate.edi.schema.implementation.Discriminator;
@@ -54,14 +55,18 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
     final QName qnImplementation;
     final Deque<EDITypeImplementation> implementedTypes = new LinkedList<>();
 
-    public SchemaReaderV3(XMLStreamReader reader) {
-        super(StaEDISchemaFactory.XMLNS_V3, reader);
+    protected SchemaReaderV3(String xmlns, XMLStreamReader reader) {
+        super(xmlns, reader);
         qnImplementation = new QName(xmlns, "implementation");
+    }
+
+    public SchemaReaderV3(XMLStreamReader reader) {
+        this(StaEDISchemaFactory.XMLNS_V3, reader);
     }
 
     @Override
     public String getImplementationName() {
-        return qnImplementation.toString();
+        return StaEDISchema.IMPLEMENTATION_ID;
     }
 
     @Override
@@ -81,15 +86,19 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
     }
 
     @Override
-    void readTransaction(XMLStreamReader reader, Map<String, EDIType> types) throws XMLStreamException {
-        super.readTransaction(reader, types);
+    protected void readInclude(XMLStreamReader reader, Map<String, EDIType> types) throws EDISchemaException {
+        // Included schema not supported in V3 Schema
+        throw unexpectedElement(reader.getName(), reader);
+    }
 
+    @Override
+    protected void readImplementation(XMLStreamReader reader, Map<String, EDIType> types) throws XMLStreamException {
         reader.nextTag();
         QName element = reader.getName();
 
         LoopImplementation impl = readImplementation(reader, element, types);
         if (impl != null) {
-            types.put(qnImplementation.toString(), impl);
+            types.put(StaEDISchema.IMPLEMENTATION_ID, impl);
         }
     }
 
@@ -105,16 +114,12 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
                      .forEach(type -> setReferences(type, types));
     }
 
-    void setReferences(BaseComplexImpl type, Map<String, EDIType> types ) {
-        String typeId;
-
-        if (type.getType() == Type.LOOP) {
-            typeId = qnLoop.toString() + '.' + type.getTypeId();
-        } else {
-            typeId = type.getTypeId();
-        }
-
+    void setReferences(BaseComplexImpl type, Map<String, EDIType> types) {
+        String typeId = type.getTypeId();
         EDIComplexType standard = (EDIComplexType) types.get(typeId);
+        if (standard == null) {
+            throw schemaException("Type " + typeId + " does not correspond to a standard type");
+        }
         List<EDIReference> standardRefs = standard.getReferences();
         List<EDITypeImplementation> implSequence = type.getSequence();
 
@@ -188,9 +193,9 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
         }
 
         LoopImplementation loop = readLoopImplementation(reader, complexType, true);
-        String typeId = qnTransaction.toString();
+        String typeId = StaEDISchema.TRANSACTION_ID;
         EDIComplexType standard = (EDIComplexType) types.get(typeId);
-        LoopImpl impl = new TransactionImpl(qnImplementation.toString(), typeId, loop.getSequence());
+        LoopImpl impl = new TransactionImpl(StaEDISchema.IMPLEMENTATION_ID, typeId, loop.getSequence());
         impl.setStandardReference(new Reference(standard, 1, 1));
         implementedTypes.add(impl);
         return impl;
@@ -210,7 +215,7 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
         String descr = null;
 
         if (transactionLoop) {
-            id = qnImplementation.toString();
+            id = StaEDISchema.IMPLEMENTATION_ID;
             typeId = null;
         } else {
             id = parseAttribute(reader, "code", String::valueOf);

@@ -49,7 +49,7 @@ public class EDISchemaException extends Exception {
     }
 
     /**
-     * Construct an exception with the assocated message and exception
+     * Construct an exception with the associated message and exception
      *
      * @param cause
      *            a nested exception
@@ -83,7 +83,7 @@ public class EDISchemaException extends Exception {
     }
 
     /**
-     * Construct an exception with the assocated message, exception and
+     * Construct an exception with the associated message, exception and
      * location.
      *
      * @param message

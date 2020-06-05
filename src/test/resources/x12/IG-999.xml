@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<schema xmlns="http://xlate.io/EDISchema/v3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://xlate.io/EDISchema/v3 ../../../main/resources/schema/EDISchema-v3.xsd">
+<schema xmlns="http://xlate.io/EDISchema/v3">
   <transaction>
     <sequence>
       <segment type="AK1" minOccurs="1" />
@@ -141,7 +140,16 @@
   <elementType name="DE0621" base="string" maxLength="3" />
   <elementType name="DE0715" base="string" />
   <elementType name="DE0716" base="string" maxLength="3" />
-  <elementType name="DE0717" base="string" />
+  <elementType name="DE0717" base="identifier">
+    <enumeration>
+      <value>A</value>
+      <value>E</value>
+      <value>M</value>
+      <value>R</value>
+      <value>W</value>
+      <value>X</value>
+    </enumeration>
+  </elementType>
   <elementType name="DE0719" base="decimal" maxLength="10" />
   <elementType name="DE0721" base="string" minLength="2" maxLength="3" />
   <elementType name="DE0722" base="decimal" maxLength="2" />

@@ -1,6 +1,7 @@
 package io.xlate.edi.internal.schema.implementation;
 
 import java.util.List;
+import java.util.Objects;
 
 import io.xlate.edi.schema.implementation.Discriminator;
 import io.xlate.edi.schema.implementation.EDITypeImplementation;
@@ -8,7 +9,7 @@ import io.xlate.edi.schema.implementation.SegmentImplementation;
 
 public class SegmentImpl extends BaseComplexImpl implements SegmentImplementation {
 
-    private static final String TOSTRING_FORMAT = "typeId: %s, minOccurs: %d, maxOccurs: %d, discriminator: { %s }, standard: { %s }";
+    private static final String TOSTRING_FORMAT = "typeId: %s, minOccurs: %d, maxOccurs: %d, discriminator: { %s }, sequence { %s }, standard: { %s }";
     private final Discriminator discriminator;
 
     public SegmentImpl(int minOccurs,
@@ -26,8 +27,18 @@ public class SegmentImpl extends BaseComplexImpl implements SegmentImplementatio
     }
 
     @Override
+    public boolean equals(Object o) {
+        return super.equals(o) && Objects.equals(discriminator, ((SegmentImpl) o).discriminator);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), discriminator);
+    }
+
+    @Override
     public String toString() {
-        return String.format(TOSTRING_FORMAT, typeId, minOccurs, maxOccurs, discriminator, standard);
+        return String.format(TOSTRING_FORMAT, typeId, minOccurs, maxOccurs, discriminator, sequence, standard);
     }
 
     @Override

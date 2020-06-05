@@ -259,6 +259,11 @@ class UsageNode {
         }
 
         @Override
+        public Type getType() {
+            return Type.ELEMENT;
+        }
+
+        @Override
         public Base getBase() {
             return target.getBase();
         }

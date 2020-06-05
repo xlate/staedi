@@ -57,6 +57,7 @@ final class StaEDIXMLStreamReader implements XMLStreamReader {
     private final Deque<QName> elementStack = new ArrayDeque<>();
 
     private NamespaceContext namespaceContext;
+    private String compositeCode = null;
 
     private final StringBuilder cdataBuilder = new StringBuilder();
     private final OutputStream cdataStream = new OutputStream() {
@@ -116,7 +117,8 @@ final class StaEDIXMLStreamReader implements XMLStreamReader {
             final int componentPosition = l.getComponentPosition();
 
             if (componentPosition > 0) {
-                name = String.format("%s-%02d", parent.getLocalPart(), componentPosition);
+                String localPart = this.compositeCode != null ? this.compositeCode : parent.getLocalPart();
+                name = String.format("%s-%02d", localPart, componentPosition);
             } else {
                 name = String.format("%s%02d", parent.getLocalPart(), l.getElementPosition());
             }
@@ -201,7 +203,8 @@ final class StaEDIXMLStreamReader implements XMLStreamReader {
             break;
 
         case START_COMPOSITE:
-            name = buildName(elementStack.getFirst(), EDINamespaces.COMPOSITES, ediReader.getReferenceCode());
+            compositeCode = ediReader.getReferenceCode();
+            name = buildName(elementStack.getFirst(), EDINamespaces.COMPOSITES);
             enqueueEvent(START_ELEMENT, name, true);
             break;
 
@@ -216,6 +219,7 @@ final class StaEDIXMLStreamReader implements XMLStreamReader {
         case END_LOOP:
         case END_SEGMENT:
         case END_COMPOSITE:
+            compositeCode = null;
             enqueueEvent(END_ELEMENT, elementStack.removeFirst(), false);
             break;
 

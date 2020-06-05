@@ -1,5 +1,6 @@
 package io.xlate.edi.internal.schema.implementation;
 
+import java.util.Objects;
 import java.util.Set;
 
 import io.xlate.edi.schema.EDIReference;
@@ -33,6 +34,18 @@ public class ElementImpl extends BaseImpl<EDISimpleType> implements ElementImple
         this.typeId = standard.getId();
         this.position = position;
         this.values = standard.getValueSet();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        return super.equals(o) &&
+                Objects.equals(position, ((ElementImpl) o).position) &&
+                Objects.equals(values, ((ElementImpl) o).values);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), position, values);
     }
 
     @Override

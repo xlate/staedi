@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE INTERCHANGE>
 <l:INTERCHANGE xmlns:l="urn:xlate.io:staedi:names:loops" xmlns:s="urn:xlate.io:staedi:names:segments"
   xmlns:c="urn:xlate.io:staedi:names:composites" xmlns:e="urn:xlate.io:staedi:names:elements">
   <s:ISA>
@@ -73,14 +74,14 @@
           </s:IK3>
           <s:CTX>
             <c:CTX01>
-              <e:CTX01-01>CLM01</e:CTX01-01>
-              <e:CTX01-02>123456789</e:CTX01-02>
+              <e:C998-01>CLM01</e:C998-01>
+              <e:C998-02>123456789</e:C998-02>
             </c:CTX01>
           </s:CTX>
           <l:L0003>
             <s:IK4>
               <c:IK401>
-                <e:IK401-01>2</e:IK401-01>
+                <e:C030-01>2</e:C030-01>
               </c:IK401>
               <e:IK402>782</e:IK402>
               <e:IK403>1</e:IK403>
@@ -106,32 +107,32 @@
           </s:IK3>
           <s:CTX>
             <c:CTX01>
-              <e:CTX01-01>SITUATIONAL TRIGGER</e:CTX01-01>
+              <e:C998-01>SITUATIONAL TRIGGER</e:C998-01>
             </c:CTX01>
             <c:CTX01>
-              <e:CTX01-01>SITUATIONAL TRIGGER</e:CTX01-01>
-              <e:CTX01-02>2</e:CTX01-02>
+              <e:C998-01>SITUATIONAL TRIGGER</e:C998-01>
+              <e:C998-02>2</e:C998-02>
             </c:CTX01>
             <c:CTX01>
-              <e:CTX01-01>SITUATIONAL TRIGGER</e:CTX01-01>
-              <e:CTX01-02>3</e:CTX01-02>
+              <e:C998-01>SITUATIONAL TRIGGER</e:C998-01>
+              <e:C998-02>3</e:C998-02>
             </c:CTX01>
             <e:CTX02>CLM</e:CTX02>
             <e:CTX03>43</e:CTX03>
             <e:CTX04 />
             <c:CTX05>
-              <e:CTX05-01>5</e:CTX05-01>
-              <e:CTX05-02>3</e:CTX05-02>
+              <e:C030-01>5</e:C030-01>
+              <e:C030-02>3</e:C030-02>
             </c:CTX05>
             <c:CTX06>
-              <e:CTX06-01>C023</e:CTX06-01>
-              <e:CTX06-02>1325</e:CTX06-02>
+              <e:C999-01>C023</e:C999-01>
+              <e:C999-02>1325</e:C999-02>
             </c:CTX06>
           </s:CTX>
           <s:CTX>
             <c:CTX01>
-              <e:CTX01-01>CLM01</e:CTX01-01>
-              <e:CTX01-02>987654321</e:CTX01-02>
+              <e:C998-01>CLM01</e:C998-01>
+              <e:C998-02>987654321</e:C998-02>
             </c:CTX01>
           </s:CTX>
         </l:L0002>

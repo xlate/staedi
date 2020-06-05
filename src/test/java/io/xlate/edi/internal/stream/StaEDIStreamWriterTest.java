@@ -1184,22 +1184,27 @@ class StaEDIStreamWriterTest {
                 case END_GROUP:
                     // Ignore control loops
                     continue;
+                case SEGMENT_ERROR:
+                case ELEMENT_OCCURRENCE_ERROR:
+                case ELEMENT_DATA_ERROR:
+                    System.out.println(event + "[" + reader.getErrorType() + "] error " + reader.getLocation().toString());
+                    break;
                 default:
                     break;
                 }
 
                 assertEquals(reader.getLocation().getSegmentPosition(),
                              writer.getLocation().getSegmentPosition(),
-                             () -> "Segment position mismatch");
+                             () -> "Segment position mismatch at " + reader.getLocation());
                 assertEquals(reader.getLocation().getElementPosition(),
                              writer.getLocation().getElementPosition(),
-                             () -> "Element position mismatch");
+                             () -> "Element position mismatch at " + reader.getLocation());
                 assertEquals(reader.getLocation().getElementOccurrence(),
                              writer.getLocation().getElementOccurrence(),
-                             () -> "Element occurrence mismatch");
+                             () -> "Element occurrence mismatch at " + reader.getLocation());
                 assertEquals(reader.getLocation().getComponentPosition(),
                              writer.getLocation().getComponentPosition(),
-                             () -> "Component position mismatch");
+                             () -> "Component position mismatch at " + reader.getLocation());
             }
         } finally {
             reader.close();
