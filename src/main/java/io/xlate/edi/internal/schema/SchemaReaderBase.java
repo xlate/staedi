@@ -560,7 +560,7 @@ abstract class SchemaReaderBase implements SchemaReader {
         throw schemaException("missing end element " + qnSyntax, reader);
     }
 
-    ElementType readSimpleType(XMLStreamReader reader) throws XMLStreamException {
+    ElementType readSimpleType(XMLStreamReader reader) {
         String name = parseAttribute(reader, "name", String::valueOf);
         String base = parseAttribute(reader, "base", String::valueOf, EDISimpleType.Base.STRING.toString());
         EDISimpleType.Base intBase = null;
