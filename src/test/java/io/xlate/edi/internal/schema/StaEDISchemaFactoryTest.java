@@ -23,6 +23,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -51,6 +53,16 @@ class StaEDISchemaFactoryTest {
         Schema schema = factory.createSchema(schemaURL);
         assertEquals(StaEDISchema.TRANSACTION_ID, schema.getStandard().getId(), "Incorrect root id");
         assertTrue(schema.containsSegment("AK9"), "Missing AK9 segment");
+    }
+
+    @Test
+    void testCreateSchemaByURL_NoSuchFile() throws MalformedURLException {
+        SchemaFactory factory = SchemaFactory.newFactory();
+        assertTrue(factory instanceof StaEDISchemaFactory, "Not an instance");
+        URL schemaURL = new URL("file:./src/test/resources/x12/missing.xml");
+        EDISchemaException thrown = assertThrows(EDISchemaException.class, () -> factory.createSchema(schemaURL));
+        assertEquals("Unable to read URL stream", thrown.getOriginalMessage());
+        assertTrue(thrown.getCause() instanceof FileNotFoundException);
     }
 
     @Test
@@ -125,6 +137,16 @@ class StaEDISchemaFactoryTest {
         EDISchemaException thrown2 = assertThrows(EDISchemaException.class, () -> factory.createSchema(stream2));
         assertEquals("Missing required attribute: [trailer]", thrown2.getOriginalMessage());
 
+    }
+
+    @Test
+    void testInvalidStartOfSchema() {
+        SchemaFactory factory = SchemaFactory.newFactory();
+        InputStream stream = new ByteArrayInputStream((""
+                + "<schema xmlns='" + StaEDISchemaFactory.XMLNS_V2 + "'"
+                + "</schema>").getBytes());
+        EDISchemaException thrown = assertThrows(EDISchemaException.class, () -> factory.createSchema(stream));
+        assertEquals("Exception checking start of schema XML", thrown.getOriginalMessage());
     }
 
     @Test
@@ -578,5 +600,22 @@ class StaEDISchemaFactoryTest {
         assertEquals("Exception reading included schema", thrown.getOriginalMessage());
         assertTrue(thrown.getCause() instanceof StaEDISchemaReadException);
         assertTrue(thrown.getCause().getCause() instanceof MalformedURLException);
+    }
+
+    @Test
+    void testIncludeV4_FileNotFound() {
+        SchemaFactory factory = SchemaFactory.newFactory();
+        InputStream stream = new ByteArrayInputStream((""
+                + "<schema xmlns='" + StaEDISchemaFactory.XMLNS_V4 + "'>"
+                + "  <include schemaLocation='file:./src/test/resources/x12/missing.xml' />"
+                + "</schema>").getBytes());
+
+        EDISchemaException thrown = assertThrows(EDISchemaException.class, () -> factory.createSchema(stream));
+        assertEquals("Exception reading included schema", thrown.getOriginalMessage());
+        Throwable root = thrown;
+        while (root.getCause() != null) {
+            root = root.getCause();
+        }
+        assertTrue(root instanceof IOException);
     }
 }

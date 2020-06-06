@@ -37,18 +37,6 @@ public class EDISchemaException extends Exception {
     }
 
     /**
-     * Construct an exception with the associated exception
-     *
-     * @param cause
-     *            a nested exception
-     */
-    public EDISchemaException(Throwable cause) {
-        super(cause);
-        this.location = null;
-        this.message = null;
-    }
-
-    /**
      * Construct an exception with the associated message and exception
      *
      * @param cause
@@ -75,7 +63,7 @@ public class EDISchemaException extends Exception {
      */
     public EDISchemaException(String message, Location location, Throwable cause) {
         super("EDISchemaException at [row,col]:[" + location.getLineNumber()
-                + "," + location.getColumnNumber() + "]\n" + "Message: "
+                + "," + location.getColumnNumber() + "];" + "Message: "
                 + message,
               cause);
         this.location = location;
@@ -92,11 +80,7 @@ public class EDISchemaException extends Exception {
      *            the location of the error
      */
     public EDISchemaException(String message, Location location) {
-        super("EDISchemaException at [row,col]:[" + location.getLineNumber()
-                + "," + location.getColumnNumber() + "]\n" + "Message: "
-                + message);
-        this.location = location;
-        this.message = message;
+        this(message, location, null);
     }
 
     /**

@@ -155,7 +155,7 @@ public class StaEDISchemaFactory implements SchemaFactory {
 
             throw unexpectedElement(schemaElement, reader);
         } catch (XMLStreamException e) {
-            throw new EDISchemaException(e);
+            throw new EDISchemaException("Exception checking start of schema XML", e);
         } catch (StaEDISchemaReadException e) {
             throw wrapped(e);
         }

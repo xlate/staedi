@@ -169,29 +169,31 @@ abstract class SchemaReaderBase implements SchemaReader {
             setReferences(types);
             reader.next();
             requireEvent(XMLStreamConstants.END_DOCUMENT, reader);
-        } catch (XMLStreamException e) {
-            throw new EDISchemaException(e);
+        } catch (XMLStreamException xse) {
+            throw schemaException("XMLStreamException reading schema", reader, xse);
         }
 
         return types;
     }
 
-    String readDescription(XMLStreamReader reader) throws XMLStreamException {
-        QName element;
-
-        reader.nextTag();
-        element = reader.getName();
+    String readDescription(XMLStreamReader reader) {
+        nextTag(reader, "seeking description element");
+        QName element = reader.getName();
         String description = null;
 
         if (qnDescription.equals(element)) {
-            description = reader.getElementText();
-            reader.nextTag();
+            try {
+                description = reader.getElementText();
+            } catch (XMLStreamException xse) {
+                throw schemaException("XMLStreamException reading description", reader, xse);
+            }
+            nextTag(reader, "after description element");
         }
 
         return description;
     }
 
-    void readInterchange(XMLStreamReader reader, Map<String, EDIType> types) throws XMLStreamException {
+    void readInterchange(XMLStreamReader reader, Map<String, EDIType> types) {
         QName element;
 
         Reference headerRef = createControlReference(reader, "header");
@@ -205,7 +207,7 @@ abstract class SchemaReaderBase implements SchemaReader {
             throw unexpectedElement(element, reader);
         }
 
-        reader.nextTag();
+        nextTag(reader, "reading interchange sequence");
         element = reader.getName();
 
         List<EDIReference> refs = new ArrayList<>(3);
@@ -213,22 +215,22 @@ abstract class SchemaReaderBase implements SchemaReader {
 
         while (qnSegment.equals(element)) {
             addReferences(reader, EDIType.Type.SEGMENT, refs, readReference(reader, types));
-            reader.nextTag(); // Advance to end element
-            reader.nextTag(); // Advance to next start element
+            nextTag(reader, "completing interchange segment"); // Advance to end element
+            nextTag(reader, "reading after interchange segment"); // Advance to next start element
             element = reader.getName();
         }
 
         if (qnGroup.equals(element)) {
             refs.add(readControlStructure(reader, element, qnTransaction, types));
-            reader.nextTag(); // Advance to end element
-            reader.nextTag(); // Advance to next start element
+            nextTag(reader, "completing group"); // Advance to end element
+            nextTag(reader, "reading after group"); // Advance to next start element
             element = reader.getName();
         }
 
         if (qnTransaction.equals(element)) {
             refs.add(readControlStructure(reader, element, null, types));
-            reader.nextTag(); // Advance to end element
-            reader.nextTag(); // Advance to next start element
+            nextTag(reader, "completing transaction"); // Advance to end element
+            nextTag(reader, "reading after transaction"); // Advance to next start element
         }
 
         refs.add(trailerRef);
@@ -245,8 +247,7 @@ abstract class SchemaReaderBase implements SchemaReader {
     Reference readControlStructure(XMLStreamReader reader,
                                    QName element,
                                    QName subelement,
-                                   Map<String, EDIType> types)
-            throws XMLStreamException {
+                                   Map<String, EDIType> types) {
         int minOccurs = 0;
         int maxOccurs = 99999;
         String use = parseAttribute(reader, "use", String::valueOf, "optional");
@@ -303,12 +304,12 @@ abstract class SchemaReaderBase implements SchemaReader {
         return new Reference(refId, "segment", 1, 1);
     }
 
-    void readTransaction(XMLStreamReader reader, Map<String, EDIType> types) throws XMLStreamException {
+    void readTransaction(XMLStreamReader reader, Map<String, EDIType> types) {
         QName element = reader.getName();
         types.put(StaEDISchema.TRANSACTION_ID, readComplexType(reader, element, types));
     }
 
-    void readTypeDefinitions(XMLStreamReader reader, Map<String, EDIType> types) throws XMLStreamException {
+    void readTypeDefinitions(XMLStreamReader reader, Map<String, EDIType> types) {
         boolean schemaEnd = false;
 
         // Cursor is already positioned on a type definition (e.g. from an earlier look-ahead)
@@ -328,7 +329,7 @@ abstract class SchemaReaderBase implements SchemaReader {
         }
     }
 
-    void readTypeDefinition(Map<String, EDIType> types, XMLStreamReader reader) throws XMLStreamException {
+    void readTypeDefinition(Map<String, EDIType> types, XMLStreamReader reader) {
         QName element = reader.getName();
         String name;
 
@@ -353,8 +354,7 @@ abstract class SchemaReaderBase implements SchemaReader {
 
     StructureType readComplexType(XMLStreamReader reader,
                                   QName complexType,
-                                  Map<String, EDIType> types)
-            throws XMLStreamException {
+                                  Map<String, EDIType> types) {
 
         final EDIType.Type type = complex.get(complexType);
         final String id;
@@ -383,13 +383,13 @@ abstract class SchemaReaderBase implements SchemaReader {
         requireElementStart(qnSequence, reader);
         readReferences(reader, types, type, refs);
 
-        int event = reader.nextTag();
+        int event = nextTag(reader, "searching for syntax element");
 
         if (event == XMLStreamConstants.START_ELEMENT) {
             requireElementStart(qnSyntax, reader);
             do {
                 readSyntax(reader, rules);
-                event = reader.nextTag();
+                event = nextTag(reader, "reading syntax elements");
             } while (event == XMLStreamConstants.START_ELEMENT && qnSyntax.equals(reader.getName()));
         }
 
@@ -471,14 +471,7 @@ abstract class SchemaReaderBase implements SchemaReader {
         Reference ref;
 
         if (qnLoop.equals(element)) {
-            StructureType loop;
-
-            try {
-                loop = readComplexType(reader, element, types);
-            } catch (XMLStreamException xse) {
-                throw schemaException("Exception reading loop", reader, xse);
-            }
-
+            StructureType loop = readComplexType(reader, element, types);
             nameCheck(refId, types, reader);
             types.put(refId, loop);
             ref = new Reference(refId, refTag, minOccurs, maxOccurs);
@@ -500,14 +493,10 @@ abstract class SchemaReaderBase implements SchemaReader {
             throw schemaException("Invalid syntax 'type': [" + type + ']', reader, e);
         }
 
-        try {
-            rules.add(new SyntaxRestriction(typeInt, readSyntaxPositions(reader)));
-        } catch (XMLStreamException xse) {
-            throw schemaException("Exception reading syntax", reader, xse);
-        }
+        rules.add(new SyntaxRestriction(typeInt, readSyntaxPositions(reader)));
     }
 
-    List<Integer> readSyntaxPositions(XMLStreamReader reader) throws XMLStreamException {
+    List<Integer> readSyntaxPositions(XMLStreamReader reader) {
         final List<Integer> positions = new ArrayList<>(5);
         boolean endOfSyntax = false;
 
@@ -517,10 +506,13 @@ abstract class SchemaReaderBase implements SchemaReader {
 
             if (event == XMLStreamConstants.START_ELEMENT) {
                 if (element.equals(qnPosition)) {
-                    String position = reader.getElementText();
+                    String position = null;
 
                     try {
+                        position = reader.getElementText();
                         positions.add(Integer.parseInt(position));
+                    } catch (XMLStreamException xse) {
+                        throw schemaException("Exception reading syntax position", reader, xse);
                     } catch (@SuppressWarnings("unused") NumberFormatException e) {
                         throw schemaException("invalid position [" + position + ']', reader);
                     }

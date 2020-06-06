@@ -294,7 +294,7 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
 
     }
 
-    SegmentImpl readSegmentImplementation() throws XMLStreamException {
+    SegmentImpl readSegmentImplementation() {
         List<EDITypeImplementation> sequence = new ArrayList<>();
         String typeId = parseAttribute(reader, "type", String::valueOf);
         int minOccurs = parseAttribute(reader, ATTR_MIN_OCCURS, Integer::parseInt, -1);
@@ -310,16 +310,12 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
     void readPositionedSequenceEntry(QName entryName, List<EDITypeImplementation> sequence, boolean composites) {
         EDITypeImplementation type;
 
-        try {
-            if (entryName.equals(qnElement)) {
-                type = readElementImplementation(reader);
-            } else if (composites && entryName.equals(qnComposite)) {
-                type = readCompositeImplementation(reader);
-            } else {
-                throw unexpectedElement(entryName, reader);
-            }
-        } catch (XMLStreamException xse) {
-            throw schemaException("Exception reading segment sequence", reader, xse);
+        if (entryName.equals(qnElement)) {
+            type = readElementImplementation(reader);
+        } else if (composites && entryName.equals(qnComposite)) {
+            type = readCompositeImplementation(reader);
+        } else {
+            throw unexpectedElement(entryName, reader);
         }
 
         implementedTypes.add(type);
@@ -395,7 +391,7 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
         }
     }
 
-    CompositeImpl readCompositeImplementation(XMLStreamReader reader) throws XMLStreamException {
+    CompositeImpl readCompositeImplementation(XMLStreamReader reader) {
         List<EDITypeImplementation> sequence = new ArrayList<>(5);
         int position = parseAttribute(reader, ATTR_POSITION, Integer::parseInt, 0);
         int minOccurs = parseAttribute(reader, ATTR_MIN_OCCURS, Integer::parseInt, 0);
@@ -440,7 +436,7 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
         }
     }
 
-    ElementImpl readElementImplementation(XMLStreamReader reader) throws XMLStreamException {
+    ElementImpl readElementImplementation(XMLStreamReader reader) {
         this.valueSet.clear();
         int position = parseAttribute(reader, ATTR_POSITION, Integer::parseInt, 0);
         int minOccurs = parseAttribute(reader, ATTR_MIN_OCCURS, Integer::parseInt, 0);
@@ -465,13 +461,17 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
                             () -> new ElementImpl(minOccurs, maxOccurs, (String) null, position, valueSet, title, descr));
     }
 
-    String readImplDescription(XMLStreamReader reader) throws XMLStreamException {
+    String readImplDescription(XMLStreamReader reader) {
         QName element = reader.getName();
         String description = null;
 
         if (element.equals(qnDescription)) {
-            description = reader.getElementText();
-            reader.nextTag();
+            try {
+                description = reader.getElementText();
+            } catch (XMLStreamException xse) {
+                throw schemaException("XMLStreamException reading description", reader, xse);
+            }
+            nextTag(reader, "after description element");
         }
 
         return description;
@@ -487,8 +487,7 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
         throw unexpectedElement(element, reader);
     }
 
-    <T> T readTypeImplementation(XMLStreamReader reader, Runnable contentHandler, Function<String, T> endHandler)
-            throws XMLStreamException {
+    <T> T readTypeImplementation(XMLStreamReader reader, Runnable contentHandler, Function<String, T> endHandler) {
 
         String descr = null;
 
@@ -504,7 +503,7 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
             return endHandler.apply(descr);
         }
 
-        if (reader.nextTag() == XMLStreamConstants.END_ELEMENT) {
+        if (nextTag(reader, "reading type implementation end element") == XMLStreamConstants.END_ELEMENT) {
             return endHandler.apply(descr);
         } else {
             throw unexpectedEvent(reader);
