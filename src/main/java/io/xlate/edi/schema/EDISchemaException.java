@@ -71,19 +71,6 @@ public class EDISchemaException extends Exception {
     }
 
     /**
-     * Construct an exception with the associated message, exception and
-     * location.
-     *
-     * @param message
-     *            the message to report
-     * @param location
-     *            the location of the error
-     */
-    public EDISchemaException(String message, Location location) {
-        this(message, location, null);
-    }
-
-    /**
      * Gets the location of the exception
      *
      * @return the location of the exception, may be null if none is available

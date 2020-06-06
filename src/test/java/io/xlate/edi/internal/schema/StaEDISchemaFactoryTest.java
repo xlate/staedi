@@ -606,12 +606,13 @@ class StaEDISchemaFactoryTest {
     void testIncludeV4_FileNotFound() {
         SchemaFactory factory = SchemaFactory.newFactory();
         InputStream stream = new ByteArrayInputStream((""
-                + "<schema xmlns='" + StaEDISchemaFactory.XMLNS_V4 + "'>"
-                + "  <include schemaLocation='file:./src/test/resources/x12/missing.xml' />"
+                + "<schema xmlns='" + StaEDISchemaFactory.XMLNS_V4 + "'>\n"
+                + "  <include schemaLocation='file:./src/test/resources/x12/missing.xml' />\n"
                 + "</schema>").getBytes());
-
         EDISchemaException thrown = assertThrows(EDISchemaException.class, () -> factory.createSchema(stream));
         assertEquals("Exception reading included schema", thrown.getOriginalMessage());
+        assertEquals(2, thrown.getLocation().getLineNumber());
+        assertEquals(73, thrown.getLocation().getColumnNumber());
         Throwable root = thrown;
         while (root.getCause() != null) {
             root = root.getCause();
