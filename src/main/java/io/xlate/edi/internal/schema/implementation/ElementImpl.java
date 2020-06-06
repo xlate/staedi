@@ -21,9 +21,9 @@ public class ElementImpl extends BaseImpl<EDISimpleType> implements ElementImple
             String title,
             String description) {
         super(title, description);
-        this.minOccurs = minOccurs;
-        this.maxOccurs = maxOccurs;
-        this.typeId = typeId;
+        super.minOccurs = minOccurs;
+        super.maxOccurs = maxOccurs;
+        super.typeId = typeId;
         this.position = position;
         this.values = values;
     }
