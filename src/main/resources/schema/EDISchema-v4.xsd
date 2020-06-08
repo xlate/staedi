@@ -20,61 +20,61 @@
   <!-- Simple Types -->
   <simpleType name="nameType">
     <restriction base="ID">
-      <pattern value="[A-Z][A-Z0-9]+" />
+      <pattern value="[A-Z][A-Z0-9]+"/>
     </restriction>
   </simpleType>
 
   <simpleType name="useType">
     <restriction base="string">
-      <enumeration value="required" />
-      <enumeration value="optional" />
-      <enumeration value="prohibited" />
+      <enumeration value="required"/>
+      <enumeration value="optional"/>
+      <enumeration value="prohibited"/>
     </restriction>
   </simpleType>
 
   <simpleType name="syntaxType">
     <restriction base="string">
-      <enumeration value="single" />
-      <enumeration value="paired" />
-      <enumeration value="required" />
-      <enumeration value="exclusion" />
-      <enumeration value="conditional" />
-      <enumeration value="list" />
+      <enumeration value="single"/>
+      <enumeration value="paired"/>
+      <enumeration value="required"/>
+      <enumeration value="exclusion"/>
+      <enumeration value="conditional"/>
+      <enumeration value="list"/>
     </restriction>
   </simpleType>
 
   <simpleType name="elementBaseType">
     <restriction base="string">
-      <enumeration value="binary" />
-      <enumeration value="date" />
-      <enumeration value="decimal" />
-      <enumeration value="identifier" />
-      <enumeration value="numeric" />
-      <enumeration value="string" />
-      <enumeration value="time" />
+      <enumeration value="binary"/>
+      <enumeration value="date"/>
+      <enumeration value="decimal"/>
+      <enumeration value="identifier"/>
+      <enumeration value="numeric"/>
+      <enumeration value="string"/>
+      <enumeration value="time"/>
     </restriction>
   </simpleType>
 
   <simpleType name="discriminatorType">
     <restriction base="decimal">
-      <minInclusive value="1" />
-      <maxInclusive value="99.99" />
+      <minInclusive value="1"/>
+      <maxInclusive value="99.99"/>
       <pattern value="[0-9]+(\.[0-9]{1,2}){0,1}"></pattern>
     </restriction>
   </simpleType>
 
   <simpleType name="positionType">
     <restriction base="nonNegativeInteger">
-      <minInclusive value="1" />
+      <minInclusive value="1"/>
     </restriction>
   </simpleType>
 
   <!-- Complex Types -->
   <complexType name="baseType" abstract="true">
     <sequence>
-      <element ref="tns:description" minOccurs="0" maxOccurs="1" />
+      <element ref="tns:description" minOccurs="0" maxOccurs="1"/>
     </sequence>
-    <attribute name="title" type="string" use="optional" />
+    <attribute name="title" type="string" use="optional"/>
   </complexType>
 
   <complexType name="anyElementType">
@@ -97,8 +97,8 @@
   <complexType name="controlType" abstract="true">
     <complexContent>
       <extension base="tns:baseType">
-        <attribute name="header" type="IDREF" use="required" />
-        <attribute name="trailer" type="IDREF" use="required" />
+        <attribute name="header" type="NCName" use="required"/>
+        <attribute name="trailer" type="NCName" use="required"/>
       </extension>
     </complexContent>
   </complexType>
@@ -106,7 +106,7 @@
   <complexType name="transactionControlType">
     <complexContent>
       <extension base="tns:controlType">
-        <attribute name="use" type="tns:useType" default="optional" />
+        <attribute name="use" type="tns:useType" default="optional"/>
       </extension>
     </complexContent>
   </complexType>
@@ -115,23 +115,37 @@
     <complexContent>
       <extension base="tns:controlType">
         <sequence>
-          <element name="transaction" type="tns:transactionControlType" minOccurs="0" />
+          <element name="transaction" type="tns:transactionControlType" minOccurs="0"/>
         </sequence>
-        <attribute name="use" type="tns:useType" default="optional" />
+        <attribute name="use" type="tns:useType" default="optional"/>
       </extension>
     </complexContent>
   </complexType>
 
   <attributeGroup name="referenceAttributeGroup">
-    <attribute name="type" type="IDREF" />
-    <attribute name="minOccurs" type="nonNegativeInteger" default="0">
+    <attribute name="type" type="NCName">
       <annotation>
-        <documentation>The minimum number of times a type may occur at the declared location in the EDI structure.</documentation>
+        <documentation>
+          The name of the target type being referenced.
+        </documentation>
       </annotation>
     </attribute>
+
+    <attribute name="minOccurs" type="nonNegativeInteger" default="0">
+      <annotation>
+        <documentation>
+          The minimum number of times a type may occur at the declared location
+          in the EDI structure.
+        </documentation>
+      </annotation>
+    </attribute>
+
     <attribute name="maxOccurs" type="nonNegativeInteger" default="1">
       <annotation>
-        <documentation>The maximum number of times a type may occur at the declared location in the EDI structure.</documentation>
+        <documentation>
+          The maximum number of times a type may occur at the declared location
+          in the EDI structure.
+        </documentation>
       </annotation>
     </attribute>
   </attributeGroup>
@@ -139,12 +153,19 @@
   <attributeGroup name="implementationAttributeGroup">
     <attribute name="minOccurs" type="nonNegativeInteger">
       <annotation>
-        <documentation>The minimum number of times a type may occur at the declared location in the EDI structure.</documentation>
+        <documentation>
+          The minimum number of times a type may occur at the declared location
+          in the EDI structure.
+        </documentation>
       </annotation>
     </attribute>
+
     <attribute name="maxOccurs" type="nonNegativeInteger">
       <annotation>
-        <documentation>The maximum number of times a type may occur at the declared location in the EDI structure.</documentation>
+        <documentation>
+          The maximum number of times a type may occur at the declared location
+          in the EDI structure.
+        </documentation>
       </annotation>
     </attribute>
   </attributeGroup>
@@ -153,7 +174,7 @@
   <complexType name="elementStandard">
     <complexContent>
       <extension base="tns:baseType">
-        <attributeGroup ref="tns:referenceAttributeGroup" />
+        <attributeGroup ref="tns:referenceAttributeGroup"/>
       </extension>
     </complexContent>
   </complexType>
@@ -162,10 +183,10 @@
     <complexContent>
       <extension base="tns:baseType">
         <sequence>
-          <element ref="tns:enumeration" minOccurs="0" />
+          <element ref="tns:enumeration" minOccurs="0"/>
         </sequence>
-        <attribute name="position" type="tns:positionType" use="required" />
-        <attributeGroup ref="tns:implementationAttributeGroup" />
+        <attribute name="position" type="tns:positionType" use="required"/>
+        <attributeGroup ref="tns:implementationAttributeGroup"/>
       </extension>
     </complexContent>
   </complexType>
@@ -174,7 +195,7 @@
   <complexType name="compositeStandard">
     <complexContent>
       <extension base="tns:baseType">
-        <attributeGroup ref="tns:referenceAttributeGroup" />
+        <attributeGroup ref="tns:referenceAttributeGroup"/>
       </extension>
     </complexContent>
   </complexType>
@@ -191,13 +212,13 @@
             </annotation>
             <complexType>
               <sequence>
-                <element name="element" type="tns:elementImpl" minOccurs="1" maxOccurs="unbounded" />
+                <element name="element" type="tns:elementImpl" minOccurs="1" maxOccurs="unbounded"/>
               </sequence>
             </complexType>
           </element>
         </sequence>
-        <attribute name="position" type="tns:positionType" use="required" />
-        <attributeGroup ref="tns:implementationAttributeGroup" />
+        <attribute name="position" type="tns:positionType" use="required"/>
+        <attributeGroup ref="tns:implementationAttributeGroup"/>
       </extension>
     </complexContent>
   </complexType>
@@ -206,7 +227,7 @@
   <complexType name="segmentStandard">
     <complexContent>
       <extension base="tns:baseType">
-        <attributeGroup ref="tns:referenceAttributeGroup" />
+        <attributeGroup ref="tns:referenceAttributeGroup"/>
       </extension>
     </complexContent>
   </complexType>
@@ -224,15 +245,35 @@
             <complexType>
               <sequence>
                 <choice minOccurs="0" maxOccurs="unbounded">
-                  <element name="element" type="tns:elementImpl" />
-                  <element name="composite" type="tns:compositeImpl" />
+                  <element name="element" type="tns:elementImpl"/>
+                  <element name="composite" type="tns:compositeImpl"/>
                 </choice>
               </sequence>
             </complexType>
           </element>
         </sequence>
-        <attribute name="type" type="NCName" use="required" />
-        <attributeGroup ref="tns:implementationAttributeGroup" />
+
+        <attribute name="type" type="NCName" use="required">
+          <annotation>
+            <documentation>
+              The name of the standard segment used at this position in the implementation.
+              Must be a valid segment name that occurs in the same
+              standard loop.
+            </documentation>
+          </annotation>
+        </attribute>
+
+        <attribute name="code" type="NMTOKEN" use="optional">
+          <annotation>
+            <documentation>
+              Code used to identify a segment within a loop. May be useful when occurrences of a
+              standard segment contain distinct information.
+            </documentation>
+          </annotation>
+        </attribute>
+
+        <attributeGroup ref="tns:implementationAttributeGroup"/>
+
         <attribute name="discriminator" type="tns:discriminatorType" use="optional">
           <annotation>
             <documentation>
@@ -240,8 +281,7 @@
               of a standard segment from other implementation occurrences. The
               element identified by the position given in this attribute must also specify an
               enumeration of values used only by this implementation and not used
-              by
-              any other implementations of the standard segment in the same implementation loop.
+              by any other implementations of the standard segment in the same implementation loop.
             </documentation>
           </annotation>
         </attribute>
@@ -267,6 +307,7 @@
             </documentation>
           </annotation>
         </attribute>
+
         <attribute name="maxOccurs" type="nonNegativeInteger" default="1">
           <annotation>
             <documentation>
@@ -295,22 +336,19 @@
             </annotation>
             <complexType>
               <choice maxOccurs="unbounded">
-                <element name="segment" type="tns:segmentStandard" />
-                <element name="loop" type="tns:loopStandard" minOccurs="0" />
+                <element name="segment" type="tns:segmentStandard"/>
+                <element name="loop" type="tns:loopStandard" minOccurs="0"/>
               </choice>
             </complexType>
           </element>
         </sequence>
 
-        <attribute name="code" use="required">
+        <attribute name="code" type="NMTOKEN" use="required">
           <annotation>
-            <documentation>Code used to uniquely identify a loop within the transaction/message.</documentation>
+            <documentation>
+              Code used to uniquely identify a loop within the transaction/message.
+            </documentation>
           </annotation>
-          <simpleType>
-            <restriction base="ID">
-              <pattern value="[A-Z0-9]{1,10}" />
-            </restriction>
-          </simpleType>
         </attribute>
       </extension>
     </complexContent>
@@ -329,28 +367,29 @@
             </annotation>
             <complexType>
               <choice maxOccurs="unbounded">
-                <element name="segment" type="tns:segmentImpl" />
-                <element name="loop" type="tns:loopImpl" minOccurs="0" />
+                <element name="segment" type="tns:segmentImpl"/>
+                <element name="loop" type="tns:loopImpl" minOccurs="0"/>
               </choice>
             </complexType>
           </element>
         </sequence>
 
-        <attribute name="type" type="NCName" use="required">
+        <attribute name="type" type="NMTOKEN" use="required">
           <annotation>
-            <documentation>The identifier (code attribute) of the standard loop this loop implements.</documentation>
+            <documentation>
+              The identifier (code attribute) of the standard loop this loop
+              implements.
+            </documentation>
           </annotation>
         </attribute>
 
-        <attribute name="code" use="required">
+        <attribute name="code" type="NMTOKEN" use="required">
           <annotation>
-            <documentation>Code used to uniquely identify a loop within the transaction/message implementation.</documentation>
+            <documentation>
+              Code used to uniquely identify a loop implementation within the
+              transaction/message implementation.
+            </documentation>
           </annotation>
-          <simpleType>
-            <restriction base="NMTOKEN">
-              <pattern value="[A-Z0-9]{1,10}" />
-            </restriction>
-          </simpleType>
         </attribute>
 
         <attribute name="discriminator" type="tns:discriminatorType">
@@ -358,11 +397,9 @@
             <documentation>
               The element position in the loop's first segment used to identify an
               implementation of a standard loop from other implementations. The
-              element
-              identified by the position given in this attribute must also specify an
+              element identified by the position given in this attribute must also specify an
               enumeration of values used only by this implementation and not used
-              by
-              any other implementations of the standard loop at the same level of the
+              by any other implementations of the standard loop at the same level of the
               transaction.
             </documentation>
           </annotation>
@@ -376,27 +413,27 @@
     <complexType>
       <sequence>
         <choice>
-          <element ref="tns:interchange" />
+          <element ref="tns:interchange"/>
           <sequence>
             <annotation>
               <documentation>The transaction standard and optional implementation details</documentation>
             </annotation>
-            <element ref="tns:transaction" />
-            <element ref="tns:implementation" minOccurs="0" />
+            <element ref="tns:transaction"/>
+            <element ref="tns:implementation" minOccurs="0"/>
           </sequence>
           <sequence>
             <annotation>
               <documentation>The referenced transaction standard and implementation details</documentation>
             </annotation>
-            <element ref="tns:include" />
-            <element ref="tns:implementation" />
+            <element ref="tns:include"/>
+            <element ref="tns:implementation"/>
           </sequence>
         </choice>
 
         <choice id="typeChoice" maxOccurs="unbounded">
-          <element ref="tns:elementType" maxOccurs="unbounded" />
-          <element ref="tns:compositeType" minOccurs="0" maxOccurs="unbounded" />
-          <element ref="tns:segmentType" maxOccurs="unbounded" />
+          <element ref="tns:elementType" maxOccurs="unbounded"/>
+          <element ref="tns:compositeType" minOccurs="0" maxOccurs="unbounded"/>
+          <element ref="tns:segmentType" maxOccurs="unbounded"/>
         </choice>
       </sequence>
     </complexType>
@@ -404,7 +441,7 @@
 
   <element name="include">
     <complexType>
-      <attribute name="schemaLocation" type="anyURI" use="required" />
+      <attribute name="schemaLocation" type="anyURI" use="required"/>
     </complexType>
   </element>
 
@@ -416,9 +453,9 @@
             <element name="sequence">
               <complexType>
                 <choice maxOccurs="unbounded">
-                  <element name="segment" type="tns:segmentStandard" minOccurs="0" />
-                  <element name="group" type="tns:groupControlType" minOccurs="0" />
-                  <element name="transaction" type="tns:transactionControlType" minOccurs="0" />
+                  <element name="segment" type="tns:segmentStandard" minOccurs="0"/>
+                  <element name="group" type="tns:groupControlType" minOccurs="0"/>
+                  <element name="transaction" type="tns:transactionControlType" minOccurs="0"/>
                 </choice>
               </complexType>
             </element>
@@ -442,8 +479,8 @@
               </annotation>
               <complexType>
                 <choice maxOccurs="unbounded">
-                  <element name="segment" type="tns:segmentStandard" />
-                  <element name="loop" type="tns:loopStandard" minOccurs="0" />
+                  <element name="segment" type="tns:segmentStandard"/>
+                  <element name="loop" type="tns:loopStandard" minOccurs="0"/>
                 </choice>
               </complexType>
             </element>
@@ -467,8 +504,8 @@
               </annotation>
               <complexType>
                 <choice maxOccurs="unbounded">
-                  <element name="segment" type="tns:segmentImpl" />
-                  <element name="loop" type="tns:loopImpl" minOccurs="0" />
+                  <element name="segment" type="tns:segmentImpl"/>
+                  <element name="loop" type="tns:loopImpl" minOccurs="0"/>
                 </choice>
               </complexType>
             </element>
@@ -483,42 +520,64 @@
       <complexContent>
         <extension base="tns:baseType">
           <sequence>
-            <element ref="tns:enumeration" minOccurs="0" />
+            <element ref="tns:enumeration" minOccurs="0"/>
           </sequence>
 
-          <attribute name="name" type="tns:nameType" use="required" />
+          <attribute name="name" type="tns:nameType" use="required">
+            <annotation>
+              <documentation>
+                Code used to uniquely identify an element definition to be referenced by
+                compositeType and segmentType elements within this schema.
+                This value will be returned by an EDIStreamReader's `getReferenceCode` method
+                when no `code` attribute has been specified.
+              </documentation>
+            </annotation>
+          </attribute>
+
+          <attribute name="code" type="NMTOKEN" use="optional">
+            <annotation>
+              <documentation>
+                Code used to identify an element externally. This value will
+                be returned by an EDIStreamReader's `getReferenceCode` method.
+              </documentation>
+            </annotation>
+          </attribute>
 
           <attribute name="number">
+            <annotation>
+              <documentation>*DEPRECATED* Use the `code` attribute to provide an element reference number.</documentation>
+            </annotation>
             <simpleType>
               <restriction base="nonNegativeInteger">
-                <minInclusive value="1" />
-                <maxInclusive value="9999" />
+                <minInclusive value="1"/>
+                <maxInclusive value="9999"/>
               </restriction>
             </simpleType>
           </attribute>
 
-          <attribute name="base" type="tns:elementBaseType" use="optional" default="string" />
-          <attribute name="minLength" type="nonNegativeInteger" default="1" />
-          <attribute name="maxLength" type="nonNegativeInteger" default="1" />
+          <attribute name="base" type="tns:elementBaseType" use="optional" default="string">
+            <annotation>
+              <documentation>
+                Identifies the element data type
+              </documentation>
+            </annotation>
+          </attribute>
+
+          <attribute name="minLength" type="nonNegativeInteger" default="1"/>
+          <attribute name="maxLength" type="nonNegativeInteger" default="1"/>
         </extension>
       </complexContent>
     </complexType>
   </element>
 
-  <element name="description" type="string" />
+  <element name="description" type="string"/>
 
   <element name="enumeration">
     <complexType>
       <sequence>
-        <element ref="tns:value" maxOccurs="unbounded" />
+        <element name="value" type="token" maxOccurs="unbounded"/>
       </sequence>
     </complexType>
-  </element>
-
-  <element name="value">
-    <simpleType>
-      <restriction base="token" />
-    </simpleType>
   </element>
 
   <element name="compositeType">
@@ -534,12 +593,13 @@
               </annotation>
               <complexType>
                 <choice minOccurs="1" maxOccurs="unbounded">
-                  <element name="element" type="tns:elementStandard" minOccurs="1" maxOccurs="unbounded" />
+                  <element name="element" type="tns:elementStandard" minOccurs="1" maxOccurs="unbounded"/>
                   <element name="any" type="tns:anyElementType">
                     <annotation>
                       <documentation>
                         May be used to declare that any component element may occur in this composite type up
-                        to the maximum number given by maxOccurs. The value of minOccurs defines the number of
+                        to the maximum number given by
+                        maxOccurs. The value of minOccurs defines the number of
                         undefined component elements that MUST occur in the composite.
                       </documentation>
                     </annotation>
@@ -547,10 +607,18 @@
                 </choice>
               </complexType>
             </element>
-            <element ref="tns:syntax" minOccurs="0" maxOccurs="unbounded" />
+            <element ref="tns:syntax" minOccurs="0" maxOccurs="unbounded"/>
           </sequence>
 
-          <attribute name="name" type="tns:nameType" use="required" />
+          <attribute name="name" type="tns:nameType" use="required">
+            <annotation>
+              <documentation>
+                Code used to uniquely identify a composite element definition to be referenced by
+                segmentType elements within this schema. This
+                value will be returned by an EDIStreamReader's `getReferenceCode` method.
+              </documentation>
+            </annotation>
+          </attribute>
         </extension>
       </complexContent>
     </complexType>
@@ -572,14 +640,22 @@
               </annotation>
               <complexType>
                 <choice minOccurs="0" maxOccurs="unbounded">
-                  <element name="element" type="tns:elementStandard" />
-                  <element name="composite" type="tns:compositeStandard" />
+                  <element name="element" type="tns:elementStandard">
+                    <annotation>
+                      <documentation>
+                        Defines a reference to a standard element definition.
+                      </documentation>
+                    </annotation>
+                  </element>
+                  <element name="composite" type="tns:compositeStandard"/>
                   <element name="any" type="tns:anyElementType">
                     <annotation>
                       <documentation>
                         May be used to declare that any element or composite may occur in this segment type up
-                        to the maximum number given by maxOccurs. The value of minOccurs defines the number of
-                        undefined elements that MUST occur in the segment at this position. Elements that repeat
+                        to the maximum number given by
+                        maxOccurs. The value of minOccurs defines the number of
+                        undefined elements that MUST occur in the segment at this position. Elements that
+                        repeat
                         may occur up to 99 times and are not affected by the value of the maxOccurs attribute.
                       </documentation>
                     </annotation>
@@ -587,7 +663,7 @@
                 </choice>
               </complexType>
             </element>
-            <element ref="tns:syntax" minOccurs="0" maxOccurs="unbounded" />
+            <element ref="tns:syntax" minOccurs="0" maxOccurs="unbounded"/>
           </sequence>
 
           <attribute name="name" use="required">
@@ -599,7 +675,7 @@
             </annotation>
             <simpleType>
               <restriction base="tns:nameType">
-                <maxLength value="3" />
+                <maxLength value="3"/>
               </restriction>
             </simpleType>
           </attribute>
@@ -611,9 +687,9 @@
   <element name="syntax">
     <complexType>
       <sequence>
-        <element name="position" type="tns:positionType" maxOccurs="unbounded" />
+        <element name="position" type="tns:positionType" maxOccurs="unbounded"/>
       </sequence>
-      <attribute name="type" type="tns:syntaxType" />
+      <attribute name="type" type="tns:syntaxType"/>
     </complexType>
   </element>
 </schema>

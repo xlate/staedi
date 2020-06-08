@@ -43,24 +43,24 @@ class StaEDISchemaTest {
     }
 
     @Test
-    void testRootTypeIsInterchange() throws EDISchemaException, XMLStreamException, FactoryConfigurationError {
+    void testRootTypeIsInterchange_00200() throws EDISchemaException, XMLStreamException, FactoryConfigurationError {
         StaEDISchema schema = new StaEDISchema(StaEDISchema.INTERCHANGE_ID, StaEDISchema.TRANSACTION_ID);
         InputStream schemaStream = getClass().getResourceAsStream("/X12/v00200.xml");
         XMLStreamReader reader = XMLInputFactory.newInstance().createXMLStreamReader(schemaStream);
         reader.nextTag(); // Pass by <schema> element
-        Map<String, EDIType> types = new SchemaReaderV3(reader).readTypes();
+        Map<String, EDIType> types = new SchemaReaderV4(reader).readTypes();
         schema.setTypes(types);
 
         assertEquals(EDIType.Type.INTERCHANGE, schema.getType(StaEDISchema.INTERCHANGE_ID).getType());
     }
 
     @Test
-    void testRootTypeIsInterchangeV3() throws EDISchemaException, XMLStreamException, FactoryConfigurationError {
+    void testRootTypeIsInterchange_00402() throws EDISchemaException, XMLStreamException, FactoryConfigurationError {
         StaEDISchema schema = new StaEDISchema(StaEDISchema.INTERCHANGE_ID, StaEDISchema.TRANSACTION_ID);
         InputStream schemaStream = getClass().getResourceAsStream("/X12/v00402.xml");
         XMLStreamReader reader = XMLInputFactory.newInstance().createXMLStreamReader(schemaStream);
         reader.nextTag(); // Pass by <schema> element
-        Map<String, EDIType> types = new SchemaReaderV3(reader).readTypes();
+        Map<String, EDIType> types = new SchemaReaderV4(reader).readTypes();
         schema.setTypes(types);
 
         assertEquals(EDIType.Type.INTERCHANGE, schema.getType(StaEDISchema.INTERCHANGE_ID).getType());

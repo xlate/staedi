@@ -52,6 +52,11 @@ public abstract class BaseImpl<T extends EDIType> implements EDITypeImplementati
     }
 
     @Override
+    public String getCode() {
+        return typeId;
+    }
+
+    @Override
     public EDIType getReferencedType() {
         return getStandard();
     }

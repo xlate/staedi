@@ -171,6 +171,13 @@ public class Validator {
         return !implSegmentCandidates.isEmpty();
     }
 
+    public String getSegmentReferenceCode() {
+        if (implSegmentSelected) {
+            return implSegment.getCode();
+        }
+        return segment.getCode();
+    }
+
     public String getCompositeReferenceCode() {
         return composite != null ? composite.getCode() : null;
     }
@@ -715,7 +722,7 @@ public class Validator {
             CharSequence implRefCode = ((EDIComplexType) implType.getReferencedType()).getCode();
 
             if (events[i].getType() == EDIStreamEvent.START_LOOP && compare(stdRefCode, implRefCode) == 0) {
-                events[i].setReferenceCode(implType.getId());
+                events[i].setReferenceCode(implType.getCode());
             }
         }
     }

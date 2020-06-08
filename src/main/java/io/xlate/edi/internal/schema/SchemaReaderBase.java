@@ -47,6 +47,7 @@ abstract class SchemaReaderBase implements SchemaReader {
 
     static final EDISimpleType ANY_ELEMENT = new ElementType(StaEDISchema.ANY_ELEMENT_ID,
                                                              Base.STRING,
+                                                             "ANY",
                                                              0,
                                                              0,
                                                              99_999,
@@ -527,6 +528,7 @@ abstract class SchemaReaderBase implements SchemaReader {
 
     ElementType readSimpleType(XMLStreamReader reader) {
         String name = parseAttribute(reader, "name", String::valueOf);
+        String code = parseAttribute(reader, "code", String::valueOf, name);
         String base = parseAttribute(reader, "base", String::valueOf, EDISimpleType.Base.STRING.toString());
         EDISimpleType.Base intBase = null;
 
@@ -540,7 +542,7 @@ abstract class SchemaReaderBase implements SchemaReader {
         long minLength = parseAttribute(reader, "minLength", Long::parseLong, 1L);
         long maxLength = parseAttribute(reader, "maxLength", Long::parseLong, 1L);
 
-        return new ElementType(name, intBase, number, minLength, maxLength, readEnumerationValues(reader));
+        return new ElementType(name, intBase, code, number, minLength, maxLength, readEnumerationValues(reader));
     }
 
     Set<String> readEnumerationValues(XMLStreamReader reader) {

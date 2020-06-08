@@ -23,5 +23,4 @@ public interface EDIComplexType extends EDIType {
 
     List<EDISyntaxRule> getSyntaxRules();
 
-    String getCode();
 }

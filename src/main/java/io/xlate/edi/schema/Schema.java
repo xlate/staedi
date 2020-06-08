@@ -27,7 +27,7 @@ public interface Schema extends Iterable<EDIType> {
      *
      * @deprecated use {@link #getStandard()} instead
      */
-    @SuppressWarnings("java:S1123")
+    @SuppressWarnings({ "java:S1123", "java:S1133" })
     @Deprecated /*(forRemoval = true, since = "1.2")*/
     public abstract EDIComplexType getMainLoop();
 

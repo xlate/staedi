@@ -126,16 +126,10 @@ class UsageNode {
 
     String getCode() {
         if (link instanceof EDITypeImplementation) {
-            return ((EDITypeImplementation) link).getId();
+            return ((EDITypeImplementation) link).getCode();
         }
 
-        EDIType referencedNode = link.getReferencedType();
-
-        if (referencedNode instanceof EDIComplexType) {
-            return ((EDIComplexType) referencedNode).getCode();
-        }
-
-        return referencedNode.getId();
+        return link.getReferencedType().getCode();
     }
 
     void validate(Dialect dialect, CharSequence value, boolean validateCodeValues, List<EDIStreamValidationError> errors) {
@@ -259,16 +253,27 @@ class UsageNode {
         }
 
         @Override
-        public Type getType() {
-            return Type.ELEMENT;
-        }
-
-        @Override
         public Base getBase() {
             return target.getBase();
         }
 
         @Override
+        public String getCode() {
+            return target.getCode();
+        }
+
+        @Override
+        public Type getType() {
+            return Type.ELEMENT;
+        }
+
+        /**
+         * @see io.xlate.edi.schema.EDISimpleType#getNumber()
+         * @deprecated
+         */
+        @SuppressWarnings({ "java:S1123", "java:S1133" })
+        @Override
+        @Deprecated
         public int getNumber() {
             return target.getNumber();
         }

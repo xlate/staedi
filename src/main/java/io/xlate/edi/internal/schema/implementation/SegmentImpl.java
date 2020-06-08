@@ -9,36 +9,47 @@ import io.xlate.edi.schema.implementation.SegmentImplementation;
 
 public class SegmentImpl extends BaseComplexImpl implements SegmentImplementation {
 
-    private static final String TOSTRING_FORMAT = "typeId: %s, minOccurs: %d, maxOccurs: %d, discriminator: { %s }, sequence { %s }, standard: { %s }";
+    private static final String TOSTRING_FORMAT = "typeId: %s, code: %s, minOccurs: %d, maxOccurs: %d, discriminator: { %s }, sequence { %s }, standard: { %s }";
+    private final String code;
     private final Discriminator discriminator;
 
+    @SuppressWarnings("java:S107")
     public SegmentImpl(int minOccurs,
             int maxOccurs,
             String typeId,
+            String code,
             Discriminator discriminator,
             List<EDITypeImplementation> sequence,
             String title,
             String description) {
         super(sequence, title, description);
-        this.minOccurs = minOccurs;
-        this.maxOccurs = maxOccurs;
-        this.typeId = typeId;
+        super.minOccurs = minOccurs;
+        super.maxOccurs = maxOccurs;
+        super.typeId = typeId;
+        this.code = code;
         this.discriminator = discriminator;
     }
 
     @Override
     public boolean equals(Object o) {
-        return super.equals(o) && Objects.equals(discriminator, ((SegmentImpl) o).discriminator);
+        return super.equals(o) &&
+                Objects.equals(code, ((SegmentImpl) o).code) &&
+                Objects.equals(discriminator, ((SegmentImpl) o).discriminator);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), discriminator);
+        return Objects.hash(super.hashCode(), code, discriminator);
     }
 
     @Override
     public String toString() {
-        return String.format(TOSTRING_FORMAT, typeId, minOccurs, maxOccurs, discriminator, sequence, standard);
+        return String.format(TOSTRING_FORMAT, typeId, code, minOccurs, maxOccurs, discriminator, sequence, standard);
+    }
+
+    @Override
+    public String getCode() {
+        return code;
     }
 
     @Override

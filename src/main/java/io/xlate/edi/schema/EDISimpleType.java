@@ -31,6 +31,16 @@ public interface EDISimpleType extends EDIType {
 
     Base getBase();
 
+    /**
+     * Retrieve the element reference number for this type.
+     *
+     * @return the element reference number as declared in the EDI schema
+     *
+     * @deprecated (since 1.8, for removal) use {@link #getCode()} and
+     *             <code>code</code> attribute instead
+     */
+    @SuppressWarnings({ "java:S1123", "java:S1133" })
+    @Deprecated /*(forRemoval = true, since = "1.8")*/
     int getNumber();
 
     long getMinLength();

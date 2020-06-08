@@ -10,13 +10,13 @@ import io.xlate.edi.schema.implementation.LoopImplementation;
 public class LoopImpl extends BaseComplexImpl implements LoopImplementation {
 
     private static final String TOSTRING_FORMAT = "id: %s, minOccurs: %d, maxOccurs: %d, discriminator: { %s }, sequence { %s }, standard: { %s }";
-    private final String id;
+    private final String code;
     private final Discriminator discriminator;
 
     @SuppressWarnings("java:S107")
     public LoopImpl(int minOccurs,
             int maxOccurs,
-            String id,
+            String code,
             String typeId,
             Discriminator discriminator,
             List<EDITypeImplementation> sequence,
@@ -25,7 +25,7 @@ public class LoopImpl extends BaseComplexImpl implements LoopImplementation {
         super(sequence, title, description);
         this.minOccurs = minOccurs;
         this.maxOccurs = maxOccurs;
-        this.id = id;
+        this.code = code;
         this.typeId = typeId;
         this.discriminator = discriminator;
     }
@@ -33,23 +33,28 @@ public class LoopImpl extends BaseComplexImpl implements LoopImplementation {
     @Override
     public boolean equals(Object o) {
         return super.equals(o) &&
-                Objects.equals(id, ((LoopImpl) o).id) &&
+                Objects.equals(code, ((LoopImpl) o).code) &&
                 Objects.equals(discriminator, ((LoopImpl) o).discriminator);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), id, discriminator);
+        return Objects.hash(super.hashCode(), code, discriminator);
     }
 
     @Override
     public String toString() {
-        return String.format(TOSTRING_FORMAT, id, minOccurs, maxOccurs, discriminator, sequence, standard);
+        return String.format(TOSTRING_FORMAT, code, minOccurs, maxOccurs, discriminator, sequence, standard);
     }
 
     @Override
     public String getId() {
-        return id;
+        return code;
+    }
+
+    @Override
+    public String getCode() {
+        return code;
     }
 
     @Override

@@ -14,7 +14,7 @@
   License for the specific language governing permissions and limitations under
   the License.
 -->
-<schema xmlns="http://xlate.io/EDISchema/v3">
+<schema xmlns="http://xlate.io/EDISchema/v4">
 
   <transaction>
     <sequence>
@@ -114,7 +114,7 @@
                   </element>
                 </sequence>
               </segment>
-              <segment type="S31" discriminator="1" minOccurs="2" maxOccurs="3">
+              <segment type="S31" discriminator="1" minOccurs="2" maxOccurs="3" code="S31B">
                 <sequence>
                   <element position="1">
                     <enumeration>

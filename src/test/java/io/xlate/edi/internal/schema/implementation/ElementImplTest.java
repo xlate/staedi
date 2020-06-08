@@ -89,6 +89,10 @@ class ElementImplTest {
                 return "E0003";
             }
             @Override
+            public String getCode() {
+                return "3";
+            }
+            @Override
             public Type getType() {
                 return Type.ELEMENT;
             }

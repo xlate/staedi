@@ -24,16 +24,18 @@ import io.xlate.edi.schema.EDISimpleType;
 @SuppressWarnings("java:S2160") // Intentionally inherit 'equals' from superclass
 class ElementType extends BasicType implements EDISimpleType {
 
-    private static final String TOSTRING_FORMAT = "id: %s, type: %s, base: %s, number: %d, minLength: %d, maxLength: %d, values: %s";
+    private static final String TOSTRING_FORMAT = "id: %s, type: %s, base: %s, code: %s, minLength: %d, maxLength: %d, values: %s";
     private Base base;
+    private String code;
     private int number;
     private long minLength;
     private long maxLength;
     private Set<String> values;
 
-    ElementType(String id, Base base, int number, long minLength, long maxLength, Set<String> values) {
+    ElementType(String id, Base base, String code, int number, long minLength, long maxLength, Set<String> values) {
         super(id, Type.ELEMENT);
         this.base = base;
+        this.code = code;
         this.number = number;
         this.minLength = minLength;
         this.maxLength = maxLength;
@@ -42,7 +44,7 @@ class ElementType extends BasicType implements EDISimpleType {
 
     @Override
     public String toString() {
-        return String.format(TOSTRING_FORMAT, getId(), getType(), base, number, minLength, maxLength, values);
+        return String.format(TOSTRING_FORMAT, getId(), getType(), base, code, minLength, maxLength, values);
     }
 
     @Override
@@ -51,6 +53,17 @@ class ElementType extends BasicType implements EDISimpleType {
     }
 
     @Override
+    public String getCode() {
+        return code;
+    }
+
+    /**
+     * @see io.xlate.edi.schema.EDISimpleType#getNumber()
+     * @deprecated
+     */
+    @SuppressWarnings({ "java:S1123", "java:S1133" })
+    @Override
+    @Deprecated
     public int getNumber() {
         return number;
     }

@@ -297,6 +297,7 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
     SegmentImpl readSegmentImplementation() {
         List<EDITypeImplementation> sequence = new ArrayList<>();
         String typeId = parseAttribute(reader, "type", String::valueOf);
+        String code = parseAttribute(reader, "code", String::valueOf, typeId);
         int minOccurs = parseAttribute(reader, ATTR_MIN_OCCURS, Integer::parseInt, -1);
         int maxOccurs = parseAttribute(reader, ATTR_MAX_OCCURS, Integer::parseInt, -1);
         BigDecimal discriminatorAttr = parseAttribute(reader, ATTR_DISCRIMINATOR, BigDecimal::new, null);
@@ -304,7 +305,19 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
 
         return readTypeImplementation(reader,
                                       () -> readSequence(reader, e -> readPositionedSequenceEntry(e, sequence, true)),
-                                      descr -> newSegmentImpl(minOccurs, maxOccurs, typeId, discriminatorAttr, sequence, title, descr));
+                                      descr -> whenExpected(reader, qnSegment, () -> {
+                                          Discriminator disc = buildDiscriminator(discriminatorAttr, sequence);
+                                          SegmentImpl segment = new SegmentImpl(minOccurs,
+                                                                                maxOccurs,
+                                                                                typeId,
+                                                                                code,
+                                                                                disc,
+                                                                                sequence,
+                                                                                title,
+                                                                                descr);
+                                          implementedTypes.add(segment);
+                                          return segment;
+                                      }));
     }
 
     void readPositionedSequenceEntry(QName entryName, List<EDITypeImplementation> sequence, boolean composites) {
@@ -331,22 +344,6 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
         if (previous != null) {
             throw schemaException("Duplicate value for position " + position, reader);
         }
-    }
-
-    SegmentImpl newSegmentImpl(int minOccurs,
-                               int maxOccurs,
-                               String typeId,
-                               BigDecimal discriminatorAttr,
-                               List<EDITypeImplementation> sequence,
-                               String title,
-                               String descr) {
-
-        return whenExpected(reader, qnSegment, () -> {
-            Discriminator disc = buildDiscriminator(discriminatorAttr, sequence);
-            SegmentImpl segment = new SegmentImpl(minOccurs, maxOccurs, typeId, disc, sequence, title, descr);
-            implementedTypes.add(segment);
-            return segment;
-        });
     }
 
     Discriminator buildDiscriminator(BigDecimal discriminatorAttr,
@@ -400,20 +397,15 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
 
         return readTypeImplementation(reader,
                                       () -> readSequence(reader, e -> readPositionedSequenceEntry(e, sequence, false)),
-                                      descr -> newCompositeImpl(reader, minOccurs, maxOccurs, position, sequence, title, descr));
-    }
-
-    CompositeImpl newCompositeImpl(XMLStreamReader reader,
-                                   int minOccurs,
-                                   int maxOccurs,
-                                   int position,
-                                   List<EDITypeImplementation> sequence,
-                                   String title,
-                                   String descr) {
-
-        return whenExpected(reader,
-                            qnComposite,
-                            () -> new CompositeImpl(minOccurs, maxOccurs, null, position, sequence, title, descr));
+                                      descr -> whenExpected(reader,
+                                                            qnComposite,
+                                                            () -> new CompositeImpl(minOccurs,
+                                                                                    maxOccurs,
+                                                                                    null,
+                                                                                    position,
+                                                                                    sequence,
+                                                                                    title,
+                                                                                    descr)));
     }
 
     void readSequence(XMLStreamReader reader, Consumer<QName> startHandler) {
@@ -445,20 +437,15 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
 
         return readTypeImplementation(reader,
                                       () -> valueSet.set(super.readEnumerationValues(reader)),
-                                      descr -> newElementImpl(reader, minOccurs, maxOccurs, position, valueSet.get(), title, descr));
-    }
-
-    ElementImpl newElementImpl(XMLStreamReader reader,
-                               int minOccurs,
-                               int maxOccurs,
-                               int position,
-                               Set<String> valueSet,
-                               String title,
-                               String descr) {
-
-        return whenExpected(reader,
-                            qnElement,
-                            () -> new ElementImpl(minOccurs, maxOccurs, (String) null, position, valueSet, title, descr));
+                                      descr -> whenExpected(reader,
+                                                            qnElement,
+                                                            () -> new ElementImpl(minOccurs,
+                                                                                  maxOccurs,
+                                                                                  (String) null,
+                                                                                  position,
+                                                                                  valueSet.get(),
+                                                                                  title,
+                                                                                  descr)));
     }
 
     String readImplDescription(XMLStreamReader reader) {

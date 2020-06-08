@@ -68,7 +68,13 @@ public class ElementImpl extends BaseImpl<EDISimpleType> implements ElementImple
         return standard.getBase();
     }
 
+    /**
+     * @see io.xlate.edi.schema.EDISimpleType#getNumber()
+     * @deprecated
+     */
+    @SuppressWarnings({ "java:S1123", "java:S1133" })
     @Override
+    @Deprecated
     public int getNumber() {
         return standard.getNumber();
     }
