@@ -17,13 +17,21 @@ package io.xlate.edi.internal.schema;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import org.junit.jupiter.api.Test;
 
@@ -37,21 +45,24 @@ import io.xlate.edi.stream.EDIStreamConstants.Standards;
 @SuppressWarnings("resource")
 class StaEDISchemaFactoryTest {
 
-    final String INTERCHANGE_V2 = '{' + StaEDISchemaFactory.XMLNS_V2 + "}interchange";
-    final String TRANSACTION_V2 = '{' + StaEDISchemaFactory.XMLNS_V2 + "}transaction";
-
-    final String INTERCHANGE_V3 = '{' + StaEDISchemaFactory.XMLNS_V3 + "}interchange";
-    final String STANDARD_V3 = '{' + StaEDISchemaFactory.XMLNS_V3 + "}transaction";
-    final String IMPL_V3 = '{' + StaEDISchemaFactory.XMLNS_V3 + "}implementation";
-
     @Test
     void testCreateSchemaByURL() throws EDISchemaException {
         SchemaFactory factory = SchemaFactory.newFactory();
         assertTrue(factory instanceof StaEDISchemaFactory, "Not an instance");
         URL schemaURL = getClass().getResource("/x12/EDISchema997.xml");
         Schema schema = factory.createSchema(schemaURL);
-        assertEquals(TRANSACTION_V2, schema.getStandard().getId(), "Incorrect root id");
+        assertEquals(StaEDISchema.TRANSACTION_ID, schema.getStandard().getId(), "Incorrect root id");
         assertTrue(schema.containsSegment("AK9"), "Missing AK9 segment");
+    }
+
+    @Test
+    void testCreateSchemaByURL_NoSuchFile() throws MalformedURLException {
+        SchemaFactory factory = SchemaFactory.newFactory();
+        assertTrue(factory instanceof StaEDISchemaFactory, "Not an instance");
+        URL schemaURL = new URL("file:./src/test/resources/x12/missing.xml");
+        EDISchemaException thrown = assertThrows(EDISchemaException.class, () -> factory.createSchema(schemaURL));
+        assertEquals("Unable to read URL stream", thrown.getOriginalMessage());
+        assertTrue(thrown.getCause() instanceof FileNotFoundException);
     }
 
     @Test
@@ -60,7 +71,7 @@ class StaEDISchemaFactoryTest {
         assertTrue(factory instanceof StaEDISchemaFactory, "Not an instance");
         InputStream schemaStream = getClass().getResourceAsStream("/x12/EDISchema997.xml");
         Schema schema = factory.createSchema(schemaStream);
-        assertEquals(TRANSACTION_V2, schema.getStandard().getId(), "Incorrect root id");
+        assertEquals(StaEDISchema.TRANSACTION_ID, schema.getStandard().getId(), "Incorrect root id");
         assertTrue(schema.containsSegment("AK9"), "Missing AK9 segment");
     }
 
@@ -68,7 +79,7 @@ class StaEDISchemaFactoryTest {
     void testCreateEdifactInterchangeSchema() throws EDISchemaException {
         Schema schema = SchemaUtils.getControlSchema(Standards.EDIFACT, new String[] { "UNOA", "4", "", "", "02" });
         assertNotNull(schema, "schema was null");
-        assertEquals(INTERCHANGE_V2, schema.getStandard().getId(), "Incorrect root id");
+        assertEquals(StaEDISchema.INTERCHANGE_ID, schema.getStandard().getId(), "Incorrect root id");
     }
 
     //TODO: no supported properties for now
@@ -129,6 +140,16 @@ class StaEDISchemaFactoryTest {
     }
 
     @Test
+    void testInvalidStartOfSchema() {
+        SchemaFactory factory = SchemaFactory.newFactory();
+        InputStream stream = new ByteArrayInputStream((""
+                + "<schema xmlns='" + StaEDISchemaFactory.XMLNS_V2 + "'"
+                + "</schema>").getBytes());
+        EDISchemaException thrown = assertThrows(EDISchemaException.class, () -> factory.createSchema(stream));
+        assertEquals("Exception checking start of schema XML", thrown.getOriginalMessage());
+    }
+
+    @Test
     void testUnexpectedElementBeforeSequenceV2() {
         SchemaFactory factory = SchemaFactory.newFactory();
         InputStream stream = new ByteArrayInputStream((""
@@ -149,9 +170,37 @@ class StaEDISchemaFactoryTest {
         assertTrue(factory instanceof StaEDISchemaFactory, "Not an instance");
         InputStream schemaStream = getClass().getResourceAsStream("/x12/IG-999.xml");
         Schema schema = factory.createSchema(schemaStream);
-        assertEquals(STANDARD_V3, schema.getStandard().getId(), "Incorrect root id");
-        assertEquals(IMPL_V3, schema.getImplementation().getId(), "Incorrect impl id");
+        assertEquals(StaEDISchema.TRANSACTION_ID, schema.getStandard().getId(), "Incorrect root id");
+        assertEquals(StaEDISchema.IMPLEMENTATION_ID, schema.getImplementation().getId(), "Incorrect impl id");
         assertTrue(schema.containsSegment("AK9"), "Missing AK9 segment");
+    }
+
+    @Test
+    void testCreateSchemaByStreamV4_with_include_equals_V3Schema() throws EDISchemaException {
+        SchemaFactory factory = SchemaFactory.newFactory();
+        assertTrue(factory instanceof StaEDISchemaFactory, "Not an instance");
+        InputStream schemaStreamV4 = getClass().getResourceAsStream("/x12/IG-999-standard-included.xml");
+        Schema schemaV4 = factory.createSchema(schemaStreamV4);
+        assertEquals(StaEDISchema.TRANSACTION_ID, schemaV4.getStandard().getId(), "Incorrect root id");
+        assertEquals(StaEDISchema.IMPLEMENTATION_ID, schemaV4.getImplementation().getId(), "Incorrect impl id");
+        assertTrue(schemaV4.containsSegment("AK9"), "Missing AK9 segment");
+
+        InputStream schemaStreamV3 = getClass().getResourceAsStream("/x12/IG-999.xml");
+        Schema schemaV3 = factory.createSchema(schemaStreamV3);
+
+        List<EDIType> missingV4 = StreamSupport.stream(schemaV3.spliterator(), false)
+                                               .filter(type -> !(type.equals(schemaV4.getType(type.getId()))
+                                                       && type.hashCode() == Objects.hashCode(schemaV4.getType(type.getId()))
+                                                       && type.toString().equals(String.valueOf(schemaV4.getType(type.getId())))))
+                                               .collect(Collectors.toList());
+        List<EDIType> missingV3 = StreamSupport.stream(schemaV4.spliterator(), false)
+                                               .filter(type -> !(type.equals(schemaV3.getType(type.getId()))
+                                                       && type.hashCode() == Objects.hashCode(schemaV3.getType(type.getId()))
+                                                       && type.toString().equals(String.valueOf(schemaV3.getType(type.getId())))))
+                                               .collect(Collectors.toList());
+
+        assertTrue(missingV4.isEmpty(), () -> "V3 schema contains types not in V4: " + missingV4);
+        assertTrue(missingV3.isEmpty(), () -> "V4 schema contains types not in V3: " + missingV3);
     }
 
     @Test
@@ -272,6 +321,13 @@ class StaEDISchemaFactoryTest {
     }
 
     @Test
+    void testGetControlSchema_NotFound() throws EDISchemaException {
+        SchemaFactory factory = SchemaFactory.newFactory();
+        Schema schema = factory.getControlSchema(Standards.EDIFACT, new String[] { "UNOA", "0" });
+        assertNull(schema);
+    }
+
+    @Test
     void testReferenceUndeclared() {
         SchemaFactory factory = SchemaFactory.newFactory();
         InputStream stream = new ByteArrayInputStream((""
@@ -283,7 +339,7 @@ class StaEDISchemaFactoryTest {
                 + "</interchange>"
                 + "</schema>").getBytes());
         EDISchemaException thrown = assertThrows(EDISchemaException.class, () -> factory.createSchema(stream));
-        assertEquals("Type " + INTERCHANGE_V3 + " references undeclared segment with ref='ABC'", thrown.getOriginalMessage());
+        assertEquals("Type " + StaEDISchema.INTERCHANGE_ID + " references undeclared segment with ref='ABC'", thrown.getOriginalMessage());
     }
 
     @Test
@@ -301,7 +357,7 @@ class StaEDISchemaFactoryTest {
                 + "<segmentType name=\"SG2\"><sequence><element type='E1'/></sequence></segmentType>"
                 + "</schema>").getBytes());
         EDISchemaException thrown = assertThrows(EDISchemaException.class, () -> factory.createSchema(stream));
-        assertEquals("Type 'E1' must not be referenced as 'segment' in definition of type '" + INTERCHANGE_V3 + "'",
+        assertEquals("Type 'E1' must not be referenced as 'segment' in definition of type '" + StaEDISchema.INTERCHANGE_ID + "'",
                      thrown.getOriginalMessage());
     }
 
@@ -338,7 +394,7 @@ class StaEDISchemaFactoryTest {
                 + "</interchange>"
                 + "</schema>").getBytes());
         EDISchemaException thrown = assertThrows(EDISchemaException.class, () -> factory.createSchema(stream));
-        assertEquals("Expected XML element [" + STANDARD_V3 + "] not found",
+        assertEquals("Expected XML element [{" + StaEDISchemaFactory.XMLNS_V3 + "}transaction] not found",
                      thrown.getOriginalMessage());
     }
 
@@ -491,5 +547,76 @@ class StaEDISchemaFactoryTest {
         EDISchemaException thrown = assertThrows(EDISchemaException.class, () -> factory.createSchema(stream));
         assertEquals("Element {" + StaEDISchemaFactory.XMLNS_V3 + "}any may only be present for segmentType and compositeType",
                      thrown.getOriginalMessage());
+    }
+
+    @Test
+    void testInvalidIncludeV2() {
+        SchemaFactory factory = SchemaFactory.newFactory();
+        InputStream stream = new ByteArrayInputStream((""
+                + "<schema xmlns='" + StaEDISchemaFactory.XMLNS_V2 + "'>"
+                + "  <include schemaLocation='./src/test/x12/EDISchema997.xml' />"
+                + "</schema>").getBytes());
+
+        EDISchemaException thrown = assertThrows(EDISchemaException.class, () -> factory.createSchema(stream));
+        assertEquals("Unexpected XML element [{" + StaEDISchemaFactory.XMLNS_V2 + "}include]",
+                     thrown.getOriginalMessage());
+    }
+
+    @Test
+    void testInvalidIncludeV3() {
+        SchemaFactory factory = SchemaFactory.newFactory();
+        InputStream stream = new ByteArrayInputStream((""
+                + "<schema xmlns='" + StaEDISchemaFactory.XMLNS_V3 + "'>"
+                + "  <include schemaLocation='./src/test/x12/EDISchema997.xml' />"
+                + "</schema>").getBytes());
+
+        EDISchemaException thrown = assertThrows(EDISchemaException.class, () -> factory.createSchema(stream));
+        assertEquals("Unexpected XML element [{" + StaEDISchemaFactory.XMLNS_V3 + "}include]",
+                     thrown.getOriginalMessage());
+    }
+
+    @Test
+    void testValidIncludeV4() throws EDISchemaException {
+        SchemaFactory factory = SchemaFactory.newFactory();
+        InputStream stream = new ByteArrayInputStream((""
+                + "<schema xmlns='" + StaEDISchemaFactory.XMLNS_V4 + "'>"
+                + "  <include schemaLocation='file:./src/test/resources/x12/EDISchema997.xml' />"
+                + "  <elementType name=\"DUMMY\" base=\"string\" maxLength=\"5\" />"
+                + "</schema>").getBytes());
+
+        Schema schema = factory.createSchema(stream);
+        assertNotNull(schema);
+    }
+
+    @Test
+    void testInvalidUrlIncludeV4() {
+        SchemaFactory factory = SchemaFactory.newFactory();
+        InputStream stream = new ByteArrayInputStream((""
+                + "<schema xmlns='" + StaEDISchemaFactory.XMLNS_V4 + "'>"
+                + "  <include schemaLocation='./src/test/resources/x12/EDISchema997.xml' />"
+                + "</schema>").getBytes());
+
+        EDISchemaException thrown = assertThrows(EDISchemaException.class, () -> factory.createSchema(stream));
+        assertEquals("Exception reading included schema", thrown.getOriginalMessage());
+        assertTrue(thrown.getCause() instanceof StaEDISchemaReadException);
+        assertTrue(thrown.getCause().getCause() instanceof MalformedURLException);
+    }
+
+    @Test
+    void testIncludeV4_FileNotFound() {
+        SchemaFactory factory = SchemaFactory.newFactory();
+        InputStream stream = new ByteArrayInputStream((""
+                + "<schema xmlns='" + StaEDISchemaFactory.XMLNS_V4 + "'>\n"
+                + "  <include schemaLocation='file:./src/test/resources/x12/missing.xml' />\n"
+                + "</schema>").getBytes());
+        EDISchemaException thrown = assertThrows(EDISchemaException.class, () -> factory.createSchema(stream));
+        assertEquals("Exception reading included schema", thrown.getOriginalMessage());
+        assertEquals(2, thrown.getLocation().getLineNumber());
+        assertEquals(73, thrown.getLocation().getColumnNumber());
+        Throwable root = thrown;
+        while (root.getCause() != null) {
+            root = root.getCause();
+        }
+        assertTrue(root instanceof IOException);
     }
 }

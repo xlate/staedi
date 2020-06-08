@@ -22,13 +22,21 @@ import java.util.Map;
 import io.xlate.edi.schema.EDIComplexType;
 import io.xlate.edi.schema.EDISchemaException;
 import io.xlate.edi.schema.EDIType;
+import io.xlate.edi.schema.EDIType.Type;
 import io.xlate.edi.schema.Schema;
 import io.xlate.edi.schema.implementation.LoopImplementation;
 
 public class StaEDISchema implements Schema {
 
-    public static final String ANY_ELEMENT_ID = "io.xlate.edi.internal.schema.ANY_ELEMENT";
-    public static final String ANY_COMPOSITE_ID = "io.xlate.edi.internal.schema.ANY_COMPOSITE";
+    public static final String ID_PREFIX = "io.xlate.edi.internal.schema.";
+
+    public static final String INTERCHANGE_ID = ID_PREFIX + Type.INTERCHANGE.name();
+    public static final String GROUP_ID = ID_PREFIX + Type.GROUP.name();
+    public static final String TRANSACTION_ID = ID_PREFIX + Type.TRANSACTION.name();
+    public static final String IMPLEMENTATION_ID = ID_PREFIX + "IMPLEMENTATION";
+
+    public static final String ANY_ELEMENT_ID = ID_PREFIX + "ANY_ELEMENT";
+    public static final String ANY_COMPOSITE_ID = ID_PREFIX + "ANY_COMPOSITE";
 
     final String interchangeName;
     final String transactionStandardName;
@@ -91,7 +99,7 @@ public class StaEDISchema implements Schema {
 
     @Override
     public boolean containsSegment(String name) {
-        final EDIType type = types.get(name);
+        final EDIType type = getType(name);
         return type != null && type.isType(EDIType.Type.SEGMENT);
     }
 

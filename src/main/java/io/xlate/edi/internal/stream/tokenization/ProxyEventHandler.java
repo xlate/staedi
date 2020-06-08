@@ -184,9 +184,11 @@ public class ProxyEventHandler implements EventHandler {
         transactionSchemaAllowed = false;
         Validator validator = validator();
         boolean eventsReady = true;
+        String code = null;
 
         if (validator != null && !dialect.isServiceAdviceSegment(segmentTag)) {
             validator.validateSegment(this, segmentTag);
+            code = validator.getSegmentReferenceCode();
             eventsReady = !validator.isPendingDiscrimination();
         }
 
@@ -195,7 +197,7 @@ public class ProxyEventHandler implements EventHandler {
             validator().validateSegment(this, segmentTag);
         }
 
-        enqueueEvent(EDIStreamEvent.START_SEGMENT, EDIStreamValidationError.NONE, segmentTag, null, location);
+        enqueueEvent(EDIStreamEvent.START_SEGMENT, EDIStreamValidationError.NONE, segmentTag, code, location);
         return eventsReady;
     }
 

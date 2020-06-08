@@ -1,5 +1,7 @@
 package io.xlate.edi.internal.schema.implementation;
 
+import java.util.Objects;
+
 import io.xlate.edi.schema.EDIReference;
 import io.xlate.edi.schema.EDIType;
 import io.xlate.edi.schema.implementation.EDITypeImplementation;
@@ -20,7 +22,37 @@ public abstract class BaseImpl<T extends EDIType> implements EDITypeImplementati
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || !getClass().isInstance(o)) {
+            return false;
+        }
+
+        @SuppressWarnings("unchecked")
+        BaseImpl<T> other = (BaseImpl<T>) o;
+
+        return Objects.equals(typeId, other.typeId) &&
+                Objects.equals(standard, other.standard) &&
+                Objects.equals(minOccurs, other.minOccurs) &&
+                Objects.equals(maxOccurs, other.maxOccurs) &&
+                Objects.equals(title, other.title) &&
+                Objects.equals(description, other.description);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(typeId, standard, minOccurs, maxOccurs, title, description);
+    }
+
+    @Override
     public String getId() {
+        return typeId;
+    }
+
+    @Override
+    public String getCode() {
         return typeId;
     }
 

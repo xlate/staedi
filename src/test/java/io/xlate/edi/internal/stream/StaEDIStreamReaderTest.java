@@ -1051,6 +1051,7 @@ class StaEDIStreamReaderTest implements ConstantsTest {
                     reader.next();
                 } catch (Exception e) {
                     thrown = e;
+                    break;
                 }
             }
         } finally {
@@ -1078,6 +1079,7 @@ class StaEDIStreamReaderTest implements ConstantsTest {
                     reader.next();
                 } catch (Exception e) {
                     thrown = e;
+                    break;
                 }
             }
         } finally {

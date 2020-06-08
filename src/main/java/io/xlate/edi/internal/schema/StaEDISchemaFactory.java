@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -41,9 +42,19 @@ public class StaEDISchemaFactory implements SchemaFactory {
 
     static final Logger LOGGER = Logger.getLogger(StaEDISchemaFactory.class.getName());
     static final XMLInputFactory FACTORY = XMLInputFactory.newInstance();
+    static final String SCHEMA_TAG = "schema";
 
     static final String XMLNS_V2 = "http://xlate.io/EDISchema/v2";
     static final String XMLNS_V3 = "http://xlate.io/EDISchema/v3";
+    static final String XMLNS_V4 = "http://xlate.io/EDISchema/v4";
+
+    static final Map<QName, Function<XMLStreamReader, SchemaReader>> readerFactories = new HashMap<>(3);
+
+    static {
+        readerFactories.put(new QName(XMLNS_V2, SCHEMA_TAG), SchemaReaderV2::new);
+        readerFactories.put(new QName(XMLNS_V3, SCHEMA_TAG), SchemaReaderV3::new);
+        readerFactories.put(new QName(XMLNS_V4, SCHEMA_TAG), SchemaReaderV4::new);
+    }
 
     private final Map<String, Object> properties;
     private final Set<String> supportedProperties;
@@ -55,57 +66,30 @@ public class StaEDISchemaFactory implements SchemaFactory {
 
     @Override
     public Schema createSchema(InputStream stream) throws EDISchemaException {
-        QName schemaElement;
+        StaEDISchema schema;
 
         try {
-            LOGGER.fine(() -> "Creating schema from stream");
-            XMLStreamReader reader = FACTORY.createXMLStreamReader(stream);
-
-            if (reader.getEventType() != XMLStreamConstants.START_DOCUMENT) {
-                throw unexpectedEvent(reader);
-            }
-
-            reader.nextTag();
-            schemaElement = reader.getName();
-
-            if (!"schema".equals(schemaElement.getLocalPart())) {
-                throw unexpectedElement(schemaElement, reader);
-            }
-
-            SchemaReader schemaReader;
-
-            if (XMLNS_V2.equals(schemaElement.getNamespaceURI())) {
-                schemaReader = new SchemaReaderV2(reader);
-            } else if (XMLNS_V3.equals(schemaElement.getNamespaceURI())) {
-                schemaReader = new SchemaReaderV3(reader);
-            } else {
-                throw unexpectedElement(schemaElement, reader);
-            }
-
+            SchemaReader schemaReader = readSchema(stream);
             Map<String, EDIType> types = schemaReader.readTypes();
 
-            StaEDISchema schema = new StaEDISchema(schemaReader.getInterchangeName(),
-                                                   schemaReader.getTransactionName(),
-                                                   schemaReader.getImplementationName());
+            schema = new StaEDISchema(schemaReader.getInterchangeName(),
+                                      schemaReader.getTransactionName(),
+                                      schemaReader.getImplementationName());
 
             schema.setTypes(types);
 
             LOGGER.log(Level.FINE, "Schema created, contains {0} types", types.size());
-
-            return schema;
-        } catch (XMLStreamException e) {
-            throw new EDISchemaException(e);
         } catch (StaEDISchemaReadException e) {
-            Location location = e.getLocation();
-            if (location != null) {
-                throw new EDISchemaException(e.getMessage(), location, e);
-            }
-            throw new EDISchemaException(e.getMessage(), e);
+            throw wrapped(e);
         }
+
+        return schema;
     }
 
     @Override
     public Schema createSchema(URL location) throws EDISchemaException {
+        LOGGER.fine(() -> "Creating schema from URL: " + location);
+
         try (InputStream stream = location.openStream()) {
             return createSchema(stream);
         } catch (IOException e) {
@@ -137,6 +121,54 @@ public class StaEDISchemaFactory implements SchemaFactory {
             properties.put(name, value);
         }
         throw new IllegalArgumentException("Unsupported property: " + name);
+    }
+
+    static Map<String, EDIType> readSchemaTypes(URL location) throws EDISchemaException {
+        LOGGER.fine(() -> "Reading schema from URL: " + location);
+
+        try (InputStream stream = location.openStream()) {
+            return readSchema(stream).readTypes();
+        } catch (StaEDISchemaReadException e) {
+            throw wrapped(e);
+        } catch (IOException e) {
+            throw new EDISchemaException("Unable to read URL stream", e);
+        }
+    }
+
+    static SchemaReader readSchema(InputStream stream) throws EDISchemaException {
+        QName schemaElement;
+
+        try {
+            LOGGER.fine(() -> "Creating schema from stream");
+            XMLStreamReader reader = FACTORY.createXMLStreamReader(stream);
+
+            if (reader.getEventType() != XMLStreamConstants.START_DOCUMENT) {
+                throw unexpectedEvent(reader);
+            }
+
+            reader.nextTag();
+            schemaElement = reader.getName();
+
+            if (readerFactories.containsKey(schemaElement)) {
+                return readerFactories.get(schemaElement).apply(reader);
+            }
+
+            throw unexpectedElement(schemaElement, reader);
+        } catch (XMLStreamException e) {
+            throw new EDISchemaException("Exception checking start of schema XML", e);
+        } catch (StaEDISchemaReadException e) {
+            throw wrapped(e);
+        }
+    }
+
+    static EDISchemaException wrapped(StaEDISchemaReadException e) {
+        Location errorLocation = e.getLocation();
+
+        if (errorLocation != null) {
+            return new EDISchemaException(e.getMessage(), errorLocation, e);
+        }
+
+        return new EDISchemaException(e.getMessage(), e);
     }
 
     static StaEDISchemaReadException schemaException(String message) {

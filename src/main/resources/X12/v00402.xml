@@ -14,7 +14,7 @@
   License for the specific language governing permissions and limitations under
   the License.
 -->
-<schema xmlns="http://xlate.io/EDISchema/v3">
+<schema xmlns="http://xlate.io/EDISchema/v4">
 
   <interchange header="ISA" trailer="IEA">
     <sequence>
@@ -186,18 +186,18 @@
 
   <elementType name="I65" base="string" />
 
-  <elementType name="E28" number="28" base="numeric" maxLength="9" />
-  <elementType name="E96" number="96" base="numeric" maxLength="10" />
-  <elementType name="E97" number="97" base="numeric" maxLength="6" />
-  <elementType name="E124" number="124" base="string" minLength="2" maxLength="15" />
-  <elementType name="E142" number="142" base="string" minLength="2" maxLength="15" />
-  <elementType name="E143" number="143" base="string" minLength="3" maxLength="3" />
-  <elementType name="E329" number="329" base="string" minLength="4" maxLength="9" />
-  <elementType name="E337" number="337" base="time" minLength="4" maxLength="8" />
-  <elementType name="E373" number="373" base="date" minLength="8" maxLength="8" />
-  <elementType name="E455" number="455" base="string" maxLength="2" />
+  <elementType name="E28" code="28" base="numeric" maxLength="9" />
+  <elementType name="E96" code="96" base="numeric" maxLength="10" />
+  <elementType name="E97" code="97" base="numeric" maxLength="6" />
+  <elementType name="E124" code="124" base="string" minLength="2" maxLength="15" />
+  <elementType name="E142" code="142" base="string" minLength="2" maxLength="15" />
+  <elementType name="E143" code="143" base="string" minLength="3" maxLength="3" />
+  <elementType name="E329" code="329" base="string" minLength="4" maxLength="9" />
+  <elementType name="E337" code="337" base="time" minLength="4" maxLength="8" />
+  <elementType name="E373" code="373" base="date" minLength="8" maxLength="8" />
+  <elementType name="E455" code="455" base="string" maxLength="2" />
 
-  <elementType name="E479" number="479" base="identifier" minLength="2" maxLength="2">
+  <elementType name="E479" code="479" base="identifier" minLength="2" maxLength="2">
     <enumeration>
       <value>AA</value>
       <value>AB</value>
@@ -462,8 +462,8 @@
     </enumeration>
   </elementType>
 
-  <elementType name="E480" number="480" base="string" maxLength="12" />
-  <elementType name="E1705" number="1705" base="string" maxLength="35" />
+  <elementType name="E480" code="480" base="string" maxLength="12" />
+  <elementType name="E1705" code="1705" base="string" maxLength="35" />
 
   <segmentType name="ST">
     <sequence>

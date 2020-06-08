@@ -12,14 +12,14 @@
 
     <!-- ==================================== Element types ===================================== -->
 
-    <elementType name="Generic" base="string" minLength="0" maxLength="500" />
-    <elementType name="Number1to3" base="numeric" minLength="1" maxLength="3" />
+    <elementType name="GENERIC" base="string" minLength="0" maxLength="500" />
+    <elementType name="NUMBER1TO3" base="numeric" minLength="1" maxLength="3" />
 
     <!-- ==================================== Segment types ===================================== -->
 
     <segmentType name="EQN">
         <sequence>
-            <element type="Number1to3" minOccurs="1" maxOccurs="1" />
+            <element type="NUMBER1TO3" minOccurs="1" maxOccurs="1" />
         </sequence>
     </segmentType>
 
@@ -29,7 +29,7 @@
 
     <segmentType name="FOO">
         <sequence>
-            <element type="Generic" minOccurs="1" maxOccurs="1" />
+            <element type="GENERIC" minOccurs="1" maxOccurs="1" />
         </sequence>
     </segmentType>
 

@@ -1,5 +1,6 @@
 package io.xlate.edi.internal.schema.implementation;
 
+import java.util.Objects;
 import java.util.Set;
 
 import io.xlate.edi.schema.EDIReference;
@@ -20,9 +21,9 @@ public class ElementImpl extends BaseImpl<EDISimpleType> implements ElementImple
             String title,
             String description) {
         super(title, description);
-        this.minOccurs = minOccurs;
-        this.maxOccurs = maxOccurs;
-        this.typeId = typeId;
+        super.minOccurs = minOccurs;
+        super.maxOccurs = maxOccurs;
+        super.typeId = typeId;
         this.position = position;
         this.values = values;
     }
@@ -33,6 +34,18 @@ public class ElementImpl extends BaseImpl<EDISimpleType> implements ElementImple
         this.typeId = standard.getId();
         this.position = position;
         this.values = standard.getValueSet();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        return super.equals(o) &&
+                Objects.equals(position, ((ElementImpl) o).position) &&
+                Objects.equals(values, ((ElementImpl) o).values);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), position, values);
     }
 
     @Override
@@ -55,7 +68,13 @@ public class ElementImpl extends BaseImpl<EDISimpleType> implements ElementImple
         return standard.getBase();
     }
 
+    /**
+     * @see io.xlate.edi.schema.EDISimpleType#getNumber()
+     * @deprecated
+     */
+    @SuppressWarnings({ "java:S1123", "java:S1133" })
     @Override
+    @Deprecated
     public int getNumber() {
         return standard.getNumber();
     }

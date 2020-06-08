@@ -29,6 +29,8 @@ public interface EDIType {
 
     String getId();
 
+    String getCode();
+
     Type getType();
 
     default boolean isType(Type type) {

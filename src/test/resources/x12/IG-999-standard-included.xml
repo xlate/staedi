@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<schema xmlns="http://xlate.io/EDISchema/v4">
+  <include schemaLocation="file:./src/test/resources/x12/EDISchema999.xml" />
+
+  <implementation>
+    <sequence>
+      <segment type="AK1">
+        <sequence>
+          <element position="2" minOccurs="1">
+            <description>Element AK102</description>
+          </element>
+          <element position="1" minOccurs="1" />
+          <element position="3" minOccurs="1" />
+        </sequence>
+      </segment>
+
+      <loop code="AK2" type="L0001" title="Transaction Set Response Header">
+        <sequence>
+          <segment type="AK2">
+          <!-- Unchanged from standard -->
+          </segment>
+
+          <loop code="IK3" type="L0002" title="Error Identification">
+            <sequence>
+              <segment type="IK3">
+                <sequence>
+                  <element position="1" minOccurs="1" />
+                  <element position="2" minOccurs="1" />
+                  <element position="3" minOccurs="0" />
+                  <element position="4" minOccurs="1" />
+                </sequence>
+              </segment>
+              <segment type="CTX" discriminator="01.01" maxOccurs="9">
+                <sequence>
+                  <composite position="1">
+                    <sequence>
+                      <element position="1">
+                        <enumeration>
+                          <value>SITUATIONAL TRIGGER</value>
+                        </enumeration>
+                      </element>
+                    </sequence>
+                  </composite>
+                  <element position="2" minOccurs="1" />
+                  <element position="3" minOccurs="1" />
+                  <element position="4" />
+                  <composite position="5" />
+                  <composite position="6">
+                    <sequence>
+                      <element position="1" />
+                    </sequence>
+                  </composite>
+                </sequence>
+              </segment>
+              <segment type="CTX" maxOccurs="1">
+                <sequence>
+                  <composite position="1">
+                    <sequence>
+                      <element position="1" minOccurs="1" />
+                      <element position="2" minOccurs="1" />
+                    </sequence>
+                  </composite>
+                    <!-- Remaining elements are not used. -->
+                </sequence>
+              </segment>
+              <loop code="IK4" type="L0003" title="Implementation Data Element Note">
+                <sequence>
+                  <segment type="IK4">
+                      <!-- Unchanged from standard -->
+                  </segment>
+                  <segment type="CTX" maxOccurs="10">
+                    <sequence>
+                      <composite position="1">
+                        <sequence>
+                          <element position="1">
+                            <enumeration>
+                              <value>SITUATIONAL TRIGGER</value>
+                            </enumeration>
+                          </element>
+                        </sequence>
+                      </composite>
+                      <element position="2" minOccurs="1" />
+                      <element position="3" minOccurs="1" />
+                      <element position="4" />
+                      <composite position="5" minOccurs="1" />
+                      <composite position="6">
+                        <sequence>
+                          <element position="1" />
+                        </sequence>
+                      </composite>
+                    </sequence>
+                  </segment>
+                </sequence>
+              </loop>
+            </sequence>
+          </loop>
+          <segment type="IK5">
+              <!-- Unchanged from standard -->
+          </segment>
+        </sequence>
+      </loop>
+      <segment type="AK9">
+          <!-- Unchanged from standard -->
+      </segment>
+    </sequence>
+  </implementation>
+</schema>
