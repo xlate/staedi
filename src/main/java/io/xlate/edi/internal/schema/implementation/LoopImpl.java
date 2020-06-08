@@ -49,7 +49,7 @@ public class LoopImpl extends BaseComplexImpl implements LoopImplementation {
 
     @Override
     public String getId() {
-        return code;
+        return getCode();
     }
 
     @Override
