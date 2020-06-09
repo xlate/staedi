@@ -17,6 +17,7 @@ public interface EDIReporter {
      * @param reader
      *            the EDIStreamReader that encountered the error
      * @throws EDIStreamException
+     *             when errors occur calling the reader
      */
     void report(EDIStreamValidationError errorType, EDIStreamReader reader) throws EDIStreamException;
 }
