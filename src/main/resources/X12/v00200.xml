@@ -18,13 +18,14 @@
 
   <interchange header="ISA" trailer="IEA">
     <sequence>
-      <segment type="TA1" maxOccurs="99999" />
+      <segment type="ISB" title="Grade of Service Request"/>
+      <segment type="TA1" title="Interchange Acknowledgment" maxOccurs="99999"/>
 
       <group header="GS" trailer="GE">
-        <transaction header="ST" trailer="SE" />
+        <transaction header="ST" trailer="SE"/>
       </group>
 
-      <transaction header="ST" trailer="SE" use="prohibited" />
+      <transaction header="ST" trailer="SE" use="prohibited"/>
     </sequence>
   </interchange>
 
@@ -40,7 +41,7 @@
     </enumeration>
   </elementType>
 
-  <elementType name="I02" base="string" minLength="10" maxLength="10" />
+  <elementType name="I02" base="string" minLength="10" maxLength="10"/>
 
   <elementType name="I03" base="identifier" minLength="2" maxLength="2">
     <enumeration>
@@ -49,7 +50,7 @@
     </enumeration>
   </elementType>
 
-  <elementType name="I04" base="string" minLength="10" maxLength="10" />
+  <elementType name="I04" base="string" minLength="10" maxLength="10"/>
 
   <elementType name="I05" base="identifier" minLength="2" maxLength="2">
     <enumeration>
@@ -97,13 +98,13 @@
     </enumeration>
   </elementType>
 
-  <elementType name="I06" base="string" minLength="15" maxLength="15" />
+  <elementType name="I06" base="string" minLength="15" maxLength="15"/>
 
-  <elementType name="I07" base="string" minLength="15" maxLength="15" />
+  <elementType name="I07" base="string" minLength="15" maxLength="15"/>
 
-  <elementType name="I08" base="date" minLength="6" maxLength="6" />
+  <elementType name="I08" base="date" minLength="6" maxLength="6"/>
 
-  <elementType name="I09" base="time" minLength="4" maxLength="4" />
+  <elementType name="I09" base="time" minLength="4" maxLength="4"/>
 
   <elementType name="I10" base="identifier">
     <enumeration>
@@ -129,7 +130,7 @@
     </enumeration>
   </elementType>
 
-  <elementType name="I12" base="numeric" minLength="9" maxLength="9" />
+  <elementType name="I12" base="numeric" minLength="9" maxLength="9"/>
 
   <elementType name="I13" base="identifier">
     <enumeration>
@@ -146,9 +147,9 @@
     </enumeration>
   </elementType>
 
-  <elementType name="I15" base="string" />
+  <elementType name="I15" base="string"/>
 
-  <elementType name="I16" base="numeric" maxLength="5" />
+  <elementType name="I16" base="numeric" maxLength="5"/>
 
   <elementType name="I17" base="identifier">
     <enumeration>
@@ -196,16 +197,24 @@
     </enumeration>
   </elementType>
 
-  <elementType name="E28" code="28" base="numeric" maxLength="9" />
-  <elementType name="E96" code="96" base="numeric" maxLength="10" />
-  <elementType name="E97" code="97" base="numeric" maxLength="6" />
-  <elementType name="E124" code="124" base="string" minLength="2" maxLength="15" />
-  <elementType name="E142" code="142" base="string" minLength="2" maxLength="15" />
-  <elementType name="E143" code="143" base="string" minLength="3" maxLength="3" />
-  <elementType name="E329" code="329" base="string" minLength="4" maxLength="9" />
-  <elementType name="E337" code="337" base="time" minLength="4" maxLength="8" />
-  <elementType name="E373" code="373" base="date" minLength="6" maxLength="8" />
-  <elementType name="E455" code="455" base="string" maxLength="2" />
+  <elementType name="I34" base="identifier">
+    <enumeration>
+      <value>0</value>
+      <value>1</value>
+      <value>2</value>
+    </enumeration>
+  </elementType>
+
+  <elementType name="E28" code="28" base="numeric" maxLength="9"/>
+  <elementType name="E96" code="96" base="numeric" maxLength="10"/>
+  <elementType name="E97" code="97" base="numeric" maxLength="6"/>
+  <elementType name="E124" code="124" base="string" minLength="2" maxLength="15"/>
+  <elementType name="E142" code="142" base="string" minLength="2" maxLength="15"/>
+  <elementType name="E143" code="143" base="string" minLength="3" maxLength="3"/>
+  <elementType name="E329" code="329" base="string" minLength="4" maxLength="9"/>
+  <elementType name="E337" code="337" base="time" minLength="4" maxLength="8"/>
+  <elementType name="E373" code="373" base="date" minLength="6" maxLength="8"/>
+  <elementType name="E455" code="455" base="string" maxLength="2"/>
 
   <elementType name="E479" code="479" base="identifier" minLength="2" maxLength="2">
     <enumeration>
@@ -472,77 +481,83 @@
     </enumeration>
   </elementType>
 
-  <elementType name="E480" code="480" base="string" maxLength="12" />
+  <elementType name="E480" code="480" base="string" maxLength="12"/>
 
   <segmentType name="ST">
     <sequence>
-      <element type="E143" minOccurs="1" />
-      <element type="E329" minOccurs="1" />
+      <element type="E143" minOccurs="1"/>
+      <element type="E329" minOccurs="1"/>
     </sequence>
   </segmentType>
 
   <segmentType name="SE">
     <sequence>
-      <element type="E96" minOccurs="1" />
-      <element type="E329" minOccurs="1" />
+      <element type="E96" minOccurs="1"/>
+      <element type="E329" minOccurs="1"/>
     </sequence>
   </segmentType>
 
   <segmentType name="GS">
     <sequence>
-      <element type="E479" minOccurs="1" />
-      <element type="E142" minOccurs="1" />
-      <element type="E124" minOccurs="1" />
-      <element type="E373" minOccurs="1" />
-      <element type="E337" minOccurs="1" />
-      <element type="E28" minOccurs="1" />
-      <element type="E455" minOccurs="1" />
-      <element type="E480" minOccurs="1" />
+      <element type="E479" minOccurs="1"/>
+      <element type="E142" minOccurs="1"/>
+      <element type="E124" minOccurs="1"/>
+      <element type="E373" minOccurs="1"/>
+      <element type="E337" minOccurs="1"/>
+      <element type="E28" minOccurs="1"/>
+      <element type="E455" minOccurs="1"/>
+      <element type="E480" minOccurs="1"/>
     </sequence>
   </segmentType>
 
   <segmentType name="GE">
     <sequence>
-      <element type="E28" minOccurs="1" />
-      <element type="E97" minOccurs="1" />
+      <element type="E28" minOccurs="1"/>
+      <element type="E97" minOccurs="1"/>
     </sequence>
   </segmentType>
 
   <segmentType name="ISA">
     <sequence>
-      <element type="I01" minOccurs="1" />
-      <element type="I02" minOccurs="1" />
-      <element type="I03" minOccurs="1" />
-      <element type="I04" minOccurs="1" />
-      <element type="I05" minOccurs="1" />
-      <element type="I06" minOccurs="1" />
-      <element type="I05" minOccurs="1" />
-      <element type="I07" minOccurs="1" />
-      <element type="I08" minOccurs="1" />
-      <element type="I09" minOccurs="1" />
-      <element type="I10" minOccurs="1" />
-      <element type="I11" minOccurs="1" />
-      <element type="I12" minOccurs="1" />
-      <element type="I13" minOccurs="1" />
-      <element type="I14" minOccurs="1" />
-      <element type="I15" minOccurs="1" />
+      <element type="I01" minOccurs="1"/>
+      <element type="I02" minOccurs="1"/>
+      <element type="I03" minOccurs="1"/>
+      <element type="I04" minOccurs="1"/>
+      <element type="I05" minOccurs="1"/>
+      <element type="I06" minOccurs="1"/>
+      <element type="I05" minOccurs="1"/>
+      <element type="I07" minOccurs="1"/>
+      <element type="I08" minOccurs="1"/>
+      <element type="I09" minOccurs="1"/>
+      <element type="I10" minOccurs="1"/>
+      <element type="I11" minOccurs="1"/>
+      <element type="I12" minOccurs="1"/>
+      <element type="I13" minOccurs="1"/>
+      <element type="I14" minOccurs="1"/>
+      <element type="I15" minOccurs="1"/>
+    </sequence>
+  </segmentType>
+
+  <segmentType name="ISB">
+    <sequence>
+      <element type="I34" minOccurs="1"/>
     </sequence>
   </segmentType>
 
   <segmentType name="TA1">
     <sequence>
-      <element type="I12" minOccurs="1" />
-      <element type="I08" minOccurs="1" />
-      <element type="I09" minOccurs="1" />
-      <element type="I17" minOccurs="1" />
-      <element type="I18" minOccurs="1" />
+      <element type="I12" minOccurs="1"/>
+      <element type="I08" minOccurs="1"/>
+      <element type="I09" minOccurs="1"/>
+      <element type="I17" minOccurs="1"/>
+      <element type="I18" minOccurs="1"/>
     </sequence>
   </segmentType>
 
   <segmentType name="IEA">
     <sequence>
-      <element type="I16" minOccurs="1" />
-      <element type="I12" minOccurs="1" />
+      <element type="I16" minOccurs="1"/>
+      <element type="I12" minOccurs="1"/>
     </sequence>
   </segmentType>
 </schema>
