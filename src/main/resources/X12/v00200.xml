@@ -18,11 +18,13 @@
 
   <interchange header="ISA" trailer="IEA">
     <sequence>
-      <segment type="TA1" maxOccurs="1" />
+      <segment type="TA1" maxOccurs="99999" />
 
       <group header="GS" trailer="GE">
         <transaction header="ST" trailer="SE" />
       </group>
+
+      <transaction header="ST" trailer="SE" use="prohibited" />
     </sequence>
   </interchange>
 

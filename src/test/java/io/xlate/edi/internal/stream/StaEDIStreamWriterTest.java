@@ -1013,8 +1013,9 @@ class StaEDIStreamWriterTest {
         writeHeader(writer);
         EDIValidationException e = assertThrows(EDIValidationException.class, () -> writer.writeStartSegment("ST"));
         assertEquals(EDIStreamEvent.SEGMENT_ERROR, e.getEvent());
-        assertEquals(EDIStreamValidationError.UNEXPECTED_SEGMENT, e.getError());
+        assertEquals(EDIStreamValidationError.LOOP_OCCURS_OVER_MAXIMUM_TIMES, e.getError());
         assertEquals("ST", e.getData().toString());
+        assertEquals("ST", e.getLocation().getSegmentTag());
         assertEquals(2, e.getLocation().getSegmentPosition());
     }
 

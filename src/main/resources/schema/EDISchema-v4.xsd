@@ -452,11 +452,11 @@
           <sequence>
             <element name="sequence">
               <complexType>
-                <choice maxOccurs="unbounded">
-                  <element name="segment" type="tns:segmentStandard" minOccurs="0"/>
+                <sequence>
+                  <element name="segment" type="tns:segmentStandard" minOccurs="0" maxOccurs="unbounded"/>
                   <element name="group" type="tns:groupControlType" minOccurs="0"/>
                   <element name="transaction" type="tns:transactionControlType" minOccurs="0"/>
-                </choice>
+                </sequence>
               </complexType>
             </element>
           </sequence>
