@@ -501,7 +501,63 @@ class SegmentValidationTest {
         assertEquals(EDIStreamEvent.END_LOOP, reader.next());
         assertEquals("0000D", reader.getReferenceCode());
 
-        // Loop L0001 has minOccurs=1
+        // Loop L0001 has minOccurs=1 in standard (not used in implementation, invalid configuration)
+        assertEquals(EDIStreamEvent.SEGMENT_ERROR, reader.next());
+        assertEquals(EDIStreamValidationError.MANDATORY_SEGMENT_MISSING, reader.getErrorType());
+        assertEquals("S20", reader.getReferenceCode());
+
+        assertTrue(!reader.hasNext(), "Unexpected segment errors exist");
+    }
+
+    @Test
+    void testImplementationValidSequenceAllMissing() throws EDISchemaException, EDIStreamException {
+        EDIInputFactory factory = EDIInputFactory.newFactory();
+        InputStream stream = new ByteArrayInputStream((""
+                + "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~"
+                + "S01*X~"
+                + "S09*X~"
+                + "IEA*1*508121953~").getBytes());
+
+        SchemaFactory schemaFactory = SchemaFactory.newFactory();
+        URL schemaLocation = getClass().getResource("/x12/EDISchemaSegmentValidation.xml");
+        Schema schema = schemaFactory.createSchema(schemaLocation);
+
+        EDIStreamReader reader = factory.createEDIStreamReader(stream, schema);
+        reader = factory.createFilteredReader(reader, new EDIStreamFilter() {
+            @Override
+            public boolean accept(EDIStreamReader reader) {
+                switch (reader.getEventType()) {
+                case START_TRANSACTION:
+                case SEGMENT_ERROR:
+                case START_LOOP:
+                case END_LOOP:
+                    return true;
+                default:
+                    return false;
+                }
+            }
+        });
+
+        assertEquals(EDIStreamEvent.START_TRANSACTION, reader.next(), "Expecting start of transaction");
+        reader.setTransactionSchema(schemaFactory.createSchema(getClass().getResource("/x12/EDISchemaSegmentValidationImpl.xml")));
+
+        assertEquals(EDIStreamEvent.SEGMENT_ERROR, reader.next());
+        assertEquals(EDIStreamValidationError.IMPLEMENTATION_LOOP_OCCURS_UNDER_MINIMUM_TIMES, reader.getErrorType());
+        assertEquals("S11", reader.getReferenceCode());
+
+        assertEquals(EDIStreamEvent.SEGMENT_ERROR, reader.next());
+        assertEquals(EDIStreamValidationError.IMPLEMENTATION_LOOP_OCCURS_UNDER_MINIMUM_TIMES, reader.getErrorType());
+        assertEquals("S11", reader.getReferenceCode());
+
+        assertEquals(EDIStreamEvent.SEGMENT_ERROR, reader.next());
+        assertEquals(EDIStreamValidationError.IMPLEMENTATION_LOOP_OCCURS_UNDER_MINIMUM_TIMES, reader.getErrorType());
+        assertEquals("S11", reader.getReferenceCode());
+
+        assertEquals(EDIStreamEvent.SEGMENT_ERROR, reader.next());
+        assertEquals(EDIStreamValidationError.IMPLEMENTATION_LOOP_OCCURS_UNDER_MINIMUM_TIMES, reader.getErrorType());
+        assertEquals("S11", reader.getReferenceCode());
+
+        // Loop L0001 has minOccurs=1 in standard (not used in implementation, invalid configuration)
         assertEquals(EDIStreamEvent.SEGMENT_ERROR, reader.next());
         assertEquals(EDIStreamValidationError.MANDATORY_SEGMENT_MISSING, reader.getErrorType());
         assertEquals("S20", reader.getReferenceCode());

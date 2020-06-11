@@ -407,7 +407,7 @@ public class ProxyEventHandler implements EventHandler {
         StreamEvent target = events[index];
         EDIStreamEvent associatedEvent = (index > 0) ? getAssociatedEvent(error) : null;
 
-        if (associatedEvent != null) {
+        if (eventExists(associatedEvent, index)) {
             /*
              * Ensure segment errors occur before other event types
              * when the array has other events already present.
@@ -415,7 +415,7 @@ public class ProxyEventHandler implements EventHandler {
             int offset = index;
             boolean complete = false;
 
-            while (!complete && offset > 0) {
+            while (!complete) {
                 if (events[offset - 1].type == associatedEvent) {
                     complete = true;
                 } else {
@@ -432,6 +432,19 @@ public class ProxyEventHandler implements EventHandler {
         target.setData(data);
         target.setReferenceCode(code);
         target.setLocation(location);
+    }
+
+    private boolean eventExists(EDIStreamEvent associatedEvent, int index) {
+        int offset = index;
+
+        while (associatedEvent != null && offset > 0) {
+            if (events[offset - 1].type == associatedEvent) {
+                return true;
+            }
+            offset--;
+        }
+
+        return false;
     }
 
     private static EDIStreamEvent getAssociatedEvent(EDIStreamValidationError error) {

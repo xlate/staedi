@@ -130,7 +130,7 @@
 
       <loop type="L0000" code="0000B" minOccurs="0" maxOccurs="2" discriminator="1">
         <sequence>
-          <segment type="S11">
+          <segment type="S10">
             <sequence>
               <element position="1">
                 <enumeration>
@@ -145,7 +145,7 @@
 
       <loop type="L0000" code="0000C" minOccurs="0" maxOccurs="1" discriminator="1">
         <sequence>
-          <segment type="S11">
+          <segment type="S10">
             <sequence>
               <element position="1">
                 <enumeration>
