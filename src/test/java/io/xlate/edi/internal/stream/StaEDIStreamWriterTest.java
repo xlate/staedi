@@ -675,19 +675,25 @@ class StaEDIStreamWriterTest {
     void testInputEquivalenceEDIFACTA() throws Exception {
         EDIInputFactory inputFactory = EDIInputFactory.newFactory();
         final ByteArrayOutputStream expected = new ByteArrayOutputStream(16384);
+        final InputStream delegate = getClass().getResourceAsStream("/EDIFACT/invoic_d97b_una.edi");
+        final char segTerm = '~';
+        final char escapeChar = '?';
 
         InputStream source = new InputStream() {
-            final InputStream delegate;
-            {
-                delegate = getClass().getResourceAsStream("/EDIFACT/invoic_d97b_una.edi");
-            }
+            boolean unaComplete = false;
 
             @Override
             public int read() throws IOException {
                 int value = delegate.read();
 
                 if (value != -1) {
-                    expected.write(value);
+                    if (value == segTerm) {
+                        unaComplete = true;
+                    }
+                    if (value != escapeChar || !unaComplete) {
+                        // Filter the escape character after the UNA
+                        expected.write(value);
+                    }
                     return value;
                 }
 

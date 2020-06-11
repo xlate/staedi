@@ -140,7 +140,7 @@ public enum State {
         /*-
          *                     SPACE ~   B   ~   I   ~   S   ~   Z   ~ SEGMT ~ CMPST ~ RELSE ~ CNTRL ~ INVLD *
          *                       |       |       |       |       |       |       |       |       |       |   *
-         *                       |   A   |   E   |   N   |   U   | ALNUM | ELEMT | REP_E | WHITE | OTHER |   *
+         *                       |   A   |   E   |   N   |   U   | ALNUM | ELEMT | RPEAT | WHITE | OTHER |   *
          *                       |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   *
          *                       | ~ | ~ | ~ | ~ | ~ | ~ | ~ | ~ | ~ | ~ | ~ |   |   |   |   |   |   |   |   */
         /* II | IE Initial  */{ II, __, __, __, HI, __, __, HU, __, __, __, __, __, __, __, II, II, __, __ },
@@ -150,7 +150,7 @@ public enum State {
         /* ISA / S       -> */{ __, IC, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __ },
         /* UNB / U       -> */{ __, __, __, __, __, HN, __, __, __, __, __, __, __, __, __, __, __, __, __ },
 
-        /* IC | HD          */{ HD, HD, HD, HD, HD, HD, HD, HD, HD, HD, HZ, HE, HC, __, __, HD, HD, HD, HV },
+        /* IC | HD          */{ HD, HD, HD, HD, HD, HD, HD, HD, HD, HD, HZ, HE, HC, __, DR, HD, HD, HD, HV },
 
         /* B0  Header Search*/{ B0, __, __, __, __, __, __, B1, __, __, __, __, __, __, __, B0, __, __, __ },
         /* B1  UNB (U)      */{ __, __, __, __, __, B2, __, __, __, __, __, __, __, __, __, __, __, __, __ },

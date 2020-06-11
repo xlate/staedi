@@ -324,11 +324,16 @@ class LexerTest {
     }
 
     @Test
-    void testInvalidCharacter() {
-        InputStream stream = new ByteArrayInputStream("ISA*00*\u0008         *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~".getBytes());
+    void testInvalidCharacter() throws Exception {
+        InputStream stream = new ByteArrayInputStream((""
+                + "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~"
+                + "TA\u0008").getBytes()); // Backspace char in segment tag
         TestLexerEventHandler eventHandler = new TestLexerEventHandler();
         final StaEDIStreamLocation location = new StaEDIStreamLocation();
         final Lexer lexer = new Lexer(stream, StandardCharsets.UTF_8, eventHandler, location);
+        for (int i = 0; i < 19; i++) {
+            lexer.parse(); // Interchange start through end of ISA
+        }
         EDIException thrown = assertThrows(EDIException.class, lexer::parse);
         assertTrue(thrown.getMessage().contains("EDIE004"));
     }

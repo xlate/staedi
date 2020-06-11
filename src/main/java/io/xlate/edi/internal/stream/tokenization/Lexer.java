@@ -220,6 +220,7 @@ public class Lexer {
                 handleStateInterchangeCandidate(input);
                 break;
             case HEADER_DATA:
+            case HEADER_INVALID_DATA:
                 handleStateHeaderData(input);
                 eventsReady = dialectConfirmed(State.TAG_SEARCH);
                 break;
