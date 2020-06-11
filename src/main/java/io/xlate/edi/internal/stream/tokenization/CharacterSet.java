@@ -238,6 +238,16 @@ public class CharacterSet {
     }
 
     public static boolean isValid(int character) {
-        return character >= prototype.length || prototype[character] != _INVLD;
+        if (character >= prototype.length) {
+            return true;
+        }
+
+        switch (prototype[character]) {
+        case CONTROL:
+        case INVALID:
+            return false;
+        default:
+            return true;
+        }
     }
 }
