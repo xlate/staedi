@@ -1088,4 +1088,28 @@ class StaEDIStreamReaderTest implements ConstantsTest {
 
         assertNull(thrown);
     }
+
+    @Test
+    void testX12InterchangeServiceRequests() throws IOException, EDIStreamException {
+        InputStream stream = getClass().getResourceAsStream("/x12/optionalInterchangeServices.edi");
+        EDIInputFactory factory = EDIInputFactory.newFactory();
+        EDIStreamReader reader = factory.createEDIStreamReader(stream);
+        Exception thrown = null;
+
+        try {
+            while (reader.hasNext()) {
+                try {
+                    reader.next();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    thrown = e;
+                    break;
+                }
+            }
+        } finally {
+            reader.close();
+        }
+
+        assertNull(thrown);
+    }
 }

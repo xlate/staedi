@@ -50,11 +50,13 @@ final class StaEDIXMLStreamReader implements XMLStreamReader {
     private final Map<String, Object> properties;
     private final boolean transactionDeclaresXmlns;
     private final Location location = new ProxyLocation();
-    private boolean autoAdvance;
 
     private final Queue<Integer> eventQueue = new ArrayDeque<>(3);
     private final Queue<QName> elementQueue = new ArrayDeque<>(3);
-    private final Deque<QName> elementStack = new ArrayDeque<>();
+    private final Deque<QName> elementStack = new ArrayDeque<>(5);
+
+    private int currentEvent = -1;
+    private QName currentElement;
 
     private NamespaceContext namespaceContext;
     private String compositeCode = null;
@@ -75,10 +77,8 @@ final class StaEDIXMLStreamReader implements XMLStreamReader {
         transactionDeclaresXmlns = Boolean.valueOf(String.valueOf(properties.get(EDIInputFactory.XML_DECLARE_TRANSACTION_XMLNS)));
 
         if (ediReader.getEventType() == EDIStreamEvent.START_INTERCHANGE) {
-            autoAdvance = false;
             enqueueEvent(EDIStreamEvent.START_INTERCHANGE);
-        } else {
-            autoAdvance = true;
+            advanceEvent();
         }
     }
 
@@ -102,7 +102,7 @@ final class StaEDIXMLStreamReader implements XMLStreamReader {
     }
 
     private boolean isEvent(int... eventTypes) {
-        return Arrays.stream(eventTypes).anyMatch(eventQueue.element()::equals);
+        return Arrays.stream(eventTypes).anyMatch(type -> type == currentEvent);
     }
 
     private QName buildName(QName parent, String namespace) {
@@ -138,11 +138,8 @@ final class StaEDIXMLStreamReader implements XMLStreamReader {
     }
 
     private void advanceEvent() {
-        if (autoAdvance) {
-            eventQueue.remove();
-            elementQueue.remove();
-        }
-        autoAdvance = true;
+        currentEvent = eventQueue.remove();
+        currentElement = elementQueue.remove();
     }
 
     private void enqueueEvent(EDIStreamEvent ediEvent) throws XMLStreamException {
@@ -249,10 +246,6 @@ final class StaEDIXMLStreamReader implements XMLStreamReader {
 
     @Override
     public int next() throws XMLStreamException {
-        if (!eventQueue.isEmpty()) {
-            advanceEvent();
-        }
-
         if (eventQueue.isEmpty()) {
             LOGGER.finer(() -> "eventQueue is empty, calling ediReader.next()");
             try {
@@ -263,6 +256,8 @@ final class StaEDIXMLStreamReader implements XMLStreamReader {
                 throw new XMLStreamException(e);
             }
         }
+
+        advanceEvent();
 
         return getEventType();
     }
@@ -341,7 +336,7 @@ final class StaEDIXMLStreamReader implements XMLStreamReader {
     @Override
     public boolean hasNext() throws XMLStreamException {
         try {
-            return ediReader.hasNext();
+            return !eventQueue.isEmpty() || ediReader.hasNext();
         } catch (Exception e) {
             throw new XMLStreamException(e);
         }
@@ -434,7 +429,7 @@ final class StaEDIXMLStreamReader implements XMLStreamReader {
 
     @Override
     public int getNamespaceCount() {
-        if (declareNamespaces(elementQueue.element())) {
+        if (declareNamespaces(currentElement)) {
             return EDINamespaces.all().size();
         }
         return 0;
@@ -442,7 +437,7 @@ final class StaEDIXMLStreamReader implements XMLStreamReader {
 
     @Override
     public String getNamespacePrefix(int index) {
-        if (declareNamespaces(elementQueue.element())) {
+        if (declareNamespaces(currentElement)) {
             String namespace = EDINamespaces.all().get(index);
             return prefixOf(namespace);
         }
@@ -451,7 +446,7 @@ final class StaEDIXMLStreamReader implements XMLStreamReader {
 
     @Override
     public String getNamespaceURI(int index) {
-        if (declareNamespaces(elementQueue.element())) {
+        if (declareNamespaces(currentElement)) {
             return EDINamespaces.all().get(index);
         }
         return null;
@@ -464,7 +459,7 @@ final class StaEDIXMLStreamReader implements XMLStreamReader {
 
     @Override
     public int getEventType() {
-        return eventQueue.isEmpty() ? -1 : eventQueue.element();
+        return currentEvent;
     }
 
     @Override
@@ -568,7 +563,7 @@ final class StaEDIXMLStreamReader implements XMLStreamReader {
     @Override
     public QName getName() {
         if (hasName()) {
-            return elementQueue.element();
+            return currentElement;
         }
         throw new IllegalStateException("Text only available for START_ELEMENT or END_ELEMENT");
     }
@@ -586,7 +581,7 @@ final class StaEDIXMLStreamReader implements XMLStreamReader {
     @Override
     public String getNamespaceURI() {
         if (hasName()) {
-            return elementQueue.element().getNamespaceURI();
+            return currentElement.getNamespaceURI();
         }
         return null;
     }

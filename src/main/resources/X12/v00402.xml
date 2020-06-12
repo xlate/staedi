@@ -200,7 +200,7 @@
 
   <elementType name="I36" base="time" minLength="4" maxLength="4" title="Delivery Time"/>
 
-  <elementType name="I37" base="identifier" title="Delivery Time Code">
+  <elementType name="I37" minLength="2" maxLength="2" base="identifier" title="Delivery Time Code">
     <enumeration>
       <value>01</value>
       <value>02</value>

@@ -40,6 +40,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.logging.Logger;
 
 import javax.xml.namespace.NamespaceContext;
 import javax.xml.stream.XMLInputFactory;
@@ -130,7 +131,7 @@ class StaEDIXMLStreamReaderTest {
     }
 
     private static void assertSegmentBoundaries(XMLStreamReader xmlReader, String tag, int elementCount)
-                                                                                                         throws XMLStreamException {
+            throws XMLStreamException {
         assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.next());
         assertEquals(tag, xmlReader.getLocalName());
         xmlReader.require(XMLStreamConstants.START_ELEMENT, null, tag);
@@ -144,7 +145,7 @@ class StaEDIXMLStreamReaderTest {
     void testSegmentSequence() throws Exception {
         XMLStreamReader xmlReader = getXmlReader(DUMMY_X12);
 
-        assertEquals(XMLStreamConstants.START_DOCUMENT, xmlReader.next());
+        assertEquals(XMLStreamConstants.START_DOCUMENT, xmlReader.getEventType());
         assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.next());
         assertEquals("INTERCHANGE", xmlReader.getLocalName());
 
@@ -166,10 +167,12 @@ class StaEDIXMLStreamReaderTest {
         XMLStreamReader xmlReader = getXmlReader(DUMMY_X12);
         XMLStreamException thrown;
 
-        assertEquals(XMLStreamConstants.START_DOCUMENT, xmlReader.next());
-        thrown = assertThrows(XMLStreamException.class, () -> xmlReader.require(XMLStreamConstants.START_DOCUMENT, EDINamespaces.LOOPS, "INTERCHANGE"));
+        assertEquals(XMLStreamConstants.START_DOCUMENT, xmlReader.getEventType());
+        thrown = assertThrows(XMLStreamException.class,
+                              () -> xmlReader.require(XMLStreamConstants.START_DOCUMENT, EDINamespaces.LOOPS, "INTERCHANGE"));
         assertTrue(thrown.getMessage().endsWith("does not have a corresponding name"));
-        thrown = assertThrows(XMLStreamException.class, () -> xmlReader.require(XMLStreamConstants.START_ELEMENT, EDINamespaces.LOOPS, "INTERCHANGE"));
+        thrown = assertThrows(XMLStreamException.class,
+                              () -> xmlReader.require(XMLStreamConstants.START_ELEMENT, EDINamespaces.LOOPS, "INTERCHANGE"));
         assertTrue(thrown.getMessage().contains("does not match required type"));
         xmlReader.next();
         // Happy Path
@@ -178,10 +181,12 @@ class StaEDIXMLStreamReaderTest {
         xmlReader.require(XMLStreamConstants.START_ELEMENT, null, "INTERCHANGE");
         xmlReader.require(XMLStreamConstants.START_ELEMENT, null, null);
 
-        thrown = assertThrows(XMLStreamException.class, () -> xmlReader.require(XMLStreamConstants.START_ELEMENT, EDINamespaces.LOOPS, "GROUP"));
+        thrown = assertThrows(XMLStreamException.class,
+                              () -> xmlReader.require(XMLStreamConstants.START_ELEMENT, EDINamespaces.LOOPS, "GROUP"));
         assertTrue(thrown.getMessage().contains("does not match required localName"));
 
-        thrown = assertThrows(XMLStreamException.class, () -> xmlReader.require(XMLStreamConstants.START_ELEMENT, EDINamespaces.SEGMENTS, "INTERCHANGE"));
+        thrown = assertThrows(XMLStreamException.class,
+                              () -> xmlReader.require(XMLStreamConstants.START_ELEMENT, EDINamespaces.SEGMENTS, "INTERCHANGE"));
         assertTrue(thrown.getMessage().contains("does not match required namespaceURI"));
 
     }
@@ -191,7 +196,7 @@ class StaEDIXMLStreamReaderTest {
         XMLStreamReader xmlReader = getXmlReader(DUMMY_X12);
         XMLStreamException thrown;
 
-        assertEquals(XMLStreamConstants.START_DOCUMENT, xmlReader.next());
+        assertEquals(XMLStreamConstants.START_DOCUMENT, xmlReader.getEventType());
         assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.next());
         assertEquals("INTERCHANGE", xmlReader.getLocalName());
 
@@ -218,7 +223,7 @@ class StaEDIXMLStreamReaderTest {
     void testNamespaces() throws Exception {
         XMLStreamReader xmlReader = getXmlReader(TINY_X12);
 
-        assertEquals(XMLStreamConstants.START_DOCUMENT, xmlReader.next());
+        assertEquals(XMLStreamConstants.START_DOCUMENT, xmlReader.getEventType());
         assertNull(xmlReader.getNamespaceURI());
         assertThrows(IllegalStateException.class, () -> xmlReader.getName());
 
@@ -285,7 +290,7 @@ class StaEDIXMLStreamReaderTest {
     @Test
     void testElementEvents() throws Exception {
         XMLStreamReader xmlReader = getXmlReader(TINY_X12);
-        assertEquals(XMLStreamConstants.START_DOCUMENT, xmlReader.next());
+        assertEquals(XMLStreamConstants.START_DOCUMENT, xmlReader.getEventType());
 
         assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.next());
         assertEquals("INTERCHANGE", xmlReader.getLocalName());
@@ -338,7 +343,45 @@ class StaEDIXMLStreamReaderTest {
         transformer.transform(new StAXSource(xmlReader), new StreamResult(result));
         String resultString = result.toString();
         Diff d = DiffBuilder.compare(Input.fromFile("src/test/resources/x12/extraDelimiter997.xml"))
-                   .withTest(resultString).build();
+                            .withTest(resultString).build();
+        assertTrue(!d.hasDifferences(), () -> "XML unexpectedly different:\n" + d.toString(new DefaultComparisonFormatter()));
+    }
+
+    @Test
+    void testReadXml_WithOptionalInterchangeServiceRequests_TransactionOnly() throws Exception {
+        EDIInputFactory ediFactory = EDIInputFactory.newFactory();
+        XMLInputFactory xmlFactory = XMLInputFactory.newDefaultFactory();
+        InputStream stream = getClass().getResourceAsStream("/x12/optionalInterchangeServices.edi");
+        ediFactory.setProperty(EDIInputFactory.XML_DECLARE_TRANSACTION_XMLNS, Boolean.TRUE);
+        EDIStreamReader reader = ediFactory.createEDIStreamReader(stream);
+        EDIStreamReader filtered = ediFactory.createFilteredReader(reader, r -> true);
+        XMLStreamReader xmlReader = ediFactory.createXMLStreamReader(filtered);
+        xmlReader.next(); // Per StAXSource JavaDoc, put in START_DOCUMENT state
+        XMLStreamReader xmlCursor = xmlFactory.createFilteredReader(xmlReader, r -> {
+            boolean startTx = (r.getEventType() == XMLStreamConstants.START_ELEMENT && r.getName().getLocalPart().equals("TRANSACTION"));
+
+            if (!startTx) {
+                Logger.getGlobal().info("Skipping event: " + r.getEventType() + "; "
+                        + (r.getEventType() == XMLStreamConstants.START_ELEMENT || r.getEventType() == XMLStreamConstants.END_ELEMENT
+                                ? r.getName()
+                                : ""));
+            }
+
+            return startTx;
+        });
+
+        xmlCursor.hasNext();
+
+        TransformerFactory factory = TransformerFactory.newInstance();
+        Transformer transformer = factory.newTransformer();
+        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+        transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
+        StringWriter result = new StringWriter();
+        transformer.transform(new StAXSource(xmlReader), new StreamResult(result));
+        String resultString = result.toString();
+        System.out.println(resultString);
+        Diff d = DiffBuilder.compare(Input.fromFile("src/test/resources/x12/optionalInterchangeServices_transactionOnly.xml"))
+                            .withTest(resultString).build();
         assertTrue(!d.hasDifferences(), () -> "XML unexpectedly different:\n" + d.toString(new DefaultComparisonFormatter()));
     }
 
@@ -359,7 +402,7 @@ class StaEDIXMLStreamReaderTest {
         transformer.transform(new StAXSource(xmlReader), new StreamResult(result));
         String resultString = result.toString();
         Diff d = DiffBuilder.compare(Input.fromFile("src/test/resources/x12/extraDelimiter997-transaction-xmlns.xml"))
-                   .withTest(resultString).build();
+                            .withTest(resultString).build();
         assertTrue(!d.hasDifferences(), () -> "XML unexpectedly different:\n" + d.toString(new DefaultComparisonFormatter()));
     }
 
@@ -393,22 +436,22 @@ class StaEDIXMLStreamReaderTest {
         Schema schema = schemaFactory.createSchema(getClass().getResource("/x12/EDISchema997.xml"));
         EDIStreamReader ediReader = factory.createEDIStreamReader(stream);
         EDIStreamFilter ediFilter = (reader) -> {
-                switch (reader.getEventType()) {
-                case START_INTERCHANGE:
-                case START_GROUP:
-                case START_TRANSACTION:
-                case START_LOOP:
-                case START_SEGMENT:
-                case END_SEGMENT:
-                case END_LOOP:
-                case END_TRANSACTION:
-                case END_GROUP:
-                case END_INTERCHANGE:
-                    return true;
-                default:
-                    return false;
-                }
-            };
+            switch (reader.getEventType()) {
+            case START_INTERCHANGE:
+            case START_GROUP:
+            case START_TRANSACTION:
+            case START_LOOP:
+            case START_SEGMENT:
+            case END_SEGMENT:
+            case END_LOOP:
+            case END_TRANSACTION:
+            case END_GROUP:
+            case END_INTERCHANGE:
+                return true;
+            default:
+                return false;
+            }
+        };
         ediReader = factory.createFilteredReader(ediReader, ediFilter);
         XMLStreamReader xmlReader = new StaEDIXMLStreamReader(ediReader);
 
@@ -493,7 +536,7 @@ class StaEDIXMLStreamReaderTest {
     void testGetTextString() throws Exception {
         XMLStreamReader xmlReader = getXmlReader(DUMMY_X12);
 
-        assertEquals(XMLStreamConstants.START_DOCUMENT, xmlReader.next());
+        assertEquals(XMLStreamConstants.START_DOCUMENT, xmlReader.getEventType());
         assertEquals(XMLStreamConstants.START_ELEMENT, xmlReader.next());
         assertEquals("INTERCHANGE", xmlReader.getLocalName());
 
@@ -507,40 +550,40 @@ class StaEDIXMLStreamReaderTest {
         String textString = xmlReader.getText();
         assertEquals("00", textString);
         char[] textArray = xmlReader.getTextCharacters();
-        assertArrayEquals(new char[] {'0', '0'}, textArray);
+        assertArrayEquals(new char[] { '0', '0' }, textArray);
         char[] textArray2 = xmlReader.getTextCharacters(); // 2nd call should be the same characters
         assertArrayEquals(textArray, textArray2);
         char[] textArrayLocal = new char[3];
         xmlReader.getTextCharacters(xmlReader.getTextStart(), textArrayLocal, 0, xmlReader.getTextLength());
-        assertArrayEquals(new char[] {'0', '0', '\0'}, textArrayLocal);
+        assertArrayEquals(new char[] { '0', '0', '\0' }, textArrayLocal);
     }
 
     @Test
     void testGetCdataBinary() throws Exception {
-    	EDIInputFactory factory = EDIInputFactory.newFactory();
+        EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = getClass().getResourceAsStream("/x12/simple_with_binary_segment.edi");
         EDIStreamReader ediReader = factory.createEDIStreamReader(stream);
         AtomicReference<String> segmentName = new AtomicReference<>();
         EDIStreamFilter ediFilter = (reader) -> {
-                switch (reader.getEventType()) {
-                case START_SEGMENT:
-                	segmentName.set(reader.getText());
-                	return true;
-                case START_INTERCHANGE:
-                case START_GROUP:
-                case START_TRANSACTION:
-                case START_LOOP:
-                case ELEMENT_DATA_BINARY:
-                case END_SEGMENT:
-                case END_LOOP:
-                case END_TRANSACTION:
-                case END_GROUP:
-                case END_INTERCHANGE:
-                    return true;
-                default:
-                    return "BIN".equals(segmentName.get());
-                }
-            };
+            switch (reader.getEventType()) {
+            case START_SEGMENT:
+                segmentName.set(reader.getText());
+                return true;
+            case START_INTERCHANGE:
+            case START_GROUP:
+            case START_TRANSACTION:
+            case START_LOOP:
+            case ELEMENT_DATA_BINARY:
+            case END_SEGMENT:
+            case END_LOOP:
+            case END_TRANSACTION:
+            case END_GROUP:
+            case END_INTERCHANGE:
+                return true;
+            default:
+                return "BIN".equals(segmentName.get());
+            }
+        };
         ediReader = factory.createFilteredReader(ediReader, ediFilter);
         XMLStreamReader xmlReader = new StaEDIXMLStreamReader(ediReader);
 
@@ -755,9 +798,9 @@ class StaEDIXMLStreamReaderTest {
 
             if (location.getElementPosition() > 0) {
                 key = String.format("%s%02d@%d",
-                                       location.getSegmentTag(),
-                                       location.getElementPosition(),
-                                       location.getSegmentPosition());
+                                    location.getSegmentTag(),
+                                    location.getElementPosition(),
+                                    location.getSegmentPosition());
             } else {
                 key = String.format("%s@%d",
                                     location.getSegmentTag(),
@@ -816,7 +859,7 @@ class StaEDIXMLStreamReaderTest {
         assertEquals(EDIStreamValidationError.SEGMENT_EXCEEDS_MAXIMUM_USE, error.getValue().iterator().next());
 
         Diff d = DiffBuilder.compare(Input.fromFile("src/test/resources/x12/invalid999_transformed.xml"))
-                   .withTest(resultString).build();
+                            .withTest(resultString).build();
         assertTrue(!d.hasDifferences(), () -> "XML unexpectedly different:\n" + d.toString(new DefaultComparisonFormatter()));
     }
 
@@ -843,12 +886,13 @@ class StaEDIXMLStreamReaderTest {
         transformer.setOutputProperty(OutputKeys.INDENT, "yes");
         transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
         StringWriter result = new StringWriter();
-        TransformerException thrown = assertThrows(TransformerException.class, () -> transformer.transform(new StAXSource(xmlReader), new StreamResult(result)));
+        TransformerException thrown = assertThrows(TransformerException.class,
+                                                   () -> transformer.transform(new StAXSource(xmlReader), new StreamResult(result)));
         Throwable cause = thrown.getCause();
         assertTrue(cause instanceof XMLStreamException);
         javax.xml.stream.Location l = ((XMLStreamException) cause).getLocation();
-        assertEquals("ParseError at [row,col]:["+l.getLineNumber()+","+
-                l.getColumnNumber()+"]\n"+
-                "Message: "+"Segment IK5 has error UNEXPECTED_SEGMENT", cause.getMessage());
+        assertEquals("ParseError at [row,col]:[" + l.getLineNumber() + "," +
+                l.getColumnNumber() + "]\n" +
+                "Message: " + "Segment IK5 has error UNEXPECTED_SEGMENT", cause.getMessage());
     }
 }

@@ -61,6 +61,8 @@ public class StreamEvent {
 
         if (!this.referenceCodeNull) {
             this.referenceCode = put(this.referenceCode, referenceCode);
+        } else {
+            this.referenceCode = put(this.referenceCode, "");
         }
     }
 

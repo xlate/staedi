@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<l:TRANSACTION xmlns:l="urn:xlate.io:staedi:names:loops" xmlns:s="urn:xlate.io:staedi:names:segments"
+  xmlns:c="urn:xlate.io:staedi:names:composites" xmlns:e="urn:xlate.io:staedi:names:elements">
+  <s:ST>
+    <e:ST01>997</e:ST01>
+    <e:ST02>0001</e:ST02>
+  </s:ST>
+  <s:AK1>
+    <e:AK101>HC</e:AK101>
+    <e:AK102>000001</e:AK102>
+  </s:AK1>
+  <s:AK9>
+    <e:AK901>A</e:AK901>
+    <e:AK902>1</e:AK902>
+    <e:AK903>1</e:AK903>
+    <e:AK904>1</e:AK904>
+  </s:AK9>
+  <s:SE>
+    <e:SE01>4</e:SE01>
+    <e:SE02>0001</e:SE02>
+  </s:SE>
+</l:TRANSACTION>
+
