@@ -575,7 +575,15 @@
   <element name="enumeration">
     <complexType>
       <sequence>
-        <element name="value" type="token" maxOccurs="unbounded"/>
+        <element name="value" maxOccurs="unbounded">
+          <complexType>
+            <simpleContent>
+              <extension base="token">
+                <attribute name="title" type="string" />
+              </extension>
+            </simpleContent>
+          </complexType>
+        </element>
       </sequence>
     </complexType>
   </element>
