@@ -350,7 +350,7 @@ class StaEDIXMLStreamReaderTest {
     @Test
     void testReadXml_WithOptionalInterchangeServiceRequests_TransactionOnly() throws Exception {
         EDIInputFactory ediFactory = EDIInputFactory.newFactory();
-        XMLInputFactory xmlFactory = XMLInputFactory.newDefaultFactory();
+        XMLInputFactory xmlFactory = XMLInputFactory.newInstance();
         InputStream stream = getClass().getResourceAsStream("/x12/optionalInterchangeServices.edi");
         ediFactory.setProperty(EDIInputFactory.XML_DECLARE_TRANSACTION_XMLNS, Boolean.TRUE);
         EDIStreamReader reader = ediFactory.createEDIStreamReader(stream);
