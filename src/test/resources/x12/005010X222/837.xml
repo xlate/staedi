@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<schema xmlns="http://xlate.io/EDISchema/v4">
+
+  <include schemaLocation="file:./target/test-classes/x12/005010/837.xml"/>
+
+  <implementation>
+    <sequence>
+      <segment type="BHT" />
+      <loop code="2010A" type="L0002">
+        <sequence>
+          <segment type="HL" />
+        </sequence>
+      </loop>
+    </sequence>
+  </implementation>
+</schema>

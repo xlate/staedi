@@ -33,8 +33,10 @@ import static io.xlate.edi.stream.EDIStreamValidationError.TOO_MANY_DATA_ELEMENT
 import static io.xlate.edi.stream.EDIStreamValidationError.TOO_MANY_REPETITIONS;
 import static io.xlate.edi.stream.EDIStreamValidationError.UNEXPECTED_SEGMENT;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
@@ -86,6 +88,8 @@ public class Validator {
     private UsageNode implElement;
     private List<UsageNode> implSegmentCandidates = new ArrayList<>();
 
+    private final Deque<UsageNode> loopStack = new ArrayDeque<>();
+
     private final List<UsageError> useErrors = new ArrayList<>();
     private final List<UsageError> elementErrors = new ArrayList<>(5);
 
@@ -107,9 +111,13 @@ public class Validator {
             }
         }
 
-        void nagivateUp() {
-            standard = UsageNode.getParent(standard);
-            impl = UsageNode.getParent(impl);
+        void nagivateUp(int limit) {
+            if (standard.getDepth() > limit) {
+                standard = UsageNode.getParent(standard);
+            }
+            if (impl != null && impl.getDepth() > limit) {
+                impl = UsageNode.getParent(impl);
+            }
         }
 
         void reset(UsageNode root, UsageNode implRoot) {
@@ -130,7 +138,7 @@ public class Validator {
 
         if (schema.getImplementation() != null) {
             implRoot = buildTree(null, 0, schema.getImplementation(), -1);
-            implSegment = implRoot != null ? implRoot.getFirstChild() : null;
+            implSegment = implRoot.getFirstChild();
         } else {
             implRoot = null;
             implSegment = null;
@@ -253,10 +261,6 @@ public class Validator {
     }
 
     private static UsageNode buildTree(UsageNode parent, int parentDepth, EDITypeImplementation impl, int index) {
-        if (impl == null) {
-            return null;
-        }
-
         int depth = parentDepth + 1;
         final UsageNode node = new UsageNode(parent, depth, impl, index);
         final List<EDITypeImplementation> children;
@@ -284,7 +288,15 @@ public class Validator {
         int childIndex = -1;
 
         for (EDITypeImplementation child : children) {
-            childUsages.add(buildTree(node, depth, child, ++childIndex));
+            ++childIndex;
+
+            UsageNode childNode = null;
+
+            if (child != null) {
+                childNode = buildTree(node, depth, child, childIndex);
+            }
+
+            childUsages.add(childNode);
         }
 
         return node;
@@ -305,36 +317,16 @@ public class Validator {
     }
 
     private void completeLoops(ValidationEventHandler handler, int workingDepth) {
-        UsageNode node;
-        boolean implLoop;
-
-        if (implSegment != null) {
-            /*-
-             * Use the implementation node so that the reference code passed to the
-             * handler reflects the implementation.
-             */
-            node = implSegment;
-            implLoop = true;
-        } else {
-            node = correctSegment;
-            implLoop = false;
-        }
-
         while (this.depth < workingDepth) {
             handleMissingMandatory(handler, workingDepth);
-            node = completeLoop(handler, node);
+            UsageNode loop = loopStack.pop();
+            handler.loopEnd(loop.getCode());
             workingDepth--;
-        }
 
-        if (implLoop) {
-            implSegment = node;
+            if (loop.isImplementation()) {
+                implSegment = loop;
+            }
         }
-    }
-
-    UsageNode completeLoop(ValidationEventHandler handler, UsageNode node) {
-        UsageNode parent = node.getParent();
-        handler.loopEnd(parent.getCode());
-        return parent;
     }
 
     public void validateSegment(ValidationEventHandler handler, CharSequence tag) {
@@ -515,6 +507,7 @@ public class Validator {
         }
 
         completeLoops(handler, startDepth);
+        loopStack.push(current);
         handler.loopBegin(current.getCode());
         correctSegment = segment = startLoop(current);
 
@@ -529,6 +522,13 @@ public class Validator {
             while (impl != null && impl.getReferencedType().equals(current.getReferencedType())) {
                 this.implSegmentCandidates.add(impl);
                 impl = impl.getNextSibling();
+            }
+
+            if (implSegmentCandidates.isEmpty()) {
+                handleMissingMandatory(handler);
+                handler.segmentError(segment.getId(), IMPLEMENTATION_UNUSED_SEGMENT_PRESENT);
+                // Save the currentImpl so that the search is resumed from the correct location
+                implSegment = currentImpl;
             }
         }
 
@@ -570,7 +570,7 @@ public class Validator {
         boolean handled = false;
 
         if (this.depth > 1) {
-            cursor.nagivateUp();
+            cursor.nagivateUp(this.depth);
             this.depth--;
         } else {
             cursor.reset(this.root, this.implRoot);
@@ -650,6 +650,10 @@ public class Validator {
                 if (implSegment.isFirstChild()) {
                     //start of loop
                     setLoopReferenceCode(events, index, count - 1, implType);
+
+                    // Replace the standard loop with the implementation on the stack
+                    loopStack.pop();
+                    loopStack.push(implSegment.getParent());
                 }
 
                 return true;
@@ -692,6 +696,11 @@ public class Validator {
 
     static boolean isMatch(PolymorphicImplementation implType, StreamEvent currentEvent) {
         Discriminator discr = implType.getDiscriminator();
+
+        // If no discriminator, matches by default
+        if (discr ==  null) {
+            return true;
+        }
 
         if (discr.getValueSet().contains(currentEvent.getData().toString())) {
             int eleLoc = discr.getElementPosition();

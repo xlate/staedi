@@ -17,6 +17,7 @@ package io.xlate.edi.internal.stream;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -32,6 +33,7 @@ import io.xlate.edi.stream.EDIInputFactory;
 import io.xlate.edi.stream.EDIStreamConstants.Standards;
 import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamException;
+import io.xlate.edi.stream.EDIStreamFilter;
 import io.xlate.edi.stream.EDIStreamReader;
 import io.xlate.edi.stream.EDIStreamValidationError;
 
@@ -470,6 +472,75 @@ class EventSequenceTest {
         assertEquals(EDIStreamEvent.ELEMENT_DATA, reader.next()); // IEA02
         assertEquals(EDIStreamEvent.END_SEGMENT, reader.next()); // IEA
         assertEquals(EDIStreamEvent.END_INTERCHANGE, reader.next());
+    }
+
+    @Test
+    @SuppressWarnings("resource")
+    void testSegmentNameMatchesReferenceCode() throws EDISchemaException, EDIStreamException {
+        EDIInputFactory factory = EDIInputFactory.newFactory();
+        InputStream stream = new ByteArrayInputStream((""
+                + "ISA*01*0000000000*01*0000000000*ZZ*ABCDEFGHIJKLMNO*ZZ*123456789012345*101127*1719*`*00402*000003438*0*P*>\n" +
+                "GS*HC*99999999999*888888888888*20111219*1340*1377*X*005010X222\n" +
+                "ST*837*0001*005010X222\n" +
+                "BHT*0019*00*565743*20110523*154959*CH\n" +
+                "HL*1**20*1\n" +
+                "SE*4*0001\n" +
+                "GE*1*1377\n" +
+                "IEA*1*000003438\n" +
+                "").getBytes());
+
+        EDIStreamReader unfiltered = factory.createEDIStreamReader(stream);
+        EDIStreamReader reader = factory.createFilteredReader(unfiltered, new EDIStreamFilter() {
+            @Override
+            public boolean accept(EDIStreamReader reader) {
+                switch (reader.getEventType()) {
+                case START_TRANSACTION:
+                case START_SEGMENT:
+                    return true;
+                default:
+                    return false;
+                }
+            }
+        });
+
+        assertEquals(EDIStreamEvent.START_SEGMENT, reader.nextTag());
+        assertEquals("ISA", reader.getText());
+        assertEquals("ISA", reader.getReferenceCode());
+        assertEquals(EDIStreamEvent.START_SEGMENT, reader.nextTag());
+        assertEquals("GS", reader.getText());
+        assertEquals("GS", reader.getReferenceCode());
+
+        assertEquals(EDIStreamEvent.START_TRANSACTION, reader.next(), "Expecting start of transaction");
+        SchemaFactory schemaFactory = SchemaFactory.newFactory();
+        URL schemaLocation = getClass().getResource("/x12/005010X222/837.xml");
+        Schema schema = schemaFactory.createSchema(schemaLocation);
+        reader.setTransactionSchema(schema);
+
+        assertEquals(EDIStreamEvent.START_SEGMENT, reader.nextTag());
+        assertEquals("ST", reader.getText());
+        assertEquals("ST", reader.getReferenceCode());
+
+        assertEquals(EDIStreamEvent.START_SEGMENT, reader.nextTag());
+        assertEquals("BHT", reader.getText());
+        assertEquals("BHT", reader.getReferenceCode());
+
+        assertEquals(EDIStreamEvent.START_SEGMENT, reader.nextTag());
+        assertEquals("HL", reader.getText());
+        assertEquals("HL", reader.getReferenceCode());
+
+        assertEquals(EDIStreamEvent.START_SEGMENT, reader.nextTag());
+        assertEquals("SE", reader.getText());
+        assertEquals("SE", reader.getReferenceCode());
+
+        assertEquals(EDIStreamEvent.START_SEGMENT, reader.nextTag());
+        assertEquals("GE", reader.getText());
+        assertEquals("GE", reader.getReferenceCode());
+
+        assertEquals(EDIStreamEvent.START_SEGMENT, reader.nextTag());
+        assertEquals("IEA", reader.getText());
+        assertEquals("IEA", reader.getReferenceCode());
+
+        assertTrue(!reader.hasNext(), "Unexpected events exist");
     }
 
     private Schema loadX12FuncAckSchema() throws EDISchemaException {

@@ -195,6 +195,7 @@ public class ProxyEventHandler implements EventHandler {
         if (exitTransaction(segmentTag)) {
             transaction = false;
             validator().validateSegment(this, segmentTag);
+            code = validator().getSegmentReferenceCode();
         }
 
         enqueueEvent(EDIStreamEvent.START_SEGMENT, EDIStreamValidationError.NONE, segmentTag, code, location);

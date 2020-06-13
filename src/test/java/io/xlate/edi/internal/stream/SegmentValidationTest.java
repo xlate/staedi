@@ -15,7 +15,6 @@
  ******************************************************************************/
 package io.xlate.edi.internal.stream;
 
-
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -188,8 +187,8 @@ class SegmentValidationTest {
 
     @Test
     void testImproperSequence()
-                                       throws EDISchemaException,
-                                       EDIStreamException {
+            throws EDISchemaException,
+            EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = new ByteArrayInputStream((""
                 + "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~"
@@ -233,8 +232,8 @@ class SegmentValidationTest {
 
     @Test
     void testSegmentNotDefined()
-                                        throws EDISchemaException,
-                                        EDIStreamException {
+            throws EDISchemaException,
+            EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = new ByteArrayInputStream((""
                 + "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~"
@@ -401,6 +400,7 @@ class SegmentValidationTest {
                 + "S0A*X~"
                 + "S11*A~"
                 + "S12*X~" // IMPLEMENTATION_UNUSED_SEGMENT_PRESENT
+                // IMPLEMENTATION_SEGMENT_BELOW_MINIMUM_USE (missing S13)
                 + "S11*B~"
                 + "S12*X~"
                 + "S12*X~"
@@ -417,8 +417,8 @@ class SegmentValidationTest {
         URL schemaLocation = getClass().getResource("/x12/EDISchemaSegmentValidation.xml");
         Schema schema = schemaFactory.createSchema(schemaLocation);
 
-        EDIStreamReader reader = factory.createEDIStreamReader(stream, schema);
-        reader = factory.createFilteredReader(reader, new EDIStreamFilter() {
+        EDIStreamReader unfiltered = factory.createEDIStreamReader(stream, schema);
+        EDIStreamReader reader = factory.createFilteredReader(unfiltered, new EDIStreamFilter() {
             @Override
             public boolean accept(EDIStreamReader reader) {
                 switch (reader.getEventType()) {
@@ -445,7 +445,9 @@ class SegmentValidationTest {
         assertEquals("S12", reader.getReferenceCode());
 
         assertEquals(EDIStreamEvent.SEGMENT_ERROR, reader.next());
-        assertEquals(EDIStreamValidationError.IMPLEMENTATION_SEGMENT_BELOW_MINIMUM_USE, reader.getErrorType());
+        assertEquals(EDIStreamValidationError.IMPLEMENTATION_SEGMENT_BELOW_MINIMUM_USE, reader.getErrorType(), () -> {
+            return "Unexpected event for code: " + reader.getReferenceCode();
+        });
         assertEquals("S13", reader.getReferenceCode());
 
         assertEquals(EDIStreamEvent.END_LOOP, reader.next());
@@ -456,7 +458,9 @@ class SegmentValidationTest {
         assertEquals("0000B", reader.getReferenceCode());
 
         assertEquals(EDIStreamEvent.SEGMENT_ERROR, reader.next());
-        assertEquals(EDIStreamValidationError.SEGMENT_EXCEEDS_MAXIMUM_USE, reader.getErrorType());
+        assertEquals(EDIStreamValidationError.SEGMENT_EXCEEDS_MAXIMUM_USE, reader.getErrorType(), () -> {
+            return "Unexpected event for code: " + reader.getReferenceCode();
+        });
         assertEquals("S12", reader.getReferenceCode());
 
         assertEquals(EDIStreamEvent.END_LOOP, reader.next());
@@ -634,5 +638,81 @@ class SegmentValidationTest {
         assertEquals("0000A", reader.getReferenceCode());
 
         assertTrue(!reader.hasNext(), "Unexpected segment errors exist");
+    }
+
+    @Test
+    void testImplementation_Only_BHT_HL_Valid() throws EDISchemaException, EDIStreamException {
+        EDIInputFactory factory = EDIInputFactory.newFactory();
+        InputStream stream = getClass().getResourceAsStream("/x12/sample837-small.edi");
+
+        EDIStreamReader reader = factory.createEDIStreamReader(stream);
+        reader = factory.createFilteredReader(reader, new EDIStreamFilter() {
+            @Override
+            public boolean accept(EDIStreamReader reader) {
+                switch (reader.getEventType()) {
+                case START_TRANSACTION:
+                case SEGMENT_ERROR:
+                case START_LOOP:
+                case END_LOOP:
+                    return true;
+                default:
+                    return false;
+                }
+            }
+        });
+
+        assertEquals(EDIStreamEvent.START_TRANSACTION, reader.next(), "Expecting start of transaction");
+        SchemaFactory schemaFactory = SchemaFactory.newFactory();
+        URL schemaLocation = getClass().getResource("/x12/005010X222/837.xml");
+        Schema schema = schemaFactory.createSchema(schemaLocation);
+        reader.setTransactionSchema(schema);
+
+        // Occurrence 1
+        assertEquals(EDIStreamEvent.START_LOOP, reader.next());
+        assertEquals("L0001", reader.getReferenceCode());
+
+        assertEquals(EDIStreamEvent.SEGMENT_ERROR, reader.next());
+        assertEquals(EDIStreamValidationError.IMPLEMENTATION_UNUSED_SEGMENT_PRESENT, reader.getErrorType());
+        assertEquals("NM1", reader.getReferenceCode());
+
+        assertEquals(EDIStreamEvent.SEGMENT_ERROR, reader.next());
+        assertEquals(EDIStreamValidationError.IMPLEMENTATION_UNUSED_SEGMENT_PRESENT, reader.getErrorType());
+        assertEquals("PER", reader.getReferenceCode());
+
+        assertEquals(EDIStreamEvent.END_LOOP, reader.next());
+        assertEquals("L0001", reader.getReferenceCode());
+
+        // Occurrence 2
+        assertEquals(EDIStreamEvent.START_LOOP, reader.next());
+        assertEquals("L0001", reader.getReferenceCode());
+
+        assertEquals(EDIStreamEvent.SEGMENT_ERROR, reader.next());
+        assertEquals(EDIStreamValidationError.IMPLEMENTATION_UNUSED_SEGMENT_PRESENT, reader.getErrorType());
+        assertEquals("NM1", reader.getReferenceCode());
+
+        assertEquals(EDIStreamEvent.END_LOOP, reader.next());
+        assertEquals("L0001", reader.getReferenceCode());
+
+        // Loop 2010A
+        assertEquals(EDIStreamEvent.START_LOOP, reader.next());
+        assertEquals("2010A", reader.getReferenceCode());
+
+        assertEquals(EDIStreamEvent.SEGMENT_ERROR, reader.next());
+        assertEquals(EDIStreamValidationError.IMPLEMENTATION_UNUSED_SEGMENT_PRESENT, reader.getErrorType());
+        assertEquals("PRV", reader.getReferenceCode());
+
+        assertEquals(EDIStreamEvent.END_LOOP, reader.next());
+        assertEquals("2010A", reader.getReferenceCode());
+
+        assertEquals(EDIStreamEvent.START_TRANSACTION, reader.next(), "Expecting start of 2nd transaction");
+
+        // Loop 2010A
+        assertEquals(EDIStreamEvent.START_LOOP, reader.next());
+        assertEquals("2010A", reader.getReferenceCode());
+
+        assertEquals(EDIStreamEvent.END_LOOP, reader.next());
+        assertEquals("2010A", reader.getReferenceCode());
+
+        assertTrue(!reader.hasNext(), "Unexpected events exist");
     }
 }
