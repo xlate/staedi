@@ -83,7 +83,7 @@ public class Validator {
     private UsageNode element;
 
     private boolean implSegmentSelected;
-    private UsageNode implSegment;
+    private UsageNode implNode;
     private UsageNode implComposite;
     private UsageNode implElement;
     private List<UsageNode> implSegmentCandidates = new ArrayList<>();
@@ -138,10 +138,10 @@ public class Validator {
 
         if (schema.getImplementation() != null) {
             implRoot = buildTree(null, 0, schema.getImplementation(), -1);
-            implSegment = implRoot.getFirstChild();
+            implNode = implRoot.getFirstChild();
         } else {
             implRoot = null;
-            implSegment = null;
+            implNode = null;
         }
     }
 
@@ -155,7 +155,7 @@ public class Validator {
 
         if (implRoot != null) {
             implRoot.reset();
-            implSegment = implRoot.getFirstChild();
+            implNode = implRoot.getFirstChild();
         }
 
         cursor.reset(root, implRoot);
@@ -181,7 +181,7 @@ public class Validator {
 
     public String getSegmentReferenceCode() {
         if (implSegmentSelected) {
-            return implSegment.getCode();
+            return implNode.getCode();
         }
         return segment.getCode();
     }
@@ -324,7 +324,7 @@ public class Validator {
             workingDepth--;
 
             if (loop.isImplementation()) {
-                implSegment = loop;
+                implNode = loop;
             }
         }
     }
@@ -337,7 +337,7 @@ public class Validator {
         final int startDepth = this.depth;
 
         cursor.standard = correctSegment;
-        cursor.impl = implSegment;
+        cursor.impl = implNode;
 
         useErrors.clear();
         boolean handled = false;
@@ -445,7 +445,7 @@ public class Validator {
                 handleMissingMandatory(handler);
                 handler.segmentError(current.getId(), IMPLEMENTATION_UNUSED_SEGMENT_PRESENT);
                 // Save the currentImpl so that the search is resumed from the correct location
-                implSegment = currentImpl;
+                implNode = currentImpl;
             } else if (implSegmentCandidates.size() == 1) {
                 currentImpl.incrementUsage();
                 currentImpl.resetChildren();
@@ -454,7 +454,7 @@ public class Validator {
                     handler.segmentError(currentImpl.getId(), SEGMENT_EXCEEDS_MAXIMUM_USE);
                 }
 
-                implSegment = currentImpl;
+                implNode = currentImpl;
                 implSegmentCandidates.clear();
                 implSegmentSelected = true;
             }
@@ -528,7 +528,7 @@ public class Validator {
                 handleMissingMandatory(handler);
                 handler.segmentError(segment.getId(), IMPLEMENTATION_UNUSED_SEGMENT_PRESENT);
                 // Save the currentImpl so that the search is resumed from the correct location
-                implSegment = currentImpl;
+                implNode = currentImpl;
             }
         }
 
@@ -647,13 +647,13 @@ public class Validator {
             if (isMatch(implType, currentEvent)) {
                 handleImplementationSelected(candidate, implSeg, handler);
 
-                if (implSegment.isFirstChild()) {
+                if (implNode.isFirstChild()) {
                     //start of loop
                     setLoopReferenceCode(events, index, count - 1, implType);
 
                     // Replace the standard loop with the implementation on the stack
                     loopStack.pop();
-                    loopStack.push(implSegment.getParent());
+                    loopStack.push(implNode.getParent());
                 }
 
                 return true;
@@ -664,9 +664,9 @@ public class Validator {
     }
 
     void handleImplementationSelected(UsageNode candidate, UsageNode implSeg, ValidationEventHandler handler) {
-        checkMinimumImplUsage(implSegment, candidate, handler);
+        checkMinimumImplUsage(implNode, candidate, handler);
         implSegmentCandidates.clear();
-        implSegment = implSeg;
+        implNode = implSeg;
         implSegmentSelected = true;
 
         if (candidate.isNodeType(Type.LOOP)) {
@@ -757,7 +757,7 @@ public class Validator {
 
     UsageNode getImplElement(int index) {
         if (implSegmentSelected) {
-            return this.implSegment.getChild(index);
+            return this.implNode.getChild(index);
         }
 
         return null;
@@ -982,7 +982,7 @@ public class Validator {
         }
 
         if (!isComposite && implSegmentSelected && index == children.size()) {
-            UsageNode previousImpl = implSegment.getChild(elementPosition);
+            UsageNode previousImpl = implNode.getChild(elementPosition);
 
             if (tooFewRepetitions(previousImpl)) {
                 validationHandler.elementError(IMPLEMENTATION_TOO_FEW_REPETITIONS.getCategory(),
