@@ -16,6 +16,7 @@
 package io.xlate.edi.internal.stream.tokenization;
 
 import io.xlate.edi.stream.EDIStreamConstants.Standards;
+import io.xlate.edi.stream.Location;
 
 public class X12Dialect implements Dialect {
 
@@ -42,6 +43,13 @@ public class X12Dialect implements Dialect {
     private char ed = DFLT_DATA_ELEMENT_SEPARATOR;
     private char cd = DFLT_COMPONENT_ELEMENT_SEPARATOR;
     private char er = DFLT_REPETITION_SEPARATOR;
+
+    private static final int TX_AGENCY = 0;
+    private static final int TX_VERSION = 1;
+    private String[] transactionVersion = new String[2];
+
+    private String agencyCode = "";
+    private String groupVersion = "";
 
     X12Dialect() {
     }
@@ -178,4 +186,41 @@ public class X12Dialect implements Dialect {
     public char getSegmentTerminator() {
         return sd;
     }
+
+    @Override
+    public void elementData(CharSequence data, Location location) {
+        if ("GS".equals(location.getSegmentTag())) {
+            switch (location.getElementPosition()) {
+            case 1:
+                agencyCode = "";
+                groupVersion = "";
+                transactionVersion[TX_AGENCY] = agencyCode;
+                transactionVersion[TX_VERSION] = groupVersion;
+                break;
+            case 7:
+                agencyCode = data.toString();
+                break;
+            case 8:
+                groupVersion = data.toString();
+                transactionVersion[TX_AGENCY] = agencyCode;
+                transactionVersion[TX_VERSION] = groupVersion;
+                break;
+            default:
+                break;
+            }
+        } else if ("ST".equals(location.getSegmentTag()) && location.getElementPosition() == 3 && data.length() > 0) {
+            transactionVersion[TX_VERSION] = data.toString();
+        }
+    }
+
+    @Override
+    public void transactionEnd() {
+        transactionVersion[TX_VERSION] = groupVersion;
+    }
+
+    @Override
+    public String[] getTransactionVersion() {
+        return transactionVersion;
+    }
+
 }

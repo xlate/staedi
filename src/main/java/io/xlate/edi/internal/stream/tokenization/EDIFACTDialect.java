@@ -15,6 +15,7 @@
  ******************************************************************************/
 package io.xlate.edi.internal.stream.tokenization;
 
+import io.xlate.edi.stream.Location;
 import io.xlate.edi.stream.EDIStreamConstants.Standards;
 
 public class EDIFACTDialect implements Dialect {
@@ -39,6 +40,12 @@ public class EDIFACTDialect implements Dialect {
     private int unbStart = -1;
     private boolean initialized;
     private boolean rejected;
+
+    private static final int TX_AGENCY = 0;
+    private static final int TX_VERSION = 1;
+    private static final int TX_RELEASE = 2;
+    private static final int TX_ASSIGNED_CODE = 3;
+    private String[] transactionVersion = new String[4];
 
     @Override
     public void setHeaderTag(String tag) {
@@ -235,6 +242,12 @@ public class EDIFACTDialect implements Dialect {
         }
     }
 
+    void clearTransactionVersion() {
+        for (int i = 0; i < transactionVersion.length; i++) {
+            transactionVersion[i] = "";
+        }
+    }
+
     @Override
     public char getComponentElementSeparator() {
         return componentDelimiter;
@@ -263,5 +276,41 @@ public class EDIFACTDialect implements Dialect {
     @Override
     public char getSegmentTerminator() {
         return segmentDelimiter;
+    }
+
+    @Override
+    public void elementData(CharSequence data, Location location) {
+        if ("UNH".equals(location.getSegmentTag())) {
+            if (location.getElementPosition() == 1) {
+                clearTransactionVersion();
+            } else if (location.getElementPosition() == 2) {
+                switch (location.getComponentPosition()) {
+                case 2:
+                    transactionVersion[TX_VERSION] = data.toString();
+                    break;
+                case 3:
+                    transactionVersion[TX_RELEASE] = data.toString();
+                    break;
+                case 4:
+                    transactionVersion[TX_AGENCY] = data.toString();
+                    break;
+                case 5:
+                    transactionVersion[TX_ASSIGNED_CODE] = data.toString();
+                    break;
+                default:
+                    break;
+                }
+            }
+        }
+    }
+
+    @Override
+    public void transactionEnd() {
+        clearTransactionVersion();
+    }
+
+    @Override
+    public String[] getTransactionVersion() {
+        return transactionVersion;
     }
 }

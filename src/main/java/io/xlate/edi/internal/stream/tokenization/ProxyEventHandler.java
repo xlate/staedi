@@ -169,6 +169,7 @@ public class ProxyEventHandler implements EventHandler {
     public void loopEnd(CharSequence id) {
         if (EDIType.Type.TRANSACTION.toString().equals(id)) {
             transaction = false;
+            dialect.transactionEnd();
             enqueueEvent(EDIStreamEvent.END_TRANSACTION, EDIStreamValidationError.NONE, id, null);
         } else if (EDIType.Type.GROUP.toString().equals(id)) {
             enqueueEvent(EDIStreamEvent.END_GROUP, EDIStreamValidationError.NONE, id, null);
@@ -181,6 +182,10 @@ public class ProxyEventHandler implements EventHandler {
     public boolean segmentBegin(String segmentTag) {
         this.segmentTag = segmentTag;
 
+        /*
+         * If this is the start of a transaction, loopStart will be called from the validator and
+         * transactionSchemaAllowed will be `true` for the duration of the start-transaction segment.
+         */
         transactionSchemaAllowed = false;
         Validator validator = validator();
         boolean eventsReady = true;
@@ -264,6 +269,7 @@ public class ProxyEventHandler implements EventHandler {
         boolean eventsReady = true;
 
         elementHolder.set(text, start, length);
+        dialect.elementData(elementHolder, location);
         Validator validator = validator();
 
         if (validator != null) {

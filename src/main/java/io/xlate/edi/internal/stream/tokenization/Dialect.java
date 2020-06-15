@@ -15,6 +15,8 @@
  ******************************************************************************/
 package io.xlate.edi.internal.stream.tokenization;
 
+import io.xlate.edi.stream.Location;
+
 public interface Dialect {
 
     String getStandard();
@@ -44,4 +46,28 @@ public interface Dialect {
     char getReleaseIndicator();
 
     char getDecimalMark();
+
+    /**
+     * Notify the dialect of element data and its location in the stream. Does
+     * not support binary elements.
+     *
+     * @param data
+     *            the element data
+     * @param location
+     *            the location of the element
+     */
+    void elementData(CharSequence data, Location location);
+
+    /**
+     * Notify the dialect that a transaction is complete.
+     */
+    void transactionEnd();
+
+    /**
+     * Returns the identifying elements of the current transaction's version.
+     *
+     * @return the array of elements identifying the current transaction's version
+     */
+    String[] getTransactionVersion();
+
 }
