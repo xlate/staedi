@@ -14,6 +14,7 @@ public interface ValidationEventHandler {
     void elementError(EDIStreamEvent event,
                       EDIStreamValidationError error,
                       CharSequence referenceCode,
+                      CharSequence text,
                       int element,
                       int component,
                       int repetition);

@@ -33,12 +33,15 @@ import static io.xlate.edi.stream.EDIStreamValidationError.TOO_MANY_DATA_ELEMENT
 import static io.xlate.edi.stream.EDIStreamValidationError.TOO_MANY_REPETITIONS;
 import static io.xlate.edi.stream.EDIStreamValidationError.UNEXPECTED_SEGMENT;
 
+import java.nio.CharBuffer;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 import java.util.logging.Logger;
 
 import io.xlate.edi.internal.schema.StaEDISchema;
@@ -81,6 +84,7 @@ public class Validator {
     private UsageNode correctSegment;
     private UsageNode composite;
     private UsageNode element;
+    private Queue<RevalidationNode> revalidationQueue = new LinkedList<>();
 
     private boolean implSegmentSelected;
     private UsageNode implNode;
@@ -123,6 +127,23 @@ public class Validator {
         void reset(UsageNode root, UsageNode implRoot) {
             standard = UsageNode.getFirstChild(root);
             impl = UsageNode.getFirstChild(implRoot);
+        }
+    }
+
+    static class RevalidationNode {
+        final UsageNode standard;
+        final UsageNode impl;
+        final CharBuffer data;
+        final Location location;
+
+        public RevalidationNode(UsageNode standard, UsageNode impl, CharSequence data, StaEDIStreamLocation location) {
+            super();
+            this.standard = standard;
+            this.impl = impl;
+            this.data = CharBuffer.allocate(data.length());
+            this.data.append(data);
+            this.data.flip();
+            this.location = location.copy();
         }
     }
 
@@ -339,6 +360,8 @@ public class Validator {
         cursor.standard = correctSegment;
         cursor.impl = implNode;
 
+        // Version specific validation must be complete by the end of a segment
+        revalidationQueue.clear();
         useErrors.clear();
         boolean handled = false;
 
@@ -891,7 +914,7 @@ public class Validator {
         }
 
         if (valueReceived) {
-            validateElementValue(dialect, value);
+            validateElementValue(dialect, position, value);
         } else {
             validateDataElementRequirement();
         }
@@ -926,7 +949,7 @@ public class Validator {
         }
     }
 
-    void validateElementValue(Dialect dialect, CharSequence value) {
+    void validateElementValue(Dialect dialect, StaEDIStreamLocation position, CharSequence value) {
         if (!element.isNodeType(EDIType.Type.COMPOSITE)) {
             this.element.incrementUsage();
 
@@ -939,21 +962,51 @@ public class Validator {
             }
         }
 
+        if (dialect.getTransactionVersionString().isEmpty() && this.element.hasVersions()) {
+            // This element value can not be validated until the version is determined
+            revalidationQueue.add(new RevalidationNode(this.element, this.implElement, value, position));
+            return;
+        }
+
+        validateElementValue(dialect, this.element, this.implElement, value);
+    }
+
+    public void validateVersionConstraints(Dialect dialect, ValidationEventHandler validationHandler) {
+        for (RevalidationNode entry : revalidationQueue) {
+            validateElementValue(dialect, entry.standard, entry.impl, entry.data);
+
+            for (UsageError error : elementErrors) {
+                validationHandler.elementError(error.getError().getCategory(),
+                                               error.getError(),
+                                               error.getCode(),
+                                               entry.data,
+                                               entry.location.getElementPosition(),
+                                               entry.location.getComponentPosition(),
+                                               entry.location.getElementOccurrence());
+            }
+
+            elementErrors.clear();
+        }
+
+        revalidationQueue.clear();
+    }
+
+    void validateElementValue(Dialect dialect, UsageNode element, UsageNode implElement, CharSequence value) {
         List<EDIStreamValidationError> errors = new ArrayList<>();
-        this.element.validate(dialect, value, this.validateCodeValues, errors);
+        element.validate(dialect, value, this.validateCodeValues, errors);
 
         for (EDIStreamValidationError error : errors) {
-            elementErrors.add(new UsageError(this.element, error));
+            elementErrors.add(new UsageError(element, error));
         }
 
         if (errors.isEmpty() && implSegmentSelected && implElement != null) {
-            this.implElement.validate(dialect, value, this.validateCodeValues, errors);
+            implElement.validate(dialect, value, this.validateCodeValues, errors);
 
             for (EDIStreamValidationError error : errors) {
                 if (error == INVALID_CODE_VALUE) {
                     error = IMPLEMENTATION_INVALID_CODE_VALUE;
                 }
-                elementErrors.add(new UsageError(this.element, error));
+                elementErrors.add(new UsageError(element, error));
             }
         }
     }
@@ -988,6 +1041,7 @@ public class Validator {
                 validationHandler.elementError(IMPLEMENTATION_TOO_FEW_REPETITIONS.getCategory(),
                                                IMPLEMENTATION_TOO_FEW_REPETITIONS,
                                                previousImpl.getCode(),
+                                               null,
                                                elementPosition + 1,
                                                componentIndex + 1,
                                                -1);

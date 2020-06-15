@@ -172,6 +172,7 @@ public class ProxyEventHandler implements EventHandler {
             dialect.transactionEnd();
             enqueueEvent(EDIStreamEvent.END_TRANSACTION, EDIStreamValidationError.NONE, id, null);
         } else if (EDIType.Type.GROUP.toString().equals(id)) {
+            dialect.groupEnd();
             enqueueEvent(EDIStreamEvent.END_GROUP, EDIStreamValidationError.NONE, id, null);
         } else {
             enqueueEvent(EDIStreamEvent.END_LOOP, EDIStreamValidationError.NONE, id, id);
@@ -216,6 +217,7 @@ public class ProxyEventHandler implements EventHandler {
     public boolean segmentEnd() {
         if (validator() != null) {
             validator().validateSyntax(this, this, location, false);
+            validator().validateVersionConstraints(dialect, this);
         }
 
         location.clearSegmentLocations();
@@ -372,6 +374,7 @@ public class ProxyEventHandler implements EventHandler {
     public void elementError(final EDIStreamEvent event,
                              final EDIStreamValidationError error,
                              final CharSequence referenceCode,
+                             final CharSequence data,
                              final int element,
                              final int component,
                              final int repetition) {
@@ -381,7 +384,7 @@ public class ProxyEventHandler implements EventHandler {
         copy.setElementOccurrence(repetition);
         copy.setComponentPosition(component);
 
-        enqueueEvent(event, error, null, referenceCode, copy);
+        enqueueEvent(event, error, data, referenceCode, copy);
     }
 
     private Validator validator() {

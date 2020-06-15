@@ -97,6 +97,7 @@ interface SyntaxValidator {
                 handler.elementError(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR,
                                      EDIStreamValidationError.CONDITIONAL_REQUIRED_DATA_ELEMENT_MISSING,
                                      referenceCode,
+                                     null,
                                      element,
                                      component,
                                      -1);
@@ -117,6 +118,7 @@ interface SyntaxValidator {
                 handler.elementError(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR,
                                      EDIStreamValidationError.EXCLUSION_CONDITION_VIOLATED,
                                      structure.getCode(),
+                                     null,
                                      element,
                                      component,
                                      -1);

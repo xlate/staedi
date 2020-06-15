@@ -686,6 +686,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     public void elementError(EDIStreamEvent event,
                              EDIStreamValidationError error,
                              CharSequence referenceCode,
+                             CharSequence data,
                              int element,
                              int component,
                              int repetition) {
@@ -695,7 +696,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         copy.setElementOccurrence(repetition);
         copy.setComponentPosition(component);
 
-        errors.add(new EDIValidationException(event, error, copy, null));
+        errors.add(new EDIValidationException(event, error, copy, data));
     }
 
     @Override
@@ -726,6 +727,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
                     elementError(error.getError().getCategory(),
                                  error.getError(),
                                  error.getCode(),
+                                 data,
                                  location.getElementPosition(),
                                  location.getComponentPosition(),
                                  location.getElementOccurrence());

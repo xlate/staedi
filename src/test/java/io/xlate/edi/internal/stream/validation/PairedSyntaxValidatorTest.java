@@ -48,6 +48,7 @@ class PairedSyntaxValidatorTest extends SyntaxValidatorTestBase {
           .elementError(eq(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR),
                         eq(EDIStreamValidationError.CONDITIONAL_REQUIRED_DATA_ELEMENT_MISSING),
                         nullable(CharSequence.class),
+                        nullable(CharSequence.class),
                         any(Integer.class),
                         any(Integer.class),
                         any(Integer.class));
@@ -73,6 +74,7 @@ class PairedSyntaxValidatorTest extends SyntaxValidatorTestBase {
           .elementError(eq(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR),
                         eq(EDIStreamValidationError.CONDITIONAL_REQUIRED_DATA_ELEMENT_MISSING),
                         nullable(CharSequence.class),
+                        nullable(CharSequence.class),
                         any(Integer.class),
                         any(Integer.class),
                         any(Integer.class));
@@ -97,6 +99,7 @@ class PairedSyntaxValidatorTest extends SyntaxValidatorTestBase {
           .elementError(eq(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR),
                         eq(EDIStreamValidationError.CONDITIONAL_REQUIRED_DATA_ELEMENT_MISSING),
                         or(isNull(), eq("E001")),
+                        nullable(CharSequence.class),
                         any(Integer.class),
                         any(Integer.class),
                         any(Integer.class));
@@ -121,6 +124,7 @@ class PairedSyntaxValidatorTest extends SyntaxValidatorTestBase {
         }).when(handler)
           .elementError(eq(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR),
                         eq(EDIStreamValidationError.CONDITIONAL_REQUIRED_DATA_ELEMENT_MISSING),
+                        nullable(CharSequence.class),
                         nullable(CharSequence.class),
                         any(Integer.class),
                         any(Integer.class),

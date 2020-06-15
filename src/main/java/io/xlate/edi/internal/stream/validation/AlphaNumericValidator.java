@@ -45,9 +45,9 @@ class AlphaNumericValidator extends ElementValidator {
                   List<EDIStreamValidationError> errors) {
 
         int length = value.length();
-        validateLength(element, length, errors);
+        validateLength(dialect, element, length, errors);
 
-        Set<String> valueSet = element.getValueSet();
+        Set<String> valueSet = element.getValueSet(dialect.getTransactionVersionString());
 
         if (!valueSet.isEmpty() && !valueSet.contains(value.toString())) {
             errors.add(EDIStreamValidationError.INVALID_CODE_VALUE);

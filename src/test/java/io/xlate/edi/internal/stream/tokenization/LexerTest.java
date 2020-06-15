@@ -107,6 +107,7 @@ class LexerTest {
         public void elementError(EDIStreamEvent event,
                                  EDIStreamValidationError error,
                                  CharSequence code,
+                                 CharSequence data,
                                  int elem,
                                  int component,
                                  int repetition) {
@@ -174,6 +175,7 @@ class LexerTest {
         public void elementError(EDIStreamEvent event,
                                  EDIStreamValidationError error,
                                  CharSequence code,
+                                 CharSequence data,
                                  int elem,
                                  int component,
                                  int repetition) {

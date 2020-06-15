@@ -17,6 +17,9 @@ package io.xlate.edi.schema;
 
 import java.util.Set;
 
+/**
+ * An interface representing the schema of an EDI simple type, AKA an element.
+ */
 public interface EDISimpleType extends EDIType {
 
     public enum Base {
@@ -32,6 +35,20 @@ public interface EDISimpleType extends EDIType {
     Base getBase();
 
     /**
+     * Returns true if this element has additional version(s) defined beyond the
+     * default. Versions may be used to specify different minimum/maximum length
+     * restrictions or enumerated values that only apply to specific versions of
+     * the element.
+     *
+     * @return true if this element has version(s), otherwise false
+     *
+     * @since 1.8
+     */
+    default boolean hasVersions() {
+        return false;
+    }
+
+    /**
      * Retrieve the element reference number for this type.
      *
      * @return the element reference number as declared in the EDI schema
@@ -43,10 +60,74 @@ public interface EDISimpleType extends EDIType {
     @Deprecated /*(forRemoval = true, since = "1.8")*/
     int getNumber();
 
+    /**
+     * Retrieve the minLength attribute of the element.
+     *
+     * @return the minLength attribute
+     */
     long getMinLength();
 
+    /**
+     * Retrieve the minLength attribute for a particular version of the element.
+     *
+     * The default implementation returns the default (un-versioned) value for
+     * the element.
+     *
+     * @param version
+     *            the version to select
+     * @return the minLength attribute for version
+     *
+     * @since 1.8
+     */
+    default long getMinLength(String version) {
+        return getMinLength();
+    }
+
+    /**
+     * Retrieve the maxLength attribute of the element.
+     *
+     * @return the maxLength attribute
+     */
     long getMaxLength();
 
+    /**
+     * Retrieve the maxLength attribute for a particular version of the element.
+     *
+     * The default implementation returns the default (un-versioned) value for
+     * the element.
+     *
+     * @param version
+     *            the version to select
+     * @return the maxLength attribute for version
+     *
+     * @since 1.8
+     */
+    default long getMaxLength(String version) {
+        return getMaxLength();
+    }
+
+    /**
+     * Retrieve the set of enumerated values allowed for this element.
+     *
+     * @return the set of enumerated values allowed for this element
+     */
     Set<String> getValueSet();
+
+    /**
+     * Retrieve the set of enumerated values allowed for this element for a
+     * particular version of the element.
+     *
+     * The default implementation returns the default (un-versioned) value for
+     * the element.
+     *
+     * @param version
+     *            the version to select
+     * @return the set of enumerated values allowed for this element for version
+     *
+     * @since 1.8
+     */
+    default Set<String> getValueSet(String version) {
+        return getValueSet();
+    }
 
 }

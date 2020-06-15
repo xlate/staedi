@@ -2,6 +2,7 @@ package io.xlate.edi.internal.stream.validation;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -43,9 +44,14 @@ class NumericValidatorTest implements ValueSetTester {
     @Test
     void testValidateLengthTooShort() {
         EDISimpleType element = mock(EDISimpleType.class);
+        when(element.getMinLength(anyString())).thenCallRealMethod();
+        when(element.getMaxLength(anyString())).thenCallRealMethod();
+        when(element.getValueSet(anyString())).thenCallRealMethod();
+
         when(element.getMinLength()).thenReturn(5L);
         when(element.getMaxLength()).thenReturn(10L);
         when(element.getValueSet()).thenReturn(setOf());
+
         ElementValidator v = NumericValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
         v.validate(dialect, element, "1234", errors);
@@ -56,9 +62,14 @@ class NumericValidatorTest implements ValueSetTester {
     @Test
     void testValidateLengthTooLong() {
         EDISimpleType element = mock(EDISimpleType.class);
+        when(element.getMinLength(anyString())).thenCallRealMethod();
+        when(element.getMaxLength(anyString())).thenCallRealMethod();
+        when(element.getValueSet(anyString())).thenCallRealMethod();
+
         when(element.getMinLength()).thenReturn(5L);
         when(element.getMaxLength()).thenReturn(10L);
         when(element.getValueSet()).thenReturn(setOf());
+
         ElementValidator v = NumericValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
         v.validate(dialect, element, "12345678901", errors);
@@ -69,9 +80,14 @@ class NumericValidatorTest implements ValueSetTester {
     @Test
     void testValidateInvalidCharacter() {
         EDISimpleType element = mock(EDISimpleType.class);
+        when(element.getMinLength(anyString())).thenCallRealMethod();
+        when(element.getMaxLength(anyString())).thenCallRealMethod();
+        when(element.getValueSet(anyString())).thenCallRealMethod();
+
         when(element.getMinLength()).thenReturn(5L);
         when(element.getMaxLength()).thenReturn(10L);
         when(element.getValueSet()).thenReturn(setOf());
+
         ElementValidator v = NumericValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
         v.validate(dialect, element, "1234F", errors);
@@ -82,8 +98,13 @@ class NumericValidatorTest implements ValueSetTester {
     @Test
     void testFormatValueTooLong() {
         EDISimpleType element = mock(EDISimpleType.class);
+        when(element.getMinLength(anyString())).thenCallRealMethod();
+        when(element.getMaxLength(anyString())).thenCallRealMethod();
+        when(element.getValueSet(anyString())).thenCallRealMethod();
+
         when(element.getMinLength()).thenReturn(4L);
         when(element.getMaxLength()).thenReturn(5L);
+
         ElementValidator v = NumericValidator.getInstance();
         StringBuilder output = new StringBuilder();
         EDIValidationException e = assertThrows(EDIValidationException.class, () -> v.format(dialect, element, "123456", output));
@@ -93,6 +114,10 @@ class NumericValidatorTest implements ValueSetTester {
     @Test
     void testFormatInvalidCharacterData() {
         EDISimpleType element = mock(EDISimpleType.class);
+        when(element.getMinLength(anyString())).thenCallRealMethod();
+        when(element.getMaxLength(anyString())).thenCallRealMethod();
+        when(element.getValueSet(anyString())).thenCallRealMethod();
+
         when(element.getMinLength()).thenReturn(4L);
         when(element.getMaxLength()).thenReturn(5L);
         ElementValidator v = NumericValidator.getInstance();
@@ -104,9 +129,14 @@ class NumericValidatorTest implements ValueSetTester {
     @Test
     void testFormatValidNumber() throws EDIException {
         EDISimpleType element = mock(EDISimpleType.class);
+        when(element.getMinLength(anyString())).thenCallRealMethod();
+        when(element.getMaxLength(anyString())).thenCallRealMethod();
+        when(element.getValueSet(anyString())).thenCallRealMethod();
+
         when(element.getMinLength()).thenReturn(4L);
         when(element.getMaxLength()).thenReturn(8L);
         when(element.getValueSet()).thenReturn(setOf());
+
         ElementValidator v = NumericValidator.getInstance();
         StringBuilder output = new StringBuilder();
         v.format(dialect, element, "1234", output);
@@ -116,9 +146,14 @@ class NumericValidatorTest implements ValueSetTester {
     @Test
     void testFormatValidNumberPadded() throws EDIException {
         EDISimpleType element = mock(EDISimpleType.class);
+        when(element.getMinLength(anyString())).thenCallRealMethod();
+        when(element.getMaxLength(anyString())).thenCallRealMethod();
+        when(element.getValueSet(anyString())).thenCallRealMethod();
+
         when(element.getMinLength()).thenReturn(6L);
         when(element.getMaxLength()).thenReturn(8L);
         when(element.getValueSet()).thenReturn(setOf());
+
         ElementValidator v = NumericValidator.getInstance();
         StringBuilder output = new StringBuilder();
         v.format(dialect, element, "123", output);

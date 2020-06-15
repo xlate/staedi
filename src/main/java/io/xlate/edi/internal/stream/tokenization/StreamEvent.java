@@ -78,8 +78,8 @@ public class StreamEvent {
         this.location.set(location);
     }
 
-    static CharBuffer put(CharBuffer buffer, CharArraySequence holder) {
-        final int length = holder != null ? holder.length() : 50;
+    static CharBuffer put(CharBuffer buffer, CharArraySequence data) {
+        final int length = data.length();
 
         if (buffer == null || buffer.capacity() < length) {
             buffer = CharBuffer.allocate(length);
@@ -87,8 +87,8 @@ public class StreamEvent {
 
         buffer.clear();
 
-        if (holder != null && length > 0) {
-            holder.putToBuffer(buffer);
+        if (length > 0) {
+            data.putToBuffer(buffer);
         }
 
         buffer.flip();

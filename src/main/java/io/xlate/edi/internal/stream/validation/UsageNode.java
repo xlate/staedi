@@ -132,18 +132,19 @@ class UsageNode {
         return link.getReferencedType().getCode();
     }
 
+    EDISimpleType getSimpleType() {
+        if (link instanceof EDISimpleType) {
+            return (EDISimpleType) link;
+        }
+        return (EDISimpleType) link.getReferencedType();
+    }
+
     void validate(Dialect dialect, CharSequence value, boolean validateCodeValues, List<EDIStreamValidationError> errors) {
         if (validator == null) {
             throw new UnsupportedOperationException("simple type only");
         }
 
-        final EDISimpleType element;
-
-        if (link instanceof EDISimpleType) {
-            element = (EDISimpleType) link;
-        } else {
-            element = (EDISimpleType) link.getReferencedType();
-        }
+        final EDISimpleType element = getSimpleType();
 
         if (validateCodeValues) {
             validator.validate(dialect, element, value, errors);
@@ -180,6 +181,10 @@ class UsageNode {
 
     boolean hasMinimumUsage() {
         return usageCount >= link.getMinOccurs();
+    }
+
+    boolean hasVersions() {
+        return getSimpleType().hasVersions();
     }
 
     boolean exceedsMaximumUsage() {
@@ -284,8 +289,18 @@ class UsageNode {
         }
 
         @Override
+        public long getMinLength(String version) {
+            return target.getMinLength(version);
+        }
+
+        @Override
         public long getMaxLength() {
             return target.getMaxLength();
+        }
+
+        @Override
+        public long getMaxLength(String version) {
+            return target.getMaxLength(version);
         }
 
         @Override

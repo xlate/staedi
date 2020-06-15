@@ -254,7 +254,15 @@
   <elementType name="E143" code="143" base="string" minLength="3" maxLength="3"/>
   <elementType name="E329" code="329" base="string" minLength="4" maxLength="9"/>
   <elementType name="E337" code="337" base="time" minLength="4" maxLength="8"/>
-  <elementType name="E373" code="373" base="date" minLength="8" maxLength="8"/>
+
+  <!-- If no match on version, allow either 6 or 8 character dates -->
+  <elementType name="E373" code="373" base="date" minLength="6" maxLength="8">
+    <!-- Prior to 004000, GS date is 6 characters -->
+    <version minVersion="X.000000" maxVersion="X.003079" minLength="6" maxLength="6" />
+    <!-- After version 004000, GS date is 6 characters -->
+    <version minVersion="X.004000" minLength="8" maxLength="8" />
+  </elementType>
+
   <elementType name="E455" code="455" base="string" maxLength="2"/>
 
   <elementType name="E479" code="479" base="identifier" minLength="2" maxLength="2">

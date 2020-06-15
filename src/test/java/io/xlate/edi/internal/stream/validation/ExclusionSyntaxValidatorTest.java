@@ -47,6 +47,7 @@ class ExclusionSyntaxValidatorTest extends SyntaxValidatorTestBase {
           .elementError(eq(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR),
                         eq(EDIStreamValidationError.EXCLUSION_CONDITION_VIOLATED),
                         nullable(CharSequence.class),
+                        nullable(CharSequence.class),
                         any(Integer.class),
                         any(Integer.class),
                         any(Integer.class));
@@ -70,6 +71,7 @@ class ExclusionSyntaxValidatorTest extends SyntaxValidatorTestBase {
         }).when(handler)
           .elementError(eq(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR),
                         eq(EDIStreamValidationError.EXCLUSION_CONDITION_VIOLATED),
+                        nullable(CharSequence.class),
                         nullable(CharSequence.class),
                         any(Integer.class),
                         any(Integer.class),
@@ -95,6 +97,7 @@ class ExclusionSyntaxValidatorTest extends SyntaxValidatorTestBase {
         }).when(handler)
           .elementError(eq(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR),
                         eq(EDIStreamValidationError.EXCLUSION_CONDITION_VIOLATED),
+                        nullable(CharSequence.class),
                         nullable(CharSequence.class),
                         any(Integer.class),
                         any(Integer.class),

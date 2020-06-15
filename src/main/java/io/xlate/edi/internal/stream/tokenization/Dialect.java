@@ -64,10 +64,24 @@ public interface Dialect {
     void transactionEnd();
 
     /**
+     * Notify the dialect that a group is complete.
+     */
+    void groupEnd();
+
+    /**
      * Returns the identifying elements of the current transaction's version.
      *
-     * @return the array of elements identifying the current transaction's version
+     * @return the array of elements identifying the current transaction's
+     *         version
      */
     String[] getTransactionVersion();
 
+    /**
+     * Returns the identifying elements of the current transaction's version as
+     * a single String joined with period `.` characters.
+     *
+     * @return the String representation of the elements identifying the current
+     *         transaction's version
+     */
+    String getTransactionVersionString();
 }

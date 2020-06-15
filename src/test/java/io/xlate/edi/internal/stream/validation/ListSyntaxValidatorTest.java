@@ -48,6 +48,7 @@ class ListSyntaxValidatorTest extends SyntaxValidatorTestBase {
           .elementError(eq(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR),
                         eq(EDIStreamValidationError.CONDITIONAL_REQUIRED_DATA_ELEMENT_MISSING),
                         nullable(CharSequence.class),
+                        nullable(CharSequence.class),
                         any(Integer.class),
                         any(Integer.class),
                         any(Integer.class));
@@ -71,6 +72,7 @@ class ListSyntaxValidatorTest extends SyntaxValidatorTestBase {
         }).when(handler)
           .elementError(eq(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR),
                         eq(EDIStreamValidationError.CONDITIONAL_REQUIRED_DATA_ELEMENT_MISSING),
+                        nullable(CharSequence.class),
                         nullable(CharSequence.class),
                         any(Integer.class),
                         any(Integer.class),
@@ -96,6 +98,7 @@ class ListSyntaxValidatorTest extends SyntaxValidatorTestBase {
         }).when(handler)
           .elementError(eq(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR),
                         eq(EDIStreamValidationError.CONDITIONAL_REQUIRED_DATA_ELEMENT_MISSING),
+                        nullable(CharSequence.class),
                         nullable(CharSequence.class),
                         any(Integer.class),
                         any(Integer.class),
@@ -126,11 +129,12 @@ class ListSyntaxValidatorTest extends SyntaxValidatorTestBase {
 
         doAnswer((Answer<Void>) invocation -> {
             count.incrementAndGet();
-            element.set(invocation.getArgument(3));
+            element.set(invocation.getArgument(4));
             return null;
         }).when(handler)
           .elementError(eq(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR),
                         eq(EDIStreamValidationError.CONDITIONAL_REQUIRED_DATA_ELEMENT_MISSING),
+                        nullable(CharSequence.class),
                         nullable(CharSequence.class),
                         any(Integer.class),
                         any(Integer.class),

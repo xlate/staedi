@@ -27,33 +27,45 @@ import io.xlate.edi.stream.EDIValidationException;
 abstract class ElementValidator {
 
     static ElementValidator getInstance(EDISimpleType.Base type) {
+        ElementValidator instance;
+
         switch (type) {
         case IDENTIFIER:
         case STRING:
-            return AlphaNumericValidator.getInstance();
+            instance = AlphaNumericValidator.getInstance();
+            break;
         case NUMERIC:
-            return NumericValidator.getInstance();
+            instance = NumericValidator.getInstance();
+            break;
         case DECIMAL:
-            return DecimalValidator.getInstance();
+            instance = DecimalValidator.getInstance();
+            break;
         case DATE:
-            return DateValidator.getInstance();
+            instance = DateValidator.getInstance();
+            break;
         case TIME:
-            return TimeValidator.getInstance();
+            instance = TimeValidator.getInstance();
+            break;
         case BINARY:
-            return null;
         default:
-            throw new IllegalArgumentException("Illegal type " + type);
+            instance = null;
+            break;
         }
+
+        return instance;
     }
 
-    protected static boolean validateLength(EDISimpleType element,
-                                         int length,
-                                         List<EDIStreamValidationError> errors) {
+    protected static boolean validateLength(Dialect dialect,
+                                            EDISimpleType element,
+                                            int length,
+                                            List<EDIStreamValidationError> errors) {
 
-        if (length > element.getMaxLength()) {
+        final String version = dialect.getTransactionVersionString();
+
+        if (length > element.getMaxLength(version)) {
             errors.add(EDIStreamValidationError.DATA_ELEMENT_TOO_LONG);
             return false;
-        } else if (length < element.getMinLength()) {
+        } else if (length < element.getMinLength(version)) {
             errors.add(EDIStreamValidationError.DATA_ELEMENT_TOO_SHORT);
             return false;
         }
@@ -85,5 +97,6 @@ abstract class ElementValidator {
     abstract void format(Dialect dialect,
                          EDISimpleType element,
                          CharSequence value,
-                         Appendable result) throws EDIException;
+                         Appendable result)
+            throws EDIException;
 }

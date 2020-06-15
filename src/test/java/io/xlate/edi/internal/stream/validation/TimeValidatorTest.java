@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -35,6 +36,10 @@ class TimeValidatorTest implements ValueSetTester {
     @Test
     void testValidateValueTooShort() {
         EDISimpleType element = mock(EDISimpleType.class);
+        when(element.getMinLength(anyString())).thenCallRealMethod();
+        when(element.getMaxLength(anyString())).thenCallRealMethod();
+        when(element.getValueSet(anyString())).thenCallRealMethod();
+
         when(element.getMinLength()).thenReturn(4L);
         when(element.getMaxLength()).thenReturn(8L);
         when(element.getValueSet()).thenReturn(setOf());
@@ -49,6 +54,10 @@ class TimeValidatorTest implements ValueSetTester {
     @Test
     void testValidateValueTooLong() {
         EDISimpleType element = mock(EDISimpleType.class);
+        when(element.getMinLength(anyString())).thenCallRealMethod();
+        when(element.getMaxLength(anyString())).thenCallRealMethod();
+        when(element.getValueSet(anyString())).thenCallRealMethod();
+
         when(element.getMinLength()).thenReturn(4L);
         when(element.getMaxLength()).thenReturn(8L);
         when(element.getValueSet()).thenReturn(setOf());
@@ -63,6 +72,10 @@ class TimeValidatorTest implements ValueSetTester {
     @Test
     void testValidateInvalidValue() {
         EDISimpleType element = mock(EDISimpleType.class);
+        when(element.getMinLength(anyString())).thenCallRealMethod();
+        when(element.getMaxLength(anyString())).thenCallRealMethod();
+        when(element.getValueSet(anyString())).thenCallRealMethod();
+
         when(element.getMinLength()).thenReturn(4L);
         when(element.getMaxLength()).thenReturn(8L);
         when(element.getValueSet()).thenReturn(setOf());
@@ -76,6 +89,10 @@ class TimeValidatorTest implements ValueSetTester {
     @Test
     void testValidateValidValue() {
         EDISimpleType element = mock(EDISimpleType.class);
+        when(element.getMinLength(anyString())).thenCallRealMethod();
+        when(element.getMaxLength(anyString())).thenCallRealMethod();
+        when(element.getValueSet(anyString())).thenCallRealMethod();
+
         when(element.getMinLength()).thenReturn(4L);
         when(element.getMaxLength()).thenReturn(8L);
         when(element.getValueSet()).thenReturn(setOf());
@@ -102,6 +119,10 @@ class TimeValidatorTest implements ValueSetTester {
     @Test
     void testFormatValueTooLong() {
         EDISimpleType element = mock(EDISimpleType.class);
+        when(element.getMinLength(anyString())).thenCallRealMethod();
+        when(element.getMaxLength(anyString())).thenCallRealMethod();
+        when(element.getValueSet(anyString())).thenCallRealMethod();
+
         when(element.getMinLength()).thenReturn(4L);
         when(element.getMaxLength()).thenReturn(8L);
         when(element.getValueSet()).thenReturn(setOf());
@@ -114,6 +135,10 @@ class TimeValidatorTest implements ValueSetTester {
     @Test
     void testFormatInvalidTime() {
         EDISimpleType element = mock(EDISimpleType.class);
+        when(element.getMinLength(anyString())).thenCallRealMethod();
+        when(element.getMaxLength(anyString())).thenCallRealMethod();
+        when(element.getValueSet(anyString())).thenCallRealMethod();
+
         when(element.getMinLength()).thenReturn(4L);
         when(element.getMaxLength()).thenReturn(8L);
         when(element.getValueSet()).thenReturn(setOf());
@@ -126,6 +151,10 @@ class TimeValidatorTest implements ValueSetTester {
     @Test
     void testFormatValidTime() throws EDIException {
         EDISimpleType element = mock(EDISimpleType.class);
+        when(element.getMinLength(anyString())).thenCallRealMethod();
+        when(element.getMaxLength(anyString())).thenCallRealMethod();
+        when(element.getValueSet(anyString())).thenCallRealMethod();
+
         when(element.getMinLength()).thenReturn(4L);
         when(element.getMaxLength()).thenReturn(8L);
         when(element.getValueSet()).thenReturn(setOf());
@@ -138,6 +167,10 @@ class TimeValidatorTest implements ValueSetTester {
     @Test
     void testFormatValidTimePadded() throws EDIException {
         EDISimpleType element = mock(EDISimpleType.class);
+        when(element.getMinLength(anyString())).thenCallRealMethod();
+        when(element.getMaxLength(anyString())).thenCallRealMethod();
+        when(element.getValueSet(anyString())).thenCallRealMethod();
+
         when(element.getMinLength()).thenReturn(6L);
         when(element.getMaxLength()).thenReturn(8L);
         when(element.getValueSet()).thenReturn(setOf());

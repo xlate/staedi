@@ -43,7 +43,7 @@ class TimeValidator extends ElementValidator {
                   List<EDIStreamValidationError> errors) {
         final int length = value.length();
 
-        if (!validateLength(element, length, errors) || !validValue(value)) {
+        if (!validateLength(dialect, element, length, errors) || !validValue(value)) {
             errors.add(EDIStreamValidationError.INVALID_TIME);
         }
     }

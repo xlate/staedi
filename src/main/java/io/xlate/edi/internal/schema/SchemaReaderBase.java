@@ -51,7 +51,8 @@ abstract class SchemaReaderBase implements SchemaReader {
                                                              0,
                                                              0,
                                                              99_999,
-                                                             Collections.emptySet());
+                                                             Collections.emptySet(),
+                                                             Collections.emptyList());
 
     static final EDIComplexType ANY_COMPOSITE = new StructureType(StaEDISchema.ANY_COMPOSITE_ID,
                                                                   Type.COMPOSITE,
@@ -77,6 +78,7 @@ abstract class SchemaReaderBase implements SchemaReader {
     final QName qnSequence;
     final QName qnEnumeration;
     final QName qnValue;
+    final QName qnVersion;
     final QName qnAny;
 
     final QName qnCompositeType;
@@ -106,6 +108,7 @@ abstract class SchemaReaderBase implements SchemaReader {
         qnSequence = new QName(xmlns, "sequence");
         qnEnumeration = new QName(xmlns, "enumeration");
         qnValue = new QName(xmlns, "value");
+        qnVersion = new QName(xmlns, "version");
         qnAny = new QName(xmlns, "any");
 
         qnCompositeType = new QName(xmlns, "compositeType");
@@ -542,7 +545,58 @@ abstract class SchemaReaderBase implements SchemaReader {
         long minLength = parseAttribute(reader, "minLength", Long::parseLong, 1L);
         long maxLength = parseAttribute(reader, "maxLength", Long::parseLong, 1L);
 
-        return new ElementType(name, intBase, code, number, minLength, maxLength, readEnumerationValues(reader));
+        final Set<String> values;
+        final List<ElementType.Version> versions;
+
+        if (nextTag(reader, "reading elementType contents") == XMLStreamConstants.END_ELEMENT) {
+            values = Collections.emptySet();
+            versions = Collections.emptyList();
+        } else {
+            if (qnEnumeration.equals(reader.getName())) {
+                values = readEnumerationValues(reader);
+                nextTag(reader, "reading after elementType enumeration");
+            } else {
+                values = Collections.emptySet();
+            }
+
+            if (qnVersion.equals(reader.getName())) {
+                versions = new ArrayList<>();
+
+                while (qnVersion.equals(reader.getName())) {
+                    versions.add(readSimpleTypeVersion(reader));
+                    nextTag(reader, "reading after elementType version");
+                }
+            } else {
+                versions = Collections.emptyList();
+            }
+
+            if (!qnElementType.equals(reader.getName())) {
+                throw unexpectedElement(reader.getName(), reader);
+            }
+        }
+
+        return new ElementType(name, intBase, code, number, minLength, maxLength, values, versions);
+    }
+
+    ElementType.Version readSimpleTypeVersion(XMLStreamReader reader) {
+        String minVersion = parseAttribute(reader, "minVersion", String::valueOf, "");
+        String maxVersion = parseAttribute(reader, "maxVersion", String::valueOf, "");
+        long minLength = parseAttribute(reader, "minLength", Long::parseLong, 1L);
+        long maxLength = parseAttribute(reader, "maxLength", Long::parseLong, 1L);
+
+        Set<String> values;
+
+        if (nextTag(reader, "reading elementType version contents") == XMLStreamConstants.END_ELEMENT) {
+            // Set to null instead of empty to indicate that no enumeration is present in this version
+            values = null;
+        } else if (qnEnumeration.equals(reader.getName())) {
+            values = readEnumerationValues(reader);
+            nextTag(reader, "reading after elementType version enumeration");
+        } else {
+            throw unexpectedElement(reader.getName(), reader);
+        }
+
+        return new ElementType.Version(minVersion, maxVersion, minLength, maxLength, values);
     }
 
     Set<String> readEnumerationValues(XMLStreamReader reader) {
@@ -556,10 +610,10 @@ abstract class SchemaReaderBase implements SchemaReader {
             if (event == XMLStreamConstants.START_ELEMENT) {
                 if (element.equals(qnValue)) {
                     values = readEnumerationValue(reader, values);
-                } else if (!element.equals(qnEnumeration)) {
+                } else {
                     throw unexpectedElement(element, reader);
                 }
-            } else if (qnElementType.equals(element) || qnEnumeration.equals(element)) {
+            } else {
                 endOfEnumeration = true;
             }
         }

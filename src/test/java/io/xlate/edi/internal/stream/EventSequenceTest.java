@@ -388,18 +388,29 @@ class EventSequenceTest {
         assertEquals(EDIStreamEvent.ELEMENT_DATA, reader.next()); // GS02
         assertEquals(EDIStreamEvent.ELEMENT_DATA, reader.next()); // GS03
 
-        // GS04 BAD_DATE
-        assertEquals(EDIStreamEvent.ELEMENT_DATA_ERROR, reader.next());
-        assertEquals("373", reader.getReferenceCode());
-        assertEquals(EDIStreamValidationError.INVALID_DATE, reader.getErrorType());
-        assertEquals("BAD_DATE", reader.getText());
         assertEquals(EDIStreamEvent.ELEMENT_DATA, reader.next()); // GS04
+        assertEquals("BAD_DATE", reader.getText());
 
         // GS05 invalid time
         assertEquals(EDIStreamEvent.ELEMENT_DATA_ERROR, reader.next());
         assertEquals(EDIStreamValidationError.INVALID_TIME, reader.getErrorType());
         assertEquals("295335", reader.getText());
         assertEquals(EDIStreamEvent.ELEMENT_DATA, reader.next()); // GS05
+
+        assertEquals(EDIStreamEvent.ELEMENT_DATA, reader.next()); // GS06
+        assertEquals(EDIStreamEvent.ELEMENT_DATA, reader.next()); // GS07
+        assertEquals(EDIStreamEvent.ELEMENT_DATA, reader.next()); // GS08
+
+        // GS04 BAD_DATE (known bad only after GS08 version is set)
+        assertEquals(EDIStreamEvent.ELEMENT_DATA_ERROR, reader.next());
+        assertEquals("373", reader.getReferenceCode());
+        assertEquals(EDIStreamValidationError.INVALID_DATE, reader.getErrorType());
+        assertEquals("BAD_DATE", reader.getText());
+        assertEquals(2, reader.getLocation().getSegmentPosition());
+        assertEquals("GS", reader.getLocation().getSegmentTag());
+        assertEquals(4, reader.getLocation().getElementPosition());
+        assertEquals(1, reader.getLocation().getElementOccurrence());
+        assertEquals(-1, reader.getLocation().getComponentPosition());
 
         assertEquals(EDIStreamEvent.START_TRANSACTION, reader.nextTag());
         reader.setTransactionSchema(loadX12FuncAckSchema());

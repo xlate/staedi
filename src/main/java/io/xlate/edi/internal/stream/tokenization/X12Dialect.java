@@ -46,12 +46,14 @@ public class X12Dialect implements Dialect {
 
     private static final int TX_AGENCY = 0;
     private static final int TX_VERSION = 1;
-    private String[] transactionVersion = new String[2];
 
-    private String agencyCode = "";
-    private String groupVersion = "";
+    private String[] transactionVersion = new String[2];
+    private String transactionVersionString;
+    private String agencyCode;
+    private String groupVersion;
 
     X12Dialect() {
+        clearTransactionVersion();
     }
 
     @Override
@@ -187,15 +189,24 @@ public class X12Dialect implements Dialect {
         return sd;
     }
 
+    void clearTransactionVersion() {
+        agencyCode = "";
+        groupVersion = "";
+        transactionVersion[TX_AGENCY] = agencyCode;
+        transactionVersion[TX_VERSION] = groupVersion;
+        updateTransactionVersionString(null);
+    }
+
+    void updateTransactionVersionString(String[] transactionVersion) {
+        transactionVersionString = transactionVersion != null ? String.join(".", transactionVersion) : "";
+    }
+
     @Override
     public void elementData(CharSequence data, Location location) {
         if ("GS".equals(location.getSegmentTag())) {
             switch (location.getElementPosition()) {
             case 1:
-                agencyCode = "";
-                groupVersion = "";
-                transactionVersion[TX_AGENCY] = agencyCode;
-                transactionVersion[TX_VERSION] = groupVersion;
+                clearTransactionVersion();
                 break;
             case 7:
                 agencyCode = data.toString();
@@ -204,18 +215,26 @@ public class X12Dialect implements Dialect {
                 groupVersion = data.toString();
                 transactionVersion[TX_AGENCY] = agencyCode;
                 transactionVersion[TX_VERSION] = groupVersion;
+                updateTransactionVersionString(transactionVersion);
                 break;
             default:
                 break;
             }
         } else if ("ST".equals(location.getSegmentTag()) && location.getElementPosition() == 3 && data.length() > 0) {
             transactionVersion[TX_VERSION] = data.toString();
+            updateTransactionVersionString(transactionVersion);
         }
     }
 
     @Override
     public void transactionEnd() {
         transactionVersion[TX_VERSION] = groupVersion;
+        updateTransactionVersionString(transactionVersion);
+    }
+
+    @Override
+    public void groupEnd() {
+        clearTransactionVersion();
     }
 
     @Override
@@ -223,4 +242,8 @@ public class X12Dialect implements Dialect {
         return transactionVersion;
     }
 
+    @Override
+    public String getTransactionVersionString() {
+        return transactionVersionString;
+    }
 }

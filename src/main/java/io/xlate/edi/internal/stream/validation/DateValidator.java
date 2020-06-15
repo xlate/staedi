@@ -16,7 +16,7 @@
 package io.xlate.edi.internal.stream.validation;
 
 import java.io.IOException;
-import java.util.Calendar;
+import java.time.LocalDate;
 import java.util.List;
 
 import io.xlate.edi.internal.stream.tokenization.Dialect;
@@ -45,7 +45,7 @@ class DateValidator extends ElementValidator {
 
         int length = value.length();
 
-        if (!validateLength(element, length, errors) || length % 2 != 0 || !validValue(value)) {
+        if (!validateLength(dialect, element, length, errors) || length % 2 != 0 || !validValue(value)) {
             errors.add(EDIStreamValidationError.INVALID_DATE);
         }
     }
@@ -103,7 +103,7 @@ class DateValidator extends ElementValidator {
          * are current year or in the past.
          **/
         if (length == 6) {
-            int year = Calendar.getInstance().get(Calendar.YEAR);
+            int year = LocalDate.now().getYear();
             int century = year / 100;
 
             if (date[0] > (year % 100)) {

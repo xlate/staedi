@@ -46,6 +46,11 @@ public class EDIFACTDialect implements Dialect {
     private static final int TX_RELEASE = 2;
     private static final int TX_ASSIGNED_CODE = 3;
     private String[] transactionVersion = new String[4];
+    private String transactionVersionString;
+
+    EDIFACTDialect() {
+        clearTransactionVersion();
+    }
 
     @Override
     public void setHeaderTag(String tag) {
@@ -246,6 +251,11 @@ public class EDIFACTDialect implements Dialect {
         for (int i = 0; i < transactionVersion.length; i++) {
             transactionVersion[i] = "";
         }
+        updateTransactionVersionString(null);
+    }
+
+    void updateTransactionVersionString(String[] transactionVersion) {
+        transactionVersionString = transactionVersion != null ? String.join(".", transactionVersion) : "";
     }
 
     @Override
@@ -293,9 +303,11 @@ public class EDIFACTDialect implements Dialect {
                     break;
                 case 4:
                     transactionVersion[TX_AGENCY] = data.toString();
+                    updateTransactionVersionString(transactionVersion);
                     break;
                 case 5:
                     transactionVersion[TX_ASSIGNED_CODE] = data.toString();
+                    updateTransactionVersionString(transactionVersion);
                     break;
                 default:
                     break;
@@ -310,7 +322,17 @@ public class EDIFACTDialect implements Dialect {
     }
 
     @Override
+    public void groupEnd() {
+        clearTransactionVersion();
+    }
+
+    @Override
     public String[] getTransactionVersion() {
         return transactionVersion;
+    }
+
+    @Override
+    public String getTransactionVersionString() {
+        return transactionVersionString;
     }
 }

@@ -39,7 +39,7 @@ class NumericValidator extends ElementValidator {
     @Override
     void validate(Dialect dialect, EDISimpleType element, CharSequence value, List<EDIStreamValidationError> errors) {
         int length = validate(dialect, value);
-        validateLength(element, Math.abs(length), errors);
+        validateLength(dialect, element, Math.abs(length), errors);
 
         if (length < 0) {
             errors.add(EDIStreamValidationError.INVALID_CHARACTER_DATA);

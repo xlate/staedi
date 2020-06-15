@@ -150,6 +150,23 @@
     </attribute>
   </attributeGroup>
 
+  <attributeGroup name="lengthAttributeGroup">
+    <attribute name="minLength" type="nonNegativeInteger" default="1">
+      <annotation>
+        <documentation>
+          The minimum length allowed for an element value to be valid.
+        </documentation>
+      </annotation>
+    </attribute>
+    <attribute name="maxLength" type="nonNegativeInteger" default="1">
+      <annotation>
+        <documentation>
+          The maximum length allowed for an element value to be valid.
+        </documentation>
+      </annotation>
+    </attribute>
+  </attributeGroup>
+
   <attributeGroup name="implementationAttributeGroup">
     <attribute name="minOccurs" type="nonNegativeInteger">
       <annotation>
@@ -519,9 +536,21 @@
     <complexType>
       <complexContent>
         <extension base="tns:baseType">
-          <sequence>
+          <choice>
             <element ref="tns:enumeration" minOccurs="0"/>
-          </sequence>
+            <element name="version" maxOccurs="unbounded">
+              <complexType>
+                <sequence>
+                  <element ref="tns:enumeration" minOccurs="0"/>
+                </sequence>
+
+                <attributeGroup ref="tns:lengthAttributeGroup" />
+
+                <attribute name="minVersion" type="token" />
+                <attribute name="maxVersion" type="token" />
+              </complexType>
+            </element>
+          </choice>
 
           <attribute name="name" type="tns:nameType" use="required">
             <annotation>
@@ -563,8 +592,7 @@
             </annotation>
           </attribute>
 
-          <attribute name="minLength" type="nonNegativeInteger" default="1"/>
-          <attribute name="maxLength" type="nonNegativeInteger" default="1"/>
+          <attributeGroup ref="tns:lengthAttributeGroup" />
         </extension>
       </complexContent>
     </complexType>
@@ -579,7 +607,7 @@
           <complexType>
             <simpleContent>
               <extension base="token">
-                <attribute name="title" type="string" />
+                <attribute name="title" type="string"/>
               </extension>
             </simpleContent>
           </complexType>

@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -35,6 +36,10 @@ class AlphaNumericValidatorTest implements ValueSetTester {
     @Test
     void testValidateLengthTooShort() {
         EDISimpleType element = mock(EDISimpleType.class);
+        when(element.getMinLength(anyString())).thenCallRealMethod();
+        when(element.getMaxLength(anyString())).thenCallRealMethod();
+        when(element.getValueSet(anyString())).thenCallRealMethod();
+
         when(element.getMinLength()).thenReturn(5L);
         when(element.getMaxLength()).thenReturn(5L);
         when(element.getValueSet()).thenReturn(setOf());
@@ -48,6 +53,10 @@ class AlphaNumericValidatorTest implements ValueSetTester {
     @Test
     void testValidateLengthTooLong() {
         EDISimpleType element = mock(EDISimpleType.class);
+        when(element.getMinLength(anyString())).thenCallRealMethod();
+        when(element.getMaxLength(anyString())).thenCallRealMethod();
+        when(element.getValueSet(anyString())).thenCallRealMethod();
+
         when(element.getMinLength()).thenReturn(5L);
         when(element.getMaxLength()).thenReturn(5L);
         when(element.getValueSet()).thenReturn(setOf());
@@ -61,6 +70,10 @@ class AlphaNumericValidatorTest implements ValueSetTester {
     @Test
     void testValidateValueNotInSet() {
         EDISimpleType element = mock(EDISimpleType.class);
+        when(element.getMinLength(anyString())).thenCallRealMethod();
+        when(element.getMaxLength(anyString())).thenCallRealMethod();
+        when(element.getValueSet(anyString())).thenCallRealMethod();
+
         when(element.getMinLength()).thenReturn(4L);
         when(element.getMaxLength()).thenReturn(5L);
         when(element.getValueSet()).thenReturn(setOf("VAL1", "VAL2"));
@@ -74,6 +87,10 @@ class AlphaNumericValidatorTest implements ValueSetTester {
     @Test
     void testValidateValueInSetBadCharacter() {
         EDISimpleType element = mock(EDISimpleType.class);
+        when(element.getMinLength(anyString())).thenCallRealMethod();
+        when(element.getMaxLength(anyString())).thenCallRealMethod();
+        when(element.getValueSet(anyString())).thenCallRealMethod();
+
         when(element.getMinLength()).thenReturn(4L);
         when(element.getMaxLength()).thenReturn(5L);
         when(element.getValueSet()).thenReturn(setOf("VAL1", "VAL\u0008"));
@@ -87,6 +104,10 @@ class AlphaNumericValidatorTest implements ValueSetTester {
     @Test
     void testFormatValueTooLong() {
         EDISimpleType element = mock(EDISimpleType.class);
+        when(element.getMinLength(anyString())).thenCallRealMethod();
+        when(element.getMaxLength(anyString())).thenCallRealMethod();
+        when(element.getValueSet(anyString())).thenCallRealMethod();
+
         when(element.getMinLength()).thenReturn(4L);
         when(element.getMaxLength()).thenReturn(5L);
         ElementValidator v = AlphaNumericValidator.getInstance();
@@ -98,6 +119,10 @@ class AlphaNumericValidatorTest implements ValueSetTester {
     @Test
     void testFormatValueNotInSet() {
         EDISimpleType element = mock(EDISimpleType.class);
+        when(element.getMinLength(anyString())).thenCallRealMethod();
+        when(element.getMaxLength(anyString())).thenCallRealMethod();
+        when(element.getValueSet(anyString())).thenCallRealMethod();
+
         when(element.getMinLength()).thenReturn(4L);
         when(element.getMaxLength()).thenReturn(8L);
         when(element.getValueSet()).thenReturn(setOf("VAL1", "VAL2"));
@@ -110,6 +135,10 @@ class AlphaNumericValidatorTest implements ValueSetTester {
     @Test
     void testFormatValueInSet() throws EDIException {
         EDISimpleType element = mock(EDISimpleType.class);
+        when(element.getMinLength(anyString())).thenCallRealMethod();
+        when(element.getMaxLength(anyString())).thenCallRealMethod();
+        when(element.getValueSet(anyString())).thenCallRealMethod();
+
         when(element.getMinLength()).thenReturn(4L);
         when(element.getMaxLength()).thenReturn(8L);
         when(element.getValueSet()).thenReturn(setOf("VAL1", "VAL2"));
@@ -122,6 +151,10 @@ class AlphaNumericValidatorTest implements ValueSetTester {
     @Test
     void testFormatInvalidCharacterData() {
         EDISimpleType element = mock(EDISimpleType.class);
+        when(element.getMinLength(anyString())).thenCallRealMethod();
+        when(element.getMaxLength(anyString())).thenCallRealMethod();
+        when(element.getValueSet(anyString())).thenCallRealMethod();
+
         when(element.getMinLength()).thenReturn(4L);
         when(element.getMaxLength()).thenReturn(4L);
         ElementValidator v = AlphaNumericValidator.getInstance();
@@ -137,6 +170,10 @@ class AlphaNumericValidatorTest implements ValueSetTester {
     @Test
     void testFormatValidValuePaddedLength() throws EDIException {
         EDISimpleType element = mock(EDISimpleType.class);
+        when(element.getMinLength(anyString())).thenCallRealMethod();
+        when(element.getMaxLength(anyString())).thenCallRealMethod();
+        when(element.getValueSet(anyString())).thenCallRealMethod();
+
         when(element.getMinLength()).thenReturn(10L);
         when(element.getMaxLength()).thenReturn(10L);
         ElementValidator v = AlphaNumericValidator.getInstance();
