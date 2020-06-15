@@ -97,6 +97,6 @@ public class CharArraySequence implements CharSequence, Comparable<CharSequence>
 
     @Override
     public String toString() {
-        return new String(text, start, length);
+        return (length > 0) ? new String(text, start, length) : "";
     }
 }
