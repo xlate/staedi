@@ -391,8 +391,8 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
     CompositeImpl readCompositeImplementation(XMLStreamReader reader) {
         List<EDITypeImplementation> sequence = new ArrayList<>(5);
         int position = parseAttribute(reader, ATTR_POSITION, Integer::parseInt, 0);
-        int minOccurs = parseAttribute(reader, ATTR_MIN_OCCURS, Integer::parseInt, 0);
-        int maxOccurs = parseAttribute(reader, ATTR_MAX_OCCURS, Integer::parseInt, 0);
+        int minOccurs = parseAttribute(reader, ATTR_MIN_OCCURS, Integer::parseInt, -1);
+        int maxOccurs = parseAttribute(reader, ATTR_MAX_OCCURS, Integer::parseInt, -1);
         String title = parseAttribute(reader, ATTR_TITLE, String::valueOf, null);
 
         return readTypeImplementation(reader,
@@ -431,8 +431,8 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
     ElementImpl readElementImplementation(XMLStreamReader reader) {
         this.valueSet.clear();
         int position = parseAttribute(reader, ATTR_POSITION, Integer::parseInt, 0);
-        int minOccurs = parseAttribute(reader, ATTR_MIN_OCCURS, Integer::parseInt, 0);
-        int maxOccurs = parseAttribute(reader, ATTR_MAX_OCCURS, Integer::parseInt, 0);
+        int minOccurs = parseAttribute(reader, ATTR_MIN_OCCURS, Integer::parseInt, -1);
+        int maxOccurs = parseAttribute(reader, ATTR_MAX_OCCURS, Integer::parseInt, -1);
         String title = parseAttribute(reader, ATTR_TITLE, String::valueOf, null);
 
         return readTypeImplementation(reader,
