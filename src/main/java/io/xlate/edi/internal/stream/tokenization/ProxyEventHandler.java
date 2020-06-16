@@ -216,7 +216,7 @@ public class ProxyEventHandler implements EventHandler {
     @Override
     public boolean segmentEnd() {
         if (validator() != null) {
-            validator().validateSyntax(this, this, location, false);
+            validator().validateSyntax(dialect, this, this, location, false);
             validator().validateVersionConstraints(dialect, this);
         }
 
@@ -231,7 +231,7 @@ public class ProxyEventHandler implements EventHandler {
         boolean eventsReady = true;
 
         if (validator() != null && !isNil) {
-            boolean invalid = !validator().validCompositeOccurrences(location);
+            boolean invalid = !validator().validCompositeOccurrences(dialect, location);
 
             if (invalid) {
                 code = validator().getElementReferenceCode();
@@ -255,7 +255,7 @@ public class ProxyEventHandler implements EventHandler {
         boolean eventsReady = true;
 
         if (validator() != null && !isNil) {
-            validator().validateSyntax(this, this, location, true);
+            validator().validateSyntax(dialect, this, this, location, true);
             eventsReady = !validator().isPendingDiscrimination();
         }
 

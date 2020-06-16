@@ -37,8 +37,8 @@ public interface EDISimpleType extends EDIType {
     /**
      * Returns true if this element has additional version(s) defined beyond the
      * default. Versions may be used to specify different minimum/maximum length
-     * restrictions or enumerated values that only apply to specific versions of
-     * the element.
+     * restrictions or enumerated values that only apply to specific versions a
+     * transaction.
      *
      * @return true if this element has version(s), otherwise false
      *

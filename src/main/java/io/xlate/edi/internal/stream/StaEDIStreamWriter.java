@@ -406,7 +406,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         if (level > LEVEL_SEGMENT) {
             validateElement(this.elementBuffer::flip, this.elementBuffer);
         }
-        validate(validator -> validator.validateSyntax(this, this, location, false));
+        validate(validator -> validator.validateSyntax(dialect, this, this, location, false));
 
         if (state == State.ELEMENT_DATA_BINARY) {
             state = State.ELEMENT_END_BINARY;
@@ -455,7 +455,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
 
         if (!atomicElementWrite) {
             if (level > LEVEL_ELEMENT) {
-                validate(validator -> validator.validateSyntax(this, this, location, true));
+                validate(validator -> validator.validateSyntax(dialect, this, this, location, true));
             } else {
                 validateElement(this.elementBuffer::flip, this.elementBuffer);
             }
@@ -679,6 +679,9 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     public void loopEnd(CharSequence id) {
         if (EDIType.Type.TRANSACTION.toString().equals(id)) {
             transaction = false;
+            dialect.transactionEnd();
+        } else if (EDIType.Type.GROUP.toString().equals(id)) {
+            dialect.groupEnd();
         }
     }
 
@@ -735,6 +738,8 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
 
                 throw validationExceptionChain(errors);
             }
+
+            dialect.elementData(data, location);
         }
     }
 

@@ -40,32 +40,16 @@ class ElementType extends BasicType implements EDISimpleType {
     final Set<String> values;
     final List<Version> versions;
 
-    static class Version {
-        final String minVersion;
-        final String maxVersion;
+    static class Version extends VersionedProperty {
         final Long minLength;
         final Long maxLength;
         final Set<String> values;
 
         Version(String minVersion, String maxVersion, Long minLength, Long maxLength, Set<String> values) {
-            super();
-            this.minVersion = minVersion;
-            this.maxVersion = maxVersion;
+            super(minVersion, maxVersion);
             this.minLength = minLength;
             this.maxLength = maxLength;
             this.values = values;
-        }
-
-        boolean appliesTo(String version) {
-            return minVersionIncludes(version) && maxVersionIncludes(version);
-        }
-
-        boolean minVersionIncludes(String version) {
-            return minVersion.trim().isEmpty() || minVersion.compareTo(version) <= 0;
-        }
-
-        boolean maxVersionIncludes(String version) {
-            return maxVersion.trim().isEmpty() || maxVersion.compareTo(version) >= 0;
         }
 
         public long getMinLength(ElementType defaultElement) {

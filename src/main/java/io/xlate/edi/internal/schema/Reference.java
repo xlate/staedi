@@ -15,6 +15,11 @@
  ******************************************************************************/
 package io.xlate.edi.internal.schema;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.function.BiFunction;
+import java.util.function.Supplier;
+
 import io.xlate.edi.schema.EDIReference;
 import io.xlate.edi.schema.EDIType;
 
@@ -26,18 +31,50 @@ class Reference implements EDIReference {
     private EDIType referencedType;
     private int minOccurs;
     private int maxOccurs;
+    final List<Version> versions;
+
+    static class Version extends VersionedProperty {
+        final Integer minOccurs;
+        final Integer maxOccurs;
+
+        Version(String minVersion, String maxVersion, Integer minOccurs, Integer maxOccurs) {
+            super(minVersion, maxVersion);
+            this.minOccurs = minOccurs;
+            this.maxOccurs = maxOccurs;
+        }
+
+        public int getMinOccurs(Reference defaultElement) {
+            return minOccurs != null ? minOccurs.intValue() : defaultElement.getMinOccurs();
+        }
+
+        public int getMaxOccurs(Reference defaultElement) {
+            return maxOccurs != null ? maxOccurs.intValue() : defaultElement.getMaxOccurs();
+        }
+    }
 
     Reference(String refId, String refTag, int minOccurs, int maxOccurs) {
         this.refId = refId;
         this.refTag = refTag;
         this.minOccurs = minOccurs;
         this.maxOccurs = maxOccurs;
+        this.versions = Collections.emptyList();
     }
 
     Reference(EDIType referencedType, int minOccurs, int maxOccurs) {
         this.referencedType = referencedType;
         this.minOccurs = minOccurs;
         this.maxOccurs = maxOccurs;
+        this.versions = Collections.emptyList();
+    }
+
+    <T> T getVersionAttribute(String version, BiFunction<Version, Reference, T> versionedSupplier, Supplier<T> defaultSupplier) {
+        for (Version ver : versions) {
+            if (ver.appliesTo(version)) {
+                return versionedSupplier.apply(ver, this);
+            }
+        }
+
+        return defaultSupplier.get();
     }
 
     @Override
@@ -71,4 +108,20 @@ class Reference implements EDIReference {
     public int getMaxOccurs() {
         return maxOccurs;
     }
+
+    @Override
+    public boolean hasVersions() {
+        return !versions.isEmpty();
+    }
+
+    @Override
+    public int getMinOccurs(String version) {
+        return getVersionAttribute(version, Version::getMinOccurs, this::getMinOccurs);
+    }
+
+    @Override
+    public int getMaxOccurs(String version) {
+        return getVersionAttribute(version, Version::getMaxOccurs, this::getMaxOccurs);
+    }
+
 }

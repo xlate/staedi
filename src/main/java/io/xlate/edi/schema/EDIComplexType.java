@@ -17,10 +17,25 @@ package io.xlate.edi.schema;
 
 import java.util.List;
 
+/**
+ * An interface representing the schema of an EDI complex type such as a loop,
+ * segment, or composite element.
+ */
 public interface EDIComplexType extends EDIType {
 
+    /**
+     * Retrieve the {@link EDIReference}s (child elements) for a this complex
+     * type.
+     *
+     * @return the references (child elements) without regard to version
+     */
     List<EDIReference> getReferences();
 
+    /**
+     * Retrieve the {@link EDISyntaxRule}s associated with this EDIComplexType.
+     *
+     * @return a list of associated {@link EDISyntaxRule}s
+     */
     List<EDISyntaxRule> getSyntaxRules();
 
 }

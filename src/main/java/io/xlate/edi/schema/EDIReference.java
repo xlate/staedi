@@ -23,4 +23,49 @@ public interface EDIReference {
 
     int getMaxOccurs();
 
+    /**
+     * Returns true if this element has additional version(s) defined beyond the
+     * default. Versions may be used to specify different minimum/maximum
+     * occurrence restrictions that only apply to specific versions of a
+     * transaction.
+     *
+     * @return true if this element has version(s), otherwise false
+     *
+     * @since 1.8
+     */
+    default boolean hasVersions() {
+        return false;
+    }
+
+    /**
+     * Retrieve the minOccurs attribute for a particular version of the element.
+     *
+     * The default implementation returns the default (un-versioned) value for
+     * the element.
+     *
+     * @param version
+     *            the version to select
+     * @return the minOccurs attribute for version
+     *
+     * @since 1.8
+     */
+    default int getMinOccurs(String version) {
+        return getMinOccurs();
+    }
+
+    /**
+     * Retrieve the maxOccurs attribute for a particular version of the element.
+     *
+     * The default implementation returns the default (un-versioned) value for
+     * the element.
+     *
+     * @param version
+     *            the version to select
+     * @return the maxOccurs attribute for version
+     *
+     * @since 1.8
+     */
+    default int getMaxOccurs(String version) {
+        return getMaxOccurs();
+    }
 }

@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import io.xlate.edi.internal.stream.tokenization.Dialect;
 import io.xlate.edi.schema.EDIComplexType;
@@ -110,6 +111,15 @@ class UsageNode {
 
     UsageNode getChild(int index) {
         return (index < children.size()) ? children.get(index) : null;
+    }
+
+    List<UsageNode> getChildren(String version) {
+        return children.stream().filter(c -> c == null || c.link.getMaxOccurs(version) > 0).collect(Collectors.toList());
+    }
+
+    UsageNode getChild(String version, int index) {
+        final List<UsageNode> versionedChildren = getChildren(version);
+        return (index < versionedChildren.size()) ? versionedChildren.get(index) : null;
     }
 
     boolean isImplementation() {

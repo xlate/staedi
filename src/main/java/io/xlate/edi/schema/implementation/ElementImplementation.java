@@ -29,4 +29,8 @@ public interface ElementImplementation extends EDITypeImplementation, EDISimpleT
         return Type.ELEMENT;
     }
 
+    @Override
+    default boolean hasVersions() {
+        return false;
+    }
 }
