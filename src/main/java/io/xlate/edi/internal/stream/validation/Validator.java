@@ -70,6 +70,8 @@ import io.xlate.edi.stream.Location;
 public class Validator {
 
     static final Logger LOGGER = Logger.getLogger(Validator.class.getName());
+    // Versions are not yet supported for segments
+    static final String SEGMENT_VERSION = "";
 
     private Schema containerSchema;
     private Schema schema;
@@ -449,7 +451,7 @@ public class Validator {
         current.incrementUsage();
         current.resetChildren();
 
-        if (current.exceedsMaximumUsage()) {
+        if (current.exceedsMaximumUsage(SEGMENT_VERSION)) {
             handleMissingMandatory(handler);
             handler.segmentError(current.getId(), SEGMENT_EXCEEDS_MAXIMUM_USE);
         }
@@ -473,7 +475,7 @@ public class Validator {
                 currentImpl.incrementUsage();
                 currentImpl.resetChildren();
 
-                if (currentImpl.exceedsMaximumUsage()) {
+                if (currentImpl.exceedsMaximumUsage(SEGMENT_VERSION)) {
                     handler.segmentError(currentImpl.getId(), SEGMENT_EXCEEDS_MAXIMUM_USE);
                 }
 
@@ -506,7 +508,7 @@ public class Validator {
     }
 
     void checkMinimumUsage(UsageNode node) {
-        if (!node.hasMinimumUsage()) {
+        if (!node.hasMinimumUsage(SEGMENT_VERSION)) {
             /*
              * The schema segment has not met it's minimum usage
              * requirement.
@@ -534,7 +536,7 @@ public class Validator {
         handler.loopBegin(current.getCode());
         correctSegment = segment = startLoop(current);
 
-        if (current.exceedsMaximumUsage()) {
+        if (current.exceedsMaximumUsage(SEGMENT_VERSION)) {
             handleMissingMandatory(handler);
             handler.segmentError(tag, LOOP_OCCURS_OVER_MAXIMUM_TIMES);
         }
@@ -577,7 +579,7 @@ public class Validator {
 
                 next.incrementUsage();
 
-                if (next.exceedsMaximumUsage()) {
+                if (next.exceedsMaximumUsage(SEGMENT_VERSION)) {
                     handler.segmentError(next.getId(), SEGMENT_EXCEEDS_MAXIMUM_USE);
                 }
 
@@ -697,13 +699,13 @@ public class Validator {
             candidate.resetChildren();
             implSeg.incrementUsage();
 
-            if (candidate.exceedsMaximumUsage()) {
+            if (candidate.exceedsMaximumUsage(SEGMENT_VERSION)) {
                 handler.segmentError(implSeg.getId(), LOOP_OCCURS_OVER_MAXIMUM_TIMES);
             }
         } else {
             candidate.incrementUsage();
 
-            if (candidate.exceedsMaximumUsage()) {
+            if (candidate.exceedsMaximumUsage(SEGMENT_VERSION)) {
                 handler.segmentError(implSeg.getId(), SEGMENT_EXCEEDS_MAXIMUM_USE);
             }
         }
@@ -819,7 +821,7 @@ public class Validator {
         } else if (!element.isNodeType(EDIType.Type.COMPOSITE)) {
             this.element.incrementUsage();
 
-            if (this.element.exceedsMaximumUsage()) {
+            if (this.element.exceedsMaximumUsage(version)) {
                 elementErrors.add(new UsageError(this.element, TOO_MANY_REPETITIONS));
                 return false;
             }
@@ -834,7 +836,7 @@ public class Validator {
         this.element = null;
         this.composite.incrementUsage();
 
-        if (this.composite.exceedsMaximumUsage()) {
+        if (this.composite.exceedsMaximumUsage(version)) {
             elementErrors.add(new UsageError(this.composite, TOO_MANY_REPETITIONS));
             return false;
         }
@@ -918,7 +920,7 @@ public class Validator {
         if (valueReceived) {
             validateElementValue(dialect, position, value);
         } else {
-            validateDataElementRequirement();
+            validateDataElementRequirement(version);
         }
 
         return elementErrors.isEmpty();
@@ -954,6 +956,8 @@ public class Validator {
     }
 
     void validateElementValue(Dialect dialect, StaEDIStreamLocation position, CharSequence value) {
+        final String version = dialect.getTransactionVersionString();
+
         if (!element.isNodeType(EDIType.Type.COMPOSITE)) {
             this.element.incrementUsage();
 
@@ -961,12 +965,12 @@ public class Validator {
                 this.implElement.incrementUsage();
             }
 
-            if (this.element.exceedsMaximumUsage()) {
+            if (this.element.exceedsMaximumUsage(version)) {
                 elementErrors.add(new UsageError(this.element, TOO_MANY_REPETITIONS));
             }
         }
 
-        if (dialect.getTransactionVersionString().isEmpty() && this.element.hasVersions()) {
+        if (version.isEmpty() && this.element.hasVersions()) {
             // This element value can not be validated until the version is determined
             revalidationQueue.add(new RevalidationNode(this.element, this.implElement, value, position));
             return;
@@ -1042,7 +1046,7 @@ public class Validator {
         if (!isComposite && implSegmentSelected && index == children.size()) {
             UsageNode previousImpl = implNode.getChild(elementPosition);
 
-            if (tooFewRepetitions(previousImpl)) {
+            if (tooFewRepetitions(version, previousImpl)) {
                 validationHandler.elementError(IMPLEMENTATION_TOO_FEW_REPETITIONS.getCategory(),
                                                IMPLEMENTATION_TOO_FEW_REPETITIONS,
                                                previousImpl.getCode(),
@@ -1064,7 +1068,7 @@ public class Validator {
         if (elementPosition > 0 && componentPosition < 0) {
             UsageNode previousImpl = getImplElement(version, elementPosition - 1);
 
-            if (tooFewRepetitions(previousImpl)) {
+            if (tooFewRepetitions(version, previousImpl)) {
                 elementErrors.add(new UsageError(previousImpl, IMPLEMENTATION_TOO_FEW_REPETITIONS));
             }
         }
@@ -1079,15 +1083,15 @@ public class Validator {
         return true;
     }
 
-    void validateDataElementRequirement() {
-        if (!UsageNode.hasMinimumUsage(element) || !UsageNode.hasMinimumUsage(implElement)) {
+    void validateDataElementRequirement(String version) {
+        if (!UsageNode.hasMinimumUsage(version, element) || !UsageNode.hasMinimumUsage(version, implElement)) {
             elementErrors.add(new UsageError(this.element, REQUIRED_DATA_ELEMENT_MISSING));
         }
     }
 
-    boolean tooFewRepetitions(UsageNode node) {
-        if (!UsageNode.hasMinimumUsage(node)) {
-            return node.getLink().getMinOccurs() > 1;
+    boolean tooFewRepetitions(String version, UsageNode node) {
+        if (!UsageNode.hasMinimumUsage(version, node)) {
+            return node.getLink().getMinOccurs(version) > 1;
         }
 
         return false;

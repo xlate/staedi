@@ -268,7 +268,7 @@
     <!-- Prior to 004000, GS date is 6 characters -->
     <version minVersion="X.000000" maxVersion="X.003079" minLength="6" maxLength="6" />
     <!-- After version 004000, GS date is 6 characters -->
-    <version minVersion="X.004000" minLength="8" maxLength="8" />
+    <version minVersion="X.004000" maxVersion="X.999999" minLength="8" maxLength="8" />
   </elementType>
 
   <elementType name="E455" code="455" base="string" maxLength="2"/>
@@ -539,11 +539,15 @@
   </elementType>
 
   <elementType name="E480" code="480" base="string" maxLength="12"/>
+  <elementType name="E1705" code="1705" base="string" maxLength="35"/>
 
   <segmentType name="ST">
     <sequence>
       <element type="E143" minOccurs="1"/>
       <element type="E329" minOccurs="1"/>
+      <element type="E1705" maxOccurs="0">
+        <version minVersion="X.004020" maxVersion="X.999999" maxOccurs="1" />
+      </element>
     </sequence>
   </segmentType>
 

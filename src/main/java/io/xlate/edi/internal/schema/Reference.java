@@ -15,6 +15,7 @@
  ******************************************************************************/
 package io.xlate.edi.internal.schema;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.BiFunction;
@@ -26,11 +27,13 @@ import io.xlate.edi.schema.EDIType;
 class Reference implements EDIReference {
 
     private static final String TOSTRING_FORMAT = "refId: %s, minOccurs: %d, maxOccurs: %d, type: { %s }";
+
     private String refId;
     private String refTag;
     private EDIType referencedType;
-    private int minOccurs;
-    private int maxOccurs;
+
+    final int minOccurs;
+    final int maxOccurs;
     final List<Version> versions;
 
     static class Version extends VersionedProperty {
@@ -52,12 +55,16 @@ class Reference implements EDIReference {
         }
     }
 
-    Reference(String refId, String refTag, int minOccurs, int maxOccurs) {
+    Reference(String refId, String refTag, int minOccurs, int maxOccurs, List<Version> versions) {
         this.refId = refId;
         this.refTag = refTag;
         this.minOccurs = minOccurs;
         this.maxOccurs = maxOccurs;
-        this.versions = Collections.emptyList();
+        this.versions = Collections.unmodifiableList(new ArrayList<>(versions));;
+    }
+
+    Reference(String refId, String refTag, int minOccurs, int maxOccurs) {
+        this(refId, refTag, minOccurs, maxOccurs, Collections.emptyList());
     }
 
     Reference(EDIType referencedType, int minOccurs, int maxOccurs) {

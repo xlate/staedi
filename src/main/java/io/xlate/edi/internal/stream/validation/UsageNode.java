@@ -64,8 +64,8 @@ class UsageNode {
         this.siblingIndex = siblingIndex;
     }
 
-    public static boolean hasMinimumUsage(UsageNode node) {
-        return node == null || node.hasMinimumUsage();
+    public static boolean hasMinimumUsage(String version, UsageNode node) {
+        return node == null || node.hasMinimumUsage(version);
     }
 
     public static UsageNode getParent(UsageNode node) {
@@ -189,16 +189,16 @@ class UsageNode {
         return this == getFirstSibling();
     }
 
-    boolean hasMinimumUsage() {
-        return usageCount >= link.getMinOccurs();
+    boolean hasMinimumUsage(String version) {
+        return usageCount >= link.getMinOccurs(version);
     }
 
     boolean hasVersions() {
         return getSimpleType().hasVersions();
     }
 
-    boolean exceedsMaximumUsage() {
-        return usageCount > link.getMaxOccurs();
+    boolean exceedsMaximumUsage(String version) {
+        return usageCount > link.getMaxOccurs(version);
     }
 
     boolean isNodeType(EDIType.Type type) {

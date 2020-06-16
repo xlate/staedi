@@ -476,11 +476,40 @@ abstract class SchemaReaderBase implements SchemaReader {
             types.put(refId, loop);
             ref = new Reference(refId, refTag, minOccurs, maxOccurs);
             ref.setReferencedType(loop);
+        } else if (qnComposite.equals(element) || qnElement.equals(element)) {
+            List<Reference.Version> versions = null;
+
+            if (nextTag(reader, "reading " + element + " contents") != XMLStreamConstants.END_ELEMENT) {
+                requireElementStart(qnVersion, reader);
+                versions = new ArrayList<>();
+
+                do {
+                    versions.add(readReferenceVersion(reader));
+                } while (nextTag(reader, "reading after " + element + " version") != XMLStreamConstants.END_ELEMENT);
+            } else {
+                versions = Collections.emptyList();
+            }
+
+            ref = new Reference(refId, refTag, minOccurs, maxOccurs, versions);
         } else {
             ref = new Reference(refId, refTag, minOccurs, maxOccurs);
         }
 
         return ref;
+    }
+
+    Reference.Version readReferenceVersion(XMLStreamReader reader) {
+        requireElementStart(qnVersion, reader);
+        String minVersion = parseAttribute(reader, "minVersion", String::valueOf, "");
+        String maxVersion = parseAttribute(reader, "maxVersion", String::valueOf, "");
+        Integer minOccurs = parseAttribute(reader, "minOccurs", Integer::valueOf, null);
+        Integer maxOccurs = parseAttribute(reader, "maxOccurs", Integer::valueOf, null);
+
+        if (nextTag(reader, "reading version contents") != XMLStreamConstants.END_ELEMENT) {
+            throw unexpectedElement(reader.getName(), reader);
+        }
+
+        return new Reference.Version(minVersion, maxVersion, minOccurs, maxOccurs);
     }
 
     void readSyntax(XMLStreamReader reader, List<EDISyntaxRule> rules) {
@@ -562,8 +591,8 @@ abstract class SchemaReaderBase implements SchemaReader {
         requireElementStart(qnVersion, reader);
         String minVersion = parseAttribute(reader, "minVersion", String::valueOf, "");
         String maxVersion = parseAttribute(reader, "maxVersion", String::valueOf, "");
-        Long minLength = parseAttribute(reader, "minLength", Long::parseLong, null);
-        Long maxLength = parseAttribute(reader, "maxLength", Long::parseLong, null);
+        Long minLength = parseAttribute(reader, "minLength", Long::valueOf, null);
+        Long maxLength = parseAttribute(reader, "maxLength", Long::valueOf, null);
 
         Set<String> values;
 
