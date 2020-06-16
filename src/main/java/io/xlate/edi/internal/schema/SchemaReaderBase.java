@@ -581,8 +581,8 @@ abstract class SchemaReaderBase implements SchemaReader {
     ElementType.Version readSimpleTypeVersion(XMLStreamReader reader) {
         String minVersion = parseAttribute(reader, "minVersion", String::valueOf, "");
         String maxVersion = parseAttribute(reader, "maxVersion", String::valueOf, "");
-        long minLength = parseAttribute(reader, "minLength", Long::parseLong, 1L);
-        long maxLength = parseAttribute(reader, "maxLength", Long::parseLong, 1L);
+        Long minLength = parseAttribute(reader, "minLength", Long::parseLong, null);
+        Long maxLength = parseAttribute(reader, "maxLength", Long::parseLong, null);
 
         Set<String> values;
 

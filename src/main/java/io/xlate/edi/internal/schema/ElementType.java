@@ -57,15 +57,15 @@ class ElementType extends BasicType implements EDISimpleType {
         }
 
         boolean appliesTo(String version) {
-            if (!minVersion.trim().isEmpty() && minVersion.compareTo(version) > 0) {
-                // version is less than the minVersion
-                return false;
-            }
-            if (!maxVersion.trim().isEmpty() && maxVersion.compareTo(version) < 0) {
-                // version is greater than the minVersion
-                return false;
-            }
-            return true;
+            return minVersionIncludes(version) && maxVersionIncludes(version);
+        }
+
+        boolean minVersionIncludes(String version) {
+            return minVersion.trim().isEmpty() || minVersion.compareTo(version) <= 0;
+        }
+
+        boolean maxVersionIncludes(String version) {
+            return maxVersion.trim().isEmpty() || maxVersion.compareTo(version) >= 0;
         }
 
         public long getMinLength(ElementType defaultElement) {

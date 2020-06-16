@@ -536,9 +536,9 @@
     <complexType>
       <complexContent>
         <extension base="tns:baseType">
-          <choice>
+          <sequence>
             <element ref="tns:enumeration" minOccurs="0"/>
-            <element name="version" maxOccurs="unbounded">
+            <element name="version" minOccurs="0" maxOccurs="unbounded">
               <complexType>
                 <sequence>
                   <element ref="tns:enumeration" minOccurs="0"/>
@@ -550,7 +550,7 @@
                 <attribute name="maxVersion" type="token" />
               </complexType>
             </element>
-          </choice>
+          </sequence>
 
           <attribute name="name" type="tns:nameType" use="required">
             <annotation>

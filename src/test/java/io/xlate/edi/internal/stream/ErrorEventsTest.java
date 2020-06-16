@@ -613,4 +613,104 @@ class ErrorEventsTest {
 
         assertFalse(reader.hasNext(), "Unexpected errors in transaction");
     }
+
+    @Test
+    void testMultiVersionElementType() throws EDISchemaException, EDIStreamException {
+        EDIInputFactory factory = EDIInputFactory.newFactory();
+        InputStream stream = new ByteArrayInputStream((""
+                + "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~"
+                + "GS*FA*ReceiverDept*SenderDept*200615*133025*000001*X*003020~"
+                + "ST*000*0001~"
+                + "S0A*AA*GOOD~" // Good
+                + "S0A*111~" // Too long
+                + "S0A*CC~" // Invalid code
+                + "SE*5*0001~"
+                + "GE*1*000001~"
+                + "GS*FA*ReceiverDept*SenderDept*20200615*133025*000002*X*004010~"
+                + "ST*000*0001~"
+                + "S0A*AA*LONG ENOUGH~" // Good
+                + "S0A*111*SHORT~" // Good, 2nd too short
+                + "S0A*3333~" // Too long
+                + "S0A*222~" // Good
+                + "S0A*333~" // Invalid code
+                + "SE*6*0001~"
+                + "GE*1*000002~"
+                + "GS*FA*ReceiverDept*SenderDept*20200615*133025*000003*X*005010~"
+                + "ST*000*0001~"
+                + "S0A*AA~" // Good
+                + "S0A*111~" // Good
+                + "S0A*3333~" // Too long
+                + "S0A*222~" // Good
+                + "S0A*333~" // Good
+                + "S0A*444~" // Invalid code
+                + "SE*3*0001~"
+                + "GE*1*000003~"
+                + "IEA*3*508121953~").getBytes());
+
+        EDIStreamReader unfiltered = factory.createEDIStreamReader(stream);
+        EDIStreamReader reader = factory.createFilteredReader(unfiltered, (r) -> {
+            switch (r.getEventType()) {
+            case SEGMENT_ERROR:
+            case ELEMENT_DATA_ERROR:
+            case ELEMENT_OCCURRENCE_ERROR:
+            case START_TRANSACTION: // To set the schema
+                return true;
+            default:
+                break;
+            }
+            return false;
+        });
+
+        assertEquals(EDIStreamEvent.START_TRANSACTION,
+                     reader.next(),
+                     () -> "Expecting start of transaction, got other " + reader.getLocation());
+
+        SchemaFactory schemaFactory = SchemaFactory.newFactory();
+        URL schemaLocation = getClass().getResource("/x12/EDISchemaMultiVersionElementType.xml");
+        Schema schema = schemaFactory.createSchema(schemaLocation);
+        reader.setTransactionSchema(schema);
+
+        assertTrue(reader.hasNext(), "Expected error missing");
+
+        assertNextEvent(reader, EDIStreamValidationError.DATA_ELEMENT_TOO_LONG, "S0A", 5, 1, "111");
+        assertNextEvent(reader, EDIStreamValidationError.INVALID_CODE_VALUE, "S0A", 5, 1, "111");
+        assertNextEvent(reader, EDIStreamValidationError.INVALID_CODE_VALUE, "S0A", 6, 1, "CC");
+
+        assertEquals(EDIStreamEvent.START_TRANSACTION,
+                     reader.next(),
+                     () -> "Expecting start of transaction, got other " + reader.getLocation());
+
+        assertNextEvent(reader, EDIStreamValidationError.DATA_ELEMENT_TOO_SHORT, "S0A", 12, 2, "SHORT");
+        assertNextEvent(reader, EDIStreamValidationError.DATA_ELEMENT_TOO_LONG, "S0A", 13, 1, "3333");
+        assertNextEvent(reader, EDIStreamValidationError.INVALID_CODE_VALUE, "S0A", 13, 1, "3333");
+        assertNextEvent(reader, EDIStreamValidationError.INVALID_CODE_VALUE, "S0A", 15, 1, "333");
+
+        assertEquals(EDIStreamEvent.START_TRANSACTION,
+                     reader.next(),
+                     () -> "Expecting start of transaction, got other " + reader.getLocation());
+
+        assertNextEvent(reader, EDIStreamValidationError.DATA_ELEMENT_TOO_LONG, "S0A", 22, 1, "3333");
+        assertNextEvent(reader, EDIStreamValidationError.INVALID_CODE_VALUE, "S0A", 22, 1, "3333");
+        assertNextEvent(reader, EDIStreamValidationError.INVALID_CODE_VALUE, "S0A", 25, 1, "444");
+
+        assertFalse(reader.hasNext(), "Unexpected errors in transaction");
+    }
+
+    void assertNextEvent(EDIStreamReader reader,
+                         EDIStreamValidationError error,
+                         String segTag,
+                         int segPos,
+                         int elePos,
+                         String txt)
+            throws EDIStreamException {
+
+        assertEquals(error.getCategory(), reader.next());
+        assertEquals(error, reader.getErrorType());
+        assertEquals(segTag, reader.getLocation().getSegmentTag());
+        assertEquals(segPos, reader.getLocation().getSegmentPosition());
+        assertEquals(elePos, reader.getLocation().getElementPosition());
+        assertEquals(1, reader.getLocation().getElementOccurrence());
+        assertEquals(-1, reader.getLocation().getComponentPosition());
+        assertEquals(txt, reader.getText());
+    }
 }
