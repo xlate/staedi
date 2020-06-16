@@ -186,11 +186,7 @@ abstract class SchemaReaderBase implements SchemaReader {
         String description = null;
 
         if (qnDescription.equals(element)) {
-            try {
-                description = reader.getElementText();
-            } catch (XMLStreamException xse) {
-                throw schemaException("XMLStreamException reading description", reader, xse);
-            }
+            description = getElementText(reader, "description");
             nextTag(reader, "after description element");
         }
 
@@ -510,18 +506,15 @@ abstract class SchemaReaderBase implements SchemaReader {
 
             if (event == XMLStreamConstants.START_ELEMENT) {
                 if (element.equals(qnPosition)) {
-                    String position = null;
+                    final String position = getElementText(reader, "syntax position");
 
                     try {
-                        position = reader.getElementText();
                         positions.add(Integer.parseInt(position));
-                    } catch (XMLStreamException xse) {
-                        throw schemaException("Exception reading syntax position", reader, xse);
                     } catch (@SuppressWarnings("unused") NumberFormatException e) {
                         throw schemaException("invalid position [" + position + ']', reader);
                     }
                 }
-            } else if (qnSyntax.equals(element)) {
+            } else {
                 endOfSyntax = true;
             }
         }
@@ -532,15 +525,7 @@ abstract class SchemaReaderBase implements SchemaReader {
     ElementType readSimpleType(XMLStreamReader reader) {
         String name = parseAttribute(reader, "name", String::valueOf);
         String code = parseAttribute(reader, "code", String::valueOf, name);
-        String base = parseAttribute(reader, "base", String::valueOf, EDISimpleType.Base.STRING.toString());
-        EDISimpleType.Base intBase = null;
-
-        try {
-            intBase = EDISimpleType.Base.valueOf(base.toUpperCase());
-        } catch (Exception e) {
-            throw schemaException("Invalid element 'type': [" + base + ']', reader, e);
-        }
-
+        Base base = parseAttribute(reader, "base", val -> Base.valueOf(val.toUpperCase()), Base.STRING);
         int number = parseAttribute(reader, "number", Integer::parseInt, -1);
         long minLength = parseAttribute(reader, "minLength", Long::parseLong, 1L);
         long maxLength = parseAttribute(reader, "maxLength", Long::parseLong, 1L);
@@ -562,23 +547,19 @@ abstract class SchemaReaderBase implements SchemaReader {
             if (qnVersion.equals(reader.getName())) {
                 versions = new ArrayList<>();
 
-                while (qnVersion.equals(reader.getName())) {
+                do {
                     versions.add(readSimpleTypeVersion(reader));
-                    nextTag(reader, "reading after elementType version");
-                }
+                } while (nextTag(reader, "reading after elementType version") != XMLStreamConstants.END_ELEMENT);
             } else {
                 versions = Collections.emptyList();
             }
-
-            if (!qnElementType.equals(reader.getName())) {
-                throw unexpectedElement(reader.getName(), reader);
-            }
         }
 
-        return new ElementType(name, intBase, code, number, minLength, maxLength, values, versions);
+        return new ElementType(name, base, code, number, minLength, maxLength, values, versions);
     }
 
     ElementType.Version readSimpleTypeVersion(XMLStreamReader reader) {
+        requireElementStart(qnVersion, reader);
         String minVersion = parseAttribute(reader, "minVersion", String::valueOf, "");
         String maxVersion = parseAttribute(reader, "maxVersion", String::valueOf, "");
         Long minLength = parseAttribute(reader, "minLength", Long::parseLong, null);
@@ -626,11 +607,7 @@ abstract class SchemaReaderBase implements SchemaReader {
             values = new LinkedHashSet<>();
         }
 
-        try {
-            values.add(reader.getElementText());
-        } catch (XMLStreamException xse) {
-            throw schemaException("Exception reading enumeration value", reader, xse);
-        }
+        values.add(getElementText(reader, "enumeration value"));
 
         return values;
     }
@@ -667,6 +644,14 @@ abstract class SchemaReaderBase implements SchemaReader {
             return reader.nextTag();
         } catch (XMLStreamException xse) {
             throw schemaException("XMLStreamException while " + activity, reader, xse);
+        }
+    }
+
+    String getElementText(XMLStreamReader reader, String context) {
+        try {
+            return reader.getElementText();
+        } catch (XMLStreamException xse) {
+            throw schemaException("XMLStreamException reading element text: " + context, reader, xse);
         }
     }
 

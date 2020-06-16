@@ -490,10 +490,8 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
             return endHandler.apply(descr);
         }
 
-        if (nextTag(reader, "reading type implementation end element") == XMLStreamConstants.END_ELEMENT) {
-            return endHandler.apply(descr);
-        } else {
-            throw unexpectedEvent(reader);
-        }
+        nextTag(reader, "reading type implementation end element");
+        requireEvent(XMLStreamConstants.END_ELEMENT, reader);
+        return endHandler.apply(descr);
     }
 }
