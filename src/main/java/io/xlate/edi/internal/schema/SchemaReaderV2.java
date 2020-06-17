@@ -4,7 +4,6 @@ import static io.xlate.edi.internal.schema.StaEDISchemaFactory.unexpectedElement
 
 import java.util.Map;
 
-import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
 import io.xlate.edi.schema.EDISchemaException;
@@ -17,18 +16,13 @@ class SchemaReaderV2 extends SchemaReaderBase implements SchemaReader {
     }
 
     @Override
-    public String getImplementationName() {
-        return null;
-    }
-
-    @Override
     protected void readInclude(XMLStreamReader reader, Map<String, EDIType> types) throws EDISchemaException {
         // Included schema not supported in V2 Schema
         throw unexpectedElement(reader.getName(), reader);
     }
 
     @Override
-    protected void readImplementation(XMLStreamReader reader, Map<String, EDIType> types) throws XMLStreamException {
+    protected void readImplementation(XMLStreamReader reader, Map<String, EDIType> types) {
         // Implementations not supported in V2 Schema
     }
 

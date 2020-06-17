@@ -131,10 +131,11 @@ public class StaEDIStreamReader implements EDIStreamReader {
                 LOGGER.finer(() -> "Done setting control schema: " + getStandard() + ", " + getVersion());
             } catch (EDISchemaException e) {
                 LOGGER.log(Level.WARNING,
-                           String.format("Exception loading controlSchema for standard %s, version %s",
+                           String.format("Exception loading controlSchema for standard %s, version %s: %s",
                                          getStandard(),
                                          Arrays.stream(getVersion()).map(Object::toString)
-                                               .collect(Collectors.joining(", "))),
+                                               .collect(Collectors.joining(", ")),
+                                         e.getMessage()),
                            e);
             }
         }
@@ -335,7 +336,7 @@ public class StaEDIStreamReader implements EDIStreamReader {
         checkTextState();
         final CharBuffer buffer = getBuffer();
 
-        return Arrays.copyOf(buffer.array(), buffer.length()) ;
+        return Arrays.copyOf(buffer.array(), buffer.length());
     }
 
     @Override
@@ -360,7 +361,7 @@ public class StaEDIStreamReader implements EDIStreamReader {
             throw new IndexOutOfBoundsException("length < 0");
         }
         if (length > target.length) {
-            throw new IndexOutOfBoundsException("length ("+length+") > target.length (" + target.length + ")");
+            throw new IndexOutOfBoundsException("length (" + length + ") > target.length (" + target.length + ")");
         }
 
         final CharBuffer buffer = getBuffer();

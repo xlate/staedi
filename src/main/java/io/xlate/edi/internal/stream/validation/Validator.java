@@ -118,9 +118,8 @@ public class Validator {
         }
 
         void nagivateUp(int limit) {
-            if (standard.getDepth() > limit) {
-                standard = UsageNode.getParent(standard);
-            }
+            standard = UsageNode.getParent(standard);
+
             if (impl != null && impl.getDepth() > limit) {
                 impl = UsageNode.getParent(impl);
             }

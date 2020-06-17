@@ -137,16 +137,6 @@ abstract class SchemaReaderBase implements SchemaReader {
     }
 
     @Override
-    public String getInterchangeName() {
-        return StaEDISchema.INTERCHANGE_ID;
-    }
-
-    @Override
-    public String getTransactionName() {
-        return StaEDISchema.TRANSACTION_ID;
-    }
-
-    @Override
     public Map<String, EDIType> readTypes() throws EDISchemaException {
         Map<String, EDIType> types = new HashMap<>(100);
 
@@ -692,6 +682,18 @@ abstract class SchemaReaderBase implements SchemaReader {
         }
     }
 
+    void requireElement(QName element, XMLStreamReader reader) {
+        Integer event = reader.getEventType();
+
+        if (event != XMLStreamConstants.START_ELEMENT && event != XMLStreamConstants.END_ELEMENT) {
+            throw unexpectedEvent(reader);
+        }
+
+        if (!element.equals(reader.getName())) {
+            throw unexpectedElement(reader.getName(), reader);
+        }
+    }
+
     void requireElementStart(QName element, XMLStreamReader reader) {
         Integer event = reader.getEventType();
 
@@ -700,7 +702,7 @@ abstract class SchemaReaderBase implements SchemaReader {
         }
 
         if (!element.equals(reader.getName())) {
-            throw schemaException("Unexpected XML element [" + reader.getName() + "]", reader);
+            throw unexpectedElement(reader.getName(), reader);
         }
     }
 
@@ -734,5 +736,5 @@ abstract class SchemaReaderBase implements SchemaReader {
 
     protected abstract void readInclude(XMLStreamReader reader, Map<String, EDIType> types) throws EDISchemaException;
 
-    protected abstract void readImplementation(XMLStreamReader reader, Map<String, EDIType> types) throws XMLStreamException;
+    protected abstract void readImplementation(XMLStreamReader reader, Map<String, EDIType> types);
 }

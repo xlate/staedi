@@ -60,7 +60,7 @@ class Reference implements EDIReference {
         this.refTag = refTag;
         this.minOccurs = minOccurs;
         this.maxOccurs = maxOccurs;
-        this.versions = Collections.unmodifiableList(new ArrayList<>(versions));;
+        this.versions = Collections.unmodifiableList(new ArrayList<>(versions));
     }
 
     Reference(String refId, String refTag, int minOccurs, int maxOccurs) {

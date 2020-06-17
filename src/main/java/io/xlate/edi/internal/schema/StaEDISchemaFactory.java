@@ -29,7 +29,6 @@ import java.util.logging.Logger;
 import javax.xml.namespace.QName;
 import javax.xml.stream.Location;
 import javax.xml.stream.XMLInputFactory;
-import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
@@ -56,32 +55,24 @@ public class StaEDISchemaFactory implements SchemaFactory {
         readerFactories.put(new QName(XMLNS_V4, SCHEMA_TAG), SchemaReaderV4::new);
     }
 
-    private final Map<String, Object> properties;
     private final Set<String> supportedProperties;
 
     public StaEDISchemaFactory() {
-        properties = new HashMap<>();
+        // Create a `properties` HashMap when supported properties are added
         supportedProperties = new HashSet<>();
     }
 
     @Override
     public Schema createSchema(InputStream stream) throws EDISchemaException {
-        StaEDISchema schema;
+        Map<String, EDIType> types = readSchemaTypes(stream);
 
-        try {
-            SchemaReader schemaReader = readSchema(stream);
-            Map<String, EDIType> types = schemaReader.readTypes();
+        StaEDISchema schema = new StaEDISchema(StaEDISchema.INTERCHANGE_ID,
+                                               StaEDISchema.TRANSACTION_ID,
+                                               StaEDISchema.IMPLEMENTATION_ID);
 
-            schema = new StaEDISchema(schemaReader.getInterchangeName(),
-                                      schemaReader.getTransactionName(),
-                                      schemaReader.getImplementationName());
+        schema.setTypes(types);
 
-            schema.setTypes(types);
-
-            LOGGER.log(Level.FINE, "Schema created, contains {0} types", types.size());
-        } catch (StaEDISchemaReadException e) {
-            throw wrapped(e);
-        }
+        LOGGER.log(Level.FINE, "Schema created, contains {0} types", types.size());
 
         return schema;
     }
@@ -109,17 +100,13 @@ public class StaEDISchemaFactory implements SchemaFactory {
 
     @Override
     public Object getProperty(String name) {
-        if (isPropertySupported(name)) {
-            return properties.get(name);
-        }
+        // When a supported property is added, only get if `isPropertySupported` returns true
         throw new IllegalArgumentException("Unsupported property: " + name);
     }
 
     @Override
     public void setProperty(String name, Object value) {
-        if (isPropertySupported(name)) {
-            properties.put(name, value);
-        }
+        // When a supported property is added, only set if `isPropertySupported` returns true
         throw new IllegalArgumentException("Unsupported property: " + name);
     }
 
@@ -127,24 +114,26 @@ public class StaEDISchemaFactory implements SchemaFactory {
         LOGGER.fine(() -> "Reading schema from URL: " + location);
 
         try (InputStream stream = location.openStream()) {
-            return readSchema(stream).readTypes();
-        } catch (StaEDISchemaReadException e) {
-            throw wrapped(e);
+            return readSchemaTypes(stream);
         } catch (IOException e) {
             throw new EDISchemaException("Unable to read URL stream", e);
         }
     }
 
-    static SchemaReader readSchema(InputStream stream) throws EDISchemaException {
+    static Map<String, EDIType> readSchemaTypes(InputStream stream) throws EDISchemaException {
+        try {
+            return readSchema(stream).readTypes();
+        } catch (StaEDISchemaReadException e) {
+            throw wrapped(e);
+        }
+    }
+
+    private static SchemaReader readSchema(InputStream stream) throws EDISchemaException {
         QName schemaElement;
 
         try {
             LOGGER.fine(() -> "Creating schema from stream");
             XMLStreamReader reader = FACTORY.createXMLStreamReader(stream);
-
-            if (reader.getEventType() != XMLStreamConstants.START_DOCUMENT) {
-                throw unexpectedEvent(reader);
-            }
 
             reader.nextTag();
             schemaElement = reader.getName();
@@ -156,12 +145,10 @@ public class StaEDISchemaFactory implements SchemaFactory {
             throw unexpectedElement(schemaElement, reader);
         } catch (XMLStreamException e) {
             throw new EDISchemaException("Exception checking start of schema XML", e);
-        } catch (StaEDISchemaReadException e) {
-            throw wrapped(e);
         }
     }
 
-    static EDISchemaException wrapped(StaEDISchemaReadException e) {
+    private static EDISchemaException wrapped(StaEDISchemaReadException e) {
         Location errorLocation = e.getLocation();
 
         if (errorLocation != null) {

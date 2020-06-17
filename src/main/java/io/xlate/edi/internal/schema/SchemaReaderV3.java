@@ -2,7 +2,6 @@ package io.xlate.edi.internal.schema;
 
 import static io.xlate.edi.internal.schema.StaEDISchemaFactory.schemaException;
 import static io.xlate.edi.internal.schema.StaEDISchemaFactory.unexpectedElement;
-import static io.xlate.edi.internal.schema.StaEDISchemaFactory.unexpectedEvent;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -23,7 +22,6 @@ import java.util.stream.StreamSupport;
 import javax.xml.namespace.QName;
 import javax.xml.stream.Location;
 import javax.xml.stream.XMLStreamConstants;
-import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
 import io.xlate.edi.internal.schema.implementation.BaseComplexImpl;
@@ -85,11 +83,6 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
     }
 
     @Override
-    public String getImplementationName() {
-        return StaEDISchema.IMPLEMENTATION_ID;
-    }
-
-    @Override
     protected String readReferencedId(XMLStreamReader reader) {
         String id = reader.getAttributeValue(null, "type");
         if (id == null) {
@@ -112,8 +105,8 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
     }
 
     @Override
-    protected void readImplementation(XMLStreamReader reader, Map<String, EDIType> types) throws XMLStreamException {
-        reader.nextTag();
+    protected void readImplementation(XMLStreamReader reader, Map<String, EDIType> types) {
+        nextTag(reader, "reading implementation start");
         QName element = reader.getName();
 
         LoopImplementation impl = readImplementation(reader, element, types);
@@ -206,8 +199,7 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
 
     LoopImplementation readImplementation(XMLStreamReader reader,
                                           QName complexType,
-                                          Map<String, EDIType> types)
-            throws XMLStreamException {
+                                          Map<String, EDIType> types) {
 
         if (!qnImplementation.equals(complexType)) {
             return null;
@@ -222,11 +214,7 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
         return impl;
     }
 
-    LoopImplementation readLoopImplementation(XMLStreamReader reader,
-                                              QName complexType,
-                                              boolean transactionLoop)
-            throws XMLStreamException {
-
+    LoopImplementation readLoopImplementation(XMLStreamReader reader, QName complexType, boolean transactionLoop) {
         List<EDITypeImplementation> sequence = new ArrayList<>();
         String id;
         String typeId;
@@ -234,7 +222,6 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
         int maxOccurs = 0;
         BigDecimal discriminatorAttr = null;
         String title = null;
-        String descr = null;
 
         if (transactionLoop) {
             id = StaEDISchema.IMPLEMENTATION_ID;
@@ -248,50 +235,34 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
             title = parseAttribute(reader, ATTR_TITLE, String::valueOf, null);
         }
 
-        if (reader.nextTag() == XMLStreamConstants.START_ELEMENT) {
-            descr = readImplDescription(reader);
-            readSequence(reader, e -> readLoopSequenceEntry(e, sequence));
-        } else {
-            throw unexpectedEvent(reader);
+        String descr = readDescription(reader);
+        readSequence(reader, e -> readLoopSequenceEntry(e, sequence));
+        nextTag(reader, "reading to end of " + complexType);
+        requireElement(complexType, reader);
+
+        Discriminator disc = null;
+
+        if (discriminatorAttr != null) {
+            SegmentImpl segImpl = (SegmentImpl) sequence.get(0);
+            disc = buildDiscriminator(discriminatorAttr, segImpl.getSequence());
         }
 
-        if (reader.nextTag() == XMLStreamConstants.END_ELEMENT) {
-            QName element = reader.getName();
-
-            if (element.equals(complexType)) {
-                Discriminator disc = null;
-                if (discriminatorAttr != null) {
-                    SegmentImpl segImpl = (SegmentImpl) sequence.get(0);
-                    disc = buildDiscriminator(discriminatorAttr, segImpl.getSequence());
-                }
-
-                return new LoopImpl(minOccurs, maxOccurs, id, typeId, disc, sequence, title, descr);
-            } else {
-                throw unexpectedElement(element, reader);
-            }
-        } else {
-            throw unexpectedEvent(reader);
-        }
+        return new LoopImpl(minOccurs, maxOccurs, id, typeId, disc, sequence, title, descr);
     }
 
     void readLoopSequenceEntry(QName entryName, List<EDITypeImplementation> sequence) {
-        try {
-            if (entryName.equals(qnLoop)) {
-                if (sequence.isEmpty()) {
-                    throw schemaException("segment element must be first child of loop sequence", reader);
-                }
-                LoopImplementation loop = readLoopImplementation(reader, entryName, false);
-                implementedTypes.add(loop);
-                sequence.add(loop);
-            } else if (entryName.equals(qnSegment)) {
-                sequence.add(readSegmentImplementation());
-            } else {
-                throw unexpectedElement(entryName, reader);
+        if (entryName.equals(qnLoop)) {
+            if (sequence.isEmpty()) {
+                throw schemaException("segment element must be first child of loop sequence", reader);
             }
-        } catch (XMLStreamException xse) {
-            throw schemaException("Exception reading loop sequence", reader, xse);
+            LoopImplementation loop = readLoopImplementation(reader, entryName, false);
+            implementedTypes.add(loop);
+            sequence.add(loop);
+        } else if (entryName.equals(qnSegment)) {
+            sequence.add(readSegmentImplementation());
+        } else {
+            throw unexpectedElement(entryName, reader);
         }
-
     }
 
     SegmentImpl readSegmentImplementation() {
@@ -409,23 +380,13 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
     }
 
     void readSequence(XMLStreamReader reader, Consumer<QName> startHandler) {
-        QName element = reader.getName();
+        requireElementStart(qnSequence, reader);
 
-        if (element.equals(qnSequence)) {
-            boolean endOfType = false;
-
-            while (!endOfType) {
-                if (nextTag(reader, "reading sequence") == XMLStreamConstants.START_ELEMENT) {
-                    startHandler.accept(reader.getName());
-                } else {
-                    if (reader.getName().equals(element)) {
-                        endOfType = true;
-                    }
-                }
+        do {
+            if (nextTag(reader, "reading sequence") == XMLStreamConstants.START_ELEMENT) {
+                startHandler.accept(reader.getName());
             }
-        } else {
-            throw unexpectedElement(element, reader);
-        }
+        } while (!reader.getName().equals(qnSequence));
     }
 
     ElementImpl readElementImplementation(XMLStreamReader reader) {
@@ -448,44 +409,17 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
                                                                                   descr)));
     }
 
-    String readImplDescription(XMLStreamReader reader) {
-        QName element = reader.getName();
-        String description = null;
-
-        if (element.equals(qnDescription)) {
-            try {
-                description = reader.getElementText();
-            } catch (XMLStreamException xse) {
-                throw schemaException("XMLStreamException reading description", reader, xse);
-            }
-            nextTag(reader, "after description element");
-        }
-
-        return description;
-    }
-
     <T> T whenExpected(XMLStreamReader reader, QName expected, Supplier<T> supplier) {
-        final QName element = reader.getName();
-
-        if (element.equals(expected)) {
-            return supplier.get();
-        }
-
-        throw unexpectedElement(element, reader);
+        requireElement(expected, reader);
+        return supplier.get();
     }
 
     <T> T readTypeImplementation(XMLStreamReader reader, Runnable contentHandler, Function<String, T> endHandler) {
 
-        String descr = null;
+        String descr = readDescription(reader);
 
-        if (nextTag(reader, "reading type implementation") == XMLStreamConstants.START_ELEMENT) {
-            descr = readImplDescription(reader);
-
-            if (reader.getEventType() == XMLStreamConstants.START_ELEMENT) {
-                contentHandler.run();
-            } else {
-                return endHandler.apply(descr);
-            }
+        if (reader.getEventType() == XMLStreamConstants.START_ELEMENT) {
+            contentHandler.run();
         } else {
             return endHandler.apply(descr);
         }
