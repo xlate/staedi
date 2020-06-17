@@ -77,7 +77,7 @@
           <version>2.22.2</version>
           <configuration>
             <systemPropertyVariables>
-              <java.util.logging.config.file>${build.testOutputDirectory}/logging.properties</java.util.logging.config.file>
+              <java.util.logging.config.file>${project.build.testOutputDirectory}/logging.properties</java.util.logging.config.file>
             </systemPropertyVariables>
             <redirectTestOutputToFile>true</redirectTestOutputToFile>
           </configuration>
