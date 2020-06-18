@@ -82,13 +82,6 @@ class StaEDISchemaFactoryTest {
         assertEquals(StaEDISchema.INTERCHANGE_ID, schema.getStandard().getId(), "Incorrect root id");
     }
 
-    //TODO: no supported properties for now
-    /*@Test
-    void testIsPropertySupported() {
-    	SchemaFactory factory = SchemaFactory.newFactory();
-    	assertTrue("FOO *is* supported", !factory.isPropertySupported("FOO"));
-    }*/
-
     @Test
     void testIsPropertyUnsupported() {
         SchemaFactory factory = SchemaFactory.newFactory();
