@@ -18,7 +18,18 @@ package io.xlate.edi.schema;
 import java.io.InputStream;
 import java.net.URL;
 
+@SuppressWarnings("java:S1214") // Allow constant string value to be used in this interface
 public interface SchemaFactory {
+
+    /**
+     * Property key for a URL (<code>java.lang.String</code> or
+     * <code>java.net.URL</code>) to be used with relative file URLs in
+     * <code>&lt;include schemaLocation="..."&gt;</code> element/attributes
+     * processed by a SchemaFactory. Besides a java.net.URL, any class with a
+     * toString method that returns a valid URL-formated String may be used as
+     * the value for this property.
+     */
+    public static final String SCHEMA_LOCATION_URL_CONTEXT = "io.xlate.edi.schema.SCHEMA_LOCATION_URL_CONTEXT";
 
     /**
      * Create a new instance of the factory. This static method creates a new
@@ -38,13 +49,16 @@ public interface SchemaFactory {
     public abstract Schema createSchema(InputStream stream) throws EDISchemaException;
 
     /**
-     * Retrieve the control schema for the provided standard and version. This method
-     * loads an internal, immutable schema provided by StAEDI.
+     * Retrieve the control schema for the provided standard and version. This
+     * method loads an internal, immutable schema provided by StAEDI.
      *
-     * @param standard the standard, e.g. X12 or EDIFACT
-     * @param version the version of the standard
+     * @param standard
+     *            the standard, e.g. X12 or EDIFACT
+     * @param version
+     *            the version of the standard
      * @return the control schema corresponding to the standard and version
-     * @throws EDISchemaException when the schema can not be loaded.
+     * @throws EDISchemaException
+     *             when the schema can not be loaded.
      *
      * @since 1.5
      */

@@ -16,6 +16,7 @@
 package io.xlate.edi.internal.schema;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -23,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -83,13 +85,28 @@ class StaEDISchemaFactoryTest {
     }
 
     @Test
-    void testIsPropertyUnsupported() {
+    void testIsPropertySupportedTrue() {
+        SchemaFactory factory = SchemaFactory.newFactory();
+        assertTrue(factory.isPropertySupported(SchemaFactory.SCHEMA_LOCATION_URL_CONTEXT));
+    }
+
+    @Test
+    void testIsPropertySupportedFalse() {
         SchemaFactory factory = SchemaFactory.newFactory();
         assertTrue(!factory.isPropertySupported("FOO"), "FOO *is* supported");
     }
 
     @Test
-    void testGetProperty() {
+    void testPropertySupported() throws MalformedURLException {
+        SchemaFactory factory = SchemaFactory.newFactory();
+        URL workDir = new File(System.getProperty("user.dir")).toURI().toURL();
+        // Set to current working directory
+        factory.setProperty(SchemaFactory.SCHEMA_LOCATION_URL_CONTEXT, new File("").toURI().toURL());
+        assertEquals(workDir, factory.getProperty(SchemaFactory.SCHEMA_LOCATION_URL_CONTEXT));
+    }
+
+    @Test
+    void testGetPropertyUnsupported() {
         SchemaFactory factory = SchemaFactory.newFactory();
         assertThrows(IllegalArgumentException.class, () -> factory.getProperty("FOO"));
     }
@@ -194,6 +211,34 @@ class StaEDISchemaFactoryTest {
 
         assertTrue(missingV4.isEmpty(), () -> "V3 schema contains types not in V4: " + missingV4);
         assertTrue(missingV3.isEmpty(), () -> "V4 schema contains types not in V3: " + missingV3);
+    }
+
+    @SuppressWarnings("deprecation")
+    @Test
+    void testCreateSchemaByStreamV4_with_include_relative_equals_V3Schema() throws Exception {
+        SchemaFactory factory = SchemaFactory.newFactory();
+
+        // Reading URL as String
+        factory.setProperty(SchemaFactory.SCHEMA_LOCATION_URL_CONTEXT, new File("src/test/resources/x12/").toURI().toString());
+        Schema schema1 = factory.createSchema(getClass().getResourceAsStream("/x12/IG-999-standard-included-relative.xml"));
+
+        // Reading URL
+        factory.setProperty(SchemaFactory.SCHEMA_LOCATION_URL_CONTEXT, new File("src/test/resources/x12/").toURI().toURL());
+        Schema schema2 = factory.createSchema(getClass().getResourceAsStream("/x12/IG-999-standard-included-relative.xml"));
+
+        factory.setProperty(SchemaFactory.SCHEMA_LOCATION_URL_CONTEXT, null);
+        Schema schema3 = factory.createSchema(getClass().getResourceAsStream("/x12/IG-999.xml"));
+
+        assertNotEquals(schema1, factory);
+        assertNotEquals(factory, schema1);
+
+        assertEquals(schema3, schema1);
+        assertEquals(schema1, schema2);
+
+        assertEquals(schema1.hashCode(), schema2.hashCode());
+        assertEquals(schema2.hashCode(), schema3.hashCode());
+
+        assertEquals(schema3.getMainLoop(), schema1.getStandard());
     }
 
     @Test
