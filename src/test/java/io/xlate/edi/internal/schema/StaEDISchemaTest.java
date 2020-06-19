@@ -20,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.InputStream;
+import java.util.Collections;
 import java.util.Map;
 
 import javax.xml.stream.FactoryConfigurationError;
@@ -48,7 +49,7 @@ class StaEDISchemaTest {
         InputStream schemaStream = getClass().getResourceAsStream("/X12/v00200.xml");
         XMLStreamReader reader = XMLInputFactory.newInstance().createXMLStreamReader(schemaStream);
         reader.nextTag(); // Pass by <schema> element
-        Map<String, EDIType> types = new SchemaReaderV4(reader).readTypes();
+        Map<String, EDIType> types = new SchemaReaderV4(reader, Collections.emptyMap()).readTypes();
         schema.setTypes(types);
 
         assertEquals(EDIType.Type.INTERCHANGE, schema.getType(StaEDISchema.INTERCHANGE_ID).getType());
@@ -60,7 +61,7 @@ class StaEDISchemaTest {
         InputStream schemaStream = getClass().getResourceAsStream("/X12/v00402.xml");
         XMLStreamReader reader = XMLInputFactory.newInstance().createXMLStreamReader(schemaStream);
         reader.nextTag(); // Pass by <schema> element
-        Map<String, EDIType> types = new SchemaReaderV4(reader).readTypes();
+        Map<String, EDIType> types = new SchemaReaderV4(reader, Collections.emptyMap()).readTypes();
         schema.setTypes(types);
 
         assertEquals(EDIType.Type.INTERCHANGE, schema.getType(StaEDISchema.INTERCHANGE_ID).getType());
@@ -72,7 +73,7 @@ class StaEDISchemaTest {
         InputStream schemaStream = getClass().getResourceAsStream("/EDIFACT/CONTRL-v4r02.xml");
         XMLStreamReader reader = XMLInputFactory.newInstance().createXMLStreamReader(schemaStream);
         reader.nextTag(); // Pass by <schema> element
-        Map<String, EDIType> types = new SchemaReaderV3(reader).readTypes();
+        Map<String, EDIType> types = new SchemaReaderV3(reader, Collections.emptyMap()).readTypes();
         schema.setTypes(types);
 
         assertEquals(EDIType.Type.TRANSACTION, schema.getType(StaEDISchema.TRANSACTION_ID).getType());
@@ -87,7 +88,7 @@ class StaEDISchemaTest {
         InputStream schemaStream = getClass().getResourceAsStream("/x12/IG-999-standard-included.xml");
         XMLStreamReader reader = XMLInputFactory.newInstance().createXMLStreamReader(schemaStream);
         reader.nextTag(); // Pass by <schema> element
-        Map<String, EDIType> types = new SchemaReaderV4(reader).readTypes();
+        Map<String, EDIType> types = new SchemaReaderV4(reader, Collections.emptyMap()).readTypes();
         schema.setTypes(types);
 
         assertEquals(EDIType.Type.TRANSACTION, schema.getType(StaEDISchema.TRANSACTION_ID).getType());

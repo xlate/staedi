@@ -18,6 +18,8 @@ package io.xlate.edi.internal.schema;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import io.xlate.edi.schema.EDIComplexType;
 import io.xlate.edi.schema.EDISchemaException;
@@ -38,6 +40,8 @@ public class StaEDISchema implements Schema {
     public static final String ANY_ELEMENT_ID = ID_PREFIX + "ANY_ELEMENT";
     public static final String ANY_COMPOSITE_ID = ID_PREFIX + "ANY_COMPOSITE";
 
+    private volatile Integer hash = null;
+
     final String interchangeName;
     final String transactionStandardName;
     final String implementationName;
@@ -54,6 +58,35 @@ public class StaEDISchema implements Schema {
 
     public StaEDISchema(String interchangeName, String transactionStandardName) {
         this(interchangeName, transactionStandardName, null);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof Schema) {
+            Schema other = (Schema) o;
+
+            // Count the differences of each entry
+            return StreamSupport.stream(spliterator(), false)
+                                .filter(type -> {
+                                    final EDIType otherType = other.getType(type.getId());
+                                    return !type.equals(otherType);
+                                })
+                                .count() == 0;
+        }
+
+        return false;
+    }
+
+    @Override
+    public synchronized int hashCode() {
+        Integer localHash = hash;
+
+        if (localHash == null) {
+            localHash = hash = StreamSupport.stream(spliterator(), false)
+                                            .collect(Collectors.summingInt(EDIType::hashCode));
+        }
+
+        return localHash.intValue();
     }
 
     @Override

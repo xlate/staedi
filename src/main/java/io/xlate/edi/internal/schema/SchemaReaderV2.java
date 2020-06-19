@@ -11,8 +11,8 @@ import io.xlate.edi.schema.EDIType;
 
 class SchemaReaderV2 extends SchemaReaderBase implements SchemaReader {
 
-    public SchemaReaderV2(XMLStreamReader reader) {
-        super(StaEDISchemaFactory.XMLNS_V2, reader);
+    public SchemaReaderV2(XMLStreamReader reader, Map<String, Object> properties) {
+        super(StaEDISchemaFactory.XMLNS_V2, reader, properties);
     }
 
     @Override

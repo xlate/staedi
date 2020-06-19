@@ -22,7 +22,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
+import java.util.function.BiFunction;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -47,24 +47,22 @@ public class StaEDISchemaFactory implements SchemaFactory {
     static final String XMLNS_V3 = "http://xlate.io/EDISchema/v3";
     static final String XMLNS_V4 = "http://xlate.io/EDISchema/v4";
 
-    static final Map<QName, Function<XMLStreamReader, SchemaReader>> readerFactories = new HashMap<>(3);
+    static final Map<QName, BiFunction<XMLStreamReader, Map<String, Object>, SchemaReader>> readerFactories = new HashMap<>(3);
+    static final Set<String> supportedProperties = new HashSet<>();
 
     static {
         readerFactories.put(new QName(XMLNS_V2, SCHEMA_TAG), SchemaReaderV2::new);
         readerFactories.put(new QName(XMLNS_V3, SCHEMA_TAG), SchemaReaderV3::new);
         readerFactories.put(new QName(XMLNS_V4, SCHEMA_TAG), SchemaReaderV4::new);
+
+        supportedProperties.add(SCHEMA_LOCATION_URL_CONTEXT);
     }
 
-    private final Set<String> supportedProperties;
-
-    public StaEDISchemaFactory() {
-        // Create a `properties` HashMap when supported properties are added
-        supportedProperties = new HashSet<>();
-    }
+    private final Map<String, Object> properties = new HashMap<>();
 
     @Override
     public Schema createSchema(InputStream stream) throws EDISchemaException {
-        Map<String, EDIType> types = readSchemaTypes(stream);
+        Map<String, EDIType> types = readSchemaTypes(stream, properties);
 
         StaEDISchema schema = new StaEDISchema(StaEDISchema.INTERCHANGE_ID,
                                                StaEDISchema.TRANSACTION_ID,
@@ -100,35 +98,45 @@ public class StaEDISchemaFactory implements SchemaFactory {
 
     @Override
     public Object getProperty(String name) {
-        // When a supported property is added, only get if `isPropertySupported` returns true
-        throw new IllegalArgumentException("Unsupported property: " + name);
+        if (isPropertySupported(name)) {
+            return properties.get(name);
+        } else {
+            throw new IllegalArgumentException("Unsupported property: " + name);
+        }
     }
 
     @Override
     public void setProperty(String name, Object value) {
-        // When a supported property is added, only set if `isPropertySupported` returns true
-        throw new IllegalArgumentException("Unsupported property: " + name);
+        if (isPropertySupported(name)) {
+            if (value != null) {
+                properties.put(name, value);
+            } else {
+                properties.remove(name);
+            }
+        } else {
+            throw new IllegalArgumentException("Unsupported property: " + name);
+        }
     }
 
-    static Map<String, EDIType> readSchemaTypes(URL location) throws EDISchemaException {
+    static Map<String, EDIType> readSchemaTypes(URL location, Map<String, Object> properties) throws EDISchemaException {
         LOGGER.fine(() -> "Reading schema from URL: " + location);
 
         try (InputStream stream = location.openStream()) {
-            return readSchemaTypes(stream);
+            return readSchemaTypes(stream, properties);
         } catch (IOException e) {
             throw new EDISchemaException("Unable to read URL stream", e);
         }
     }
 
-    static Map<String, EDIType> readSchemaTypes(InputStream stream) throws EDISchemaException {
+    static Map<String, EDIType> readSchemaTypes(InputStream stream, Map<String, Object> properties) throws EDISchemaException {
         try {
-            return readSchema(stream).readTypes();
+            return getReader(stream, properties).readTypes();
         } catch (StaEDISchemaReadException e) {
             throw wrapped(e);
         }
     }
 
-    private static SchemaReader readSchema(InputStream stream) throws EDISchemaException {
+    private static SchemaReader getReader(InputStream stream, Map<String, Object> properties) throws EDISchemaException {
         QName schemaElement;
 
         try {
@@ -139,7 +147,7 @@ public class StaEDISchemaFactory implements SchemaFactory {
             schemaElement = reader.getName();
 
             if (readerFactories.containsKey(schemaElement)) {
-                return readerFactories.get(schemaElement).apply(reader);
+                return readerFactories.get(schemaElement).apply(reader, properties);
             }
 
             throw unexpectedElement(schemaElement, reader);

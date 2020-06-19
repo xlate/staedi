@@ -90,8 +90,9 @@ abstract class SchemaReaderBase implements SchemaReader {
     final Set<QName> references;
 
     protected XMLStreamReader reader;
+    protected Map<String, Object> properties;
 
-    public SchemaReaderBase(String xmlns, XMLStreamReader reader) {
+    public SchemaReaderBase(String xmlns, XMLStreamReader reader, Map<String, Object> properties) {
         this.xmlns = xmlns;
         qnSchema = new QName(xmlns, "schema");
         qnInclude = new QName(xmlns, "include");
@@ -134,6 +135,7 @@ abstract class SchemaReaderBase implements SchemaReader {
         references.add(qnElement);
 
         this.reader = reader;
+        this.properties = properties;
     }
 
     @Override

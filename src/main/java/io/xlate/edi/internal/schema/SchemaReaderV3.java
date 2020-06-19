@@ -73,13 +73,13 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
 
     final ValueSet valueSet = new ValueSet();
 
-    protected SchemaReaderV3(String xmlns, XMLStreamReader reader) {
-        super(xmlns, reader);
+    protected SchemaReaderV3(String xmlns, XMLStreamReader reader, Map<String, Object> properties) {
+        super(xmlns, reader, properties);
         qnImplementation = new QName(xmlns, "implementation");
     }
 
-    public SchemaReaderV3(XMLStreamReader reader) {
-        this(StaEDISchemaFactory.XMLNS_V3, reader);
+    public SchemaReaderV3(XMLStreamReader reader, Map<String, Object> properties) {
+        this(StaEDISchemaFactory.XMLNS_V3, reader, properties);
     }
 
     @Override
