@@ -625,30 +625,24 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
             return;
         }
 
-        if (level >= LEVEL_ELEMENT) {
-            for (int i = 0; i < emptyElements; i++) {
-                write(this.dataElementSeparator);
-            }
-
-            if (unterminatedElement) {
-                write(this.dataElementSeparator);
-            }
-
-            emptyElements = 0;
-            unterminatedElement = false;
-        }
+        writeRequiredSeparator(emptyElements, unterminatedElement, this.dataElementSeparator);
+        emptyElements = 0;
+        unterminatedElement = false;
 
         if (level == LEVEL_COMPONENT) {
-            for (int i = 0; i < emptyComponents; i++) {
-                write(this.componentElementSeparator);
-            }
-
-            if (unterminatedComponent) {
-                write(this.componentElementSeparator);
-            }
-
+            writeRequiredSeparator(emptyComponents, unterminatedComponent, this.componentElementSeparator);
             emptyComponents = 0;
             unterminatedComponent = false;
+        }
+    }
+
+    void writeRequiredSeparator(int emptyCount, boolean unterminated, char separator) throws EDIStreamException {
+        for (int i = 0; i < emptyCount; i++) {
+            write(separator);
+        }
+
+        if (unterminated) {
+            write(separator);
         }
     }
 
