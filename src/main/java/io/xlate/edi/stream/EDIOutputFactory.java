@@ -21,7 +21,22 @@ import javax.xml.stream.XMLStreamWriter;
 
 public abstract class EDIOutputFactory extends PropertySupport {
 
+    /**
+     * <p>When set to true, the EDI output will have a platform specific line
+     * separator written after each segment terminator.
+     *
+     * <p>Default value is false.
+     */
     public static final String PRETTY_PRINT = "io.xlate.edi.stream.PRETTY_PRINT";
+
+    /**
+     * <p>When set to true, empty trailing elements in a segment and empty trailing
+     * components in a composite element will be truncated. I.e, they will not
+     * be written to the output.
+     *
+     * <p>Default value is false.
+     */
+    public static final String TRUNCATE_EMPTY_ELEMENTS = "io.xlate.edi.stream.TRUNCATE_EMPTY_ELEMENTS";
 
     /**
      * Create a new instance of the factory. This static method creates a new
