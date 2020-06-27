@@ -357,24 +357,14 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
                      * a UNA is written first.
                      */
                     dialect = DialectFactory.getDialect(EDIFACTDialect.UNA);
-                    writeString(EDIFACTDialect.UNA);
-                    write(this.componentElementSeparator);
-                    write(this.dataElementSeparator);
-                    write(this.decimalMark);
-                    write(this.releaseIndicator);
-                    write(this.repetitionSeparator);
-                    write(this.segmentTerminator);
+                    writeServiceAdviceString();
                     // Now write the UNB
                     writeString(name);
                 } else {
                     writeString(name);
 
                     if (EDIFACTDialect.UNA.equals(name)) {
-                        write(this.componentElementSeparator);
-                        write(this.dataElementSeparator);
-                        write(this.decimalMark);
-                        write(this.releaseIndicator);
-                        write(this.repetitionSeparator);
+                        writeServiceAdviceCharacters();
                     }
                 }
             } else {
@@ -389,9 +379,31 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         return this;
     }
 
+    void writeServiceAdviceString() throws EDIStreamException {
+        writeString(EDIFACTDialect.UNA);
+        writeServiceAdviceCharacters();
+        writeSegmentTerminator();
+    }
+
+    void writeServiceAdviceCharacters() throws EDIStreamException {
+        write(this.componentElementSeparator);
+        write(this.dataElementSeparator);
+        write(this.decimalMark);
+        write(this.releaseIndicator);
+        write(this.repetitionSeparator);
+    }
+
     private void writeString(String value) throws EDIStreamException {
         for (int i = 0, m = value.length(); i < m; i++) {
             write(value.charAt(i));
+        }
+    }
+
+    void writeSegmentTerminator() throws EDIStreamException {
+        write(this.segmentTerminator);
+
+        if (prettyPrint) {
+            writeString(lineSeparator);
         }
     }
 
@@ -412,10 +424,8 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
             state = State.ELEMENT_END_BINARY;
         }
 
-        write(this.segmentTerminator);
-        if (prettyPrint) {
-            writeString(lineSeparator);
-        }
+        writeSegmentTerminator();
+
         level = LEVEL_INTERCHANGE;
         location.clearSegmentLocations();
         transactionSchemaAllowed = false;
