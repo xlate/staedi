@@ -36,6 +36,7 @@ public class StaEDIOutputFactory extends EDIOutputFactory {
         supportedProperties.add(EDIStreamConstants.Delimiters.DECIMAL);
         supportedProperties.add(EDIStreamConstants.Delimiters.RELEASE);
         supportedProperties.add(PRETTY_PRINT);
+        supportedProperties.add(TRUNCATE_EMPTY_ELEMENTS);
 
         properties.put(PRETTY_PRINT, Boolean.FALSE);
     }

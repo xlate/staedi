@@ -30,8 +30,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.logging.Logger;
 
 import io.xlate.edi.internal.stream.tokenization.CharacterClass;
 import io.xlate.edi.internal.stream.tokenization.CharacterSet;
@@ -56,6 +56,8 @@ import io.xlate.edi.stream.EDIValidationException;
 import io.xlate.edi.stream.Location;
 
 public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, ValidationEventHandler {
+
+    static final Logger LOGGER = Logger.getLogger(StaEDIStreamWriter.class.getName());
 
     private static final int LEVEL_INITIAL = 0;
     private static final int LEVEL_INTERCHANGE = 1;
@@ -93,14 +95,24 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     private char decimalMark;
     private char releaseIndicator;
 
+    private final boolean emptyElementTruncation;
     private final boolean prettyPrint;
     private final String lineSeparator;
+
+    private long elementLength = 0;
+
+    private int emptyElements = 0;
+    private boolean unterminatedElement = false;
+
+    private int emptyComponents = 0;
+    private boolean unterminatedComponent = false;
 
     public StaEDIStreamWriter(OutputStream stream, Charset charset, Map<String, Object> properties) {
         this.stream = stream;
         this.writer = new OutputStreamWriter(stream, charset);
         this.properties = new HashMap<>(properties);
-        this.prettyPrint = property(EDIOutputFactory.PRETTY_PRINT, Boolean::valueOf);
+        this.emptyElementTruncation = booleanValue(properties.get(EDIOutputFactory.TRUNCATE_EMPTY_ELEMENTS));
+        this.prettyPrint = booleanValue(properties.get(EDIOutputFactory.PRETTY_PRINT));
 
         if (prettyPrint) {
             lineSeparator = System.getProperty("line.separator");
@@ -110,13 +122,18 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         this.location = new StaEDIStreamLocation();
     }
 
-    @SuppressWarnings("unchecked")
-    private <T> T property(String key, Function<String, T> converter) {
-        Object prop = properties.get(key);
-        if (prop instanceof String) {
-            return converter.apply((String) prop);
+    boolean booleanValue(Object value) {
+        if (value instanceof Boolean) {
+            return (Boolean) value;
         }
-        return (T) prop;
+        if (value instanceof String) {
+            return Boolean.valueOf(value.toString());
+        }
+        if (value == null) {
+            return false;
+        }
+        LOGGER.warning(() -> "Value [" + value + "] could not be converted to boolean");
+        return false;
     }
 
     private void setupDelimiters() {
@@ -375,6 +392,9 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         }
 
         level = LEVEL_SEGMENT;
+        emptyElements = 0;
+        // Treat the segment tag as an unterminated element that must be closed when element data is encountered
+        unterminatedElement = true;
 
         return this;
     }
@@ -436,10 +456,17 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     @Override
     public EDIStreamWriter writeStartElement() throws EDIStreamException {
         ensureLevel(LEVEL_SEGMENT);
-        write(this.dataElementSeparator);
         level = LEVEL_ELEMENT;
         location.incrementElementPosition();
         elementBuffer.clear();
+        elementLength = 0;
+        emptyComponents = 0;
+        unterminatedComponent = false;
+
+        if (!emptyElementTruncation) {
+            write(this.dataElementSeparator);
+        }
+
         return this;
     }
 
@@ -454,8 +481,13 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     public EDIStreamWriter writeRepeatElement() throws EDIStreamException {
         ensureLevelAtLeast(LEVEL_SEGMENT);
         write(this.repetitionSeparator);
+        // The repetition separator was used instead of the data element separator
+        unterminatedElement = false;
         level = LEVEL_ELEMENT;
         location.incrementElementOccurrence();
+        elementLength = 0;
+        emptyComponents = 0;
+        unterminatedComponent = false;
         return this;
     }
 
@@ -474,6 +506,12 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         location.clearComponentPosition();
         level = LEVEL_SEGMENT;
 
+        if (elementLength > 0) {
+            unterminatedElement = true;
+        } else {
+            emptyElements++;
+        }
+
         if (state == State.ELEMENT_DATA_BINARY) {
             state = State.ELEMENT_END_BINARY;
         }
@@ -489,22 +527,31 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
             throw new IllegalStateException();
         }
 
-        if (LEVEL_COMPOSITE == level) {
+        if (LEVEL_COMPOSITE == level && !emptyElementTruncation) {
             write(this.componentElementSeparator);
         }
 
         level = LEVEL_COMPONENT;
         location.incrementComponentPosition();
         elementBuffer.clear();
+        elementLength = 0;
         return this;
     }
 
     @Override
     public EDIStreamWriter endComponent() throws EDIStreamException {
         ensureLevel(LEVEL_COMPONENT);
+
         if (!atomicElementWrite) {
             validateElement(this.elementBuffer::flip, this.elementBuffer);
         }
+
+        if (elementLength > 0) {
+            unterminatedComponent = true;
+        } else {
+            emptyComponents++;
+        }
+
         level = LEVEL_COMPOSITE;
         return this;
     }
@@ -573,9 +620,43 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         return this;
     }
 
+    void writeRequiredSeparators(int dataLength) throws EDIStreamException {
+        if (dataLength < 1 || !emptyElementTruncation) {
+            return;
+        }
+
+        if (level >= LEVEL_ELEMENT) {
+            for (int i = 0; i < emptyElements; i++) {
+                write(this.dataElementSeparator);
+            }
+
+            if (unterminatedElement) {
+                write(this.dataElementSeparator);
+            }
+
+            emptyElements = 0;
+            unterminatedElement = false;
+        }
+
+        if (level == LEVEL_COMPONENT) {
+            for (int i = 0; i < emptyComponents; i++) {
+                write(this.componentElementSeparator);
+            }
+
+            if (unterminatedComponent) {
+                write(this.componentElementSeparator);
+            }
+
+            emptyComponents = 0;
+            unterminatedComponent = false;
+        }
+    }
+
     @Override
     public EDIStreamWriter writeElementData(CharSequence text) throws EDIStreamException {
         ensureLevelAtLeast(LEVEL_ELEMENT);
+        writeRequiredSeparators(text.length());
+
         for (int i = 0, m = text.length(); i < m; i++) {
             char curr = text.charAt(i);
 
@@ -589,6 +670,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
 
             write(curr);
             elementBuffer.put(curr);
+            elementLength++;
         }
         return this;
     }
@@ -597,6 +679,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     public EDIStreamWriter writeElementData(char[] text, int start, int end) throws EDIStreamException {
         ensureLevelAtLeast(LEVEL_ELEMENT);
         ensureArgs(text.length, start, end);
+        writeRequiredSeparators(end - start);
 
         for (int i = start, m = end; i < m; i++) {
             char curr = text[i];
@@ -605,6 +688,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
             }
             write(curr);
             elementBuffer.put(curr);
+            elementLength++;
         }
 
         return this;
@@ -617,11 +701,14 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         int output;
 
         try {
+            writeRequiredSeparators(binaryStream.available());
+
             flush(); // Write `Writer` buffers to stream before writing binary
 
             while ((output = binaryStream.read()) != -1) {
                 location.incrementOffset(output);
                 stream.write(output);
+                elementLength++;
             }
         } catch (IOException e) {
             throw new EDIStreamException("Exception writing binary element data", location, e);
@@ -635,6 +722,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         ensureLevel(LEVEL_ELEMENT);
         ensureState(State.ELEMENT_DATA_BINARY);
         ensureArgs(binary.length, start, end);
+        writeRequiredSeparators(end - start);
 
         try {
             flush(); // Write `Writer` buffers to stream before writing binary
@@ -642,6 +730,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
             for (int i = start; i < end; i++) {
                 location.incrementOffset(binary[i]);
                 stream.write(binary[i]);
+                elementLength++;
             }
         } catch (IOException e) {
             throw new EDIStreamException("Exception writing binary element data", location, e);
@@ -654,9 +743,11 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     public EDIStreamWriter writeBinaryData(ByteBuffer binary) throws EDIStreamException {
         ensureLevel(LEVEL_ELEMENT);
         ensureState(State.ELEMENT_DATA_BINARY);
+        writeRequiredSeparators(binary.remaining());
 
         while (binary.hasRemaining()) {
             write(binary.get());
+            elementLength++;
         }
 
         return this;

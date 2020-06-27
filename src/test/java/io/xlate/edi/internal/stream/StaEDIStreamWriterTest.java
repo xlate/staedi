@@ -185,7 +185,7 @@ class StaEDIStreamWriterTest {
         writer.writeElement("0");
         writer.writeElement("P");
         EDIStreamException thrown = assertThrows(EDIStreamException.class, () -> writer.writeElement(":"));
-        assertEquals("Unexpected header character: 0x002A [*] in segment ISA at position 1, element 15", thrown.getMessage());
+        assertEquals("Unexpected header character: 0x002A [*] in segment ISA at position 1, element 16", thrown.getMessage());
     }
 
     @Test
@@ -344,6 +344,26 @@ class StaEDIStreamWriterTest {
     }
 
     @Test
+    void testComponent_EmptyTruncated() throws IllegalStateException, EDIStreamException {
+        EDIOutputFactory factory = EDIOutputFactory.newFactory();
+        factory.setProperty(EDIOutputFactory.TRUNCATE_EMPTY_ELEMENTS, true);
+        OutputStream stream = new ByteArrayOutputStream(4096);
+        EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
+        writer.startInterchange();
+        writer.writeStartSegment("ISA");
+        writer.writeStartElement()
+              .startComponent()
+              .endComponent()
+              .startComponent()
+              .endComponent()
+              .endElement()
+              .writeEmptyElement()
+              .writeEndSegment();
+        writer.flush();
+        assertEquals("ISA~", stream.toString());
+    }
+
+    @Test
     void testComponentIllegal() throws IllegalStateException, EDIStreamException {
         EDIOutputFactory factory = EDIOutputFactory.newFactory();
         OutputStream stream = new ByteArrayOutputStream(4096);
@@ -405,6 +425,85 @@ class StaEDIStreamWriterTest {
         writer.writeEndSegment();
         writer.flush();
         assertEquals("ISA*:::~", stream.toString());
+    }
+
+    @Test
+    void testWriteEmptyElements_EmptyTruncated() throws IllegalStateException, EDIStreamException {
+        EDIOutputFactory factory = EDIOutputFactory.newFactory();
+        factory.setProperty(EDIOutputFactory.TRUNCATE_EMPTY_ELEMENTS, true);
+        OutputStream stream = new ByteArrayOutputStream(4096);
+        EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
+        writer.startInterchange();
+        writer.writeStartSegment("ISA");
+        writer.writeStartElement();
+        writer.writeEmptyComponent();
+        writer.writeEmptyComponent();
+        writer.writeEmptyComponent();
+        writer.writeEmptyComponent();
+        writer.endElement();
+        writer.writeEndSegment();
+        writer.flush();
+        assertEquals("ISA~", stream.toString());
+    }
+
+    @Test
+    void testWriteTruncatedElements() throws IllegalStateException, EDIStreamException {
+        EDIOutputFactory factory = EDIOutputFactory.newFactory();
+        factory.setProperty(EDIOutputFactory.TRUNCATE_EMPTY_ELEMENTS, true);
+        OutputStream stream = new ByteArrayOutputStream(4096);
+        EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
+        writer.startInterchange();
+        writer.writeStartSegment("ISA");
+
+        // All components truncated
+        writer.writeStartElement();
+        writer.writeEmptyComponent();
+        writer.writeEmptyComponent();
+        writer.writeEmptyComponent();
+        writer.writeEmptyComponent();
+        writer.endElement();
+
+        // Components after "LAST" truncated
+        writer.writeStartElement();
+        writer.writeEmptyComponent();
+        writer.writeComponent("LAST");
+        writer.writeEmptyComponent();
+        writer.writeEmptyComponent();
+        writer.endElement();
+
+        // All present
+        writer.writeStartElement();
+        writer.writeEmptyComponent();
+        writer.writeEmptyComponent();
+        writer.writeEmptyComponent();
+        writer.writeComponent("LAST");
+        writer.endElement();
+
+        // All present
+        writer.writeStartElement();
+        writer.writeEmptyComponent();
+        writer.writeComponent("SECOND");
+        writer.writeEmptyComponent();
+        writer.writeComponent("LAST");
+        writer.endElement();
+
+        writer.writeEmptyElement();
+        writer.writeEmptyElement();
+
+        writer.writeElement("LAST");
+
+        // All three elements truncated
+        writer.writeEmptyElement();
+        writer.writeStartElement();
+        writer.writeEmptyComponent();
+        writer.writeEmptyComponent();
+        writer.endElement();
+        writer.writeEmptyElement();
+
+        writer.writeEndSegment();
+        writer.flush();
+
+        assertEquals("ISA**:LAST*:::LAST*:SECOND::LAST***LAST~", stream.toString());
     }
 
     @Test
