@@ -20,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.BufferedInputStream;
@@ -44,6 +45,7 @@ import io.xlate.edi.schema.SchemaFactory;
 import io.xlate.edi.stream.EDIInputFactory;
 import io.xlate.edi.stream.EDIOutputFactory;
 import io.xlate.edi.stream.EDIStreamConstants;
+import io.xlate.edi.stream.EDIStreamConstants.Delimiters;
 import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamException;
 import io.xlate.edi.stream.EDIStreamReader;
@@ -51,7 +53,6 @@ import io.xlate.edi.stream.EDIStreamValidationError;
 import io.xlate.edi.stream.EDIStreamWriter;
 import io.xlate.edi.stream.EDIValidationException;
 import io.xlate.edi.stream.Location;
-import io.xlate.edi.stream.EDIStreamConstants.Delimiters;
 
 @SuppressWarnings("resource")
 class StaEDIStreamWriterTest {
@@ -90,6 +91,17 @@ class StaEDIStreamWriterTest {
         OutputStream stream = new ByteArrayOutputStream(1);
         EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
         assertThrows(IllegalArgumentException.class, () -> writer.getProperty(null));
+    }
+
+    @Test
+    void testInvalidBooleanPropertyIsFalse() {
+        EDIOutputFactory factory = EDIOutputFactory.newFactory();
+        factory.setProperty(EDIOutputFactory.TRUNCATE_EMPTY_ELEMENTS, new Object());
+        OutputStream stream = new ByteArrayOutputStream(1);
+        EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
+
+        assertTrue(writer instanceof StaEDIStreamWriter);
+        assertEquals(false, ((StaEDIStreamWriter) writer).emptyElementTruncation);
     }
 
     @Test

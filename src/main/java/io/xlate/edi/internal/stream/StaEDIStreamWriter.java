@@ -95,7 +95,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     private char decimalMark;
     private char releaseIndicator;
 
-    private final boolean emptyElementTruncation;
+    final boolean emptyElementTruncation;
     private final boolean prettyPrint;
     private final String lineSeparator;
 
