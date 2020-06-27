@@ -140,7 +140,7 @@ final class StaEDIXMLStreamWriter implements XMLStreamWriter {
             uri = getNamespaceURI(XMLConstants.DEFAULT_NS_PREFIX);
         }
 
-        if ("INTERCHANGE".equals(local)) {
+        if (INTERCHANGE.getLocalPart().equals(local)) {
             writeStart(INTERCHANGE);
         } else {
             if (uri == null || uri.isEmpty()) {
