@@ -25,7 +25,7 @@ Support is available to assist with incorporating StAEDI into your business's ap
 Please email ***contact at xlate dot io*** for more information.
 
 ## Have a Question?
-If you have a question about StAEDI that may not necessitate then opening of an issue, please head to the StAEDI Gitter channel at https://gitter.im/xlate/staedi to discuss.
+If you have a question about StAEDI that may not require the opening of an issue, please head to the StAEDI Gitter channel at https://gitter.im/xlate/staedi to discuss.
 
 ## Using `EDIStreamReader`
 How to bootstrap the reader:
