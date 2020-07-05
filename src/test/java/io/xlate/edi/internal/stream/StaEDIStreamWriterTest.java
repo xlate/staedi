@@ -1121,6 +1121,7 @@ class StaEDIStreamWriterTest {
 
         Schema control = SchemaUtils.getControlSchema("X12", new String[] { "00501" });
         writer.setControlSchema(control);
+        assertSame(control, writer.getControlSchema());
 
         /*SchemaFactory schemaFactory = SchemaFactory.newFactory();
         Schema transaction = schemaFactory.createSchema(getClass().getResource("/x12/EDISchema997.xml"));

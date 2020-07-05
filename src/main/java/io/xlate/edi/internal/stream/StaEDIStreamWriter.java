@@ -228,6 +228,11 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     }
 
     @Override
+    public Schema getControlSchema() {
+        return this.controlSchema;
+    }
+
+    @Override
     public void setControlSchema(Schema controlSchema) {
         ensureLevel(LEVEL_INITIAL);
         this.controlSchema = controlSchema;

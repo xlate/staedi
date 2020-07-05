@@ -52,6 +52,16 @@ public interface EDIStreamWriter {
     void flush() throws EDIStreamException;
 
     /**
+     * Returns the control schema currently set on the reader. If none has been
+     * set, then null will be returned.
+     *
+     * @return the control schema current set on this reader, may be null
+     *
+     * @since 1.8
+     */
+    Schema getControlSchema();
+
+    /**
      * <p>
      * Sets the schema to be used for validation of the control structure for
      * this stream writer. This schema will be used to validate interchange,
