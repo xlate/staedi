@@ -16,6 +16,17 @@ using a "pull" processing flow for EDI parsing and an emit flow for EDI generati
 - Validation of **industry implementations**, for example HIPAA
 - Read and write EDI data using standard Java XML interfaces (StAX)
 
+## Support
+Support is available to assist with incorporating StAEDI into your business's application. Available services include
+- **Development of EDI validation schemas** using your documentation (e.g. PDF)
+- **Integrating StAEDI** into you Java application
+- **Troubleshooting issues** with your existing integration (not including StAEDI bugs - please open an issue)
+
+Please email ***contact at xlate dot io*** for more information.
+
+## Have a Question?
+If you have a question about StAEDI that may not necessitate then opening of an issue, please head to the StAEDI Gitter channel at https://gitter.im/xlate/staedi to discuss.
+
 ## Using `EDIStreamReader`
 How to bootstrap the reader:
 ```java
