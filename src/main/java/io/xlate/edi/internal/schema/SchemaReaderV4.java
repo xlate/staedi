@@ -19,7 +19,7 @@ public class SchemaReaderV4 extends SchemaReaderV3 {
 
     @Override
     protected String readReferencedId(XMLStreamReader reader) {
-        return reader.getAttributeValue(null, "type");
+        return parseAttribute(reader, "type", String::valueOf);
     }
 
     @Override
