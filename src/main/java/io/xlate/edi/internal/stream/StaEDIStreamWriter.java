@@ -152,8 +152,8 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
                              Delimiters.REPETITION,
                              Delimiters.DECIMAL,
                              Delimiters.RELEASE)
-                .stream()
-                .anyMatch(properties::containsKey);
+                     .stream()
+                     .anyMatch(properties::containsKey);
     }
 
     static char getDelimiter(Map<String, Object> properties, String key, Supplier<Character> defaultSupplier) {
@@ -811,6 +811,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         Validator validator = validator();
 
         if (validator != null) {
+            errors.clear();
             command.accept(validator);
 
             if (!errors.isEmpty()) {
@@ -823,6 +824,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         Validator validator = validator();
 
         if (validator != null) {
+            errors.clear();
             setupCommand.run();
 
             if (!validator.validateElement(dialect, location, data)) {
