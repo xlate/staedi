@@ -35,6 +35,8 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+import javax.xml.stream.XMLStreamException;
+
 import org.junit.jupiter.api.Test;
 
 import io.xlate.edi.schema.EDIComplexType;
@@ -624,6 +626,22 @@ class StaEDISchemaFactoryTest {
 
         Schema schema = factory.createSchema(stream);
         assertNotNull(schema);
+    }
+
+    @Test
+    void testExceptionAtDocumentEnd() throws EDISchemaException {
+        SchemaFactory factory = SchemaFactory.newFactory();
+        InputStream stream = new ByteArrayInputStream((""
+                + "<schema xmlns='" + StaEDISchemaFactory.XMLNS_V4 + "'>"
+                + "  <include schemaLocation='file:./src/test/resources/x12/EDISchema997.xml' />"
+                + "  <elementType name=\"DUMMY\" base=\"string\" maxLength=\"5\" />"
+                + "</schema>"
+                + "</schema>").getBytes());
+
+        EDISchemaException thrown = assertThrows(EDISchemaException.class, () -> factory.createSchema(stream));
+        assertEquals("XMLStreamException reading end of document", thrown.getOriginalMessage());
+        assertTrue(thrown.getCause() instanceof StaEDISchemaReadException);
+        assertTrue(thrown.getCause().getCause() instanceof XMLStreamException);
     }
 
     @Test

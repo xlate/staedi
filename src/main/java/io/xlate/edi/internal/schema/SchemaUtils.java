@@ -18,19 +18,20 @@ package io.xlate.edi.internal.schema;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
+import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.util.Enumeration;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.NavigableMap;
+import java.util.Properties;
+import java.util.TreeMap;
 
 import io.xlate.edi.schema.EDISchemaException;
 import io.xlate.edi.schema.Schema;
 import io.xlate.edi.schema.SchemaFactory;
 import io.xlate.edi.stream.EDIStreamConstants.Standards;
-
-import java.util.NavigableMap;
-import java.util.Properties;
-import java.util.TreeMap;
 
 public class SchemaUtils {
 
@@ -109,8 +110,18 @@ public class SchemaUtils {
     }
 
     private static Schema getXmlSchema(String resource) throws EDISchemaException {
-        SchemaFactory schemaFactory = SchemaFactory.newFactory();
         URL location = getURL(resource);
+        URL locationContext;
+
+        try {
+            locationContext = URI.create(location.toString()).resolve(".").toURL();
+        } catch (MalformedURLException e) {
+            throw new EDISchemaException("Unable to resolve schema location context", e);
+        }
+
+        SchemaFactory schemaFactory = SchemaFactory.newFactory();
+        schemaFactory.setProperty(SchemaFactory.SCHEMA_LOCATION_URL_CONTEXT, locationContext);
+
         return schemaFactory.createSchema(location);
     }
 }

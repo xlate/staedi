@@ -28,6 +28,8 @@ public interface SchemaFactory {
      * processed by a SchemaFactory. Besides a java.net.URL, any class with a
      * toString method that returns a valid URL-formated String may be used as
      * the value for this property.
+     *
+     * @since 1.8
      */
     public static final String SCHEMA_LOCATION_URL_CONTEXT = "io.xlate.edi.schema.SCHEMA_LOCATION_URL_CONTEXT";
 
