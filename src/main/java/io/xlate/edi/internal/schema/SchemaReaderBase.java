@@ -141,10 +141,6 @@ abstract class SchemaReaderBase implements SchemaReader {
     }
 
     @Override
-    public Map<String, EDIType> readTypes() throws EDISchemaException {
-        return readTypes(true);
-    }
-
     public Map<String, EDIType> readTypes(boolean setReferences) throws EDISchemaException {
         Map<String, EDIType> types = new HashMap<>(100);
 
