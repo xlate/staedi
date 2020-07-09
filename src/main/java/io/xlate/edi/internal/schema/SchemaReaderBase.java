@@ -69,6 +69,7 @@ abstract class SchemaReaderBase implements SchemaReader {
     final QName qnInterchange;
     final QName qnGroup;
     final QName qnTransaction;
+    final QName qnImplementation;
     final QName qnLoop;
     final QName qnSegment;
     final QName qnComposite;
@@ -100,6 +101,7 @@ abstract class SchemaReaderBase implements SchemaReader {
         qnInterchange = new QName(xmlns, "interchange");
         qnGroup = new QName(xmlns, "group");
         qnTransaction = new QName(xmlns, "transaction");
+        qnImplementation = new QName(xmlns, "implementation");
         qnLoop = new QName(xmlns, "loop");
         qnSegment = new QName(xmlns, "segment");
         qnComposite = new QName(xmlns, LOCALNAME_COMPOSITE);
@@ -139,34 +141,43 @@ abstract class SchemaReaderBase implements SchemaReader {
     }
 
     @Override
-    public Map<String, EDIType> readTypes() throws EDISchemaException {
+    public Map<String, EDIType> readTypes(boolean setReferences) throws EDISchemaException {
         Map<String, EDIType> types = new HashMap<>(100);
 
         types.put(StaEDISchema.ANY_ELEMENT_ID, ANY_ELEMENT);
         types.put(StaEDISchema.ANY_COMPOSITE_ID, ANY_COMPOSITE);
 
+        nextTag(reader, "advancing to first schema element");
+        QName element = reader.getName();
+
+        while (qnInclude.equals(element)) {
+            readInclude(reader, types);
+            element = reader.getName();
+        }
+
+        if (qnInterchange.equals(element)) {
+            readInterchange(reader, types);
+        } else if (qnTransaction.equals(element)) {
+            readTransaction(reader, types);
+            readImplementation(reader, types);
+        } else if (qnImplementation.equals(element)) {
+            readImplementation(reader, types);
+        } else if (!typeDefinitions.containsKey(reader.getName())) {
+            throw unexpectedElement(element, reader);
+        }
+
+        readTypeDefinitions(reader, types);
+
         try {
-            reader.nextTag();
-            QName element = reader.getName();
-
-            if (qnInclude.equals(element)) {
-                readInclude(reader, types);
-                readImplementation(reader, types);
-            } else if (qnInterchange.equals(element)) {
-                readInterchange(reader, types);
-            } else if (qnTransaction.equals(element)) {
-                readTransaction(reader, types);
-                readImplementation(reader, types);
-            } else {
-                throw unexpectedElement(element, reader);
-            }
-
-            readTypeDefinitions(reader, types);
-            setReferences(types);
             reader.next();
-            requireEvent(XMLStreamConstants.END_DOCUMENT, reader);
         } catch (XMLStreamException xse) {
-            throw schemaException("XMLStreamException reading schema", reader, xse);
+            throw schemaException("XMLStreamException reading end of document", reader, xse);
+        }
+
+        requireEvent(XMLStreamConstants.END_DOCUMENT, reader);
+
+        if (setReferences) {
+            setReferences(types);
         }
 
         return types;
@@ -234,6 +245,7 @@ abstract class SchemaReaderBase implements SchemaReader {
                                                       Collections.emptyList());
 
         types.put(interchange.getId(), interchange);
+        nextTag(reader, "advancing after interchange");
     }
 
     Reference readControlStructure(XMLStreamReader reader,
@@ -299,10 +311,11 @@ abstract class SchemaReaderBase implements SchemaReader {
     void readTransaction(XMLStreamReader reader, Map<String, EDIType> types) {
         QName element = reader.getName();
         types.put(StaEDISchema.TRANSACTION_ID, readComplexType(reader, element, types));
+        nextTag(reader, "seeking next element after transaction");
     }
 
     void readTypeDefinitions(XMLStreamReader reader, Map<String, EDIType> types) {
-        boolean schemaEnd = false;
+        boolean schemaEnd = reader.getName().equals(qnSchema);
 
         // Cursor is already positioned on a type definition (e.g. from an earlier look-ahead)
         if (typeDefinitions.containsKey(reader.getName())
@@ -314,9 +327,7 @@ abstract class SchemaReaderBase implements SchemaReader {
             if (nextTag(reader, "reading schema types") == XMLStreamConstants.START_ELEMENT) {
                 readTypeDefinition(types, reader);
             } else {
-                if (reader.getName().equals(qnSchema)) {
-                    schemaEnd = true;
-                }
+                schemaEnd = reader.getName().equals(qnSchema);
             }
         }
     }

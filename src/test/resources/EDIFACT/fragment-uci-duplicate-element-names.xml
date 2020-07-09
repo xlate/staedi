@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <schema xmlns="http://xlate.io/EDISchema/v3">
+  <!-- v3 required for StaEDISchemaFactoryTest#testDuplicateElementTypeNames -->
   <transaction>
     <sequence>
       <segment type="UCI" minOccurs="1" maxOccurs="1" />

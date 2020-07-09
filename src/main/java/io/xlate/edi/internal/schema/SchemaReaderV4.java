@@ -4,6 +4,7 @@ import static io.xlate.edi.internal.schema.StaEDISchemaFactory.schemaException;
 
 import java.net.URL;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import javax.xml.stream.XMLStreamReader;
 
@@ -13,8 +14,17 @@ import io.xlate.edi.schema.SchemaFactory;
 
 public class SchemaReaderV4 extends SchemaReaderV3 {
 
+    private static final Logger LOGGER = Logger.getLogger(SchemaReaderV4.class.getName());
+
     public SchemaReaderV4(XMLStreamReader reader, Map<String, Object> properties) {
         super(StaEDISchemaFactory.XMLNS_V4, reader, properties);
+    }
+
+    @Override
+    void nameCheck(String name, Map<String, EDIType> types, XMLStreamReader reader) {
+        if (types.containsKey(name)) {
+            LOGGER.fine(() -> "Duplicate type name encountered: [" + name + ']');
+        }
     }
 
     @Override
@@ -44,5 +54,7 @@ public class SchemaReaderV4 extends SchemaReaderV3 {
         } catch (Exception e) {
             throw schemaException("Exception reading included schema", reader, e);
         }
+
+        nextTag(reader, "seeking next element after include");
     }
 }

@@ -7,6 +7,10 @@ import io.xlate.edi.schema.EDIType;
 
 interface SchemaReader {
 
-    Map<String, EDIType> readTypes() throws EDISchemaException;
+    default Map<String, EDIType> readTypes() throws EDISchemaException {
+        return readTypes(true);
+    }
+
+    Map<String, EDIType> readTypes(boolean setReferences) throws EDISchemaException;
 
 }

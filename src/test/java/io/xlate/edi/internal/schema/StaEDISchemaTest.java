@@ -20,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.InputStream;
+import java.net.URL;
 import java.util.Collections;
 import java.util.Map;
 
@@ -33,6 +34,7 @@ import org.junit.jupiter.api.Test;
 import io.xlate.edi.schema.EDIComplexType;
 import io.xlate.edi.schema.EDISchemaException;
 import io.xlate.edi.schema.EDIType;
+import io.xlate.edi.schema.SchemaFactory;
 
 @SuppressWarnings("resource")
 class StaEDISchemaTest {
@@ -44,31 +46,36 @@ class StaEDISchemaTest {
     }
 
     @Test
-    void testRootTypeIsInterchange_00200() throws EDISchemaException, XMLStreamException, FactoryConfigurationError {
+    void testRootTypeIsInterchange_00200() throws Exception {
         StaEDISchema schema = new StaEDISchema(StaEDISchema.INTERCHANGE_ID, StaEDISchema.TRANSACTION_ID);
-        InputStream schemaStream = getClass().getResourceAsStream("/X12/v00200.xml");
-        XMLStreamReader reader = XMLInputFactory.newInstance().createXMLStreamReader(schemaStream);
+        URL schemaLocation = getClass().getResource("/X12/v00200.xml");
+        XMLStreamReader reader = XMLInputFactory.newInstance().createXMLStreamReader(schemaLocation.openStream());
         reader.nextTag(); // Pass by <schema> element
-        Map<String, EDIType> types = new SchemaReaderV4(reader, Collections.emptyMap()).readTypes();
+        Map<String, EDIType> types = new SchemaReaderV4(reader,
+                                                        Collections.singletonMap(SchemaFactory.SCHEMA_LOCATION_URL_CONTEXT,
+                                                                                 schemaLocation.toURI().resolve(".").toURL())).readTypes();
         schema.setTypes(types);
 
         assertEquals(EDIType.Type.INTERCHANGE, schema.getType(StaEDISchema.INTERCHANGE_ID).getType());
     }
 
     @Test
-    void testRootTypeIsInterchange_00402() throws EDISchemaException, XMLStreamException, FactoryConfigurationError {
+    void testRootTypeIsInterchange_00402() throws Exception {
         StaEDISchema schema = new StaEDISchema(StaEDISchema.INTERCHANGE_ID, StaEDISchema.TRANSACTION_ID);
-        InputStream schemaStream = getClass().getResourceAsStream("/X12/v00402.xml");
-        XMLStreamReader reader = XMLInputFactory.newInstance().createXMLStreamReader(schemaStream);
+        URL schemaLocation = getClass().getResource("/X12/v00402.xml");
+        XMLStreamReader reader = XMLInputFactory.newInstance().createXMLStreamReader(schemaLocation.openStream());
         reader.nextTag(); // Pass by <schema> element
-        Map<String, EDIType> types = new SchemaReaderV4(reader, Collections.emptyMap()).readTypes();
+        Map<String, EDIType> types = new SchemaReaderV4(reader,
+                                                        Collections.singletonMap(SchemaFactory.SCHEMA_LOCATION_URL_CONTEXT,
+                                                                                 schemaLocation.toURI().resolve(".").toURL())).readTypes();
         schema.setTypes(types);
 
         assertEquals(EDIType.Type.INTERCHANGE, schema.getType(StaEDISchema.INTERCHANGE_ID).getType());
     }
 
     @Test
-    void testLoadV3TransactionMultipleSyntaxElements_EDIFACT_CONTRL() throws EDISchemaException, XMLStreamException, FactoryConfigurationError {
+    void testLoadV3TransactionMultipleSyntaxElements_EDIFACT_CONTRL()
+            throws EDISchemaException, XMLStreamException, FactoryConfigurationError {
         StaEDISchema schema = new StaEDISchema(StaEDISchema.INTERCHANGE_ID, StaEDISchema.TRANSACTION_ID);
         InputStream schemaStream = getClass().getResourceAsStream("/EDIFACT/CONTRL-v4r02.xml");
         XMLStreamReader reader = XMLInputFactory.newInstance().createXMLStreamReader(schemaStream);

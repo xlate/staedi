@@ -62,7 +62,7 @@ public class StaEDISchemaFactory implements SchemaFactory {
 
     @Override
     public Schema createSchema(InputStream stream) throws EDISchemaException {
-        Map<String, EDIType> types = readSchemaTypes(stream, properties);
+        Map<String, EDIType> types = readSchemaTypes(stream, properties, true);
 
         StaEDISchema schema = new StaEDISchema(StaEDISchema.INTERCHANGE_ID,
                                                StaEDISchema.TRANSACTION_ID,
@@ -122,15 +122,15 @@ public class StaEDISchemaFactory implements SchemaFactory {
         LOGGER.fine(() -> "Reading schema from URL: " + location);
 
         try (InputStream stream = location.openStream()) {
-            return readSchemaTypes(stream, properties);
+            return readSchemaTypes(stream, properties, false);
         } catch (IOException e) {
             throw new EDISchemaException("Unable to read URL stream", e);
         }
     }
 
-    static Map<String, EDIType> readSchemaTypes(InputStream stream, Map<String, Object> properties) throws EDISchemaException {
+    static Map<String, EDIType> readSchemaTypes(InputStream stream, Map<String, Object> properties, boolean setReferences) throws EDISchemaException {
         try {
-            return getReader(stream, properties).readTypes();
+            return getReader(stream, properties).readTypes(setReferences);
         } catch (StaEDISchemaReadException e) {
             throw wrapped(e);
         }

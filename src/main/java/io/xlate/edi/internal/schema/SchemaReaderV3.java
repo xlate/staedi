@@ -52,7 +52,6 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
     private static final String ATTR_DISCRIMINATOR = "discriminator";
     private static final String ATTR_TITLE = "title";
 
-    final QName qnImplementation;
     final Deque<EDITypeImplementation> implementedTypes = new LinkedList<>();
 
     static class ValueSet {
@@ -75,7 +74,6 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
 
     protected SchemaReaderV3(String xmlns, XMLStreamReader reader, Map<String, Object> properties) {
         super(xmlns, reader, properties);
-        qnImplementation = new QName(xmlns, "implementation");
     }
 
     public SchemaReaderV3(XMLStreamReader reader, Map<String, Object> properties) {
@@ -106,12 +104,16 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
 
     @Override
     protected void readImplementation(XMLStreamReader reader, Map<String, EDIType> types) {
-        nextTag(reader, "reading implementation start");
         QName element = reader.getName();
 
-        LoopImplementation impl = readImplementation(reader, element, types);
-        if (impl != null) {
-            types.put(StaEDISchema.IMPLEMENTATION_ID, impl);
+        if (qnImplementation.equals(element)) {
+            LoopImplementation impl = readImplementation(reader, element, types);
+
+            if (impl != null) {
+                types.put(StaEDISchema.IMPLEMENTATION_ID, impl);
+            }
+
+            nextTag(reader, "seeking next element after implementation end");
         }
     }
 
@@ -200,10 +202,6 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
     LoopImplementation readImplementation(XMLStreamReader reader,
                                           QName complexType,
                                           Map<String, EDIType> types) {
-
-        if (!qnImplementation.equals(complexType)) {
-            return null;
-        }
 
         LoopImplementation loop = readLoopImplementation(reader, complexType, true);
         String typeId = StaEDISchema.TRANSACTION_ID;

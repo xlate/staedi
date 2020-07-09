@@ -33,12 +33,16 @@ import java.net.URL;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
+
+import javax.xml.stream.XMLStreamException;
 
 import org.junit.jupiter.api.Test;
 
 import io.xlate.edi.schema.EDIComplexType;
 import io.xlate.edi.schema.EDISchemaException;
+import io.xlate.edi.schema.EDISimpleType;
 import io.xlate.edi.schema.EDIType;
 import io.xlate.edi.schema.Schema;
 import io.xlate.edi.schema.SchemaFactory;
@@ -349,6 +353,35 @@ class StaEDISchemaFactoryTest {
     }
 
     @Test
+    void testDuplicateElementTypeNames_v4_override() throws EDISchemaException {
+        SchemaFactory factory = SchemaFactory.newFactory();
+        InputStream stream = new ByteArrayInputStream((""
+                + "<schema xmlns='" + StaEDISchemaFactory.XMLNS_V4 + "'>"
+                + "<interchange header='SG1' trailer='SG2'>"
+                + "<sequence>"
+                + "  <group header='SG3' trailer='SG4'>"
+                + "    <transaction header='SG5' trailer='SG6'/>"
+                + "  </group>"
+                + "</sequence>"
+                + "</interchange>"
+                + "<elementType name=\"E1\" base=\"string\" minLength='2' maxLength=\"5\" />"
+                + "<segmentType name=\"SG1\"><sequence><element type='E1'/></sequence></segmentType>"
+                + "<segmentType name=\"SG2\"><sequence><element type='E1'/></sequence></segmentType>"
+                + "<segmentType name=\"SG3\"><sequence><element type='E1'/></sequence></segmentType>"
+                + "<segmentType name=\"SG4\"><sequence><element type='E1'/></sequence></segmentType>"
+                + "<segmentType name=\"SG5\"><sequence><element type='E1'/></sequence></segmentType>"
+                + "<elementType name=\"E1\" base=\"string\" minLength='1' maxLength=\"10\" />"
+                + "<segmentType name=\"SG6\"><sequence><element type='E1'/></sequence></segmentType>"
+                + "</schema>").getBytes());
+        Schema schema = factory.createSchema(stream);
+        Stream.of("SG1","SG2","SG3","SG4","SG5","SG6")
+              .forEach(segmentTag -> {
+                  assertEquals(1, ((EDISimpleType) ((EDIComplexType) schema.getType(segmentTag)).getReferences().get(0).getReferencedType()).getMinLength());
+                  assertEquals(10, ((EDISimpleType) ((EDIComplexType) schema.getType(segmentTag)).getReferences().get(0).getReferencedType()).getMaxLength());
+              });
+    }
+
+    @Test
     void testGetControlSchema() throws EDISchemaException {
         SchemaFactory factory = SchemaFactory.newFactory();
         Schema schema = factory.getControlSchema(Standards.X12, new String[] { "00501" });
@@ -624,6 +657,22 @@ class StaEDISchemaFactoryTest {
 
         Schema schema = factory.createSchema(stream);
         assertNotNull(schema);
+    }
+
+    @Test
+    void testExceptionAtDocumentEnd() throws EDISchemaException {
+        SchemaFactory factory = SchemaFactory.newFactory();
+        InputStream stream = new ByteArrayInputStream((""
+                + "<schema xmlns='" + StaEDISchemaFactory.XMLNS_V4 + "'>"
+                + "  <include schemaLocation='file:./src/test/resources/x12/EDISchema997.xml' />"
+                + "  <elementType name=\"DUMMY\" base=\"string\" maxLength=\"5\" />"
+                + "</schema>"
+                + "</schema>").getBytes());
+
+        EDISchemaException thrown = assertThrows(EDISchemaException.class, () -> factory.createSchema(stream));
+        assertEquals("XMLStreamException reading end of document", thrown.getOriginalMessage());
+        assertTrue(thrown.getCause() instanceof StaEDISchemaReadException);
+        assertTrue(thrown.getCause().getCause() instanceof XMLStreamException);
     }
 
     @Test

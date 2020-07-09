@@ -2,6 +2,10 @@ name: StAEDI Build
 
 on:
   push:
+    branches:
+      - master
+    tags:
+      - '**'
     paths-ignore:
       - '.gitignore'
       - '.travis.yml*'

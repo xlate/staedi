@@ -131,7 +131,7 @@
       </annotation>
     </attribute>
 
-    <attributeGroup ref="tns:occursAttributeGroup" />
+    <attributeGroup ref="tns:occursAttributeGroup"/>
   </attributeGroup>
 
   <attributeGroup name="lengthAttributeGroup">
@@ -217,8 +217,8 @@
         <sequence>
           <element name="version" minOccurs="0" maxOccurs="unbounded">
             <complexType>
-              <attributeGroup ref="tns:versionAttributeGroup" />
-              <attributeGroup ref="tns:occursAttributeGroup" />
+              <attributeGroup ref="tns:versionAttributeGroup"/>
+              <attributeGroup ref="tns:occursAttributeGroup"/>
             </complexType>
           </element>
         </sequence>
@@ -247,8 +247,8 @@
         <sequence>
           <element name="version" minOccurs="0" maxOccurs="unbounded">
             <complexType>
-              <attributeGroup ref="tns:versionAttributeGroup" />
-              <attributeGroup ref="tns:occursAttributeGroup" />
+              <attributeGroup ref="tns:versionAttributeGroup"/>
+              <attributeGroup ref="tns:occursAttributeGroup"/>
             </complexType>
           </element>
         </sequence>
@@ -470,8 +470,15 @@
   <element name="schema">
     <complexType>
       <sequence>
-        <choice>
+        <element ref="tns:include" minOccurs="0" maxOccurs="unbounded">
+          <annotation>
+            <documentation>Optional reference to another schema file to include.</documentation>
+          </annotation>
+        </element>
+
+        <choice minOccurs="0">
           <element ref="tns:interchange"/>
+
           <sequence>
             <annotation>
               <documentation>The transaction standard and optional implementation details</documentation>
@@ -479,11 +486,16 @@
             <element ref="tns:transaction"/>
             <element ref="tns:implementation" minOccurs="0"/>
           </sequence>
+
           <sequence>
             <annotation>
-              <documentation>The referenced transaction standard and implementation details</documentation>
+              <documentation>
+                The transaction implementation details. When
+                implementation is used without an associated
+                transaction element, the transaction must
+                have been declared in an 'include'd schema.
+              </documentation>
             </annotation>
-            <element ref="tns:include"/>
             <element ref="tns:implementation"/>
           </sequence>
         </choice>
@@ -585,7 +597,7 @@
                   <element ref="tns:enumeration" minOccurs="0"/>
                 </sequence>
 
-                <attributeGroup ref="tns:versionAttributeGroup" />
+                <attributeGroup ref="tns:versionAttributeGroup"/>
                 <attributeGroup ref="tns:lengthAttributeGroup"/>
               </complexType>
             </element>
