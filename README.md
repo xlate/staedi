@@ -28,8 +28,8 @@ Please email ***contact at xlate dot io*** for more information.
 If you have a question about StAEDI that may not require the opening of an issue, please head to the StAEDI Gitter channel at https://gitter.im/xlate/staedi to discuss.
 
 ## Looking for something more?
-[Fresno](https://www.xlate.io/#fresno) is an integrated EDI validation and transformation engine that supports conversion from EDI to XML and back. Data can be exchanged 
-using files or a REST API, easing integration with existing applications and frameworks. Advanced features include the automatic generation of acknowledgements and tracking 
+[Fresno](https://www.xlate.io/#fresno) is an integrated EDI validation and transformation engine that supports conversion from EDI to XML and back. Data can be exchanged
+using files or a REST API, easing integration with existing applications and frameworks. Advanced features include the automatic generation of acknowledgements and tracking
 acknowledgements for EDI messages sent outbound. Fresno uses the same validation file format that is used in StAEDI.
 
 More information, email subscription, and pricing can be found at [https://www.xlate.io](https://www.xlate.io/#fresno).
@@ -64,7 +64,7 @@ String segmentName = reader.getText();
 <dependency>
   <groupId>io.xlate</groupId>
   <artifactId>staedi</artifactId>
-  <version>1.7.1</version>
+  <version>1.8.0</version>
 </dependency>
 ```
 
