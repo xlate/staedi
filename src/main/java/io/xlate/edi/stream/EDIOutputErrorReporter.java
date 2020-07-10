@@ -22,7 +22,7 @@ public interface EDIOutputErrorReporter {
      * @param data
      *            the invalid data, may be null (e.g. for missing required
      *            element errors)
-     * @param referenceCode
+     * @param code
      *            the reference code for the invalid data, if available from the
      *            current schema used for validation
      */
