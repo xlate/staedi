@@ -215,8 +215,14 @@ public abstract class EDIInputFactory extends PropertySupport {
      * @return the reporter that will be set on any EDIStreamReader created by
      *         this factory instance
      *
+     * @throws ClassCastException
+     *             when reporter is not an instance of EDIReporter
+     *
      * @since 1.4
+     * @deprecated use {@link #getErrorReporter()} instead
      */
+    @SuppressWarnings({ "java:S1123", "java:S1133" })
+    @Deprecated /*(forRemoval = true, since = "1.9")*/
     public abstract EDIReporter getEDIReporter();
 
     /**
@@ -231,6 +237,35 @@ public abstract class EDIInputFactory extends PropertySupport {
      *            the resolver to use to report non fatal errors
      *
      * @since 1.4
+     * @deprecated use {@link #setErrorReporter(EDIInputErrorReporter)} instead
      */
+    @SuppressWarnings({ "java:S1123", "java:S1133" })
+    @Deprecated /*(forRemoval = true, since = "1.9")*/
     public abstract void setEDIReporter(EDIReporter reporter);
+
+    /**
+     * Retrieves the reporter that will be set on any EDIStreamReader created by
+     * this factory instance.
+     *
+     * @return the reporter that will be set on any EDIStreamReader created by
+     *         this factory instance
+     *
+     * @since 1.9
+     */
+    public abstract EDIInputErrorReporter getErrorReporter();
+
+    /**
+     * The reporter that will be set on any EDIStreamReader created by this
+     * factory instance.
+     *
+     * NOTE: When using an EDIReporter, errors found in the data stream that are
+     * reported to the reporter will not appear in the stream of events returned
+     * by the EDIStreamReader.
+     *
+     * @param reporter
+     *            the resolver to use to report non fatal errors
+     *
+     * @since 1.9
+     */
+    public abstract void setErrorReporter(EDIInputErrorReporter reporter);
 }

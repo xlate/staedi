@@ -21,12 +21,15 @@ import java.nio.charset.StandardCharsets;
 
 import javax.xml.stream.XMLStreamWriter;
 
+import io.xlate.edi.stream.EDIOutputErrorReporter;
 import io.xlate.edi.stream.EDIOutputFactory;
 import io.xlate.edi.stream.EDIStreamConstants;
 import io.xlate.edi.stream.EDIStreamException;
 import io.xlate.edi.stream.EDIStreamWriter;
 
 public class StaEDIOutputFactory extends EDIOutputFactory {
+
+    private EDIOutputErrorReporter reporter;
 
     public StaEDIOutputFactory() {
         supportedProperties.add(EDIStreamConstants.Delimiters.SEGMENT);
@@ -43,13 +46,13 @@ public class StaEDIOutputFactory extends EDIOutputFactory {
 
     @Override
     public EDIStreamWriter createEDIStreamWriter(OutputStream stream) {
-        return new StaEDIStreamWriter(stream, StandardCharsets.UTF_8, properties);
+        return new StaEDIStreamWriter(stream, StandardCharsets.UTF_8, properties, reporter);
     }
 
     @Override
     public EDIStreamWriter createEDIStreamWriter(OutputStream stream, String encoding) throws EDIStreamException {
         if (Charset.isSupported(encoding)) {
-            return new StaEDIStreamWriter(stream, Charset.forName(encoding), properties);
+            return new StaEDIStreamWriter(stream, Charset.forName(encoding), properties, reporter);
         }
         throw new EDIStreamException("Unsupported encoding: " + encoding);
     }
@@ -57,5 +60,15 @@ public class StaEDIOutputFactory extends EDIOutputFactory {
     @Override
     public XMLStreamWriter createXMLStreamWriter(EDIStreamWriter writer) {
         return new StaEDIXMLStreamWriter(writer);
+    }
+
+    @Override
+    public EDIOutputErrorReporter getErrorReporter() {
+        return this.reporter;
+    }
+
+    @Override
+    public void setErrorReporter(EDIOutputErrorReporter reporter) {
+        this.reporter = reporter;
     }
 }

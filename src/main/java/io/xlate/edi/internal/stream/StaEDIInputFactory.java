@@ -24,15 +24,15 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
 import io.xlate.edi.schema.Schema;
+import io.xlate.edi.stream.EDIInputErrorReporter;
 import io.xlate.edi.stream.EDIInputFactory;
-import io.xlate.edi.stream.EDIReporter;
 import io.xlate.edi.stream.EDIStreamException;
 import io.xlate.edi.stream.EDIStreamFilter;
 import io.xlate.edi.stream.EDIStreamReader;
 
 public class StaEDIInputFactory extends EDIInputFactory {
 
-    private EDIReporter reporter;
+    private EDIInputErrorReporter reporter;
 
     public StaEDIInputFactory() {
         supportedProperties.add(EDI_VALIDATE_CONTROL_STRUCTURE);
@@ -52,7 +52,7 @@ public class StaEDIInputFactory extends EDIInputFactory {
 
     @Override
     public EDIStreamReader createEDIStreamReader(InputStream stream, Schema schema) {
-        return new StaEDIStreamReader(stream, StandardCharsets.UTF_8, schema, properties, getEDIReporter());
+        return new StaEDIStreamReader(stream, StandardCharsets.UTF_8, schema, properties, getErrorReporter());
     }
 
     @SuppressWarnings("resource")
@@ -61,7 +61,7 @@ public class StaEDIInputFactory extends EDIInputFactory {
         Objects.requireNonNull(stream);
 
         if (Charset.isSupported(encoding)) {
-            return new StaEDIStreamReader(stream, Charset.forName(encoding), schema, properties, getEDIReporter());
+            return new StaEDIStreamReader(stream, Charset.forName(encoding), schema, properties, getErrorReporter());
         }
 
         throw new EDIStreamException("Unsupported encoding: " + encoding);
@@ -78,12 +78,32 @@ public class StaEDIInputFactory extends EDIInputFactory {
     }
 
     @Override
-    public EDIReporter getEDIReporter() {
+    public EDIInputErrorReporter getErrorReporter() {
         return reporter;
     }
 
     @Override
-    public void setEDIReporter(EDIReporter reporter) {
+    public void setErrorReporter(EDIInputErrorReporter reporter) {
         this.reporter = reporter;
+    }
+
+    @Override
+    @SuppressWarnings({ "java:S1123", "java:S1133" })
+    @Deprecated /*(forRemoval = true, since = "1.9")*/
+    public io.xlate.edi.stream.EDIReporter getEDIReporter() {
+        EDIInputErrorReporter errorReporter = getErrorReporter();
+
+        if (errorReporter instanceof io.xlate.edi.stream.EDIReporter) {
+            return (io.xlate.edi.stream.EDIReporter) errorReporter;
+        }
+
+        throw new ClassCastException("Can not cast reporter to EDIReporter; did you mean to call getErrorReporter() ?");
+    }
+
+    @Override
+    @SuppressWarnings({ "java:S1123", "java:S1133" })
+    @Deprecated /*(forRemoval = true, since = "1.9")*/
+    public void setEDIReporter(io.xlate.edi.stream.EDIReporter reporter) {
+        setErrorReporter(reporter);
     }
 }

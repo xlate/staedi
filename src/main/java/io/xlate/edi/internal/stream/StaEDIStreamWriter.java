@@ -46,6 +46,7 @@ import io.xlate.edi.internal.stream.validation.UsageError;
 import io.xlate.edi.internal.stream.validation.Validator;
 import io.xlate.edi.schema.EDIType;
 import io.xlate.edi.schema.Schema;
+import io.xlate.edi.stream.EDIOutputErrorReporter;
 import io.xlate.edi.stream.EDIOutputFactory;
 import io.xlate.edi.stream.EDIStreamConstants.Delimiters;
 import io.xlate.edi.stream.EDIStreamEvent;
@@ -74,6 +75,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     private final OutputStream stream;
     private final OutputStreamWriter writer;
     private final Map<String, Object> properties;
+    private final EDIOutputErrorReporter reporter;
     private Dialect dialect;
 
     private final StaEDIStreamLocation location;
@@ -107,10 +109,11 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     private int emptyComponents = 0;
     private boolean unterminatedComponent = false;
 
-    public StaEDIStreamWriter(OutputStream stream, Charset charset, Map<String, Object> properties) {
+    public StaEDIStreamWriter(OutputStream stream, Charset charset, Map<String, Object> properties, EDIOutputErrorReporter reporter) {
         this.stream = stream;
         this.writer = new OutputStreamWriter(stream, charset);
         this.properties = new HashMap<>(properties);
+        this.reporter = reporter;
         this.emptyElementTruncation = booleanValue(properties.get(EDIOutputFactory.TRUNCATE_EMPTY_ELEMENTS));
         this.prettyPrint = booleanValue(properties.get(EDIOutputFactory.PRETTY_PRINT));
 
@@ -799,12 +802,20 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         copy.setElementOccurrence(repetition);
         copy.setComponentPosition(component);
 
-        errors.add(new EDIValidationException(event, error, copy, data));
+        if (this.reporter != null) {
+            this.reporter.report(error, this, copy, data, referenceCode);
+        } else {
+            errors.add(new EDIValidationException(event, error, copy, data));
+        }
     }
 
     @Override
     public void segmentError(CharSequence token, EDIStreamValidationError error) {
-        errors.add(new EDIValidationException(EDIStreamEvent.SEGMENT_ERROR, error, location, token));
+        if (this.reporter != null) {
+            this.reporter.report(error, this, this.getLocation(), token, token);
+        } else {
+            errors.add(new EDIValidationException(EDIStreamEvent.SEGMENT_ERROR, error, location, token));
+        }
     }
 
     private void validate(Consumer<Validator> command) {
@@ -837,7 +848,9 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
                                  location.getComponentPosition(),
                                  location.getElementOccurrence());
                 }
+            }
 
+            if (!errors.isEmpty()) {
                 throw validationExceptionChain(errors);
             }
 

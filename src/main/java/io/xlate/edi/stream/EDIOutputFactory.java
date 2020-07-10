@@ -22,19 +22,23 @@ import javax.xml.stream.XMLStreamWriter;
 public abstract class EDIOutputFactory extends PropertySupport {
 
     /**
-     * <p>When set to true, the EDI output will have a platform specific line
+     * <p>
+     * When set to true, the EDI output will have a platform specific line
      * separator written after each segment terminator.
      *
-     * <p>Default value is false.
+     * <p>
+     * Default value is false.
      */
     public static final String PRETTY_PRINT = "io.xlate.edi.stream.PRETTY_PRINT";
 
     /**
-     * <p>When set to true, empty trailing elements in a segment and empty trailing
+     * <p>
+     * When set to true, empty trailing elements in a segment and empty trailing
      * components in a composite element will be truncated. I.e, they will not
      * be written to the output.
      *
-     * <p>Default value is false.
+     * <p>
+     * Default value is false.
      */
     public static final String TRUNCATE_EMPTY_ELEMENTS = "io.xlate.edi.stream.TRUNCATE_EMPTY_ELEMENTS";
 
@@ -90,4 +94,30 @@ public abstract class EDIOutputFactory extends PropertySupport {
      * @return a new {@link XMLStreamWriter}
      */
     public abstract XMLStreamWriter createXMLStreamWriter(EDIStreamWriter writer);
+
+    /**
+     * Retrieves the reporter that will be set on any EDIStreamWriter created by
+     * this factory instance.
+     *
+     * @return the reporter that will be set on any EDIStreamWriter created by
+     *         this factory instance
+     *
+     * @since 1.9
+     */
+    public abstract EDIOutputErrorReporter getErrorReporter();
+
+    /**
+     * The reporter that will be set on any EDIStreamWriter created by this
+     * factory instance.
+     *
+     * NOTE: When using an EDIOutputErrorReporter, errors found in the data
+     * stream that are reported to the reporter will not be throw as instances
+     * of {@link EDIValidationException}.
+     *
+     * @param reporter
+     *            the resolver to use to report non fatal errors
+     *
+     * @since 1.9
+     */
+    public abstract void setErrorReporter(EDIOutputErrorReporter reporter);
 }
