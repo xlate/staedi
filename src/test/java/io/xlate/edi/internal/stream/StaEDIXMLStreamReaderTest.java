@@ -792,7 +792,7 @@ class StaEDIXMLStreamReaderTest {
     void testEDIReporterSet() throws Exception {
         EDIInputFactory ediFactory = EDIInputFactory.newFactory();
         Map<String, Set<EDIStreamValidationError>> errors = new LinkedHashMap<>();
-        ediFactory.setEDIReporter((errorEvent, reader) -> {
+        ediFactory.setErrorReporter((errorEvent, reader) -> {
             Location location = reader.getLocation();
             String key;
 

@@ -43,6 +43,7 @@ import io.xlate.edi.schema.EDISchemaException;
 import io.xlate.edi.schema.Schema;
 import io.xlate.edi.schema.SchemaFactory;
 import io.xlate.edi.stream.EDIInputFactory;
+import io.xlate.edi.stream.EDIOutputErrorReporter;
 import io.xlate.edi.stream.EDIOutputFactory;
 import io.xlate.edi.stream.EDIStreamConstants;
 import io.xlate.edi.stream.EDIStreamConstants.Delimiters;
@@ -1113,7 +1114,7 @@ class StaEDIStreamWriterTest {
     }
 
     @Test
-    void testValidatedSegmentTags() throws EDISchemaException, EDIStreamException {
+    void testValidatedSegmentTagsExceptionThrown() throws EDISchemaException, EDIStreamException {
         EDIOutputFactory outputFactory = EDIOutputFactory.newFactory();
         outputFactory.setProperty(EDIOutputFactory.PRETTY_PRINT, true);
         ByteArrayOutputStream result = new ByteArrayOutputStream(16384);
@@ -1122,10 +1123,6 @@ class StaEDIStreamWriterTest {
         Schema control = SchemaUtils.getControlSchema("X12", new String[] { "00501" });
         writer.setControlSchema(control);
         assertSame(control, writer.getControlSchema());
-
-        /*SchemaFactory schemaFactory = SchemaFactory.newFactory();
-        Schema transaction = schemaFactory.createSchema(getClass().getResource("/x12/EDISchema997.xml"));
-        writer.setTransactionSchema(transaction);*/
 
         writer.startInterchange();
         writeHeader(writer);
@@ -1138,6 +1135,70 @@ class StaEDIStreamWriterTest {
     }
 
     @Test
+    void testValidatedSegmentTagsReporterInvoked() throws EDISchemaException, EDIStreamException {
+        StringBuilder actual = new StringBuilder();
+        EDIOutputFactory outputFactory = EDIOutputFactory.newFactory();
+        outputFactory.setProperty(EDIOutputFactory.PRETTY_PRINT, true);
+        outputFactory.setErrorReporter((error, writer, location, data, code) -> {
+            actual.append(String.join("|", String.valueOf(error.getCategory()), String.valueOf(error), String.valueOf(location), data, code));
+        });
+        ByteArrayOutputStream result = new ByteArrayOutputStream(16384);
+        EDIStreamWriter writer = outputFactory.createEDIStreamWriter(result);
+
+        Schema control = SchemaUtils.getControlSchema("X12", new String[] { "00501" });
+        writer.setControlSchema(control);
+        assertSame(control, writer.getControlSchema());
+
+        writer.startInterchange();
+        writeHeader(writer);
+        writer.writeStartSegment("ST");
+        String[] error = actual.toString().split("\\|");
+        assertEquals(EDIStreamEvent.SEGMENT_ERROR.name(), error[0]);
+        assertEquals(EDIStreamValidationError.LOOP_OCCURS_OVER_MAXIMUM_TIMES.name(), error[1]);
+        assertEquals("in segment ST at position 2", error[2]);
+        assertEquals("ST", error[3]);
+        assertEquals("ST", error[4]);
+    }
+
+    @Test
+    void testElementValidationReporterInvoked() throws EDISchemaException, EDIStreamException {
+        List<String> actual = new ArrayList<>();
+        EDIOutputErrorReporter reporter = (error, writer, location, data, code) -> {
+            actual.add(String.join("|", String.valueOf(error.getCategory()), String.valueOf(error), String.valueOf(location), data, code));
+        };
+        EDIOutputFactory outputFactory = EDIOutputFactory.newFactory();
+        outputFactory.setProperty(EDIOutputFactory.PRETTY_PRINT, true);
+        outputFactory.setErrorReporter(reporter);
+        assertSame(reporter, outputFactory.getErrorReporter());
+
+        ByteArrayOutputStream result = new ByteArrayOutputStream(16384);
+        EDIStreamWriter writer = outputFactory.createEDIStreamWriter(result);
+
+        Schema control = SchemaUtils.getControlSchema("X12", new String[] { "00501" });
+        writer.setControlSchema(control);
+
+        writer.startInterchange();
+        writeHeader(writer);
+        writer.writeStartSegment("GS");
+        writer.writeElement("AAA");
+        assertEquals(2, actual.size());
+
+        String[] e1 = actual.get(0).split("\\|");
+        assertEquals(EDIStreamEvent.ELEMENT_DATA_ERROR.name(), e1[0]);
+        assertEquals(EDIStreamValidationError.DATA_ELEMENT_TOO_LONG.name(), e1[1]);
+        assertEquals("in segment GS at position 2, element 1", e1[2]);
+        assertEquals("AAA", e1[3]);
+        assertEquals("479", e1[4]);
+
+        String[] e2 = actual.get(1).split("\\|");
+        assertEquals(EDIStreamEvent.ELEMENT_DATA_ERROR.name(), e2[0]);
+        assertEquals(EDIStreamValidationError.INVALID_CODE_VALUE.name(), e2[1]);
+        assertEquals("in segment GS at position 2, element 1", e2[2]);
+        assertEquals("AAA", e2[3]);
+        assertEquals("479", e2[4]);
+    }
+
+    @Test
     void testElementValidationThrown() throws EDISchemaException, EDIStreamException {
         EDIOutputFactory outputFactory = EDIOutputFactory.newFactory();
         outputFactory.setProperty(EDIOutputFactory.PRETTY_PRINT, true);
@@ -1146,10 +1207,6 @@ class StaEDIStreamWriterTest {
 
         Schema control = SchemaUtils.getControlSchema("X12", new String[] { "00501" });
         writer.setControlSchema(control);
-
-        /*SchemaFactory schemaFactory = SchemaFactory.newFactory();
-        Schema transaction = schemaFactory.createSchema(getClass().getResource("/x12/EDISchema997.xml"));
-        writer.setTransactionSchema(transaction);*/
 
         writer.startInterchange();
         writeHeader(writer);

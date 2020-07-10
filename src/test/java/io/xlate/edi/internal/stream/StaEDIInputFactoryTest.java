@@ -18,16 +18,19 @@ package io.xlate.edi.internal.stream;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.InputStream;
 
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 import io.xlate.edi.schema.EDISchemaException;
 import io.xlate.edi.schema.Schema;
 import io.xlate.edi.schema.SchemaFactory;
+import io.xlate.edi.stream.EDIInputErrorReporter;
 import io.xlate.edi.stream.EDIInputFactory;
 import io.xlate.edi.stream.EDIStreamException;
 import io.xlate.edi.stream.EDIStreamReader;
@@ -113,5 +116,25 @@ class StaEDIInputFactoryTest {
     void testSetPropertyUnsupported() {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         assertThrows(IllegalArgumentException.class, () -> factory.setProperty("FOO", null));
+    }
+
+    @SuppressWarnings("deprecation")
+    @Test
+    void testDeprecatedReporterMethodUsesDeprecatedType() {
+        io.xlate.edi.stream.EDIReporter deprecatedReporter = Mockito.mock(io.xlate.edi.stream.EDIReporter.class);
+        EDIInputFactory factory = EDIInputFactory.newFactory();
+        factory.setEDIReporter(deprecatedReporter);
+        assertSame(deprecatedReporter, factory.getErrorReporter());
+        assertSame(deprecatedReporter, factory.getEDIReporter());
+    }
+
+    @SuppressWarnings("deprecation")
+    @Test
+    void testDeprecatedReporterMethodThrowsException() {
+        EDIInputErrorReporter reporter = Mockito.mock(EDIInputErrorReporter.class);
+        EDIInputFactory factory = EDIInputFactory.newFactory();
+        factory.setErrorReporter(reporter);
+        assertSame(reporter, factory.getErrorReporter());
+        assertThrows(ClassCastException.class, () -> factory.getEDIReporter());
     }
 }

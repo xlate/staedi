@@ -34,8 +34,8 @@ import io.xlate.edi.internal.stream.tokenization.Lexer;
 import io.xlate.edi.internal.stream.tokenization.ProxyEventHandler;
 import io.xlate.edi.schema.EDISchemaException;
 import io.xlate.edi.schema.Schema;
+import io.xlate.edi.stream.EDIInputErrorReporter;
 import io.xlate.edi.stream.EDIInputFactory;
-import io.xlate.edi.stream.EDIReporter;
 import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamException;
 import io.xlate.edi.stream.EDIStreamReader;
@@ -48,7 +48,7 @@ public class StaEDIStreamReader implements EDIStreamReader {
 
     private Schema controlSchema;
     private final Map<String, Object> properties;
-    private final EDIReporter reporter;
+    private final EDIInputErrorReporter reporter;
     private final StaEDIStreamLocation location = new StaEDIStreamLocation();
     private final ProxyEventHandler proxy;
     private final Lexer lexer;
@@ -61,7 +61,7 @@ public class StaEDIStreamReader implements EDIStreamReader {
             Charset charset,
             Schema schema,
             Map<String, Object> properties,
-            EDIReporter reporter) {
+            EDIInputErrorReporter reporter) {
 
         this.controlSchema = schema;
         this.properties = new HashMap<>(properties);
