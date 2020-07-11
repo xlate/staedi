@@ -193,8 +193,13 @@ class UsageNode {
         return usageCount > link.getMaxOccurs(version);
     }
 
-    boolean isNodeType(EDIType.Type type) {
-        return link.getReferencedType().isType(type);
+    boolean isNodeType(EDIType.Type... types) {
+        for (EDIType.Type type : types) {
+            if (link.getReferencedType().isType(type)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     EDIType.Type getNodeType() {
