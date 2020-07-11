@@ -35,10 +35,16 @@ abstract class SyntaxValidatorTestBase {
 
     protected UsageNode mockUsageNode(String referenceCode, boolean used, int index) {
         UsageNode node = mock(UsageNode.class);
-        when(node.getCode()).thenReturn(referenceCode);
+        EDIReference typeReference = mock(EDIReference.class);
+        EDIType type = mock(EDIType.class);
+
+        when(type.getCode()).thenReturn(referenceCode);
+        when(typeReference.getReferencedType()).thenReturn(type);
+        when(node.getLink()).thenReturn(typeReference);
         when(node.isUsed()).thenReturn(used);
         when(node.getParent()).thenReturn(structure);
         when(node.getIndex()).thenReturn(index);
+
         return node;
     }
 

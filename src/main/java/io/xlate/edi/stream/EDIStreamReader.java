@@ -21,7 +21,10 @@ import java.io.InputStream;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
+import io.xlate.edi.schema.EDIReference;
+import io.xlate.edi.schema.EDIType;
 import io.xlate.edi.schema.Schema;
+import io.xlate.edi.schema.implementation.EDITypeImplementation;
 
 public interface EDIStreamReader extends Closeable, EDIStreamConstants {
 
@@ -122,6 +125,62 @@ public interface EDIStreamReader extends Closeable, EDIStreamConstants {
      *             start of an interchange
      */
     String[] getVersion();
+
+    /**
+     * Get the transaction version declared on the transaction header segment or
+     * the functional group header segment (X12 only). Calls to this method are
+     * only valid when interchange type has been determined, after
+     * START_INTERCHANGE, and the transaction version has been determined by
+     * reading the dialect-specific data elements containing the version
+     * value(s).
+     *
+     * The elements of the returned array are defined as:
+     * <ol>
+     * <li>Agency code
+     * <li>Version
+     * <li>Release
+     * <li>Industry code
+     * </ol>
+     *
+     * In practice, the values will be the following elements:
+     * <p>
+     * For EDIFACT:
+     * <ol>
+     * <li>Agency code: UNH02-4
+     * <li>Version: UNH02-2
+     * <li>Release: UNH02-3
+     * <li>Industry code: UNH02-5
+     * </ol>
+     * <p>
+     * For X12:
+     * <ol>
+     * <li>Agency code: GS07
+     * <li>Version/Release/Industry code: GS08 (or ST03, when used)
+     * </ol>
+     *
+     * @return the transaction version
+     * @throws IllegalStateException
+     *             when the version has not yet been determined, prior to the
+     *             start of a transaction (or functional group when in use)
+     *
+     * @since 1.9
+     */
+    String[] getTransactionVersion();
+
+    /**
+     * The transaction version string elements as a single, period-delimited
+     * value. This value may be used to obtain version-specific schema
+     * information available from the {@link EDIReference} returned from
+     * {@link #getSchemaTypeReference()}.
+     *
+     * @return the transaction version as a single, period-delimited value
+     * @throws IllegalStateException
+     *             when the version has not yet been determined, prior to the
+     *             start of a transaction (or functional group when in use)
+     *
+     * @since 1.9
+     */
+    String getTransactionVersionString();
 
     /**
      * Returns the control schema currently set on the reader. If none has been
@@ -359,4 +418,19 @@ public interface EDIStreamReader extends Closeable, EDIStreamConstants {
      *             binary data element immediately preceding this call.
      */
     InputStream getBinaryData();
+
+    /**
+     * Returns an {@link EDIReference} for the schema type at the current point
+     * in the reader's input stream. Information such as minimum and maximum
+     * occurrences, as well as the {@link EDIType} may be obtained from the
+     * reference. If the reader is utilizing an implementation schema and the
+     * current schema type is an implemented type, the returned reference will
+     * be an {@link EDITypeImplementation}.
+     *
+     * @return an {@link EDIReference} for the schema type at the current point
+     *         in the reader's input stream
+     *
+     * @since 1.9
+     */
+    EDIReference getSchemaTypeReference();
 }

@@ -134,13 +134,13 @@ class UsageNode {
         return link.getReferencedType().getId();
     }
 
-    String getCode() {
+    /*String getCode() {
         if (link instanceof EDITypeImplementation) {
             return ((EDITypeImplementation) link).getCode();
         }
 
         return link.getReferencedType().getCode();
-    }
+    }*/
 
     EDISimpleType getSimpleType() {
         if (link instanceof EDISimpleType) {

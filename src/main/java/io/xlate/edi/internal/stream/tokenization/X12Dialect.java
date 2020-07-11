@@ -239,7 +239,7 @@ public class X12Dialect implements Dialect {
 
     @Override
     public String[] getTransactionVersion() {
-        return transactionVersion;
+        return transactionVersionString.isEmpty() ? null : transactionVersion;
     }
 
     @Override

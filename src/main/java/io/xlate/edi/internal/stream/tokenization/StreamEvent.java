@@ -4,13 +4,15 @@ import java.nio.CharBuffer;
 
 import io.xlate.edi.internal.stream.CharArraySequence;
 import io.xlate.edi.internal.stream.StaEDIStreamLocation;
+import io.xlate.edi.schema.EDIReference;
+import io.xlate.edi.schema.implementation.EDITypeImplementation;
 import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamValidationError;
 import io.xlate.edi.stream.Location;
 
 public class StreamEvent {
 
-    private static final String TOSTRING_FORMAT = "type: %s, error: %s, data: %s, referenceCode: %s, location: { %s }";
+    private static final String TOSTRING_FORMAT = "type: %s, error: %s, data: %s, typeReference: %s, location: { %s }";
 
     EDIStreamEvent type;
     EDIStreamValidationError errorType;
@@ -18,14 +20,13 @@ public class StreamEvent {
     CharBuffer data;
     boolean dataNull = true;
 
-    CharBuffer referenceCode;
-    boolean referenceCodeNull = true;
+    EDIReference typeReference;
 
     StaEDIStreamLocation location;
 
     @Override
     public String toString() {
-        return String.format(TOSTRING_FORMAT, type, errorType, data, referenceCode, location);
+        return String.format(TOSTRING_FORMAT, type, errorType, data, typeReference, location);
     }
 
     public EDIStreamEvent getType() {
@@ -48,22 +49,24 @@ public class StreamEvent {
         }
     }
 
-    public CharSequence getReferenceCode() {
-        return referenceCodeNull ? null : referenceCode;
-    }
-
-    public String getReferenceCodeString() {
-        return referenceCodeNull ? null : referenceCode.toString();
-    }
-
-    public void setReferenceCode(CharSequence referenceCode) {
-        this.referenceCodeNull = (referenceCode == null);
-
-        if (!this.referenceCodeNull) {
-            this.referenceCode = put(this.referenceCode, referenceCode);
-        } else {
-            this.referenceCode = put(this.referenceCode, "");
+    public String getReferenceCode() {
+        if (typeReference instanceof EDITypeImplementation) {
+            return ((EDITypeImplementation) typeReference).getCode();
         }
+
+        if (typeReference != null) {
+            return typeReference.getReferencedType().getCode();
+        }
+
+        return null;
+    }
+
+    public EDIReference getTypeReference() {
+        return typeReference;
+    }
+
+    public void setTypeReference(EDIReference typeReference) {
+        this.typeReference = typeReference;
     }
 
     public Location getLocation() {

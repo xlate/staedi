@@ -32,6 +32,7 @@ import io.xlate.edi.internal.schema.SchemaUtils;
 import io.xlate.edi.internal.stream.tokenization.Dialect;
 import io.xlate.edi.internal.stream.tokenization.Lexer;
 import io.xlate.edi.internal.stream.tokenization.ProxyEventHandler;
+import io.xlate.edi.schema.EDIReference;
 import io.xlate.edi.schema.EDISchemaException;
 import io.xlate.edi.schema.Schema;
 import io.xlate.edi.stream.EDIInputErrorReporter;
@@ -79,6 +80,12 @@ public class StaEDIStreamReader implements EDIStreamReader {
     private void ensureIncomplete() {
         if (complete) {
             throw new NoSuchElementException("Reader is complete");
+        }
+    }
+
+    void ensureTransactionVersionAvailable() {
+        if (lexer.getDialect() == null || lexer.getDialect().getTransactionVersion() == null) {
+            throw new IllegalStateException("transaction version not accessible");
         }
     }
 
@@ -248,6 +255,18 @@ public class StaEDIStreamReader implements EDIStreamReader {
         }
 
         return lexer.getDialect().getVersion();
+    }
+
+    @Override
+    public String[] getTransactionVersion() {
+        ensureTransactionVersionAvailable();
+        return lexer.getDialect().getTransactionVersion();
+    }
+
+    @Override
+    public String getTransactionVersionString() {
+        ensureTransactionVersionAvailable();
+        return lexer.getDialect().getTransactionVersionString();
     }
 
     @Override
@@ -431,6 +450,11 @@ public class StaEDIStreamReader implements EDIStreamReader {
         }
 
         return proxy.getBinary();
+    }
+
+    @Override
+    public EDIReference getSchemaTypeReference() {
+        return proxy.getSchemaTypeReference();
     }
 
     /**************************************************************************/

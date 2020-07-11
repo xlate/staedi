@@ -1,19 +1,20 @@
 package io.xlate.edi.internal.stream.tokenization;
 
+import io.xlate.edi.schema.EDIReference;
 import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamValidationError;
 
 public interface ValidationEventHandler {
 
-    void loopBegin(CharSequence id);
+    void loopBegin(EDIReference typeReference);
 
-    void loopEnd(CharSequence id);
+    void loopEnd(EDIReference typeReference);
 
-    void segmentError(CharSequence token, EDIStreamValidationError error);
+    void segmentError(CharSequence token, EDIReference typeReference, EDIStreamValidationError error);
 
     void elementError(EDIStreamEvent event,
                       EDIStreamValidationError error,
-                      CharSequence referenceCode,
+                      EDIReference typeReference,
                       CharSequence text,
                       int element,
                       int component,

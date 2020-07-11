@@ -2,8 +2,8 @@ package io.xlate.edi.internal.stream.validation;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.matches;
 import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
@@ -16,6 +16,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.stubbing.Answer;
 
+import io.xlate.edi.schema.EDIReference;
 import io.xlate.edi.schema.EDISyntaxRule.Type;
 import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamValidationError;
@@ -46,7 +47,7 @@ class RequiredSyntaxValidatorTest extends SyntaxValidatorTestBase {
         }).when(handler)
           .elementError(eq(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR),
                         eq(EDIStreamValidationError.CONDITIONAL_REQUIRED_DATA_ELEMENT_MISSING),
-                        nullable(CharSequence.class),
+                        nullable(EDIReference.class),
                         nullable(CharSequence.class),
                         any(Integer.class),
                         any(Integer.class),
@@ -72,7 +73,7 @@ class RequiredSyntaxValidatorTest extends SyntaxValidatorTestBase {
         }).when(handler)
           .elementError(eq(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR),
                         eq(EDIStreamValidationError.CONDITIONAL_REQUIRED_DATA_ELEMENT_MISSING),
-                        matches("E00[13-4]"),
+                        argThat(arg -> arg.getReferencedType().getCode().matches("E00[13-4]")),
                         nullable(CharSequence.class),
                         any(Integer.class),
                         any(Integer.class),
@@ -97,7 +98,7 @@ class RequiredSyntaxValidatorTest extends SyntaxValidatorTestBase {
         }).when(handler)
           .elementError(eq(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR),
                         eq(EDIStreamValidationError.CONDITIONAL_REQUIRED_DATA_ELEMENT_MISSING),
-                        nullable(CharSequence.class),
+                        nullable(EDIReference.class),
                         nullable(CharSequence.class),
                         any(Integer.class),
                         any(Integer.class),
@@ -123,7 +124,7 @@ class RequiredSyntaxValidatorTest extends SyntaxValidatorTestBase {
         }).when(handler)
           .elementError(eq(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR),
                         eq(EDIStreamValidationError.CONDITIONAL_REQUIRED_DATA_ELEMENT_MISSING),
-                        nullable(CharSequence.class),
+                        nullable(EDIReference.class),
                         nullable(CharSequence.class),
                         any(Integer.class),
                         any(Integer.class),

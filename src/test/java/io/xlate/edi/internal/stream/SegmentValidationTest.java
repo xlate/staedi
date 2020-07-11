@@ -500,7 +500,8 @@ class SegmentValidationTest {
         // Standard Loop L0000 may only occur 5 times
         assertEquals(EDIStreamEvent.SEGMENT_ERROR, reader.next());
         assertEquals(EDIStreamValidationError.LOOP_OCCURS_OVER_MAXIMUM_TIMES, reader.getErrorType());
-        assertEquals("S11", reader.getReferenceCode());
+        assertEquals("S11", reader.getText());
+        assertEquals("L0000", reader.getReferenceCode());
 
         assertEquals(EDIStreamEvent.END_LOOP, reader.next());
         assertEquals("0000D", reader.getReferenceCode());
@@ -629,7 +630,8 @@ class SegmentValidationTest {
 
         assertEquals(EDIStreamEvent.SEGMENT_ERROR, reader.next());
         assertEquals(EDIStreamValidationError.IMPLEMENTATION_SEGMENT_BELOW_MINIMUM_USE, reader.getErrorType());
-        assertEquals("S31", reader.getReferenceCode());
+        assertEquals("S31", reader.getText());
+        assertEquals("S31B", reader.getReferenceCode());
 
         assertEquals(EDIStreamEvent.END_LOOP, reader.next());
         assertEquals("0002AYY", reader.getReferenceCode());
