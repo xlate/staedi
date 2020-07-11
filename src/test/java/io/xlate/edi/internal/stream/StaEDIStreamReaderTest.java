@@ -1112,4 +1112,81 @@ class StaEDIStreamReaderTest implements ConstantsTest {
 
         assertNull(thrown);
     }
+
+    @Test
+    void testX12TransactionVersionRetrieval() throws EDIStreamException, IOException {
+        ByteArrayInputStream stream = new ByteArrayInputStream((""
+                + "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *200711*0100*U*00401*000000001*0*T*:~"
+                + "GS*FA*ReceiverDept*SenderDept*20200711*010015*1*X*005010~"
+                + "ST*997*0001*005010X230~"
+                + "SE*2*0001~"
+                + "GE*1*1~"
+                + "IEA*1*000000001~").getBytes());
+
+        EDIInputFactory factory = EDIInputFactory.newFactory();
+        EDIStreamReader reader = factory.createEDIStreamReader(stream);
+        Exception thrown = null;
+
+        Map<String, String[]> segmentEndVersions = new HashMap<>(2);
+        Map<String, String> segmentEndVersionStrings = new HashMap<>(2);
+        Exception initThrown = null;
+        Exception gsStartThrown = null;
+        Exception ieaStartThrown = null;
+
+        try {
+            initThrown = assertThrows(IllegalStateException.class, () -> reader.getTransactionVersionString());
+
+            while (reader.hasNext()) {
+                try {
+                    switch (reader.next()) {
+                    case START_SEGMENT:
+                        if ("GS".equals(reader.getText())) {
+                            gsStartThrown = assertThrows(IllegalStateException.class, () -> reader.getTransactionVersionString());
+                        }
+                        if ("IEA".equals(reader.getText())) {
+                            ieaStartThrown = assertThrows(IllegalStateException.class, () -> reader.getTransactionVersionString());
+                        }
+
+                        break;
+
+                    case END_SEGMENT:
+                        switch (reader.getText()) {
+                        case "GS":
+                        case "ST":
+                            segmentEndVersions.put(reader.getText(), reader.getTransactionVersion());
+                            segmentEndVersionStrings.put(reader.getText(), reader.getTransactionVersionString());
+                            break;
+                        default:
+                            break;
+                        }
+
+                        break;
+                    default:
+                        break;
+                    }
+                } catch (Exception e) {
+                    thrown = e;
+                    break;
+                }
+            }
+        } finally {
+            reader.close();
+        }
+
+        assertNull(thrown);
+        assertNotNull(initThrown);
+        assertEquals("transaction version not accessible", initThrown.getMessage());
+        assertNotNull(gsStartThrown);
+        assertEquals("transaction version not accessible", gsStartThrown.getMessage());
+        assertNotNull(ieaStartThrown);
+        assertEquals("transaction version not accessible", ieaStartThrown.getMessage());
+
+        assertEquals(2, segmentEndVersions.size());
+        assertArrayEquals(new String[] { "X", "005010" },  segmentEndVersions.get("GS"));
+        assertArrayEquals(new String[] { "X", "005010X230" },  segmentEndVersions.get("ST"));
+
+        assertEquals(2, segmentEndVersionStrings.size());
+        assertEquals("X.005010",  segmentEndVersionStrings.get("GS"));
+        assertEquals("X.005010X230",  segmentEndVersionStrings.get("ST"));
+    }
 }

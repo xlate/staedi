@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -83,9 +84,9 @@ public class StaEDIStreamReader implements EDIStreamReader {
         }
     }
 
-    void ensureTransactionVersionAvailable() {
-        if (lexer.getDialect() == null || lexer.getDialect().getTransactionVersion() == null) {
-            throw new IllegalStateException("transaction version not accessible");
+    void ensureVersionAvailable(Function<Dialect, String[]> versionSupplier, String versionType) {
+        if (lexer.getDialect() == null || versionSupplier.apply(lexer.getDialect()) == null) {
+            throw new IllegalStateException(versionType + " not accessible");
         }
     }
 
@@ -250,22 +251,21 @@ public class StaEDIStreamReader implements EDIStreamReader {
 
     @Override
     public String[] getVersion() {
-        if (lexer.getDialect() == null || lexer.getDialect().getVersion() == null) {
-            throw new IllegalStateException("version not accessible");
-        }
-
-        return lexer.getDialect().getVersion();
+        ensureVersionAvailable(Dialect::getVersion, "version");
+        String[] version = lexer.getDialect().getVersion();
+        return Arrays.copyOf(version, version.length);
     }
 
     @Override
     public String[] getTransactionVersion() {
-        ensureTransactionVersionAvailable();
-        return lexer.getDialect().getTransactionVersion();
+        ensureVersionAvailable(Dialect::getTransactionVersion, "transaction version");
+        String[] version = lexer.getDialect().getTransactionVersion();
+        return Arrays.copyOf(version, version.length);
     }
 
     @Override
     public String getTransactionVersionString() {
-        ensureTransactionVersionAvailable();
+        ensureVersionAvailable(Dialect::getTransactionVersion, "transaction version");
         return lexer.getDialect().getTransactionVersionString();
     }
 
