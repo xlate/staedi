@@ -399,6 +399,8 @@
               </choice>
             </complexType>
           </element>
+
+          <element ref="tns:syntax" minOccurs="0" maxOccurs="unbounded"/>
         </sequence>
 
         <attribute name="code" type="NMTOKEN" use="required">
@@ -529,6 +531,8 @@
                 </sequence>
               </complexType>
             </element>
+
+            <element ref="tns:syntax" minOccurs="0" maxOccurs="unbounded"/>
           </sequence>
         </extension>
       </complexContent>
@@ -554,6 +558,7 @@
                 </choice>
               </complexType>
             </element>
+            <element ref="tns:syntax" minOccurs="0" maxOccurs="unbounded"/>
           </sequence>
         </extension>
       </complexContent>

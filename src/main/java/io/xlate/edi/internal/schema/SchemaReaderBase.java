@@ -234,15 +234,29 @@ abstract class SchemaReaderBase implements SchemaReader {
             refs.add(readControlStructure(reader, element, null, types));
             nextTag(reader, "completing transaction"); // Advance to end element
             nextTag(reader, "reading after transaction"); // Advance to next start element
+            element = reader.getName();
         }
 
         refs.add(trailerRef);
+
+        final List<EDISyntaxRule> rules;
+
+        if (qnSyntax.equals(element)) {
+            rules = new ArrayList<>(2);
+
+            do {
+                readSyntax(reader, rules);
+                nextTag(reader, "reading after syntax element");
+            } while (qnSyntax.equals(reader.getName()));
+        } else {
+            rules = Collections.emptyList();
+        }
 
         StructureType interchange = new StructureType(StaEDISchema.INTERCHANGE_ID,
                                                       EDIType.Type.INTERCHANGE,
                                                       "INTERCHANGE",
                                                       refs,
-                                                      Collections.emptyList());
+                                                      rules);
 
         types.put(interchange.getId(), interchange);
         nextTag(reader, "advancing after interchange");
