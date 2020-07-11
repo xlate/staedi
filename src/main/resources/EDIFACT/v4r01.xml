@@ -8,8 +8,8 @@
             <transaction header="UNH" trailer="UNT"/>
         </sequence>
         <syntax type="single">
-            <position>1</position>
             <position>2</position>
+            <position>3</position>
         </syntax>
     </interchange>
     <elementType name="DE0001" code="1" base="identifier" minLength="4" maxLength="4">
