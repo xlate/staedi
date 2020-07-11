@@ -1217,6 +1217,9 @@ class StaEDIStreamReaderTest implements ConstantsTest {
         List<EDIReference> errorReferences = new ArrayList<>();
         List<EDIStreamValidationError> errors = new ArrayList<>();
 
+        assertNull(reader.getReferenceCode()); // Null before start of input
+        assertNull(reader.getSchemaTypeReference()); // Null before start of input
+
         try {
             while (reader.hasNext()) {
                 try {
@@ -1252,6 +1255,9 @@ class StaEDIStreamReaderTest implements ConstantsTest {
         }
 
         assertNull(thrown);
+        assertNull(reader.getReferenceCode()); // Null after end of input
+        assertNull(reader.getSchemaTypeReference()); // Null after end of input
+
         assertEquals(6, gsDateMinInitial);
         assertEquals(8, gsDateMaxInitial);
         assertEquals(6, gsDateMinVersion003040);
