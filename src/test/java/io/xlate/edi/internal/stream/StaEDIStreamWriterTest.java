@@ -31,6 +31,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,6 +40,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import io.xlate.edi.internal.schema.SchemaUtils;
+import io.xlate.edi.schema.EDIReference;
 import io.xlate.edi.schema.EDISchemaException;
 import io.xlate.edi.schema.Schema;
 import io.xlate.edi.schema.SchemaFactory;
@@ -1136,11 +1138,11 @@ class StaEDIStreamWriterTest {
 
     @Test
     void testValidatedSegmentTagsReporterInvoked() throws EDISchemaException, EDIStreamException {
-        StringBuilder actual = new StringBuilder();
+        List<Object> actual = new ArrayList<>();
         EDIOutputFactory outputFactory = EDIOutputFactory.newFactory();
         outputFactory.setProperty(EDIOutputFactory.PRETTY_PRINT, true);
-        outputFactory.setErrorReporter((error, writer, location, data, code) -> {
-            actual.append(String.join("|", String.valueOf(error.getCategory()), String.valueOf(error), String.valueOf(location), data, code));
+        outputFactory.setErrorReporter((error, writer, location, data, typeReference) -> {
+            actual.addAll(Arrays.asList(error.getCategory(), error, String.valueOf(location), data, typeReference));
         });
         ByteArrayOutputStream result = new ByteArrayOutputStream(16384);
         EDIStreamWriter writer = outputFactory.createEDIStreamWriter(result);
@@ -1152,19 +1154,19 @@ class StaEDIStreamWriterTest {
         writer.startInterchange();
         writeHeader(writer);
         writer.writeStartSegment("ST");
-        String[] error = actual.toString().split("\\|");
-        assertEquals(EDIStreamEvent.SEGMENT_ERROR.name(), error[0]);
-        assertEquals(EDIStreamValidationError.LOOP_OCCURS_OVER_MAXIMUM_TIMES.name(), error[1]);
-        assertEquals("in segment ST at position 2", error[2]);
-        assertEquals("ST", error[3]);
-        assertEquals("ST", error[4]);
+        assertEquals(5, actual.size());
+        assertEquals(EDIStreamEvent.SEGMENT_ERROR, actual.get(0));
+        assertEquals(EDIStreamValidationError.LOOP_OCCURS_OVER_MAXIMUM_TIMES, actual.get(1));
+        assertEquals("in segment ST at position 2", actual.get(2));
+        assertEquals("ST", actual.get(3));
+        assertEquals("TRANSACTION", ((EDIReference) actual.get(4)).getReferencedType().getCode());
     }
 
     @Test
     void testElementValidationReporterInvoked() throws EDISchemaException, EDIStreamException {
-        List<String> actual = new ArrayList<>();
-        EDIOutputErrorReporter reporter = (error, writer, location, data, code) -> {
-            actual.add(String.join("|", String.valueOf(error.getCategory()), String.valueOf(error), String.valueOf(location), data, code));
+        List<List<Object>> actual = new ArrayList<>();
+        EDIOutputErrorReporter reporter = (error, writer, location, data, typeReference) -> {
+            actual.add(Arrays.asList(error.getCategory(), error, String.valueOf(location), data, typeReference));
         };
         EDIOutputFactory outputFactory = EDIOutputFactory.newFactory();
         outputFactory.setProperty(EDIOutputFactory.PRETTY_PRINT, true);
@@ -1183,19 +1185,21 @@ class StaEDIStreamWriterTest {
         writer.writeElement("AAA");
         assertEquals(2, actual.size());
 
-        String[] e1 = actual.get(0).split("\\|");
-        assertEquals(EDIStreamEvent.ELEMENT_DATA_ERROR.name(), e1[0]);
-        assertEquals(EDIStreamValidationError.DATA_ELEMENT_TOO_LONG.name(), e1[1]);
-        assertEquals("in segment GS at position 2, element 1", e1[2]);
-        assertEquals("AAA", e1[3]);
-        assertEquals("479", e1[4]);
+        List<Object> e1 = actual.get(0);
+        assertEquals(5, e1.size());
+        assertEquals(EDIStreamEvent.ELEMENT_DATA_ERROR, e1.get(0));
+        assertEquals(EDIStreamValidationError.DATA_ELEMENT_TOO_LONG, e1.get(1));
+        assertEquals("in segment GS at position 2, element 1", e1.get(2));
+        assertEquals("AAA", e1.get(3));
+        assertEquals("479", ((EDIReference) e1.get(4)).getReferencedType().getCode());
 
-        String[] e2 = actual.get(1).split("\\|");
-        assertEquals(EDIStreamEvent.ELEMENT_DATA_ERROR.name(), e2[0]);
-        assertEquals(EDIStreamValidationError.INVALID_CODE_VALUE.name(), e2[1]);
-        assertEquals("in segment GS at position 2, element 1", e2[2]);
-        assertEquals("AAA", e2[3]);
-        assertEquals("479", e2[4]);
+        List<Object> e2 = actual.get(1);
+        assertEquals(5, e2.size());
+        assertEquals(EDIStreamEvent.ELEMENT_DATA_ERROR, e2.get(0));
+        assertEquals(EDIStreamValidationError.INVALID_CODE_VALUE, e2.get(1));
+        assertEquals("in segment GS at position 2, element 1", e2.get(2));
+        assertEquals("AAA", e2.get(3));
+        assertEquals("479", ((EDIReference) e2.get(4)).getReferencedType().getCode());
     }
 
     @Test

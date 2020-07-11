@@ -25,6 +25,7 @@ import io.xlate.edi.internal.stream.CharArraySequence;
 import io.xlate.edi.internal.stream.StaEDIStreamLocation;
 import io.xlate.edi.internal.stream.validation.UsageError;
 import io.xlate.edi.internal.stream.validation.Validator;
+import io.xlate.edi.schema.EDIReference;
 import io.xlate.edi.schema.EDIType;
 import io.xlate.edi.schema.Schema;
 import io.xlate.edi.stream.EDIStreamEvent;
@@ -120,7 +121,7 @@ public class ProxyEventHandler implements EventHandler {
     }
 
     public String getReferenceCode() {
-        return hasEvents() ? events[eventIndex].getReferenceCodeString() : null;
+        return hasEvents() ? events[eventIndex].getReferenceCode() : null;
     }
 
     public Location getLocation() {
@@ -138,44 +139,52 @@ public class ProxyEventHandler implements EventHandler {
         this.binary = binary;
     }
 
+    public EDIReference getSchemaTypeReference() {
+        return hasEvents() ? events[eventIndex].getTypeReference() : null;
+    }
+
     @Override
     public void interchangeBegin(Dialect dialect) {
         this.dialect = dialect;
-        enqueueEvent(EDIStreamEvent.START_INTERCHANGE, EDIStreamValidationError.NONE, "", null);
+        enqueueEvent(EDIStreamEvent.START_INTERCHANGE, EDIStreamValidationError.NONE, "", null, location);
     }
 
     @Override
     public void interchangeEnd() {
-        enqueueEvent(EDIStreamEvent.END_INTERCHANGE, EDIStreamValidationError.NONE, "", null);
+        enqueueEvent(EDIStreamEvent.END_INTERCHANGE, EDIStreamValidationError.NONE, "", null, location);
     }
 
     @Override
-    public void loopBegin(CharSequence id) {
-        if (EDIType.Type.TRANSACTION.toString().equals(id)) {
+    public void loopBegin(EDIReference typeReference) {
+        final String loopCode = typeReference.getReferencedType().getCode();
+
+        if (EDIType.Type.TRANSACTION.toString().equals(loopCode)) {
             transaction = true;
             transactionSchemaAllowed = true;
-            enqueueEvent(EDIStreamEvent.START_TRANSACTION, EDIStreamValidationError.NONE, id, null);
+            enqueueEvent(EDIStreamEvent.START_TRANSACTION, EDIStreamValidationError.NONE, loopCode, typeReference, location);
             if (transactionValidator != null) {
                 transactionValidator.reset();
             }
-        } else if (EDIType.Type.GROUP.toString().equals(id)) {
-            enqueueEvent(EDIStreamEvent.START_GROUP, EDIStreamValidationError.NONE, id, null);
+        } else if (EDIType.Type.GROUP.toString().equals(loopCode)) {
+            enqueueEvent(EDIStreamEvent.START_GROUP, EDIStreamValidationError.NONE, loopCode, typeReference, location);
         } else {
-            enqueueEvent(EDIStreamEvent.START_LOOP, EDIStreamValidationError.NONE, id, id);
+            enqueueEvent(EDIStreamEvent.START_LOOP, EDIStreamValidationError.NONE, loopCode, typeReference, location);
         }
     }
 
     @Override
-    public void loopEnd(CharSequence id) {
-        if (EDIType.Type.TRANSACTION.toString().equals(id)) {
+    public void loopEnd(EDIReference typeReference) {
+        final String loopCode = typeReference.getReferencedType().getCode();
+
+        if (EDIType.Type.TRANSACTION.toString().equals(loopCode)) {
             transaction = false;
             dialect.transactionEnd();
-            enqueueEvent(EDIStreamEvent.END_TRANSACTION, EDIStreamValidationError.NONE, id, null);
-        } else if (EDIType.Type.GROUP.toString().equals(id)) {
+            enqueueEvent(EDIStreamEvent.END_TRANSACTION, EDIStreamValidationError.NONE, loopCode, typeReference, location);
+        } else if (EDIType.Type.GROUP.toString().equals(loopCode)) {
             dialect.groupEnd();
-            enqueueEvent(EDIStreamEvent.END_GROUP, EDIStreamValidationError.NONE, id, null);
+            enqueueEvent(EDIStreamEvent.END_GROUP, EDIStreamValidationError.NONE, loopCode, typeReference, location);
         } else {
-            enqueueEvent(EDIStreamEvent.END_LOOP, EDIStreamValidationError.NONE, id, id);
+            enqueueEvent(EDIStreamEvent.END_LOOP, EDIStreamValidationError.NONE, loopCode, typeReference, location);
         }
     }
 
@@ -190,21 +199,21 @@ public class ProxyEventHandler implements EventHandler {
         transactionSchemaAllowed = false;
         Validator validator = validator();
         boolean eventsReady = true;
-        String code = null;
+        EDIReference typeReference = null;
 
         if (validator != null && !dialect.isServiceAdviceSegment(segmentTag)) {
             validator.validateSegment(this, segmentTag);
-            code = validator.getSegmentReferenceCode();
+            typeReference = validator.getSegmentReferenceCode();
             eventsReady = !validator.isPendingDiscrimination();
         }
 
         if (exitTransaction(segmentTag)) {
             transaction = false;
             validator().validateSegment(this, segmentTag);
-            code = validator().getSegmentReferenceCode();
+            typeReference = validator().getSegmentReferenceCode();
         }
 
-        enqueueEvent(EDIStreamEvent.START_SEGMENT, EDIStreamValidationError.NONE, segmentTag, code, location);
+        enqueueEvent(EDIStreamEvent.START_SEGMENT, EDIStreamValidationError.NONE, segmentTag, typeReference, location);
         return eventsReady;
     }
 
@@ -227,26 +236,26 @@ public class ProxyEventHandler implements EventHandler {
 
     @Override
     public boolean compositeBegin(boolean isNil) {
-        String code = null;
+        EDIReference typeReference = null;
         boolean eventsReady = true;
 
         if (validator() != null && !isNil) {
             boolean invalid = !validator().validCompositeOccurrences(dialect, location);
 
             if (invalid) {
-                code = validator().getElementReferenceCode();
+                typeReference = validator().getElementReference();
                 List<UsageError> errors = validator().getElementErrors();
 
                 for (UsageError error : errors) {
-                    enqueueEvent(error.getError().getCategory(), error.getError(), "", error.getCode());
+                    enqueueEvent(error.getError().getCategory(), error.getError(), "", error.getTypeReference(), location);
                 }
             } else {
-                code = validator().getCompositeReferenceCode();
+                typeReference = validator().getCompositeReference();
             }
             eventsReady = !validator().isPendingDiscrimination();
         }
 
-        enqueueEvent(EDIStreamEvent.START_COMPOSITE, EDIStreamValidationError.NONE, "", code);
+        enqueueEvent(EDIStreamEvent.START_COMPOSITE, EDIStreamValidationError.NONE, "", typeReference, location);
         return eventsReady;
     }
 
@@ -260,14 +269,14 @@ public class ProxyEventHandler implements EventHandler {
         }
 
         location.clearComponentPosition();
-        enqueueEvent(EDIStreamEvent.END_COMPOSITE, EDIStreamValidationError.NONE, "", null);
+        enqueueEvent(EDIStreamEvent.END_COMPOSITE, EDIStreamValidationError.NONE, "", null, location);
         return eventsReady;
     }
 
     @Override
     public boolean elementData(char[] text, int start, int length) {
         boolean derivedComposite;
-        String code;
+        EDIReference typeReference;
         boolean eventsReady = true;
 
         elementHolder.set(text, start, length);
@@ -276,17 +285,17 @@ public class ProxyEventHandler implements EventHandler {
 
         if (validator != null) {
             derivedComposite = validateElement(validator);
-            code = validator.getElementReferenceCode();
+            typeReference = validator.getElementReference();
         } else {
             derivedComposite = false;
-            code = null;
+            typeReference = null;
         }
 
         if (text != null && (!derivedComposite || length > 0) /* Not an inferred element */) {
             enqueueEvent(EDIStreamEvent.ELEMENT_DATA,
                          EDIStreamValidationError.NONE,
                          elementHolder,
-                         code,
+                         typeReference,
                          location);
 
             if (validator != null && validator.isPendingDiscrimination()) {
@@ -324,7 +333,7 @@ public class ProxyEventHandler implements EventHandler {
                     enqueueEvent(error.getError().getCategory(),
                                  error.getError(),
                                  elementHolder,
-                                 error.getCode(),
+                                 error.getTypeReference(),
                                  location);
                     cursor.remove();
                     //$FALL-THROUGH$
@@ -346,7 +355,7 @@ public class ProxyEventHandler implements EventHandler {
                 enqueueEvent(error.getError().getCategory(),
                              error.getError(),
                              elementHolder,
-                             error.getCode(),
+                             error.getTypeReference(),
                              location);
             }
         }
@@ -360,20 +369,20 @@ public class ProxyEventHandler implements EventHandler {
 
     @Override
     public boolean binaryData(InputStream binaryStream) {
-        enqueueEvent(EDIStreamEvent.ELEMENT_DATA_BINARY, EDIStreamValidationError.NONE, "", null);
+        enqueueEvent(EDIStreamEvent.ELEMENT_DATA_BINARY, EDIStreamValidationError.NONE, "", null, location);
         setBinary(binaryStream);
         return true;
     }
 
     @Override
-    public void segmentError(CharSequence token, EDIStreamValidationError error) {
-        enqueueEvent(EDIStreamEvent.SEGMENT_ERROR, error, token, token);
+    public void segmentError(CharSequence token, EDIReference typeReference, EDIStreamValidationError error) {
+        enqueueEvent(EDIStreamEvent.SEGMENT_ERROR, error, token, typeReference, location);
     }
 
     @Override
     public void elementError(final EDIStreamEvent event,
                              final EDIStreamValidationError error,
-                             final CharSequence referenceCode,
+                             final EDIReference typeReference,
                              final CharSequence data,
                              final int element,
                              final int component,
@@ -384,7 +393,7 @@ public class ProxyEventHandler implements EventHandler {
         copy.setElementOccurrence(repetition);
         copy.setComponentPosition(component);
 
-        enqueueEvent(event, error, data, referenceCode, copy);
+        enqueueEvent(event, error, data, typeReference, copy);
     }
 
     private Validator validator() {
@@ -394,26 +403,11 @@ public class ProxyEventHandler implements EventHandler {
 
     private void enqueueEvent(EDIStreamEvent event,
                               EDIStreamValidationError error,
-                              CharSequence holder,
-                              CharSequence code,
-                              Location location) {
-
-        enqueueEvent(eventCount, event, error, holder, code, location);
-        eventCount++;
-    }
-
-    private void enqueueEvent(EDIStreamEvent event, EDIStreamValidationError error, CharSequence text, CharSequence code) {
-        enqueueEvent(eventCount, event, error, text, code, location);
-        eventCount++;
-    }
-
-    private void enqueueEvent(int index,
-                              EDIStreamEvent event,
-                              EDIStreamValidationError error,
                               CharSequence data,
-                              CharSequence code,
+                              EDIReference typeReference,
                               Location location) {
 
+        final int index = eventCount;
         StreamEvent target = events[index];
         EDIStreamEvent associatedEvent = (index > 0) ? getAssociatedEvent(error) : null;
 
@@ -440,8 +434,10 @@ public class ProxyEventHandler implements EventHandler {
         target.type = event;
         target.errorType = error;
         target.setData(data);
-        target.setReferenceCode(code);
+        target.setTypeReference(typeReference);
         target.setLocation(location);
+
+        eventCount++;
     }
 
     private boolean eventExists(EDIStreamEvent associatedEvent, int index) {

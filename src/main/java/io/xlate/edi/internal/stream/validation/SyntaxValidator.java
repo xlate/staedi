@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.xlate.edi.internal.stream.tokenization.ValidationEventHandler;
+import io.xlate.edi.schema.EDIReference;
 import io.xlate.edi.schema.EDISyntaxRule;
 import io.xlate.edi.schema.EDIType;
 import io.xlate.edi.stream.EDIStreamEvent;
@@ -79,15 +80,15 @@ interface SyntaxValidator {
 
         for (int position : syntax.getPositions()) {
             final boolean used;
-            final String referenceCode;
+            final EDIReference referenceType;
 
             if (position < limit) {
                 UsageNode node = children.get(position - 1);
                 used = node.isUsed();
-                referenceCode = node.getCode();
+                referenceType = node.getLink();
             } else {
                 used = false;
-                referenceCode = null;
+                referenceType = null;
             }
 
             if (!used) {
@@ -96,7 +97,7 @@ interface SyntaxValidator {
 
                 handler.elementError(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR,
                                      EDIStreamValidationError.CONDITIONAL_REQUIRED_DATA_ELEMENT_MISSING,
-                                     referenceCode,
+                                     referenceType,
                                      null,
                                      element,
                                      component,
@@ -117,7 +118,7 @@ interface SyntaxValidator {
 
                 handler.elementError(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR,
                                      EDIStreamValidationError.EXCLUSION_CONDITION_VIOLATED,
-                                     structure.getCode(),
+                                     structure.getLink(),
                                      null,
                                      element,
                                      component,

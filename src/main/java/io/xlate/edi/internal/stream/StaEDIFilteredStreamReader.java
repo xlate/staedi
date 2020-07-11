@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 
+import io.xlate.edi.schema.EDIReference;
 import io.xlate.edi.schema.Schema;
 import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamException;
@@ -116,6 +117,16 @@ class StaEDIFilteredStreamReader implements EDIStreamReader {
     }
 
     @Override
+    public String[] getTransactionVersion() {
+        return delegate.getTransactionVersion();
+    }
+
+    @Override
+    public String getTransactionVersionString() {
+        return delegate.getTransactionVersionString();
+    }
+
+    @Override
     public Schema getControlSchema() {
         return delegate.getControlSchema();
     }
@@ -189,5 +200,10 @@ class StaEDIFilteredStreamReader implements EDIStreamReader {
     @Override
     public InputStream getBinaryData() {
         return delegate.getBinaryData();
+    }
+
+    @Override
+    public EDIReference getSchemaTypeReference() {
+        return delegate.getSchemaTypeReference();
     }
 }

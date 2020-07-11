@@ -201,15 +201,15 @@ public class Validator {
         return !implSegmentCandidates.isEmpty();
     }
 
-    public String getSegmentReferenceCode() {
+    public EDIReference getSegmentReferenceCode() {
         if (implSegmentSelected) {
-            return implNode.getCode();
+            return implNode.getLink();
         }
-        return segment.getCode();
+        return segment.getLink();
     }
 
-    public String getCompositeReferenceCode() {
-        return composite != null ? composite.getCode() : null;
+    public EDIReference getCompositeReference() {
+        return composite != null ? composite.getLink() : null;
     }
 
     public boolean isBinaryElementLength() {
@@ -225,12 +225,12 @@ public class Validator {
         return false;
     }
 
-    public String getElementReferenceCode() {
+    public EDIReference getElementReference() {
         if (composite != null) {
-            return composite.getCode();
+            return composite.getLink();
         }
         if (element != null) {
-            return element.getCode();
+            return element.getLink();
         }
         return null;
     }
@@ -342,7 +342,7 @@ public class Validator {
         while (this.depth < workingDepth) {
             handleMissingMandatory(handler, workingDepth);
             UsageNode loop = loopStack.pop();
-            handler.loopEnd(loop.getCode());
+            handler.loopEnd(loop.getLink());
             workingDepth--;
 
             if (loop.isImplementation()) {
@@ -452,7 +452,7 @@ public class Validator {
 
         if (current.exceedsMaximumUsage(SEGMENT_VERSION)) {
             handleMissingMandatory(handler);
-            handler.segmentError(current.getId(), SEGMENT_EXCEEDS_MAXIMUM_USE);
+            handler.segmentError(current.getId(), current.getLink(), SEGMENT_EXCEEDS_MAXIMUM_USE);
         }
 
         correctSegment = segment = current;
@@ -467,7 +467,7 @@ public class Validator {
 
             if (implSegmentCandidates.isEmpty()) {
                 handleMissingMandatory(handler);
-                handler.segmentError(current.getId(), IMPLEMENTATION_UNUSED_SEGMENT_PRESENT);
+                handler.segmentError(current.getId(), current.getLink(), IMPLEMENTATION_UNUSED_SEGMENT_PRESENT);
                 // Save the currentImpl so that the search is resumed from the correct location
                 implNode = currentImpl;
             } else if (implSegmentCandidates.size() == 1) {
@@ -475,7 +475,7 @@ public class Validator {
                 currentImpl.resetChildren();
 
                 if (currentImpl.exceedsMaximumUsage(SEGMENT_VERSION)) {
-                    handler.segmentError(currentImpl.getId(), SEGMENT_EXCEEDS_MAXIMUM_USE);
+                    handler.segmentError(currentImpl.getId(), current.getLink(), SEGMENT_EXCEEDS_MAXIMUM_USE);
                 }
 
                 implNode = currentImpl;
@@ -513,14 +513,13 @@ public class Validator {
              * requirement.
              */
             final UsageNode segmentNode = toSegment(node);
-            final String tag = segmentNode.getId();
 
             if (!segmentNode.isImplementation()) {
-                useErrors.add(new UsageError(tag, MANDATORY_SEGMENT_MISSING, node.getDepth()));
+                useErrors.add(new UsageError(segmentNode.getLink(), MANDATORY_SEGMENT_MISSING, node.getDepth()));
             } else if (node.getNodeType() == Type.SEGMENT) {
-                useErrors.add(new UsageError(tag, IMPLEMENTATION_SEGMENT_BELOW_MINIMUM_USE, node.getDepth()));
+                useErrors.add(new UsageError(segmentNode.getLink(), IMPLEMENTATION_SEGMENT_BELOW_MINIMUM_USE, node.getDepth()));
             } else {
-                useErrors.add(new UsageError(tag, IMPLEMENTATION_LOOP_OCCURS_UNDER_MINIMUM_TIMES, node.getDepth()));
+                useErrors.add(new UsageError(segmentNode.getLink(), IMPLEMENTATION_LOOP_OCCURS_UNDER_MINIMUM_TIMES, node.getDepth()));
             }
         }
     }
@@ -532,12 +531,12 @@ public class Validator {
 
         completeLoops(handler, startDepth);
         loopStack.push(current);
-        handler.loopBegin(current.getCode());
+        handler.loopBegin(current.getLink());
         correctSegment = segment = startLoop(current);
 
         if (current.exceedsMaximumUsage(SEGMENT_VERSION)) {
             handleMissingMandatory(handler);
-            handler.segmentError(tag, LOOP_OCCURS_OVER_MAXIMUM_TIMES);
+            handler.segmentError(tag, current.getLink(), LOOP_OCCURS_OVER_MAXIMUM_TIMES);
         }
 
         if (currentImpl != null) {
@@ -550,7 +549,7 @@ public class Validator {
 
             if (implSegmentCandidates.isEmpty()) {
                 handleMissingMandatory(handler);
-                handler.segmentError(segment.getId(), IMPLEMENTATION_UNUSED_SEGMENT_PRESENT);
+                handler.segmentError(segment.getId(), segment.getLink(), IMPLEMENTATION_UNUSED_SEGMENT_PRESENT);
                 // Save the currentImpl so that the search is resumed from the correct location
                 implNode = currentImpl;
             }
@@ -574,12 +573,12 @@ public class Validator {
 
             if (next != null && !next.isFirstChild()) {
                 useErrors.clear();
-                handler.segmentError(next.getId(), SEGMENT_NOT_IN_PROPER_SEQUENCE);
+                handler.segmentError(next.getId(), next.getLink(), SEGMENT_NOT_IN_PROPER_SEQUENCE);
 
                 next.incrementUsage();
 
                 if (next.exceedsMaximumUsage(SEGMENT_VERSION)) {
-                    handler.segmentError(next.getId(), SEGMENT_EXCEEDS_MAXIMUM_USE);
+                    handler.segmentError(next.getId(), next.getLink(), SEGMENT_EXCEEDS_MAXIMUM_USE);
                 }
 
                 segment = next;
@@ -624,9 +623,9 @@ public class Validator {
                 useErrors.clear();
 
                 if (schema.containsSegment(tagString)) {
-                    handler.segmentError(tag, UNEXPECTED_SEGMENT);
+                    handler.segmentError(tag, null, UNEXPECTED_SEGMENT);
                 } else {
-                    handler.segmentError(tag, SEGMENT_NOT_IN_DEFINED_TRANSACTION_SET);
+                    handler.segmentError(tag, null, SEGMENT_NOT_IN_DEFINED_TRANSACTION_SET);
                 }
             }
 
@@ -638,7 +637,7 @@ public class Validator {
 
     private void handleMissingMandatory(ValidationEventHandler handler) {
         for (UsageError error : useErrors) {
-            error.handle(handler::segmentError);
+            error.handleSegmentError(handler);
         }
 
         useErrors.clear();
@@ -650,7 +649,7 @@ public class Validator {
         while (errors.hasNext()) {
             UsageError e = errors.next();
             if (e.isDepthGreaterThan(depth)) {
-                e.handle(handler::segmentError);
+                e.handleSegmentError(handler);
                 errors.remove();
             }
         }
@@ -699,13 +698,13 @@ public class Validator {
             implSeg.incrementUsage();
 
             if (candidate.exceedsMaximumUsage(SEGMENT_VERSION)) {
-                handler.segmentError(implSeg.getId(), LOOP_OCCURS_OVER_MAXIMUM_TIMES);
+                handler.segmentError(implSeg.getId(), implSeg.getLink(), LOOP_OCCURS_OVER_MAXIMUM_TIMES);
             }
         } else {
             candidate.incrementUsage();
 
             if (candidate.exceedsMaximumUsage(SEGMENT_VERSION)) {
-                handler.segmentError(implSeg.getId(), SEGMENT_EXCEEDS_MAXIMUM_USE);
+                handler.segmentError(implSeg.getId(), implSeg.getLink(), SEGMENT_EXCEEDS_MAXIMUM_USE);
             }
         }
     }
@@ -755,7 +754,7 @@ public class Validator {
             CharSequence implRefCode = ((EDIComplexType) implType.getReferencedType()).getCode();
 
             if (events[i].getType() == EDIStreamEvent.START_LOOP && compare(stdRefCode, implRefCode) == 0) {
-                events[i].setReferenceCode(implType.getCode());
+                events[i].setTypeReference(implType);
             }
         }
     }
@@ -985,7 +984,7 @@ public class Validator {
             for (UsageError error : elementErrors) {
                 validationHandler.elementError(error.getError().getCategory(),
                                                error.getError(),
-                                               error.getCode(),
+                                               error.getTypeReference(),
                                                entry.data,
                                                entry.location.getElementPosition(),
                                                entry.location.getComponentPosition(),
@@ -1048,7 +1047,7 @@ public class Validator {
             if (tooFewRepetitions(version, previousImpl)) {
                 validationHandler.elementError(IMPLEMENTATION_TOO_FEW_REPETITIONS.getCategory(),
                                                IMPLEMENTATION_TOO_FEW_REPETITIONS,
-                                               previousImpl.getCode(),
+                                               previousImpl.getLink(),
                                                null,
                                                elementPosition + 1,
                                                componentIndex + 1,

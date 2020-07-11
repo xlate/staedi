@@ -32,6 +32,7 @@ import org.junit.jupiter.api.Test;
 
 import io.xlate.edi.internal.stream.ConstantsTest;
 import io.xlate.edi.internal.stream.StaEDIStreamLocation;
+import io.xlate.edi.schema.EDIReference;
 import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamValidationError;
 
@@ -53,12 +54,12 @@ class LexerTest {
         }
 
         @Override
-        public void loopBegin(CharSequence id) {
+        public void loopBegin(EDIReference typeReference) {
             content.put("LAST", "loopBegin");
         }
 
         @Override
-        public void loopEnd(CharSequence id) {
+        public void loopEnd(EDIReference typeReference) {
             content.put("LAST", "loopEnd");
         }
 
@@ -100,13 +101,13 @@ class LexerTest {
         }
 
         @Override
-        public void segmentError(CharSequence token, EDIStreamValidationError error) {
+        public void segmentError(CharSequence token, EDIReference typeReference, EDIStreamValidationError error) {
         }
 
         @Override
         public void elementError(EDIStreamEvent event,
                                  EDIStreamValidationError error,
-                                 CharSequence code,
+                                 EDIReference typeReference,
                                  CharSequence data,
                                  int elem,
                                  int component,
@@ -126,11 +127,11 @@ class LexerTest {
         }
 
         @Override
-        public void loopBegin(CharSequence id) {
+        public void loopBegin(EDIReference typeReference) {
         }
 
         @Override
-        public void loopEnd(CharSequence id) {
+        public void loopEnd(EDIReference typeReference) {
         }
 
         @Override
@@ -168,13 +169,13 @@ class LexerTest {
         }
 
         @Override
-        public void segmentError(CharSequence token, EDIStreamValidationError error) {
+        public void segmentError(CharSequence token, EDIReference typeReference, EDIStreamValidationError error) {
         }
 
         @Override
         public void elementError(EDIStreamEvent event,
                                  EDIStreamValidationError error,
-                                 CharSequence code,
+                                 EDIReference typeReference,
                                  CharSequence data,
                                  int elem,
                                  int component,

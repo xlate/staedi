@@ -27,9 +27,11 @@ import static org.junit.jupiter.api.Assertions.fail;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
@@ -43,7 +45,10 @@ import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
 import io.xlate.edi.internal.schema.SchemaUtils;
+import io.xlate.edi.schema.EDIComplexType;
+import io.xlate.edi.schema.EDIReference;
 import io.xlate.edi.schema.EDISchemaException;
+import io.xlate.edi.schema.EDISimpleType;
 import io.xlate.edi.schema.Schema;
 import io.xlate.edi.schema.SchemaFactory;
 import io.xlate.edi.stream.EDIInputFactory;
@@ -1111,5 +1116,158 @@ class StaEDIStreamReaderTest implements ConstantsTest {
         }
 
         assertNull(thrown);
+    }
+
+    @Test
+    void testX12TransactionVersionRetrieval() throws EDIStreamException, IOException {
+        ByteArrayInputStream stream = new ByteArrayInputStream((""
+                + "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *200711*0100*U*00401*000000001*0*T*:~"
+                + "GS*FA*ReceiverDept*SenderDept*20200711*010015*1*X*005010~"
+                + "ST*997*0001*005010X230~"
+                + "SE*2*0001~"
+                + "GE*1*1~"
+                + "IEA*1*000000001~").getBytes());
+
+        EDIInputFactory factory = EDIInputFactory.newFactory();
+        EDIStreamReader rawReader = factory.createEDIStreamReader(stream);
+        EDIStreamReader reader = factory.createFilteredReader(rawReader, r -> true); // Accept all events
+        Exception thrown = null;
+
+        Map<String, String[]> segmentEndVersions = new HashMap<>(2);
+        Map<String, String> segmentEndVersionStrings = new HashMap<>(2);
+        Exception initThrown = null;
+        Exception gsStartThrown = null;
+        Exception ieaStartThrown = null;
+
+        try {
+            initThrown = assertThrows(IllegalStateException.class, () -> reader.getTransactionVersionString());
+
+            while (reader.hasNext()) {
+                try {
+                    switch (reader.next()) {
+                    case START_SEGMENT:
+                        if ("GS".equals(reader.getText())) {
+                            gsStartThrown = assertThrows(IllegalStateException.class, () -> reader.getTransactionVersionString());
+                        }
+                        if ("IEA".equals(reader.getText())) {
+                            ieaStartThrown = assertThrows(IllegalStateException.class, () -> reader.getTransactionVersionString());
+                        }
+
+                        break;
+
+                    case END_SEGMENT:
+                        switch (reader.getText()) {
+                        case "GS":
+                        case "ST":
+                            segmentEndVersions.put(reader.getText(), reader.getTransactionVersion());
+                            segmentEndVersionStrings.put(reader.getText(), reader.getTransactionVersionString());
+                            break;
+                        default:
+                            break;
+                        }
+
+                        break;
+                    default:
+                        break;
+                    }
+                } catch (Exception e) {
+                    thrown = e;
+                    break;
+                }
+            }
+        } finally {
+            reader.close();
+        }
+
+        assertNull(thrown);
+        assertNotNull(initThrown);
+        assertEquals("transaction version not accessible", initThrown.getMessage());
+        assertNotNull(gsStartThrown);
+        assertEquals("transaction version not accessible", gsStartThrown.getMessage());
+        assertNotNull(ieaStartThrown);
+        assertEquals("transaction version not accessible", ieaStartThrown.getMessage());
+
+        assertEquals(2, segmentEndVersions.size());
+        assertArrayEquals(new String[] { "X", "005010" },  segmentEndVersions.get("GS"));
+        assertArrayEquals(new String[] { "X", "005010X230" },  segmentEndVersions.get("ST"));
+
+        assertEquals(2, segmentEndVersionStrings.size());
+        assertEquals("X.005010",  segmentEndVersionStrings.get("GS"));
+        assertEquals("X.005010X230",  segmentEndVersionStrings.get("ST"));
+    }
+
+    @Test
+    void testX12FunctionalGroupDateVariableValidation() throws EDIStreamException, IOException {
+        ByteArrayInputStream stream = new ByteArrayInputStream((""
+                + "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *200711*0100*U*00401*000000001*0*T*:~"
+                + "GS*FA*ReceiverDept*SenderDept*20200711*010015*1*X*003040~"
+                + "ST*997*0001*005010X230~"
+                + "SE*2*0001~"
+                + "GE*1*1~"
+                + "IEA*1*000000001~").getBytes());
+
+        EDIInputFactory factory = EDIInputFactory.newFactory();
+        EDIStreamReader rawReader = factory.createEDIStreamReader(stream);
+        EDIStreamReader reader = factory.createFilteredReader(rawReader, r -> true); // Accept all events
+        Exception thrown = null;
+        long gsDateMinInitial = -1;
+        long gsDateMaxInitial = -1;
+        long gsDateMinVersion003040 = -1;
+        long gsDateMaxVersion003040 = -1;
+        List<EDIReference> errorReferences = new ArrayList<>();
+        List<EDIStreamValidationError> errors = new ArrayList<>();
+
+        assertNull(reader.getReferenceCode()); // Null before start of input
+        assertNull(reader.getSchemaTypeReference()); // Null before start of input
+
+        try {
+            while (reader.hasNext()) {
+                try {
+                    switch (reader.next()) {
+                    case ELEMENT_DATA:
+                        if ("GS".equals(reader.getLocation().getSegmentTag()) && reader.getLocation().getElementPosition() == 4) {
+                            gsDateMinInitial = ((EDISimpleType) reader.getSchemaTypeReference().getReferencedType()).getMinLength();
+                            gsDateMaxInitial = ((EDISimpleType) reader.getSchemaTypeReference().getReferencedType()).getMaxLength();
+                        }
+                        if ("GS".equals(reader.getLocation().getSegmentTag()) && reader.getLocation().getElementPosition() == 8) {
+                            // Version has been determined
+                            String version = reader.getTransactionVersionString();
+                            EDIReference gsDateReference = ((EDIComplexType) reader.getControlSchema().getType("GS")).getReferences().get(3);
+                            gsDateMinVersion003040 = ((EDISimpleType) gsDateReference.getReferencedType()).getMinLength(version);
+                            gsDateMaxVersion003040 = ((EDISimpleType) gsDateReference.getReferencedType()).getMaxLength(version);
+                        }
+
+                        break;
+                    case ELEMENT_DATA_ERROR:
+                        errors.add(reader.getErrorType());
+                        errorReferences.add(reader.getSchemaTypeReference());
+                        break;
+                    default:
+                        break;
+                    }
+                } catch (Exception e) {
+                    thrown = e;
+                    break;
+                }
+            }
+        } finally {
+            reader.close();
+        }
+
+        assertNull(thrown);
+        assertNull(reader.getReferenceCode()); // Null after end of input
+        assertNull(reader.getSchemaTypeReference()); // Null after end of input
+
+        assertEquals(6, gsDateMinInitial);
+        assertEquals(8, gsDateMaxInitial);
+        assertEquals(6, gsDateMinVersion003040);
+        assertEquals(6, gsDateMaxVersion003040);
+
+        assertEquals(2, errors.size());
+        assertTrue(errors.contains(EDIStreamValidationError.INVALID_DATE));
+        assertTrue(errors.contains(EDIStreamValidationError.DATA_ELEMENT_TOO_LONG));
+
+        assertEquals("373", errorReferences.get(0).getReferencedType().getCode());
+        assertEquals("373", errorReferences.get(1).getReferencedType().getCode());
     }
 }

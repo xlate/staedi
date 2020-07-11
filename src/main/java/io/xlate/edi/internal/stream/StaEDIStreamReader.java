@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -32,6 +33,7 @@ import io.xlate.edi.internal.schema.SchemaUtils;
 import io.xlate.edi.internal.stream.tokenization.Dialect;
 import io.xlate.edi.internal.stream.tokenization.Lexer;
 import io.xlate.edi.internal.stream.tokenization.ProxyEventHandler;
+import io.xlate.edi.schema.EDIReference;
 import io.xlate.edi.schema.EDISchemaException;
 import io.xlate.edi.schema.Schema;
 import io.xlate.edi.stream.EDIInputErrorReporter;
@@ -79,6 +81,12 @@ public class StaEDIStreamReader implements EDIStreamReader {
     private void ensureIncomplete() {
         if (complete) {
             throw new NoSuchElementException("Reader is complete");
+        }
+    }
+
+    void ensureVersionAvailable(Function<Dialect, String[]> versionSupplier, String versionType) {
+        if (lexer.getDialect() == null || versionSupplier.apply(lexer.getDialect()) == null) {
+            throw new IllegalStateException(versionType + " not accessible");
         }
     }
 
@@ -243,11 +251,22 @@ public class StaEDIStreamReader implements EDIStreamReader {
 
     @Override
     public String[] getVersion() {
-        if (lexer.getDialect() == null || lexer.getDialect().getVersion() == null) {
-            throw new IllegalStateException("version not accessible");
-        }
+        ensureVersionAvailable(Dialect::getVersion, "version");
+        String[] version = lexer.getDialect().getVersion();
+        return Arrays.copyOf(version, version.length);
+    }
 
-        return lexer.getDialect().getVersion();
+    @Override
+    public String[] getTransactionVersion() {
+        ensureVersionAvailable(Dialect::getTransactionVersion, "transaction version");
+        String[] version = lexer.getDialect().getTransactionVersion();
+        return Arrays.copyOf(version, version.length);
+    }
+
+    @Override
+    public String getTransactionVersionString() {
+        ensureVersionAvailable(Dialect::getTransactionVersion, "transaction version");
+        return lexer.getDialect().getTransactionVersionString();
     }
 
     @Override
@@ -431,6 +450,11 @@ public class StaEDIStreamReader implements EDIStreamReader {
         }
 
         return proxy.getBinary();
+    }
+
+    @Override
+    public EDIReference getSchemaTypeReference() {
+        return proxy.getSchemaTypeReference();
     }
 
     /**************************************************************************/

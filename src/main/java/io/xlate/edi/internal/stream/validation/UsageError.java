@@ -1,17 +1,17 @@
 package io.xlate.edi.internal.stream.validation;
 
-import java.util.function.BiConsumer;
-
+import io.xlate.edi.internal.stream.tokenization.ValidationEventHandler;
+import io.xlate.edi.schema.EDIReference;
 import io.xlate.edi.stream.EDIStreamValidationError;
 
 public class UsageError {
-    final String code;
+    final EDIReference typeReference;
     final EDIStreamValidationError error;
     final int depth;
 
-    UsageError(String code, EDIStreamValidationError error, int depth) {
+    UsageError(EDIReference typeReference, EDIStreamValidationError error, int depth) {
         super();
-        this.code = code;
+        this.typeReference = typeReference;
         this.error = error;
         this.depth = depth;
     }
@@ -19,13 +19,13 @@ public class UsageError {
     UsageError(EDIStreamValidationError error) {
         super();
         this.error = error;
-        this.code = null;
+        this.typeReference = null;
         this.depth = -1;
     }
 
     UsageError(UsageNode node, EDIStreamValidationError error) {
         super();
-        this.code = node.getCode();
+        this.typeReference = node.getLink();
         this.depth = node.getDepth();
         this.error = error;
     }
@@ -34,12 +34,12 @@ public class UsageError {
         return this.depth > depth;
     }
 
-    void handle(BiConsumer<String, EDIStreamValidationError> handler) {
-        handler.accept(code, error);
+    void handleSegmentError(ValidationEventHandler handler) {
+        handler.segmentError(typeReference.getReferencedType().getId(), typeReference, error);
     }
 
-    public String getCode() {
-        return code;
+    public EDIReference getTypeReference() {
+        return typeReference;
     }
 
     public EDIStreamValidationError getError() {

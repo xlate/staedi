@@ -108,7 +108,8 @@ class CompositeValidationTest {
 
         assertEquals(EDIStreamEvent.SEGMENT_ERROR, reader.next());
         assertEquals(EDIStreamValidationError.SEGMENT_NOT_IN_DEFINED_TRANSACTION_SET, reader.getErrorType());
-        assertEquals("S99", reader.getReferenceCode());
+        assertEquals("S99", reader.getText());
+        assertNull(reader.getReferenceCode()); // No reference code available for undefined segment
 
         assertEquals(EDIStreamEvent.END_LOOP, reader.next());
         assertEquals("0000A", reader.getReferenceCode());

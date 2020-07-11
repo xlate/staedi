@@ -1,10 +1,9 @@
 package io.xlate.edi.internal.stream.validation;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.AdditionalMatchers.or;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
@@ -17,6 +16,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.stubbing.Answer;
 
+import io.xlate.edi.schema.EDIReference;
 import io.xlate.edi.schema.EDISyntaxRule.Type;
 import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamValidationError;
@@ -47,7 +47,7 @@ class PairedSyntaxValidatorTest extends SyntaxValidatorTestBase {
         }).when(handler)
           .elementError(eq(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR),
                         eq(EDIStreamValidationError.CONDITIONAL_REQUIRED_DATA_ELEMENT_MISSING),
-                        nullable(CharSequence.class),
+                        nullable(EDIReference.class),
                         nullable(CharSequence.class),
                         any(Integer.class),
                         any(Integer.class),
@@ -73,7 +73,7 @@ class PairedSyntaxValidatorTest extends SyntaxValidatorTestBase {
         }).when(handler)
           .elementError(eq(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR),
                         eq(EDIStreamValidationError.CONDITIONAL_REQUIRED_DATA_ELEMENT_MISSING),
-                        nullable(CharSequence.class),
+                        nullable(EDIReference.class),
                         nullable(CharSequence.class),
                         any(Integer.class),
                         any(Integer.class),
@@ -98,7 +98,7 @@ class PairedSyntaxValidatorTest extends SyntaxValidatorTestBase {
         }).when(handler)
           .elementError(eq(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR),
                         eq(EDIStreamValidationError.CONDITIONAL_REQUIRED_DATA_ELEMENT_MISSING),
-                        or(isNull(), eq("E001")),
+                        argThat((arg -> arg == null || "E001".equals(arg.getReferencedType().getCode()))),
                         nullable(CharSequence.class),
                         any(Integer.class),
                         any(Integer.class),
@@ -124,7 +124,7 @@ class PairedSyntaxValidatorTest extends SyntaxValidatorTestBase {
         }).when(handler)
           .elementError(eq(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR),
                         eq(EDIStreamValidationError.CONDITIONAL_REQUIRED_DATA_ELEMENT_MISSING),
-                        nullable(CharSequence.class),
+                        nullable(EDIReference.class),
                         nullable(CharSequence.class),
                         any(Integer.class),
                         any(Integer.class),

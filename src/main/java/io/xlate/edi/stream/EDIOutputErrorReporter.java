@@ -1,5 +1,7 @@
 package io.xlate.edi.stream;
 
+import io.xlate.edi.schema.EDIReference;
+
 /**
  * This interface is used to report non-fatal errors detected in an EDI input.
  *
@@ -22,9 +24,13 @@ public interface EDIOutputErrorReporter {
      * @param data
      *            the invalid data, may be null (e.g. for missing required
      *            element errors)
-     * @param code
-     *            the reference code for the invalid data, if available from the
-     *            current schema used for validation
+     * @param typeReference
+     *            the schema type reference for the invalid data, if available
+     *            from the current schema used for validation
      */
-    void report(EDIStreamValidationError errorType, EDIStreamWriter writer, Location location, CharSequence data, CharSequence code);
+    void report(EDIStreamValidationError errorType,
+                EDIStreamWriter writer,
+                Location location,
+                CharSequence data,
+                EDIReference typeReference);
 }

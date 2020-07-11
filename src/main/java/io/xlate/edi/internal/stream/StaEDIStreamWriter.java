@@ -44,6 +44,7 @@ import io.xlate.edi.internal.stream.tokenization.State;
 import io.xlate.edi.internal.stream.tokenization.ValidationEventHandler;
 import io.xlate.edi.internal.stream.validation.UsageError;
 import io.xlate.edi.internal.stream.validation.Validator;
+import io.xlate.edi.schema.EDIReference;
 import io.xlate.edi.schema.EDIType;
 import io.xlate.edi.schema.Schema;
 import io.xlate.edi.stream.EDIOutputErrorReporter;
@@ -768,8 +769,10 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     }
 
     @Override
-    public void loopBegin(CharSequence id) {
-        if (EDIType.Type.TRANSACTION.toString().equals(id)) {
+    public void loopBegin(EDIReference typeReference) {
+        final String loopCode = typeReference.getReferencedType().getCode();
+
+        if (EDIType.Type.TRANSACTION.toString().equals(loopCode)) {
             transaction = true;
             transactionSchemaAllowed = true;
             if (transactionValidator != null) {
@@ -779,11 +782,13 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     }
 
     @Override
-    public void loopEnd(CharSequence id) {
-        if (EDIType.Type.TRANSACTION.toString().equals(id)) {
+    public void loopEnd(EDIReference typeReference) {
+        final String loopCode = typeReference.getReferencedType().getCode();
+
+        if (EDIType.Type.TRANSACTION.toString().equals(loopCode)) {
             transaction = false;
             dialect.transactionEnd();
-        } else if (EDIType.Type.GROUP.toString().equals(id)) {
+        } else if (EDIType.Type.GROUP.toString().equals(loopCode)) {
             dialect.groupEnd();
         }
     }
@@ -791,7 +796,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     @Override
     public void elementError(EDIStreamEvent event,
                              EDIStreamValidationError error,
-                             CharSequence referenceCode,
+                             EDIReference typeReference,
                              CharSequence data,
                              int element,
                              int component,
@@ -803,16 +808,16 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         copy.setComponentPosition(component);
 
         if (this.reporter != null) {
-            this.reporter.report(error, this, copy, data, referenceCode);
+            this.reporter.report(error, this, copy, data, typeReference);
         } else {
             errors.add(new EDIValidationException(event, error, copy, data));
         }
     }
 
     @Override
-    public void segmentError(CharSequence token, EDIStreamValidationError error) {
+    public void segmentError(CharSequence token, EDIReference typeReference, EDIStreamValidationError error) {
         if (this.reporter != null) {
-            this.reporter.report(error, this, this.getLocation(), token, token);
+            this.reporter.report(error, this, this.getLocation(), token, typeReference);
         } else {
             errors.add(new EDIValidationException(EDIStreamEvent.SEGMENT_ERROR, error, location, token));
         }
@@ -842,7 +847,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
                 for (UsageError error : validator.getElementErrors()) {
                     elementError(error.getError().getCategory(),
                                  error.getError(),
-                                 error.getCode(),
+                                 error.getTypeReference(),
                                  data,
                                  location.getElementPosition(),
                                  location.getComponentPosition(),
