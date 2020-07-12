@@ -12,6 +12,7 @@
       <position>2</position>
       <position>3</position>
       <position>4</position>
+      <position>10</position><!-- Bad position -->
     </syntax>
     <syntax type="single">
       <position>3</position>

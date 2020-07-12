@@ -217,8 +217,16 @@ public class ProxyEventHandler implements EventHandler {
         }
 
         if (exitTransaction(segmentTag)) {
+            // Validate the syntax for the elements directly within the transaction loop
+            if (validator != null) {
+                validator.validateLoopSyntax(this);
+            }
+
             transaction = false;
-            validator().validateSegment(this, segmentTag);
+
+            // Now the control validator after setting transaction to false
+            validator = validator();
+            validator.validateSegment(this, segmentTag);
             typeReference = validator().getSegmentReferenceCode();
         }
 
