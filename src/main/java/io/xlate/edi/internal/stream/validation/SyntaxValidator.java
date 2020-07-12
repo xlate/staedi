@@ -15,6 +15,12 @@
  ******************************************************************************/
 package io.xlate.edi.internal.stream.validation;
 
+import static io.xlate.edi.stream.EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR;
+import static io.xlate.edi.stream.EDIStreamValidationError.CONDITIONAL_REQUIRED_DATA_ELEMENT_MISSING;
+import static io.xlate.edi.stream.EDIStreamValidationError.CONDITIONAL_REQUIRED_SEGMENT_MISSING;
+import static io.xlate.edi.stream.EDIStreamValidationError.EXCLUSION_CONDITION_VIOLATED;
+import static io.xlate.edi.stream.EDIStreamValidationError.SEGMENT_EXCLUSION_CONDITION_VIOLATED;
+
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -23,7 +29,6 @@ import io.xlate.edi.schema.EDIComplexType;
 import io.xlate.edi.schema.EDIReference;
 import io.xlate.edi.schema.EDISyntaxRule;
 import io.xlate.edi.schema.EDIType;
-import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamValidationError;
 
 interface SyntaxValidator {
@@ -102,23 +107,9 @@ interface SyntaxValidator {
 
             if (!used) {
                 if (structure.isNodeType(EDIType.Type.SEGMENT, EDIType.Type.COMPOSITE)) {
-                    final int element = getElementPosition(structure, position);
-                    final int component = getComponentPosition(structure, position);
-
-                    handler.elementError(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR,
-                                         EDIStreamValidationError.CONDITIONAL_REQUIRED_DATA_ELEMENT_MISSING,
-                                         typeReference,
-                                         null,
-                                         element,
-                                         component,
-                                         -1);
+                    signalElementError(structure, typeReference, position, CONDITIONAL_REQUIRED_DATA_ELEMENT_MISSING, handler);
                 } else if (typeReference != null) {
-                    // Error is reported on the first sub-reference of the loop
-                    typeReference = ((EDIComplexType) typeReference.getReferencedType()).getReferences().get(0);
-
-                    handler.segmentError(typeReference.getReferencedType().getId(),
-                                         typeReference,
-                                         EDIStreamValidationError.CONDITIONAL_REQUIRED_SEGMENT_MISSING);
+                    signalSegmentError(typeReference, CONDITIONAL_REQUIRED_SEGMENT_MISSING, handler);
                 }
             }
         }
@@ -130,32 +121,43 @@ interface SyntaxValidator {
         int tally = 0;
 
         for (int position : syntax.getPositions()) {
-            UsageNode node = children.get(position - 1);
+            if (position < limit
+                    && children.get(position - 1).isUsed()
+                    && ++tally > 1) {
 
-            if (position < limit && node.isUsed() && ++tally > 1) {
-                EDIReference typeReference = node.getLink();
+                EDIReference typeReference = children.get(position - 1).getLink();
 
                 if (structure.isNodeType(EDIType.Type.SEGMENT, EDIType.Type.COMPOSITE)) {
-                    final int element = getElementPosition(structure, position);
-                    final int component = getComponentPosition(structure, position);
-
-                    handler.elementError(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR,
-                                         EDIStreamValidationError.EXCLUSION_CONDITION_VIOLATED,
-                                         typeReference,
-                                         null,
-                                         element,
-                                         component,
-                                         -1);
+                    signalElementError(structure, typeReference, position, EXCLUSION_CONDITION_VIOLATED, handler);
                 } else {
-                    // Error is reported on the first sub-reference of the loop
-                    typeReference = ((EDIComplexType) typeReference.getReferencedType()).getReferences().get(0);
-
-                    handler.segmentError(typeReference.getReferencedType().getId(),
-                                         typeReference,
-                                         EDIStreamValidationError.SEGMENT_EXCLUSION_CONDITION_VIOLATED);
+                    signalSegmentError(typeReference, SEGMENT_EXCLUSION_CONDITION_VIOLATED, handler);
                 }
             }
         }
+    }
+
+    static void signalElementError(UsageNode structure,
+                                   EDIReference typeReference,
+                                   int position,
+                                   EDIStreamValidationError error,
+                                   ValidationEventHandler handler) {
+
+        final int element = getElementPosition(structure, position);
+        final int component = getComponentPosition(structure, position);
+
+        handler.elementError(ELEMENT_OCCURRENCE_ERROR, error, typeReference, null, element, component, -1);
+    }
+
+    static void signalSegmentError(EDIReference typeReference, EDIStreamValidationError error, ValidationEventHandler handler) {
+        EDIType type = typeReference.getReferencedType();
+
+        if (!type.isType(EDIType.Type.SEGMENT)) {
+            // Error is reported on the first sub-reference of a loop
+            typeReference = ((EDIComplexType) type).getReferences().get(0);
+            type = typeReference.getReferencedType();
+        }
+
+        handler.segmentError(type.getId(), typeReference, error);
     }
 
     static int getComponentPosition(UsageNode structure, int position) {
