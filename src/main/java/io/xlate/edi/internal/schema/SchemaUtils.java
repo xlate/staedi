@@ -19,7 +19,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.net.MalformedURLException;
-import java.net.URI;
 import java.net.URL;
 import java.util.Enumeration;
 import java.util.Map;
@@ -110,11 +109,12 @@ public class SchemaUtils {
     }
 
     private static Schema getXmlSchema(String resource) throws EDISchemaException {
-        URL location = getURL(resource);
-        URL locationContext;
+        final URL location = getURL(resource);
+        final URL locationContext;
 
         try {
-            locationContext = URI.create(location.toString()).resolve(".").toURL();
+            final String external = location.toExternalForm();
+            locationContext = new URL(external.substring(0, external.lastIndexOf('/') + 1));
         } catch (MalformedURLException e) {
             throw new EDISchemaException("Unable to resolve schema location context", e);
         }
