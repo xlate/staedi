@@ -326,6 +326,28 @@ class ErrorEventsTest {
     }
 
     @Test
+    void testEDIFACT_NeitherGroupNorTransactionUsed() throws EDIStreamException {
+        EDIInputFactory factory = EDIInputFactory.newFactory();
+        InputStream stream = new ByteArrayInputStream((""
+                + "UNB+UNOA:4:::02+005435656:1+006415160:1+20060515:1434+00000000000001'"
+                + "UNZ+0+00000000000001'").getBytes());
+
+        EDIStreamReader reader = factory.createEDIStreamReader(stream);
+        reader = factory.createFilteredReader(reader, errorFilter);
+
+        assertTrue(reader.hasNext(), "Expected errors not found");
+        reader.next();
+        assertEquals(EDIStreamValidationError.CONDITIONAL_REQUIRED_SEGMENT_MISSING, reader.getErrorType());
+        assertEquals("UNG", reader.getReferenceCode());
+
+        reader.next();
+        assertEquals(EDIStreamValidationError.CONDITIONAL_REQUIRED_SEGMENT_MISSING, reader.getErrorType());
+        assertEquals("UNH", reader.getReferenceCode());
+
+        assertTrue(!reader.hasNext(), "Unexpected errors exist");
+    }
+
+    @Test
     void testValidEmptySegment() throws EDISchemaException, EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = new ByteArrayInputStream((""

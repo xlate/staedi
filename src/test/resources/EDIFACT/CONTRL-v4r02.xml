@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<schema xmlns="http://xlate.io/EDISchema/v3">
+<schema xmlns="http://xlate.io/EDISchema/v4">
   <transaction>
     <sequence>
       <segment type="UCI" minOccurs="1" maxOccurs="1" />
-      <loop code="L0001" minOccurs="0" maxOccurs="999">
+      <loop code="SG1" minOccurs="0" maxOccurs="999">
         <sequence>
           <segment type="UCM" minOccurs="1" maxOccurs="1" />
-          <loop code="L0002" minOccurs="0" maxOccurs="999">
+          <loop code="SG2" minOccurs="0" maxOccurs="999">
             <sequence>
               <segment type="UCS" minOccurs="1" maxOccurs="1" />
               <segment type="UCD" minOccurs="0" maxOccurs="99" />
@@ -14,13 +14,13 @@
           </loop>
         </sequence>
       </loop>
-      <loop code="L0003" minOccurs="0" maxOccurs="999">
+      <loop code="SG3" minOccurs="0" maxOccurs="999">
         <sequence>
           <segment type="UCF" minOccurs="1" maxOccurs="1" />
-          <loop code="L0004" minOccurs="0" maxOccurs="999">
+          <loop code="SG4" minOccurs="0" maxOccurs="999">
             <sequence>
               <segment type="UCM" minOccurs="1" maxOccurs="1" />
-              <loop code="L0005" minOccurs="0" maxOccurs="999">
+              <loop code="SG5" minOccurs="0" maxOccurs="999">
                 <sequence>
                   <segment type="UCS" minOccurs="1" maxOccurs="1" />
                   <segment type="UCD" minOccurs="0" maxOccurs="99" />
@@ -31,6 +31,10 @@
         </sequence>
       </loop>
     </sequence>
+    <syntax type="exclusion">
+      <position>2</position><!-- Loop L0001 -->
+      <position>3</position>
+    </syntax>
   </transaction>
   <elementType name="DE0004" number="4" base="string" maxLength="35" />
   <elementType name="DE0007" number="7" base="identifier" maxLength="4">
