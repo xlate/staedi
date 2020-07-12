@@ -1062,6 +1062,16 @@ public class Validator {
         }
     }
 
+    public void validateLoopSyntax(ValidationEventHandler validationHandler) {
+        final UsageNode loop = segment.getParent();
+
+        for (EDISyntaxRule rule : loop.getSyntaxRules()) {
+            final EDISyntaxRule.Type ruleType = rule.getType();
+            SyntaxValidator validator = SyntaxValidator.getInstance(ruleType);
+            validator.validate(rule, loop, validationHandler);
+        }
+    }
+
     void validateImplRepetitions(String version, int elementPosition, int componentPosition) {
         if (elementPosition > 0 && componentPosition < 0) {
             UsageNode previousImpl = getImplElement(version, elementPosition - 1);

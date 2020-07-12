@@ -234,15 +234,25 @@ abstract class SchemaReaderBase implements SchemaReader {
             refs.add(readControlStructure(reader, element, null, types));
             nextTag(reader, "completing transaction"); // Advance to end element
             nextTag(reader, "reading after transaction"); // Advance to next start element
+            element = reader.getName();
         }
 
         refs.add(trailerRef);
+
+        final List<EDISyntaxRule> rules;
+
+        if (qnSyntax.equals(element)) {
+            rules = new ArrayList<>(2);
+            readSyntaxList(reader, rules);
+        } else {
+            rules = Collections.emptyList();
+        }
 
         StructureType interchange = new StructureType(StaEDISchema.INTERCHANGE_ID,
                                                       EDIType.Type.INTERCHANGE,
                                                       "INTERCHANGE",
                                                       refs,
-                                                      Collections.emptyList());
+                                                      rules);
 
         types.put(interchange.getId(), interchange);
         nextTag(reader, "advancing after interchange");
@@ -390,11 +400,10 @@ abstract class SchemaReaderBase implements SchemaReader {
 
         if (event == XMLStreamConstants.START_ELEMENT) {
             requireElementStart(qnSyntax, reader);
-            do {
-                readSyntax(reader, rules);
-                event = nextTag(reader, "reading syntax elements");
-            } while (event == XMLStreamConstants.START_ELEMENT && qnSyntax.equals(reader.getName()));
+            readSyntaxList(reader, rules);
         }
+
+        event = reader.getEventType();
 
         if (event == XMLStreamConstants.END_ELEMENT) {
             return new StructureType(id, type, code, refs, rules);
@@ -513,6 +522,13 @@ abstract class SchemaReaderBase implements SchemaReader {
         }
 
         return new Reference.Version(minVersion, maxVersion, minOccurs, maxOccurs);
+    }
+
+    void readSyntaxList(XMLStreamReader reader, List<EDISyntaxRule> rules) {
+        do {
+            readSyntax(reader, rules);
+            nextTag(reader, "reading after syntax element");
+        } while (qnSyntax.equals(reader.getName()));
     }
 
     void readSyntax(XMLStreamReader reader, List<EDISyntaxRule> rules) {

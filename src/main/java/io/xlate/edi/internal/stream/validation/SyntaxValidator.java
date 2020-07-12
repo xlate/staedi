@@ -15,35 +15,49 @@
  ******************************************************************************/
 package io.xlate.edi.internal.stream.validation;
 
+import static io.xlate.edi.stream.EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR;
+import static io.xlate.edi.stream.EDIStreamValidationError.CONDITIONAL_REQUIRED_DATA_ELEMENT_MISSING;
+import static io.xlate.edi.stream.EDIStreamValidationError.CONDITIONAL_REQUIRED_SEGMENT_MISSING;
+import static io.xlate.edi.stream.EDIStreamValidationError.EXCLUSION_CONDITION_VIOLATED;
+import static io.xlate.edi.stream.EDIStreamValidationError.SEGMENT_EXCLUSION_CONDITION_VIOLATED;
+
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.xlate.edi.internal.stream.tokenization.ValidationEventHandler;
+import io.xlate.edi.schema.EDIComplexType;
 import io.xlate.edi.schema.EDIReference;
 import io.xlate.edi.schema.EDISyntaxRule;
 import io.xlate.edi.schema.EDIType;
-import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamValidationError;
 
 interface SyntaxValidator {
 
     static SyntaxValidator getInstance(EDISyntaxRule.Type type) {
+        SyntaxValidator instance = null;
+
         switch (type) {
         case CONDITIONAL:
-            return ConditionSyntaxValidator.getInstance();
+            instance = ConditionSyntaxValidator.getInstance();
+            break;
         case EXCLUSION:
-            return ExclusionSyntaxValidator.getInstance();
+            instance = ExclusionSyntaxValidator.getInstance();
+            break;
         case LIST:
-            return ListSyntaxValidator.getInstance();
+            instance = ListSyntaxValidator.getInstance();
+            break;
         case PAIRED:
-            return PairedSyntaxValidator.getInstance();
+            instance = PairedSyntaxValidator.getInstance();
+            break;
         case REQUIRED:
-            return RequiredSyntaxValidator.getInstance();
+            instance = RequiredSyntaxValidator.getInstance();
+            break;
         case SINGLE:
-            return SingleSyntaxValidator.getInstance();
-        default:
-            throw new IllegalArgumentException("Unexpected syntax restriction type " + type + ".");
+            instance = SingleSyntaxValidator.getInstance();
+            break;
         }
+
+        return instance;
     }
 
     static class SyntaxStatus {
@@ -80,28 +94,23 @@ interface SyntaxValidator {
 
         for (int position : syntax.getPositions()) {
             final boolean used;
-            final EDIReference referenceType;
+            EDIReference typeReference;
 
             if (position < limit) {
                 UsageNode node = children.get(position - 1);
                 used = node.isUsed();
-                referenceType = node.getLink();
+                typeReference = node.getLink();
             } else {
                 used = false;
-                referenceType = null;
+                typeReference = null;
             }
 
             if (!used) {
-                final int element = getElementPosition(structure, position);
-                final int component = getComponentPosition(structure, position);
-
-                handler.elementError(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR,
-                                     EDIStreamValidationError.CONDITIONAL_REQUIRED_DATA_ELEMENT_MISSING,
-                                     referenceType,
-                                     null,
-                                     element,
-                                     component,
-                                     -1);
+                if (structure.isNodeType(EDIType.Type.SEGMENT, EDIType.Type.COMPOSITE)) {
+                    signalElementError(structure, typeReference, position, CONDITIONAL_REQUIRED_DATA_ELEMENT_MISSING, handler);
+                } else if (typeReference != null) {
+                    signalSegmentError(typeReference, CONDITIONAL_REQUIRED_SEGMENT_MISSING, handler);
+                }
             }
         }
     }
@@ -112,19 +121,43 @@ interface SyntaxValidator {
         int tally = 0;
 
         for (int position : syntax.getPositions()) {
-            if (position < limit && children.get(position - 1).isUsed() && ++tally > 1) {
-                final int element = getElementPosition(structure, position);
-                final int component = getComponentPosition(structure, position);
+            if (position < limit
+                    && children.get(position - 1).isUsed()
+                    && ++tally > 1) {
 
-                handler.elementError(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR,
-                                     EDIStreamValidationError.EXCLUSION_CONDITION_VIOLATED,
-                                     structure.getLink(),
-                                     null,
-                                     element,
-                                     component,
-                                     -1);
+                EDIReference typeReference = children.get(position - 1).getLink();
+
+                if (structure.isNodeType(EDIType.Type.SEGMENT, EDIType.Type.COMPOSITE)) {
+                    signalElementError(structure, typeReference, position, EXCLUSION_CONDITION_VIOLATED, handler);
+                } else {
+                    signalSegmentError(typeReference, SEGMENT_EXCLUSION_CONDITION_VIOLATED, handler);
+                }
             }
         }
+    }
+
+    static void signalElementError(UsageNode structure,
+                                   EDIReference typeReference,
+                                   int position,
+                                   EDIStreamValidationError error,
+                                   ValidationEventHandler handler) {
+
+        final int element = getElementPosition(structure, position);
+        final int component = getComponentPosition(structure, position);
+
+        handler.elementError(ELEMENT_OCCURRENCE_ERROR, error, typeReference, null, element, component, -1);
+    }
+
+    static void signalSegmentError(EDIReference typeReference, EDIStreamValidationError error, ValidationEventHandler handler) {
+        EDIType type = typeReference.getReferencedType();
+
+        if (!type.isType(EDIType.Type.SEGMENT)) {
+            // Error is reported on the first sub-reference of a loop
+            typeReference = ((EDIComplexType) type).getReferences().get(0);
+            type = typeReference.getReferencedType();
+        }
+
+        handler.segmentError(type.getId(), typeReference, error);
     }
 
     static int getComponentPosition(UsageNode structure, int position) {

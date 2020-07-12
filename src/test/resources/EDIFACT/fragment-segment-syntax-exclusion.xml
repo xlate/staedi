@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<schema xmlns="http://xlate.io/EDISchema/v4">
+  <transaction>
+    <sequence>
+      <segment type="UXA" />
+      <segment type="UXB" />
+      <segment type="UXC" />
+      <segment type="UXD" />
+    </sequence>
+    <syntax type="exclusion">
+      <position>1</position>
+      <position>2</position>
+      <position>3</position>
+      <position>4</position>
+      <position>10</position><!-- Bad position -->
+    </syntax>
+    <syntax type="single">
+      <position>3</position>
+      <position>4</position>
+    </syntax>
+  </transaction>
+
+  <elementType name="DE0000" code="0" base="string" maxLength="35" />
+
+  <segmentType name="UXA">
+    <sequence>
+      <element type="DE0000" minOccurs="1" />
+    </sequence>
+  </segmentType>
+
+  <segmentType name="UXB">
+    <sequence>
+      <element type="DE0000" minOccurs="1" />
+    </sequence>
+  </segmentType>
+
+  <segmentType name="UXC">
+    <sequence>
+      <element type="DE0000" minOccurs="1" />
+    </sequence>
+  </segmentType>
+
+  <segmentType name="UXD">
+    <sequence>
+      <element type="DE0000" minOccurs="1" />
+    </sequence>
+  </segmentType>
+</schema>

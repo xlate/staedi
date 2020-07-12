@@ -80,7 +80,7 @@ class StaEDISchemaTest {
         InputStream schemaStream = getClass().getResourceAsStream("/EDIFACT/CONTRL-v4r02.xml");
         XMLStreamReader reader = XMLInputFactory.newInstance().createXMLStreamReader(schemaStream);
         reader.nextTag(); // Pass by <schema> element
-        Map<String, EDIType> types = new SchemaReaderV3(reader, Collections.emptyMap()).readTypes();
+        Map<String, EDIType> types = new SchemaReaderV4(reader, Collections.emptyMap()).readTypes();
         schema.setTypes(types);
 
         assertEquals(EDIType.Type.TRANSACTION, schema.getType(StaEDISchema.TRANSACTION_ID).getType());

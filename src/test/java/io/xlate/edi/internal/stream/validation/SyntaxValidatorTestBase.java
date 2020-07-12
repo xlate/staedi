@@ -30,6 +30,7 @@ abstract class SyntaxValidatorTestBase {
         when(structureRef.getReferencedType()).thenReturn(structureType);
 
         structure = mock(UsageNode.class);
+        when(structure.isNodeType(EDIType.Type.SEGMENT, EDIType.Type.COMPOSITE)).thenReturn(true);
         when(structure.isNodeType(EDIType.Type.SEGMENT)).thenReturn(true);
     }
 

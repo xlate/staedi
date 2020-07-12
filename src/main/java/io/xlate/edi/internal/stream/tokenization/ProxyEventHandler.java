@@ -151,6 +151,12 @@ public class ProxyEventHandler implements EventHandler {
 
     @Override
     public void interchangeEnd() {
+        Validator validator = validator();
+
+        if (validator != null) {
+            validator.validateLoopSyntax(this);
+        }
+
         enqueueEvent(EDIStreamEvent.END_INTERCHANGE, EDIStreamValidationError.NONE, "", null, location);
     }
 
@@ -175,6 +181,9 @@ public class ProxyEventHandler implements EventHandler {
     @Override
     public void loopEnd(EDIReference typeReference) {
         final String loopCode = typeReference.getReferencedType().getCode();
+
+        // Validator can not be null when a loopEnd event has been signaled.
+        validator().validateLoopSyntax(this);
 
         if (EDIType.Type.TRANSACTION.toString().equals(loopCode)) {
             transaction = false;
@@ -208,8 +217,16 @@ public class ProxyEventHandler implements EventHandler {
         }
 
         if (exitTransaction(segmentTag)) {
+            // Validate the syntax for the elements directly within the transaction loop
+            if (validator != null) {
+                validator.validateLoopSyntax(this);
+            }
+
             transaction = false;
-            validator().validateSegment(this, segmentTag);
+
+            // Now the control validator after setting transaction to false
+            validator = validator();
+            validator.validateSegment(this, segmentTag);
             typeReference = validator().getSegmentReferenceCode();
         }
 
