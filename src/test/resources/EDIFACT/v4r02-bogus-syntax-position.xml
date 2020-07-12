@@ -1,0 +1,668 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<schema xmlns="http://xlate.io/EDISchema/v4">
+    <interchange header="UNB" trailer="UNZ">
+        <sequence>
+            <group header="UNG" trailer="UNE">
+                <transaction header="UNH" trailer="UNT"/>
+            </group>
+            <transaction header="UNH" trailer="UNT"/>
+        </sequence>
+        <syntax type="single">
+            <position>2</position><!-- Top-level Group -->
+            <position>3</position><!-- Top-level Transaction -->
+            <position>5</position><!-- Bogus -->
+        </syntax>
+    </interchange>
+    <elementType name="DE0001" code="1" base="identifier" minLength="4" maxLength="4">
+        <enumeration>
+            <value>UNOA</value>
+            <value>UNOB</value>
+            <value>UNOC</value>
+            <value>UNOD</value>
+            <value>UNOE</value>
+            <value>UNOF</value>
+            <value>UNOG</value>
+            <value>UNOH</value>
+            <value>UNOI</value>
+            <value>UNOJ</value>
+            <value>UNOK</value>
+            <value>UNOL</value>
+            <value>UNOW</value>
+            <value>UNOX</value>
+            <value>UNOY</value>
+        </enumeration>
+    </elementType>
+    <elementType name="DE0002" code="2" base="identifier">
+        <enumeration>
+            <value>1</value>
+            <value>2</value>
+            <value>3</value>
+            <value>4</value>
+        </enumeration>
+    </elementType>
+    <elementType name="DE0004" code="4" base="string" maxLength="35"/>
+    <elementType name="DE0007" code="7" base="identifier" maxLength="4">
+        <enumeration>
+            <value>1</value>
+            <value>4</value>
+            <value>5</value>
+            <value>8</value>
+            <value>9</value>
+            <value>12</value>
+            <value>14</value>
+            <value>18</value>
+            <value>22</value>
+            <value>30</value>
+            <value>31</value>
+            <value>33</value>
+            <value>34</value>
+            <value>51</value>
+            <value>52</value>
+            <value>53</value>
+            <value>54</value>
+            <value>55</value>
+            <value>57</value>
+            <value>58</value>
+            <value>59</value>
+            <value>61</value>
+            <value>63</value>
+            <value>65</value>
+            <value>80</value>
+            <value>82</value>
+            <value>84</value>
+            <value>85</value>
+            <value>86</value>
+            <value>87</value>
+            <value>89</value>
+            <value>90</value>
+            <value>91</value>
+            <value>92</value>
+            <value>103</value>
+            <value>128</value>
+            <value>129</value>
+            <value>144</value>
+            <value>145</value>
+            <value>146</value>
+            <value>147</value>
+            <value>148</value>
+            <value>500</value>
+            <value>501</value>
+            <value>502</value>
+            <value>Z01</value>
+            <value>ZZZ</value>
+        </enumeration>
+    </elementType>
+    <elementType name="DE0008" code="8" base="string" maxLength="35"/>
+    <elementType name="DE0010" code="10" base="string" maxLength="35"/>
+    <elementType name="DE0014" code="14" base="string" maxLength="35"/>
+    <elementType name="DE0017" code="17" base="decimal" minLength="8" maxLength="8"/>
+    <elementType name="DE0019" code="19" base="decimal" minLength="4" maxLength="4"/>
+    <elementType name="DE0020" code="20" base="string" maxLength="14"/>
+    <elementType name="DE0022" code="22" base="string" maxLength="14"/>
+    <elementType name="DE0025" code="25" base="identifier" minLength="2" maxLength="2">
+        <enumeration>
+            <value>AA</value>
+            <value>BB</value>
+        </enumeration>
+    </elementType>
+    <elementType name="DE0026" code="26" base="string" maxLength="14"/>
+    <elementType name="DE0029" code="29" base="identifier">
+        <enumeration>
+            <value>A</value>
+        </enumeration>
+    </elementType>
+    <elementType name="DE0031" code="31" base="decimal"/>
+    <elementType name="DE0032" code="32" base="string" maxLength="35"/>
+    <elementType name="DE0035" code="35" base="decimal"/>
+    <elementType name="DE0036" code="36" base="decimal" maxLength="6"/>
+    <elementType name="DE0038" code="38" base="string" maxLength="6"/>
+    <elementType name="DE0040" code="40" base="string" maxLength="35"/>
+    <elementType name="DE0042" code="42" base="string" maxLength="35"/>
+    <elementType name="DE0044" code="44" base="string" maxLength="35"/>
+    <elementType name="DE0046" code="46" base="string" maxLength="35"/>
+    <elementType name="DE0048" code="48" base="string" maxLength="14"/>
+    <elementType name="DE0051" code="51" base="identifier" maxLength="3">
+        <enumeration>
+            <value>AA</value>
+            <value>AB</value>
+            <value>AC</value>
+            <value>AD</value>
+            <value>AE</value>
+            <value>AF</value>
+            <value>AG</value>
+            <value>AH</value>
+            <value>AI</value>
+            <value>CC</value>
+            <value>CE</value>
+            <value>EC</value>
+            <value>ED</value>
+            <value>EE</value>
+            <value>EN</value>
+            <value>ER</value>
+            <value>EU</value>
+            <value>EW</value>
+            <value>EX</value>
+            <value>IA</value>
+            <value>KE</value>
+            <value>LI</value>
+            <value>OD</value>
+            <value>RI</value>
+            <value>RT</value>
+            <value>UN</value>
+        </enumeration>
+    </elementType>
+    <elementType name="DE0052" code="52" base="identifier" maxLength="3">
+        <enumeration>
+            <value>1</value>
+            <value>2</value>
+            <value>4</value>
+            <value>D</value>
+            <value>S</value>
+            <value>88</value>
+            <value>89</value>
+            <value>90</value>
+        </enumeration>
+    </elementType>
+    <elementType name="DE0054" code="54" base="identifier" maxLength="3">
+        <enumeration>
+            <value>1</value>
+            <value>2</value>
+            <value>00A</value>
+            <value>00B</value>
+            <value>01A</value>
+            <value>01B</value>
+            <value>01C</value>
+            <value>02A</value>
+            <value>02B</value>
+            <value>03A</value>
+            <value>03B</value>
+            <value>04A</value>
+            <value>04B</value>
+            <value>05A</value>
+            <value>05B</value>
+            <value>06A</value>
+            <value>06B</value>
+            <value>07A</value>
+            <value>07B</value>
+            <value>08A</value>
+            <value>08B</value>
+            <value>09A</value>
+            <value>09B</value>
+            <value>10A</value>
+            <value>10B</value>
+            <value>11A</value>
+            <value>11B</value>
+            <value>12A</value>
+            <value>12B</value>
+            <value>13A</value>
+            <value>13B</value>
+            <value>14A</value>
+            <value>14B</value>
+            <value>15A</value>
+            <value>15B</value>
+            <value>16A</value>
+            <value>16B</value>
+            <value>17A</value>
+            <value>17B</value>
+            <value>18A</value>
+            <value>18B</value>
+            <value>19A</value>
+            <value>902</value>
+            <value>911</value>
+            <value>912</value>
+            <value>921</value>
+            <value>932</value>
+            <value>93A</value>
+            <value>94A</value>
+            <value>94B</value>
+            <value>95A</value>
+            <value>95B</value>
+            <value>96A</value>
+            <value>96B</value>
+            <value>97A</value>
+            <value>97B</value>
+            <value>98A</value>
+            <value>98B</value>
+            <value>99A</value>
+            <value>99B</value>
+        </enumeration>
+    </elementType>
+    <elementType name="DE0057" code="57" base="string" maxLength="6"/>
+    <elementType name="DE0058" code="58" base="string" maxLength="14"/>
+    <elementType name="DE0060" code="60" base="decimal" maxLength="6"/>
+    <elementType name="DE0062" code="62" base="string" maxLength="14"/>
+    <elementType name="DE0065" code="65" base="identifier" maxLength="6">
+        <enumeration>
+            <value>APERAK</value>
+            <value>AUTACK</value>
+            <value>AUTHOR</value>
+            <value>AVLREQ</value>
+            <value>AVLRSP</value>
+            <value>BALANC</value>
+            <value>BANSTA</value>
+            <value>BAPLIE</value>
+            <value>BERMAN</value>
+            <value>BMISRM</value>
+            <value>BOPBNK</value>
+            <value>BOPCUS</value>
+            <value>BOPDIR</value>
+            <value>BOPINF</value>
+            <value>BUSCRD</value>
+            <value>CALINF</value>
+            <value>CASINT</value>
+            <value>CASRES</value>
+            <value>CHACCO</value>
+            <value>CLASET</value>
+            <value>CNTCND</value>
+            <value>COACSU</value>
+            <value>COARRI</value>
+            <value>CODECO</value>
+            <value>CODENO</value>
+            <value>COEDOR</value>
+            <value>COHAOR</value>
+            <value>COLREQ</value>
+            <value>COMDIS</value>
+            <value>CONAPW</value>
+            <value>CONDPV</value>
+            <value>CONDRA</value>
+            <value>CONDRO</value>
+            <value>CONEST</value>
+            <value>CONITT</value>
+            <value>CONPVA</value>
+            <value>CONQVA</value>
+            <value>CONRPW</value>
+            <value>CONTEN</value>
+            <value>CONTRL</value>
+            <value>CONWQD</value>
+            <value>COPARN</value>
+            <value>COPAYM</value>
+            <value>COPINO</value>
+            <value>COPRAR</value>
+            <value>COREOR</value>
+            <value>COSTCO</value>
+            <value>COSTOR</value>
+            <value>CREADV</value>
+            <value>CREEXT</value>
+            <value>CREMUL</value>
+            <value>CUSCAR</value>
+            <value>CUSDEC</value>
+            <value>CUSEXP</value>
+            <value>CUSPED</value>
+            <value>CUSREP</value>
+            <value>CUSRES</value>
+            <value>DAPLOS</value>
+            <value>DEBADV</value>
+            <value>DEBMUL</value>
+            <value>DEBREC</value>
+            <value>DELFOR</value>
+            <value>DELJIT</value>
+            <value>DESADV</value>
+            <value>DESTIM</value>
+            <value>DGRECA</value>
+            <value>DIRDEB</value>
+            <value>DIRDEF</value>
+            <value>DMRDEF</value>
+            <value>DMSTAT</value>
+            <value>DOCADV</value>
+            <value>DOCAMA</value>
+            <value>DOCAMI</value>
+            <value>DOCAMR</value>
+            <value>DOCAPP</value>
+            <value>DOCARE</value>
+            <value>DOCINF</value>
+            <value>ENTREC</value>
+            <value>FINCAN</value>
+            <value>FINPAY</value>
+            <value>FINSTA</value>
+            <value>GENRAL</value>
+            <value>GESMES</value>
+            <value>GOVCBR</value>
+            <value>HANMOV</value>
+            <value>ICASRP</value>
+            <value>ICSOLI</value>
+            <value>IFCSUM</value>
+            <value>IFTCCA</value>
+            <value>IFTDGN</value>
+            <value>IFTFCC</value>
+            <value>IFTICL</value>
+            <value>IFTMAN</value>
+            <value>IFTMBC</value>
+            <value>IFTMBF</value>
+            <value>IFTMBP</value>
+            <value>IFTMCA</value>
+            <value>IFTMCS</value>
+            <value>IFTMIN</value>
+            <value>IFTRIN</value>
+            <value>IFTSAI</value>
+            <value>IFTSTA</value>
+            <value>IFTSTQ</value>
+            <value>IHCEBI</value>
+            <value>IHCLME</value>
+            <value>IMPDEF</value>
+            <value>INFCON</value>
+            <value>INFENT</value>
+            <value>INSDES</value>
+            <value>INSPRE</value>
+            <value>INSREQ</value>
+            <value>INSRPT</value>
+            <value>INVOIC</value>
+            <value>INVRPT</value>
+            <value>IPPOAD</value>
+            <value>IPPOMO</value>
+            <value>ISENDS</value>
+            <value>ITRRPT</value>
+            <value>JAPRES</value>
+            <value>JINFDE</value>
+            <value>JOBAPP</value>
+            <value>JOBCON</value>
+            <value>JOBMOD</value>
+            <value>JOBOFF</value>
+            <value>JUPREQ</value>
+            <value>KEYMAN</value>
+            <value>LEDGER</value>
+            <value>LREACT</value>
+            <value>LRECLM</value>
+            <value>MEDPID</value>
+            <value>MEDPRE</value>
+            <value>MEDREQ</value>
+            <value>MEDRPT</value>
+            <value>MEDRUC</value>
+            <value>MEQPOS</value>
+            <value>MOVINS</value>
+            <value>MSCONS</value>
+            <value>ORDCHG</value>
+            <value>ORDERS</value>
+            <value>ORDRSP</value>
+            <value>OSTENQ</value>
+            <value>OSTRPT</value>
+            <value>PARTIN</value>
+            <value>PASREQ</value>
+            <value>PASRSP</value>
+            <value>PAXLST</value>
+            <value>PAYDUC</value>
+            <value>PAYEXT</value>
+            <value>PAYMUL</value>
+            <value>PAYORD</value>
+            <value>PRICAT</value>
+            <value>PRIHIS</value>
+            <value>PROCST</value>
+            <value>PRODAT</value>
+            <value>PRODEX</value>
+            <value>PROINQ</value>
+            <value>PROSRV</value>
+            <value>PROTAP</value>
+            <value>PRPAID</value>
+            <value>QALITY</value>
+            <value>QUOTES</value>
+            <value>RDRMES</value>
+            <value>REBORD</value>
+            <value>RECADV</value>
+            <value>RECALC</value>
+            <value>RECECO</value>
+            <value>RECLAM</value>
+            <value>RECORD</value>
+            <value>REGENT</value>
+            <value>RELIST</value>
+            <value>REMADV</value>
+            <value>REPREM</value>
+            <value>REQDOC</value>
+            <value>REQOTE</value>
+            <value>RESETT</value>
+            <value>RESMSG</value>
+            <value>RESREQ</value>
+            <value>RESRSP</value>
+            <value>RETACC</value>
+            <value>RETANN</value>
+            <value>RETINS</value>
+            <value>RPCALL</value>
+            <value>SAFHAZ</value>
+            <value>SANCRT</value>
+            <value>SKDREQ</value>
+            <value>SKDUPD</value>
+            <value>SLSFCT</value>
+            <value>SLSRPT</value>
+            <value>SOCADE</value>
+            <value>SSIMOD</value>
+            <value>SSRECH</value>
+            <value>SSREGW</value>
+            <value>STATAC</value>
+            <value>STLRPT</value>
+            <value>SUPCOT</value>
+            <value>SUPMAN</value>
+            <value>SUPRES</value>
+            <value>TANSTA</value>
+            <value>TAXCON</value>
+            <value>TIQREQ</value>
+            <value>TIQRSP</value>
+            <value>TPFREP</value>
+            <value>TSDUPD</value>
+            <value>TUPREQ</value>
+            <value>TUPRSP</value>
+            <value>UTILMD</value>
+            <value>UTILTS</value>
+            <value>VATDEC</value>
+            <value>VERMAS</value>
+            <value>VESDEP</value>
+            <value>WASDIS</value>
+            <value>WKGRDC</value>
+            <value>WKGRRE</value>
+        </enumeration>
+    </elementType>
+    <elementType name="DE0068" code="68" base="string" maxLength="35"/>
+    <elementType name="DE0070" code="70" base="decimal" maxLength="2"/>
+    <elementType name="DE0073" code="73" base="identifier">
+        <enumeration>
+            <value>C</value>
+            <value>F</value>
+        </enumeration>
+    </elementType>
+    <elementType name="DE0074" code="74" base="decimal" maxLength="10"/>
+    <elementType name="DE0076" code="76" base="string" minLength="2" maxLength="2"/>
+    <elementType name="DE0080" code="80" base="string" maxLength="6"/>
+    <elementType name="DE0110" code="110" base="string" maxLength="6"/>
+    <elementType name="DE0113" code="113" base="identifier" maxLength="6">
+        <enumeration>
+            <value>AA</value>
+            <value>AB</value>
+            <value>AC</value>
+            <value>AD</value>
+            <value>AE</value>
+            <value>AF</value>
+            <value>AG</value>
+            <value>AH</value>
+            <value>AI</value>
+            <value>AJ</value>
+            <value>AK</value>
+            <value>AL</value>
+            <value>AM</value>
+            <value>AN</value>
+            <value>AO</value>
+            <value>AP</value>
+            <value>AQ</value>
+            <value>AR</value>
+            <value>AS</value>
+            <value>SECACK</value>
+            <value>SECAUT</value>
+        </enumeration>
+    </elementType>
+    <elementType name="DE0115" code="115" base="string" maxLength="14"/>
+    <elementType name="DE0116" code="116" base="string" maxLength="3"/>
+    <elementType name="DE0118" code="118" base="string" maxLength="3"/>
+    <elementType name="DE0121" code="121" base="string" maxLength="14"/>
+    <elementType name="DE0122" code="122" base="string" maxLength="3"/>
+    <elementType name="DE0124" code="124" base="string" maxLength="3"/>
+    <elementType name="DE0127" code="127" base="string" maxLength="14"/>
+    <elementType name="DE0128" code="128" base="string" maxLength="3"/>
+    <elementType name="DE0130" code="130" base="string" maxLength="3"/>
+    <elementType name="DE0133" code="133" base="identifier" maxLength="3">
+        <enumeration>
+            <value>1</value>
+            <value>2</value>
+            <value>3</value>
+            <value>4</value>
+            <value>5</value>
+            <value>6</value>
+            <value>7</value>
+            <value>8</value>
+            <value>ZZZ</value>
+        </enumeration>
+    </elementType>
+    <compositeType name="CES001">
+        <sequence>
+            <element type="DE0001" minOccurs="1"/>
+            <element type="DE0002" minOccurs="1"/>
+            <element type="DE0080"/>
+            <element type="DE0133"/>
+            <element type="DE0076"/>
+        </sequence>
+    </compositeType>
+    <compositeType name="CES002">
+        <sequence>
+            <element type="DE0004" minOccurs="1"/>
+            <element type="DE0007"/>
+            <element type="DE0008"/>
+            <element type="DE0042"/>
+        </sequence>
+    </compositeType>
+    <compositeType name="CES003">
+        <sequence>
+            <element type="DE0010" minOccurs="1"/>
+            <element type="DE0007"/>
+            <element type="DE0014"/>
+            <element type="DE0046"/>
+        </sequence>
+    </compositeType>
+    <compositeType name="CES004">
+        <sequence>
+            <element type="DE0017" minOccurs="1"/>
+            <element type="DE0019" minOccurs="1"/>
+        </sequence>
+    </compositeType>
+    <compositeType name="CES005">
+        <sequence>
+            <element type="DE0022" minOccurs="1"/>
+            <element type="DE0025"/>
+        </sequence>
+    </compositeType>
+    <compositeType name="CES006">
+        <sequence>
+            <element type="DE0040" minOccurs="1"/>
+            <element type="DE0007"/>
+        </sequence>
+    </compositeType>
+    <compositeType name="CES007">
+        <sequence>
+            <element type="DE0044" minOccurs="1"/>
+            <element type="DE0007"/>
+        </sequence>
+    </compositeType>
+    <compositeType name="CES008">
+        <sequence>
+            <element type="DE0052" minOccurs="1"/>
+            <element type="DE0054" minOccurs="1"/>
+            <element type="DE0057"/>
+        </sequence>
+    </compositeType>
+    <compositeType name="CES009">
+        <sequence>
+            <element type="DE0065" minOccurs="1"/>
+            <element type="DE0052" minOccurs="1"/>
+            <element type="DE0054" minOccurs="1"/>
+            <element type="DE0051" minOccurs="1"/>
+            <element type="DE0057"/>
+            <element type="DE0110"/>
+            <element type="DE0113"/>
+        </sequence>
+    </compositeType>
+    <compositeType name="CES010">
+        <sequence>
+            <element type="DE0070" minOccurs="1"/>
+            <element type="DE0073"/>
+        </sequence>
+    </compositeType>
+    <compositeType name="CES016">
+        <sequence>
+            <element type="DE0115" minOccurs="1"/>
+            <element type="DE0116"/>
+            <element type="DE0118"/>
+            <element type="DE0051"/>
+        </sequence>
+    </compositeType>
+    <compositeType name="CES017">
+        <sequence>
+            <element type="DE0121" minOccurs="1"/>
+            <element type="DE0122"/>
+            <element type="DE0124"/>
+            <element type="DE0051"/>
+        </sequence>
+    </compositeType>
+    <compositeType name="CES018">
+        <sequence>
+            <element type="DE0127" minOccurs="1"/>
+            <element type="DE0128"/>
+            <element type="DE0130"/>
+            <element type="DE0051"/>
+        </sequence>
+    </compositeType>
+    <segmentType name="UNB">
+        <sequence>
+            <composite type="CES001" minOccurs="1"/>
+            <composite type="CES002" minOccurs="1"/>
+            <composite type="CES003" minOccurs="1"/>
+            <composite type="CES004" minOccurs="1"/>
+            <element type="DE0020" minOccurs="1"/>
+            <composite type="CES005"/>
+            <element type="DE0026"/>
+            <element type="DE0029"/>
+            <element type="DE0031"/>
+            <element type="DE0032"/>
+            <element type="DE0035"/>
+        </sequence>
+    </segmentType>
+    <segmentType name="UNE">
+        <sequence>
+            <element type="DE0060" minOccurs="1"/>
+            <element type="DE0048" minOccurs="1"/>
+        </sequence>
+    </segmentType>
+    <segmentType name="UNG">
+        <sequence>
+            <element type="DE0038"/>
+            <composite type="CES006"/>
+            <composite type="CES007"/>
+            <composite type="CES004"/>
+            <element type="DE0048" minOccurs="1"/>
+            <element type="DE0051"/>
+            <composite type="CES008"/>
+            <element type="DE0058"/>
+        </sequence>
+        <syntax type="paired">
+            <position>1</position>
+            <position>6</position>
+            <position>7</position>
+        </syntax>
+    </segmentType>
+    <segmentType name="UNH">
+        <sequence>
+            <element type="DE0062" minOccurs="1"/>
+            <composite type="CES009" minOccurs="1"/>
+            <element type="DE0068"/>
+            <composite type="CES010"/>
+            <composite type="CES016"/>
+            <composite type="CES017"/>
+            <composite type="CES018"/>
+        </sequence>
+    </segmentType>
+    <segmentType name="UNT">
+        <sequence>
+            <element type="DE0074" minOccurs="1"/>
+            <element type="DE0062" minOccurs="1"/>
+        </sequence>
+    </segmentType>
+    <segmentType name="UNZ">
+        <sequence>
+            <element type="DE0036" minOccurs="1"/>
+            <element type="DE0020" minOccurs="1"/>
+        </sequence>
+    </segmentType>
+</schema>

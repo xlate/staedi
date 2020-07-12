@@ -326,13 +326,15 @@ class ErrorEventsTest {
     }
 
     @Test
-    void testEDIFACT_NeitherGroupNorTransactionUsed() throws EDIStreamException {
+    void testEDIFACT_NeitherGroupNorTransactionUsed() throws EDIStreamException, EDISchemaException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = new ByteArrayInputStream((""
                 + "UNB+UNOA:4:::02+005435656:1+006415160:1+20060515:1434+00000000000001'"
                 + "UNZ+0+00000000000001'").getBytes());
 
         EDIStreamReader reader = factory.createEDIStreamReader(stream);
+        reader.next(); // Advance to interchange start
+        reader.setControlSchema(SchemaFactory.newFactory().createSchema(getClass().getResource("/EDIFACT/v4r02-bogus-syntax-position.xml")));
         reader = factory.createFilteredReader(reader, errorFilter);
 
         assertTrue(reader.hasNext(), "Expected errors not found");

@@ -32,8 +32,8 @@
       </loop>
     </sequence>
     <syntax type="exclusion">
-      <position>2</position><!-- Loop L0001 -->
-      <position>3</position>
+      <position>2</position><!-- Loop SG1 -->
+      <position>3</position><!-- Loop SG3 -->
     </syntax>
   </transaction>
   <elementType name="DE0004" number="4" base="string" maxLength="35" />
