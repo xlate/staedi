@@ -21,6 +21,13 @@ import io.xlate.edi.stream.Location;
 public class X12Dialect implements Dialect {
 
     private static final String ISA = "ISA";
+    private static final String ISX = "ISX";
+    private static final String GS = "GS";
+    private static final String ST = "ST";
+
+    private static final int RELEASE_ISX_SEGMENT = 704; // 007040 (Version 7, release 4)
+    private static final int RELEASE_ELEMENT_I65 = 402; // 004020 (Version 4, release 2)
+
     static final char DFLT_SEGMENT_TERMINATOR = '~';
     static final char DFLT_DATA_ELEMENT_SEPARATOR = '*';
     static final char DFLT_COMPONENT_ELEMENT_SEPARATOR = ':';
@@ -39,10 +46,14 @@ public class X12Dialect implements Dialect {
     private int index = -1;
     private boolean initialized;
     private boolean rejected;
-    private char sd = DFLT_SEGMENT_TERMINATOR;
-    private char ed = DFLT_DATA_ELEMENT_SEPARATOR;
-    private char cd = DFLT_COMPONENT_ELEMENT_SEPARATOR;
-    private char er = DFLT_REPETITION_SEPARATOR;
+
+    private CharacterSet characters;
+    private char segmentDelimiter = DFLT_SEGMENT_TERMINATOR;
+    private char elementDelimiter = DFLT_DATA_ELEMENT_SEPARATOR;
+    private char decimalMark = '.';
+    private char releaseIndicator = 0;
+    private char componentDelimiter = DFLT_COMPONENT_ELEMENT_SEPARATOR;
+    private char elementRepeater = DFLT_REPETITION_SEPARATOR;
 
     private static final int TX_AGENCY = 0;
     private static final int TX_VERSION = 1;
@@ -76,31 +87,36 @@ public class X12Dialect implements Dialect {
             }
         }
 
-        cd = header[X12_COMPONENT_OFFSET];
-        sd = header[X12_SEGMENT_OFFSET];
-        er = header[X12_REPEAT_OFFSET];
+        componentDelimiter = header[X12_COMPONENT_OFFSET];
+        segmentDelimiter = header[X12_SEGMENT_OFFSET];
+        elementRepeater = header[X12_REPEAT_OFFSET];
 
-        characters.setClass(cd, CharacterClass.COMPONENT_DELIMITER);
-        characters.setClass(sd, CharacterClass.SEGMENT_DELIMITER);
+        characters.setClass(componentDelimiter, CharacterClass.COMPONENT_DELIMITER);
+        characters.setClass(segmentDelimiter, CharacterClass.SEGMENT_DELIMITER);
 
-        try {
-            version = new String[] { new String(header, 84, 5) };
+        version = new String[] { new String(header, 84, 5) };
 
-            if (Integer.parseInt(version[0]) >= 402) {
-                characters.setClass(er, CharacterClass.ELEMENT_REPEATER);
-            } else {
-                er = '\0';
-            }
-        } catch (@SuppressWarnings("unused") NumberFormatException nfe) {
+        if (numericVersion() >= RELEASE_ELEMENT_I65) {
+            characters.setClass(elementRepeater, CharacterClass.ELEMENT_REPEATER);
+        } else {
             /*
-             * Ignore exception - the ELEMENT_REPEATER will not be set due to a
-             * non-numeric version.
+             * Exception parsing the version or older version - the ELEMENT_REPEATER
+             * will not be set.
              */
-            er = '\0';
+            elementRepeater = '\0';
         }
 
+        this.characters = characters;
         initialized = true;
         return true;
+    }
+
+    int numericVersion() {
+        try {
+            return Integer.parseInt(version[0]);
+        } catch (NumberFormatException nfe) {
+            return 0;
+        }
     }
 
     @Override
@@ -138,8 +154,8 @@ public class X12Dialect implements Dialect {
                 header = new char[X12_ISA_LENGTH];
                 break;
             case X12_ELEMENT_OFFSET:
-                ed = value;
-                characters.setClass(ed, CharacterClass.ELEMENT_DELIMITER);
+                elementDelimiter = value;
+                characters.setClass(elementDelimiter, CharacterClass.ELEMENT_DELIMITER);
                 break;
             default:
                 break;
@@ -161,32 +177,32 @@ public class X12Dialect implements Dialect {
 
     @Override
     public char getComponentElementSeparator() {
-        return cd;
+        return componentDelimiter;
     }
 
     @Override
     public char getDataElementSeparator() {
-        return ed;
+        return elementDelimiter;
     }
 
     @Override
     public char getDecimalMark() {
-        return '.';
+        return decimalMark;
     }
 
     @Override
     public char getReleaseIndicator() {
-        return 0;
+        return releaseIndicator;
     }
 
     @Override
     public char getRepetitionSeparator() {
-        return er;
+        return elementRepeater;
     }
 
     @Override
     public char getSegmentTerminator() {
-        return sd;
+        return segmentDelimiter;
     }
 
     void clearTransactionVersion() {
@@ -203,7 +219,12 @@ public class X12Dialect implements Dialect {
 
     @Override
     public void elementData(CharSequence data, Location location) {
-        if ("GS".equals(location.getSegmentTag())) {
+        if (ISX.equals(location.getSegmentTag()) && numericVersion() >= RELEASE_ISX_SEGMENT) {
+            if (location.getElementPosition() == 1 && data.length() == 1) {
+                releaseIndicator = data.charAt(0);
+                characters.setClass(releaseIndicator, CharacterClass.RELEASE_CHARACTER);
+            }
+        } else if (GS.equals(location.getSegmentTag())) {
             switch (location.getElementPosition()) {
             case 1:
                 clearTransactionVersion();
@@ -220,7 +241,7 @@ public class X12Dialect implements Dialect {
             default:
                 break;
             }
-        } else if ("ST".equals(location.getSegmentTag()) && location.getElementPosition() == 3 && data.length() > 0) {
+        } else if (ST.equals(location.getSegmentTag()) && location.getElementPosition() == 3 && data.length() > 0) {
             transactionVersion[TX_VERSION] = data.toString();
             updateTransactionVersionString(transactionVersion);
         }
