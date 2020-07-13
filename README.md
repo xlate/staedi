@@ -19,7 +19,7 @@ using a "pull" processing flow for EDI parsing and an emit flow for EDI generati
 ## Support
 Support is available to assist with incorporating StAEDI into your business's application. Available services include
 - **Development of EDI validation schemas** using your documentation (e.g. PDF)
-- **Integrating StAEDI** into you Java application
+- **Integrating StAEDI** into your Java application
 - **Troubleshooting issues** with your existing integration (not including StAEDI bugs - please open an issue)
 
 Please email ***contact at xlate dot io*** for more information.
