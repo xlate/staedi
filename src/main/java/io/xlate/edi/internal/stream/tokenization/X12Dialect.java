@@ -18,7 +18,7 @@ package io.xlate.edi.internal.stream.tokenization;
 import io.xlate.edi.stream.EDIStreamConstants.Standards;
 import io.xlate.edi.stream.Location;
 
-public class X12Dialect implements Dialect {
+public class X12Dialect extends Dialect {
 
     private static final String ISA = "ISA";
     private static final String ISX = "ISX";
@@ -48,13 +48,6 @@ public class X12Dialect implements Dialect {
     private boolean rejected;
 
     private CharacterSet characters;
-    private char segmentDelimiter = DFLT_SEGMENT_TERMINATOR;
-    private char elementDelimiter = DFLT_DATA_ELEMENT_SEPARATOR;
-    private char decimalMark = '.';
-    private char releaseIndicator = 0;
-    private char componentDelimiter = DFLT_COMPONENT_ELEMENT_SEPARATOR;
-    private char elementRepeater = DFLT_REPETITION_SEPARATOR;
-
     private static final int TX_AGENCY = 0;
     private static final int TX_VERSION = 1;
 
@@ -64,6 +57,13 @@ public class X12Dialect implements Dialect {
     private String groupVersion;
 
     X12Dialect() {
+        segmentDelimiter = DFLT_SEGMENT_TERMINATOR;
+        elementDelimiter = DFLT_DATA_ELEMENT_SEPARATOR;
+        decimalMark = '.';
+        releaseIndicator = 0;
+        componentDelimiter = DFLT_COMPONENT_ELEMENT_SEPARATOR;
+        elementRepeater = DFLT_REPETITION_SEPARATOR;
+
         clearTransactionVersion();
     }
 
@@ -173,36 +173,6 @@ public class X12Dialect implements Dialect {
         }
 
         return true;
-    }
-
-    @Override
-    public char getComponentElementSeparator() {
-        return componentDelimiter;
-    }
-
-    @Override
-    public char getDataElementSeparator() {
-        return elementDelimiter;
-    }
-
-    @Override
-    public char getDecimalMark() {
-        return decimalMark;
-    }
-
-    @Override
-    public char getReleaseIndicator() {
-        return releaseIndicator;
-    }
-
-    @Override
-    public char getRepetitionSeparator() {
-        return elementRepeater;
-    }
-
-    @Override
-    public char getSegmentTerminator() {
-        return segmentDelimiter;
     }
 
     void clearTransactionVersion() {

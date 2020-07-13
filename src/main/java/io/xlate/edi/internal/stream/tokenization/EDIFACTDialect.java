@@ -18,20 +18,13 @@ package io.xlate.edi.internal.stream.tokenization;
 import io.xlate.edi.stream.Location;
 import io.xlate.edi.stream.EDIStreamConstants.Standards;
 
-public class EDIFACTDialect implements Dialect {
+public class EDIFACTDialect extends Dialect {
 
     public static final String UNA = "UNA";
     public static final String UNB = "UNB";
 
     private static final String[] EMPTY = new String[0];
     private static final int EDIFACT_UNA_LENGTH = 9;
-
-    private char componentDelimiter = ':';
-    private char elementDelimiter = '+';
-    private char decimalMark = '.';
-    private char releaseIndicator = '?';
-    private char elementRepeater = '*';
-    private char segmentDelimiter = '\'';
 
     private String headerTag;
     private String[] version;
@@ -49,6 +42,13 @@ public class EDIFACTDialect implements Dialect {
     private String transactionVersionString;
 
     EDIFACTDialect() {
+        componentDelimiter = ':';
+        elementDelimiter = '+';
+        decimalMark = '.';
+        releaseIndicator = '?';
+        elementRepeater = '*';
+        segmentDelimiter = '\'';
+
         clearTransactionVersion();
     }
 
@@ -256,36 +256,6 @@ public class EDIFACTDialect implements Dialect {
 
     void updateTransactionVersionString(String[] transactionVersion) {
         transactionVersionString = transactionVersion != null ? String.join(".", transactionVersion) : "";
-    }
-
-    @Override
-    public char getComponentElementSeparator() {
-        return componentDelimiter;
-    }
-
-    @Override
-    public char getDataElementSeparator() {
-        return elementDelimiter;
-    }
-
-    @Override
-    public char getDecimalMark() {
-        return decimalMark;
-    }
-
-    @Override
-    public char getReleaseIndicator() {
-        return releaseIndicator;
-    }
-
-    @Override
-    public char getRepetitionSeparator() {
-        return elementRepeater;
-    }
-
-    @Override
-    public char getSegmentTerminator() {
-        return segmentDelimiter;
     }
 
     @Override

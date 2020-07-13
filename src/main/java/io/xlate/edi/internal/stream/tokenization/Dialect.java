@@ -17,35 +17,54 @@ package io.xlate.edi.internal.stream.tokenization;
 
 import io.xlate.edi.stream.Location;
 
-public interface Dialect {
+public abstract class Dialect {
 
-    String getStandard();
+    protected char segmentDelimiter;
+    protected char elementDelimiter;
+    protected char decimalMark;
+    protected char releaseIndicator;
+    protected char componentDelimiter;
+    protected char elementRepeater;
 
-    String[] getVersion();
+    public char getComponentElementSeparator() {
+        return componentDelimiter;
+    }
 
-    void setHeaderTag(String tag);
+    public char getDataElementSeparator() {
+        return elementDelimiter;
+    }
 
-    String getHeaderTag();
+    public char getDecimalMark() {
+        return decimalMark;
+    }
 
-    boolean isConfirmed();
+    public char getReleaseIndicator() {
+        return releaseIndicator;
+    }
 
-    boolean isRejected();
+    public char getRepetitionSeparator() {
+        return elementRepeater;
+    }
 
-    boolean isServiceAdviceSegment(String tag);
+    public char getSegmentTerminator() {
+        return segmentDelimiter;
+    }
 
-    boolean appendHeader(CharacterSet characters, char value);
+    public abstract String getStandard();
 
-    char getSegmentTerminator();
+    public abstract String[] getVersion();
 
-    char getDataElementSeparator();
+    public abstract void setHeaderTag(String tag);
 
-    char getComponentElementSeparator();
+    public abstract String getHeaderTag();
 
-    char getRepetitionSeparator();
+    public abstract boolean isConfirmed();
 
-    char getReleaseIndicator();
+    public abstract boolean isRejected();
 
-    char getDecimalMark();
+    public abstract boolean isServiceAdviceSegment(String tag);
+
+    public abstract boolean appendHeader(CharacterSet characters, char value);
 
     /**
      * Notify the dialect of element data and its location in the stream. Does
@@ -56,17 +75,17 @@ public interface Dialect {
      * @param location
      *            the location of the element
      */
-    void elementData(CharSequence data, Location location);
+    public abstract void elementData(CharSequence data, Location location);
 
     /**
      * Notify the dialect that a transaction is complete.
      */
-    void transactionEnd();
+    public abstract void transactionEnd();
 
     /**
      * Notify the dialect that a group is complete.
      */
-    void groupEnd();
+    public abstract void groupEnd();
 
     /**
      * Returns the identifying elements of the current transaction's version.
@@ -74,7 +93,7 @@ public interface Dialect {
      * @return the array of elements identifying the current transaction's
      *         version
      */
-    String[] getTransactionVersion();
+    public abstract String[] getTransactionVersion();
 
     /**
      * Returns the identifying elements of the current transaction's version as
@@ -83,5 +102,5 @@ public interface Dialect {
      * @return the String representation of the elements identifying the current
      *         transaction's version
      */
-    String getTransactionVersionString();
+    public abstract String getTransactionVersionString();
 }
