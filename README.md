@@ -15,6 +15,7 @@ using a "pull" processing flow for EDI parsing and an emit flow for EDI generati
 - Validation of **EDI standards** (segment occurrences, element type, element length constraints, etc.)
 - Validation of **industry implementations**, for example HIPAA
 - Read and write EDI data using standard Java XML interfaces (StAX)
+- Support for X12 `ISX` segment (release character, element 01 only), introduced in version `007040`
 
 ## Support
 Support is available to assist with incorporating StAEDI into your business's application. Available services include
