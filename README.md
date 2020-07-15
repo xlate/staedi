@@ -64,7 +64,7 @@ String segmentName = reader.getText();
 <dependency>
   <groupId>io.xlate</groupId>
   <artifactId>staedi</artifactId>
-  <version>1.8.1</version>
+  <version>1.9.0</version>
 </dependency>
 ```
 
