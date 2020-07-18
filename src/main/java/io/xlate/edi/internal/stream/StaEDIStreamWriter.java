@@ -100,7 +100,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
 
     final boolean emptyElementTruncation;
     private final boolean prettyPrint;
-    private final String lineSeparator;
+    private String prettyPrintString;
 
     private long elementLength = 0;
 
@@ -117,12 +117,6 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         this.reporter = reporter;
         this.emptyElementTruncation = booleanValue(properties.get(EDIOutputFactory.TRUNCATE_EMPTY_ELEMENTS));
         this.prettyPrint = booleanValue(properties.get(EDIOutputFactory.PRETTY_PRINT));
-
-        if (prettyPrint) {
-            lineSeparator = System.getProperty("line.separator");
-        } else {
-            lineSeparator = null;
-        }
         this.location = new StaEDIStreamLocation();
     }
 
@@ -147,6 +141,15 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         repetitionSeparator = getDelimiter(properties, Delimiters.REPETITION, dialect::getRepetitionSeparator);
         decimalMark = getDelimiter(properties, Delimiters.DECIMAL, dialect::getDecimalMark);
         releaseIndicator = getDelimiter(properties, Delimiters.RELEASE, dialect::getReleaseIndicator);
+
+        String lineSeparator = System.getProperty("line.separator");
+
+        if (prettyPrint && lineSeparator.indexOf(segmentTerminator) < 0) {
+            // Do not add the line separator after the segment terminator if they conflict. I.e., the separater contains the terminator
+            prettyPrintString = lineSeparator;
+        } else {
+            prettyPrintString = "";
+        }
     }
 
     private boolean areDelimitersSpecified() {
@@ -432,7 +435,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         write(this.segmentTerminator);
 
         if (prettyPrint) {
-            writeString(lineSeparator);
+            writeString(prettyPrintString);
         }
     }
 

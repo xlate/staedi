@@ -1801,4 +1801,23 @@ class StaEDIStreamWriterTest {
         assertEquals("UNA:+.?*~UNB+UNOA:3+005435656:1+006415160:1+060515:1434+00000000000778~",
                      new String(stream.toByteArray()));
     }
+
+    @Test
+    void testPrettyPrintDisabledWithNewLineSegmentTerminator() throws EDIStreamException {
+        EDIOutputFactory factory = EDIOutputFactory.newFactory();
+        factory.setProperty(Delimiters.SEGMENT, '\n');
+        factory.setProperty(EDIOutputFactory.PRETTY_PRINT, true);
+
+        ByteArrayOutputStream stream = new ByteArrayOutputStream(4096);
+        EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
+
+        writer.startInterchange();
+        writeHeader(writer);
+
+        writer.flush();
+        String segment = new String(stream.toByteArray());
+
+        assertEquals(106, segment.length());
+        assertEquals("\n", segment.substring(105));
+    }
 }
