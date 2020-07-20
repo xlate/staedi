@@ -41,6 +41,7 @@ import java.util.Deque;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Queue;
 import java.util.logging.Logger;
 
@@ -749,27 +750,14 @@ public class Validator {
      */
     static void setLoopReferenceCode(StreamEvent[] events, int index, int count, PolymorphicImplementation implType) {
         for (int i = index; i < count; i++) {
-            CharSequence stdRefCode = events[i].getReferenceCode();
+            String stdRefCode = events[i].getReferenceCode();
             // This is the reference code of the impl's standard type
-            CharSequence implRefCode = ((EDIComplexType) implType.getReferencedType()).getCode();
+            String implRefCode = ((EDIComplexType) implType.getReferencedType()).getCode();
 
-            if (events[i].getType() == EDIStreamEvent.START_LOOP && compare(stdRefCode, implRefCode) == 0) {
+            if (events[i].getType() == EDIStreamEvent.START_LOOP && Objects.equals(stdRefCode, implRefCode)) {
                 events[i].setTypeReference(implType);
             }
         }
-    }
-
-    // Replace with CharSequence#compare(CharSequence, CharSequence) when migrating to Java 11+
-    static int compare(CharSequence cs1, CharSequence cs2) {
-        for (int i = 0, len = Math.min(cs1.length(), cs2.length()); i < len; i++) {
-            char a = cs1.charAt(i);
-            char b = cs2.charAt(i);
-            if (a != b) {
-                return a - b;
-            }
-        }
-
-        return cs1.length() - cs2.length();
     }
 
     /* ********************************************************************** */
