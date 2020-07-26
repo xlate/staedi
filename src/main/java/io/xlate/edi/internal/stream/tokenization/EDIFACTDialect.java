@@ -220,10 +220,12 @@ public class EDIFACTDialect extends Dialect {
         }
 
         if (index > EDIFACT_UNA_LENGTH) {
-            if (unbStart > -1 && (index - unbStart) > 9) {
-                rejected = !initialize(characters);
-                return isConfirmed();
-            } else if (header.charAt(index) == 'B') {
+            if (unbStart > -1 && (index - unbStart) > 4) {
+                if (value == elementDelimiter) {
+                    rejected = !initialize(characters);
+                    return isConfirmed();
+                }
+            } else if (value == 'B') {
                 CharSequence un = header.subSequence(index - 2, index);
 
                 if ("UN".contentEquals(un)) {
