@@ -129,7 +129,6 @@ class StaEDIStreamReaderTest implements ConstantsTest {
         expected.put(Delimiters.SEGMENT, '\'');
         expected.put(Delimiters.DATA_ELEMENT, '+');
         expected.put(Delimiters.COMPONENT_ELEMENT, ':');
-        expected.put(Delimiters.REPETITION, ' ');
         expected.put(Delimiters.RELEASE, '?');
         expected.put(Delimiters.DECIMAL, ',');
 
