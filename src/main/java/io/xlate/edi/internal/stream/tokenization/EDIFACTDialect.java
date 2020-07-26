@@ -15,8 +15,8 @@
  ******************************************************************************/
 package io.xlate.edi.internal.stream.tokenization;
 
-import io.xlate.edi.stream.Location;
 import io.xlate.edi.stream.EDIStreamConstants.Standards;
+import io.xlate.edi.stream.Location;
 
 public class EDIFACTDialect extends Dialect {
 
@@ -73,10 +73,14 @@ public class EDIFACTDialect extends Dialect {
 
             if (releaseIndicator != ' ') {
                 characters.setClass(releaseIndicator, CharacterClass.RELEASE_CHARACTER);
+            } else {
+                releaseIndicator = '\0';
             }
 
             if (elementRepeater != ' ') {
                 characters.setClass(elementRepeater, CharacterClass.ELEMENT_REPEATER);
+            } else {
+                elementRepeater = '\0';
             }
 
             characters.setClass(segmentDelimiter, CharacterClass.SEGMENT_DELIMITER);
@@ -89,47 +93,19 @@ public class EDIFACTDialect extends Dialect {
     }
 
     private String[] parseVersion() {
-        int versionStart = findVersionStart(headerTag, header, elementDelimiter);
+        int versionStart = findVersionStart();
+        int versionEnd = header.indexOf(String.valueOf(elementDelimiter), versionStart);
 
-        if (versionStart > -1) {
-            StringBuilder versionBuilder = new StringBuilder();
-
-            for (int i = versionStart; header.charAt(i) != elementDelimiter; i++) {
-                versionBuilder.append(header.charAt(i));
-            }
-
-            return versionBuilder.toString().split('\\' + String.valueOf(componentDelimiter));
+        if (versionEnd - versionStart > 1) {
+            return header.substring(versionStart, versionEnd).split('\\' + String.valueOf(componentDelimiter));
         }
 
         return EMPTY;
     }
 
-    static int findVersionStart(String headerTag, StringBuilder header, char elementDelimiter) {
-        final int length = header.length();
-        int versionStart = -1;
-
-        if (UNB.equals(headerTag)) {
-            if (length >= 10) {
-                versionStart = 4;
-            }
-        } else if (length >= 18) {
-            for (int i = 11; i < length; i++) {
-                if (unbTag(header, i - 2) &&
-                        length >= i + 7 &&
-                        header.charAt(i + 1) == elementDelimiter) {
-                    versionStart = i + 2;
-                    break;
-                }
-            }
-        }
-
-        return versionStart;
-    }
-
-    static boolean unbTag(StringBuilder buffer, int position) {
-        return (buffer.charAt(position) == 'U' &&
-                buffer.charAt(position + 1) == 'N' &&
-                buffer.charAt(position + 2) == 'B');
+    int findVersionStart() {
+        // Skip four characters: UNB<delim>
+        return UNB.equals(headerTag) ? 4 : unbStart + 4;
     }
 
     @Override
@@ -220,10 +196,12 @@ public class EDIFACTDialect extends Dialect {
         }
 
         if (index > EDIFACT_UNA_LENGTH) {
-            if (unbStart > -1 && (index - unbStart) > 9) {
-                rejected = !initialize(characters);
-                return isConfirmed();
-            } else if (header.charAt(index) == 'B') {
+            if (unbStart > -1 && (index - unbStart) > 3) {
+                if (value == elementDelimiter) {
+                    rejected = !initialize(characters);
+                    return isConfirmed();
+                }
+            } else if (value == 'B') {
                 CharSequence un = header.subSequence(index - 2, index);
 
                 if ("UN".contentEquals(un)) {

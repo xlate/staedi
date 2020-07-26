@@ -1820,4 +1820,46 @@ class StaEDIStreamWriterTest {
         assertEquals(106, segment.length());
         assertEquals("\n", segment.substring(105));
     }
+
+    @Test
+    void testVersionReleaseEDIFACTHeader() throws EDIStreamException {
+        EDIOutputFactory factory = EDIOutputFactory.newFactory();
+        ByteArrayOutputStream stream = new ByteArrayOutputStream(4096);
+        EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
+
+        writer.startInterchange();
+        writer.writeStartSegment("UNA").writeEndSegment();
+        // UNB+UNOA:4:::2+005435656:1+006415160:1+060515:1434+00000000000778~
+        writer.writeStartSegment("UNB");
+
+        writer.writeStartElement();
+        writer.writeComponent("UNOA");
+        writer.writeComponent("4");
+        writer.writeEmptyComponent();
+        writer.writeEmptyComponent();
+        writer.writeComponent("2");
+        writer.endElement();
+
+        writer.writeStartElement();
+        writer.writeComponent("005435656");
+        writer.writeComponent("1");
+        writer.endElement();
+
+        writer.writeStartElement();
+        writer.writeComponent("006415160");
+        writer.writeComponent("1");
+        writer.endElement();
+
+        writer.writeStartElement();
+        writer.writeComponent("060515");
+        writer.writeComponent("1434");
+        writer.endElement();
+
+        writer.writeElement("00000000000778");
+        writer.writeEndSegment();
+
+        writer.flush();
+        assertEquals("UNA:+.?*'UNB+UNOA:4:::2+005435656:1+006415160:1+060515:1434+00000000000778'",
+                     new String(stream.toByteArray()));
+    }
 }
