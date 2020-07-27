@@ -151,15 +151,15 @@ public class Lexer {
         this.binaryStream = new InputStream() {
             @Override
             public int read() throws IOException {
-                int input = -1;
+                int binaryInput = -1;
 
-                if (binaryRemain-- < 1 || (input = stream.read()) < 0) {
+                if (binaryRemain-- < 1 || (binaryInput = stream.read()) < 0) {
                     state = State.ELEMENT_END_BINARY;
                 } else {
-                    location.incrementOffset(input);
+                    location.incrementOffset(binaryInput);
                 }
 
-                return input;
+                return binaryInput;
             }
         };
 
