@@ -15,7 +15,7 @@ import io.xlate.edi.stream.EDIStreamConstants;
 import io.xlate.edi.stream.EDIStreamException;
 import io.xlate.edi.stream.EDIStreamWriter;
 
-public class WriteEdifactExampleTest {
+class WriteEdifactExampleTest {
 
     @Test
     void testEdifactExample() throws EDIStreamException, IOException {
