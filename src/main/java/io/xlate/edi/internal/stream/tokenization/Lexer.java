@@ -42,6 +42,7 @@ public class Lexer {
     }
 
     private final Deque<Mode> modes = new ArrayDeque<>();
+    private int input = 0;
     private State state = State.INITIAL;
     private State previous;
 
@@ -171,7 +172,11 @@ public class Lexer {
             return;
         }
 
-        int input = 0;
+        if (state == State.INVALID) {
+            // Unable to proceed once the state becomes invalid
+            throw invalidStateError();
+        }
+
         boolean eventsReady = false;
 
         while (!eventsReady && (input = readCharacter()) > -1) {
@@ -268,15 +273,7 @@ public class Lexer {
                 break;
             default:
                 if (clazz != CharacterClass.INVALID) {
-                    StringBuilder message = new StringBuilder();
-                    message.append(": ");
-                    message.append(state);
-                    message.append(" (previous: ");
-                    message.append(previous);
-                    message.append("); input: '");
-                    message.append((char) input);
-                    message.append('\'');
-                    throw error(EDIException.INVALID_STATE, message);
+                    throw invalidStateError();
                 } else {
                     throw error(EDIException.INVALID_CHARACTER);
                 }
@@ -396,6 +393,18 @@ public class Lexer {
         }
 
         return false;
+    }
+
+    private EDIException invalidStateError() {
+        StringBuilder message = new StringBuilder();
+        message.append(": ");
+        message.append(state);
+        message.append(" (previous: ");
+        message.append(previous);
+        message.append("); input: '");
+        message.append((char) input);
+        message.append('\'');
+        return error(EDIException.INVALID_STATE, message);
     }
 
     private EDIException error(int code, CharSequence message) {
