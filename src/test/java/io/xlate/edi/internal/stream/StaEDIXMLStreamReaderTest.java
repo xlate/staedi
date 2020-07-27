@@ -895,4 +895,22 @@ class StaEDIXMLStreamReaderTest {
                 l.getColumnNumber() + "]\n" +
                 "Message: " + "Segment IK5 has error UNEXPECTED_SEGMENT", cause.getMessage());
     }
+
+    @Test
+    void testInvalidInput() throws Exception {
+        EDIInputFactory factory = EDIInputFactory.newFactory();
+        factory.setProperty(EDIInputFactory.EDI_VALIDATE_CONTROL_STRUCTURE, "false");
+        InputStream stream = new ByteArrayInputStream("{}".getBytes());
+        ediReader = factory.createEDIStreamReader(stream);
+        XMLStreamReader xmlReader = factory.createXMLStreamReader(ediReader);
+        XMLStreamReader filtered = XMLInputFactory.newFactory().createFilteredReader(xmlReader,
+                                                                                     reader -> reader.getEventType() == XMLStreamConstants.START_ELEMENT &&
+                                                                                               reader.getLocalName().equals("TRANSACTION"));
+
+        XMLStreamException thrown = assertThrows(XMLStreamException.class, () -> filtered.hasNext());
+        assertTrue(thrown.getCause() instanceof EDIStreamException);
+        String message = thrown.getCause().getMessage();
+        assertTrue(message.contains("EDIE003"));
+        assertTrue(message.contains("input: '{'"));
+    }
 }
