@@ -14,22 +14,20 @@
   License for the specific language governing permissions and limitations under
   the License.
 -->
-<schema xmlns="http://xlate.io/EDISchema/v2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://xlate.io/EDISchema/v2 ../../../../src/main/resources/schema/EDISchema-v2.xsd">
-
+<schema xmlns="http://xlate.io/EDISchema/v4">
   <transaction>
     <sequence>
-      <segment ref="BIN" minOccurs="1" maxOccurs="3" />
+      <segment type="BIN" minOccurs="1" maxOccurs="3" />
     </sequence>
   </transaction>
 
-  <elementType name="E9990" number="9990" base="numeric" maxLength="18" />
-  <elementType name="E9991" number="9991" base="binary" maxLength="999999999999999999" />
+  <elementType name="E9990" code="9990" base="numeric" maxLength="18" />
+  <elementType name="E9991" code="9991" base="binary" maxLength="999999999999999999" />
 
   <segmentType name="BIN">
     <sequence>
-      <element ref="E9990" minOccurs="1" />
-      <element ref="E9991" minOccurs="1" />
+      <element type="E9990" minOccurs="1" />
+      <element type="E9991" minOccurs="1" />
     </sequence>
   </segmentType>
 </schema>

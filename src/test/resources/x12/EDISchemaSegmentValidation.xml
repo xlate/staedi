@@ -14,8 +14,7 @@
   License for the specific language governing permissions and limitations under
   the License.
 -->
-<schema xmlns="http://xlate.io/EDISchema/v2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://xlate.io/EDISchema/v2 ../../../../src/main/resources/schema/EDISchema-v2.xsd">
+<schema xmlns="http://xlate.io/EDISchema/v4">
 
   <interchange header="ISA" trailer="IEA">
     <sequence>
@@ -43,41 +42,41 @@
 
   <segmentType name="ISA">
     <sequence>
-      <element ref="EI01" minOccurs="1" />
-      <element ref="EI02" minOccurs="1" />
-      <element ref="EI03" minOccurs="1" />
-      <element ref="EI04" minOccurs="1" />
-      <element ref="EI05" minOccurs="1" />
-      <element ref="EI06" minOccurs="1" />
-      <element ref="EI05" minOccurs="1" />
-      <element ref="EI07" minOccurs="1" />
-      <element ref="EI08" minOccurs="1" />
-      <element ref="EI09" minOccurs="1" />
-      <element ref="EI65" minOccurs="1" />
-      <element ref="EI11" minOccurs="1" />
-      <element ref="EI12" minOccurs="1" />
-      <element ref="EI13" minOccurs="1" />
-      <element ref="EI14" minOccurs="1" />
-      <element ref="EI15" minOccurs="1" />
+      <element type="EI01" minOccurs="1" />
+      <element type="EI02" minOccurs="1" />
+      <element type="EI03" minOccurs="1" />
+      <element type="EI04" minOccurs="1" />
+      <element type="EI05" minOccurs="1" />
+      <element type="EI06" minOccurs="1" />
+      <element type="EI05" minOccurs="1" />
+      <element type="EI07" minOccurs="1" />
+      <element type="EI08" minOccurs="1" />
+      <element type="EI09" minOccurs="1" />
+      <element type="EI65" minOccurs="1" />
+      <element type="EI11" minOccurs="1" />
+      <element type="EI12" minOccurs="1" />
+      <element type="EI13" minOccurs="1" />
+      <element type="EI14" minOccurs="1" />
+      <element type="EI15" minOccurs="1" />
     </sequence>
   </segmentType>
 
   <segmentType name="S01">
     <sequence>
-      <element ref="E999" minOccurs="1" />
+      <element type="E999" minOccurs="1" />
     </sequence>
   </segmentType>
 
   <segmentType name="S09">
     <sequence>
-      <element ref="E999" minOccurs="1" />
+      <element type="E999" minOccurs="1" />
     </sequence>
   </segmentType>
 
   <segmentType name="IEA">
     <sequence>
-      <element ref="EI16" minOccurs="1" />
-      <element ref="EI12" minOccurs="1" />
+      <element type="EI16" minOccurs="1" />
+      <element type="EI12" minOccurs="1" />
     </sequence>
   </segmentType>
 </schema>
