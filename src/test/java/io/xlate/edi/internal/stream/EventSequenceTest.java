@@ -452,7 +452,7 @@ class EventSequenceTest {
         assertEquals(EDIStreamValidationError.INVALID_CHARACTER_DATA, reader.getErrorType());
         assertEquals("<TOO_LONG_AND_NOT_NUMERIC>", reader.getText());
         assertEquals(EDIStreamEvent.ELEMENT_DATA, reader.next()); // GE02
-        assertEquals("97", reader.getReferenceCode());
+        assertEquals("28", reader.getReferenceCode());
 
         // GE02 - 2nd occurrence
         assertEquals(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR, reader.next());
@@ -462,7 +462,7 @@ class EventSequenceTest {
 
         // GE02 - 3rd occurrence plus data error
         assertEquals(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR, reader.next());
-        assertEquals("97", reader.getReferenceCode());
+        assertEquals("28", reader.getReferenceCode());
         assertEquals(EDIStreamValidationError.TOO_MANY_REPETITIONS, reader.getErrorType());
         assertEquals(EDIStreamEvent.ELEMENT_DATA_ERROR, reader.next());
         assertEquals(EDIStreamValidationError.INVALID_CHARACTER_DATA, reader.getErrorType());
