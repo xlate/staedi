@@ -591,8 +591,8 @@
 
   <segmentType name="GE">
     <sequence>
-      <element type="E28" minOccurs="1"/>
       <element type="E97" minOccurs="1"/>
+      <element type="E28" minOccurs="1"/>
     </sequence>
   </segmentType>
 
