@@ -367,7 +367,7 @@ public class Validator {
         useErrors.clear();
         boolean handled = false;
 
-        while (!handled && cursor.standard != null) {
+        while (!handled) {
             handled = handleNode(tag, cursor.standard, cursor.impl, startDepth, handler);
 
             if (!handled) {
