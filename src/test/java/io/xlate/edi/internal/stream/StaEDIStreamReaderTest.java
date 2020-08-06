@@ -40,6 +40,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
@@ -1523,5 +1524,55 @@ class StaEDIStreamReaderTest implements ConstantsTest {
 
         assertEquals("373", errorReferences.get(0).getReferencedType().getCode());
         assertEquals("373", errorReferences.get(1).getReferencedType().getCode());
+    }
+
+    @Test
+    public void testEmptySegmentAtLoopStartValidation() throws Exception {
+
+        EDIInputFactory factory = EDIInputFactory.newFactory();
+        Schema transSchema = SchemaFactory.newFactory().createSchema(getClass().getResourceAsStream("/EDIFACT/empty-segment-loop-schema.xml"));
+        factory.setProperty(EDIInputFactory.EDI_VALIDATE_CONTROL_STRUCTURE, true);
+        factory.setProperty(EDIInputFactory.EDI_VALIDATE_CONTROL_CODE_VALUES, false);
+
+        EDIStreamReader reader = factory.createEDIStreamReader(getClass().getResourceAsStream("/EDIFACT/empty-segment-loop-example.edi"));
+        String segmentName = null;
+
+        try {
+            while (reader.hasNext()) {
+                switch (reader.next()) {
+                case START_TRANSACTION:
+                    reader.setTransactionSchema(transSchema);
+                    break;
+
+                case START_SEGMENT:
+                    segmentName = reader.getText();
+                    break;
+
+                case END_SEGMENT:
+                    segmentName = null;
+                    break;
+
+                case ELEMENT_DATA:
+                    break;
+
+                case SEGMENT_ERROR:
+                case ELEMENT_DATA_ERROR:
+                case ELEMENT_OCCURRENCE_ERROR:
+                    String textOnError = reader.getText();
+                    Location loc = reader.getLocation();
+                    EDIStreamValidationError error = reader.getErrorType();
+
+                    // Fails printing:
+                    // java.lang.AssertionError: SEGMENT_ERROR: SEGMENT_EXCEEDS_MAXIMUM_USE (refCode=RCI, seg=null, elemPos=-1, compoPos=-1, textOnError=EQN)
+                    Assertions.fail(String.format("%s: %s (refCode=%s, textOnError=%s, loc=%s)",
+                            error.getCategory(), error, reader.getReferenceCode(), textOnError, loc));
+                    break;
+                default:
+                    break;
+                }
+            }
+        } finally {
+            reader.close();
+        }
     }
 }

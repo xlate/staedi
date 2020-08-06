@@ -531,14 +531,7 @@ public class Validator {
         }
 
         completeLoops(handler, startDepth);
-        loopStack.push(current);
-        handler.loopBegin(current.getLink());
-        correctSegment = segment = startLoop(current);
-
-        if (current.exceedsMaximumUsage(SEGMENT_VERSION)) {
-            handleMissingMandatory(handler);
-            handler.segmentError(tag, current.getLink(), LOOP_OCCURS_OVER_MAXIMUM_TIMES);
-        }
+        boolean implUnusedSegment = false;
 
         if (currentImpl != null) {
             UsageNode impl = currentImpl;
@@ -549,11 +542,32 @@ public class Validator {
             }
 
             if (implSegmentCandidates.isEmpty()) {
-                handleMissingMandatory(handler);
-                handler.segmentError(segment.getId(), segment.getLink(), IMPLEMENTATION_UNUSED_SEGMENT_PRESENT);
+                implUnusedSegment = true;
                 // Save the currentImpl so that the search is resumed from the correct location
                 implNode = currentImpl;
+            } else if (implSegmentCandidates.size() == 1) {
+                handleImplementationSelected(currentImpl, currentImpl.getFirstChild(), handler);
             }
+        }
+
+        if (currentImpl != null && implSegmentSelected) {
+            loopStack.push(currentImpl);
+            handler.loopBegin(currentImpl.getLink());
+        } else {
+            loopStack.push(current);
+            handler.loopBegin(current.getLink());
+        }
+
+        correctSegment = segment = startLoop(current);
+
+        if (current.exceedsMaximumUsage(SEGMENT_VERSION)) {
+            handleMissingMandatory(handler);
+            handler.segmentError(tag, current.getLink(), LOOP_OCCURS_OVER_MAXIMUM_TIMES);
+        }
+
+        if (implUnusedSegment) {
+            handleMissingMandatory(handler);
+            handler.segmentError(segment.getId(), segment.getLink(), IMPLEMENTATION_UNUSED_SEGMENT_PRESENT);
         }
 
         return true;
