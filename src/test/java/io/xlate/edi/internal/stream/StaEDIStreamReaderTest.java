@@ -1527,7 +1527,7 @@ class StaEDIStreamReaderTest implements ConstantsTest {
     }
 
     @Test
-    public void testEmptySegmentAtLoopStartValidation() throws Exception {
+    void testEmptySegmentAtLoopStartValidation() throws Exception {
 
         EDIInputFactory factory = EDIInputFactory.newFactory();
         Schema transSchema = SchemaFactory.newFactory().createSchema(getClass().getResourceAsStream("/EDIFACT/empty-segment-loop-schema.xml"));
