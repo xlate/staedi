@@ -1,6 +1,5 @@
 package io.xlate.edi.internal.stream;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -17,9 +16,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import io.xlate.edi.stream.EDINamespaces;
 import io.xlate.edi.stream.EDIOutputFactory;
 import io.xlate.edi.stream.EDIStreamWriter;
-import io.xlate.edi.stream.EDINamespaces;
 
 class StaEDIXMLStreamWriterTest {
 
@@ -56,6 +55,13 @@ class StaEDIXMLStreamWriterTest {
 
     }
 
+    static void unconfirmedBufferEquals(String expected, EDIStreamWriter writer) {
+        StaEDIStreamWriter writerImpl = (StaEDIStreamWriter) writer;
+        writerImpl.unconfirmedBuffer.mark();
+        writerImpl.unconfirmedBuffer.flip();
+        assertEquals(expected, writerImpl.unconfirmedBuffer.toString());
+    }
+
     @Test
     void testWriteStartElementString() throws XMLStreamException {
         it.setPrefix("l", EDINamespaces.LOOPS);
@@ -65,7 +71,7 @@ class StaEDIXMLStreamWriterTest {
         it.writeStartElement("s:ISA");
         it.flush();
         it.close();
-        assertArrayEquals("ISA".getBytes(), stream.toByteArray());
+        unconfirmedBufferEquals("ISA", ediWriter);
     }
 
     @Test
@@ -76,7 +82,7 @@ class StaEDIXMLStreamWriterTest {
         it.writeStartElement("l:INTERCHANGE");
         it.writeStartElement("ISA");
         it.flush();
-        assertArrayEquals("ISA".getBytes(), stream.toByteArray());
+        unconfirmedBufferEquals("ISA", ediWriter);
     }
 
     @Test
@@ -102,7 +108,7 @@ class StaEDIXMLStreamWriterTest {
         it.writeStartElement(EDINamespaces.LOOPS, "INTERCHANGE");
         it.writeStartElement(EDINamespaces.SEGMENTS, "ISA");
         it.flush();
-        assertArrayEquals("ISA".getBytes(), stream.toByteArray());
+        unconfirmedBufferEquals("ISA", ediWriter);
     }
 
     @Test
@@ -113,7 +119,7 @@ class StaEDIXMLStreamWriterTest {
         it.writeStartElement("e", "ISA01", EDINamespaces.ELEMENTS); // Test
         it.writeCharacters("00");
         it.flush();
-        assertArrayEquals("ISA*00".getBytes(), stream.toByteArray());
+        unconfirmedBufferEquals("ISA*00", ediWriter);
     }
 
     @Test
@@ -125,7 +131,7 @@ class StaEDIXMLStreamWriterTest {
         it.writeStartElement("e", "ISA02", EDINamespaces.ELEMENTS);
         it.writeCharacters("          ");
         it.flush();
-        assertArrayEquals("ISA**          ".getBytes(), stream.toByteArray());
+        unconfirmedBufferEquals("ISA**          ", ediWriter);
     }
 
     @Test
@@ -137,7 +143,7 @@ class StaEDIXMLStreamWriterTest {
         it.writeStartElement("e", "ISA02", EDINamespaces.ELEMENTS);
         it.writeCharacters("          ");
         it.flush();
-        assertArrayEquals("ISA**          ".getBytes(), stream.toByteArray());
+        unconfirmedBufferEquals("ISA**          ", ediWriter);
     }
 
     @Test
@@ -149,7 +155,7 @@ class StaEDIXMLStreamWriterTest {
         it.writeStartElement("e", "ISA02", EDINamespaces.ELEMENTS);
         it.writeCharacters("          ");
         it.flush();
-        assertArrayEquals("ISA**          ".getBytes(), stream.toByteArray());
+        unconfirmedBufferEquals("ISA**          ", ediWriter);
     }
 
     @Test
@@ -162,7 +168,7 @@ class StaEDIXMLStreamWriterTest {
         it.writeStartElement("e", "ISA02", EDINamespaces.ELEMENTS);
         it.writeCharacters("          ");
         it.flush();
-        assertArrayEquals("ISA**          ".getBytes(), stream.toByteArray());
+        unconfirmedBufferEquals("ISA**          ", ediWriter);
     }
 
     @Test
@@ -185,7 +191,7 @@ class StaEDIXMLStreamWriterTest {
         it.writeCharacters("00");
         it.writeEndElement(); // Test
         it.flush();
-        assertArrayEquals("ISA*00".getBytes(), stream.toByteArray());
+        unconfirmedBufferEquals("ISA*00", ediWriter);
     }
 
     @Test
@@ -237,7 +243,7 @@ class StaEDIXMLStreamWriterTest {
         it.writeStartElement("s:ISA");
         it.flush();
         it.close();
-        assertArrayEquals("ISA".getBytes(), stream.toByteArray());
+        unconfirmedBufferEquals("ISA", ediWriter);
     }
 
     @Test
@@ -249,7 +255,7 @@ class StaEDIXMLStreamWriterTest {
         it.writeStartElement("s:ISA");
         it.flush();
         it.close();
-        assertArrayEquals("ISA".getBytes(), stream.toByteArray());
+        unconfirmedBufferEquals("ISA", ediWriter);
     }
 
     @Test
@@ -259,7 +265,7 @@ class StaEDIXMLStreamWriterTest {
         it.writeCData(" \t\n\r"); // Test
         it.writeStartElement("s", "ISA", EDINamespaces.SEGMENTS);
         it.flush();
-        assertArrayEquals("ISA".getBytes(), stream.toByteArray());
+        unconfirmedBufferEquals("ISA", ediWriter);
     }
 
     @Test
@@ -269,7 +275,7 @@ class StaEDIXMLStreamWriterTest {
         it.writeCharacters(" \t\n\r"); // Test
         it.writeStartElement("s", "ISA", EDINamespaces.SEGMENTS);
         it.flush();
-        assertArrayEquals("ISA".getBytes(), stream.toByteArray());
+        unconfirmedBufferEquals("ISA", ediWriter);
     }
 
     @Test
@@ -287,7 +293,7 @@ class StaEDIXMLStreamWriterTest {
         it.writeCharacters(" \t \n \r  OUT OF INDEX BOUNDS".toCharArray(), 2, 6); // Test
         it.writeStartElement("s", "ISA", EDINamespaces.SEGMENTS);
         it.flush();
-        assertArrayEquals("ISA".getBytes(), stream.toByteArray());
+        unconfirmedBufferEquals("ISA", ediWriter);
     }
 
     @Test

@@ -24,6 +24,14 @@ public class EDIFACTDialect extends Dialect {
     public static final String UNB = "UNB";
 
     private static final String[] EMPTY = new String[0];
+
+    static final char DFLT_SEGMENT_TERMINATOR = '\'';
+    static final char DFLT_DATA_ELEMENT_SEPARATOR = '+';
+    static final char DFLT_COMPONENT_ELEMENT_SEPARATOR = ':';
+    static final char DFLT_REPETITION_SEPARATOR = '*';
+    static final char DFLT_RELEASE_CHARACTER = '?';
+    static final char DFLT_DECIMAL_MARK = '.';
+
     private static final int EDIFACT_UNA_LENGTH = 9;
 
     private String headerTag;
@@ -42,12 +50,12 @@ public class EDIFACTDialect extends Dialect {
     private String transactionVersionString;
 
     EDIFACTDialect() {
-        componentDelimiter = ':';
-        elementDelimiter = '+';
-        decimalMark = '.';
-        releaseIndicator = '?';
-        elementRepeater = '*';
-        segmentDelimiter = '\'';
+        componentDelimiter = DFLT_COMPONENT_ELEMENT_SEPARATOR;
+        elementDelimiter = DFLT_DATA_ELEMENT_SEPARATOR;
+        decimalMark = DFLT_DECIMAL_MARK;
+        releaseIndicator = DFLT_RELEASE_CHARACTER;
+        elementRepeater = DFLT_REPETITION_SEPARATOR;
+        segmentDelimiter = DFLT_SEGMENT_TERMINATOR;
 
         clearTransactionVersion();
     }
@@ -65,19 +73,22 @@ public class EDIFACTDialect extends Dialect {
     boolean initialize(CharacterSet characters) {
         String[] parsedVersion = parseVersion();
 
-        if (parsedVersion.length > 0) {
+        if (parsedVersion.length > 1) {
             this.version = parsedVersion;
+            final String syntaxVersion = this.version[1];
 
             characters.setClass(componentDelimiter, CharacterClass.COMPONENT_DELIMITER);
             characters.setClass(elementDelimiter, CharacterClass.ELEMENT_DELIMITER);
 
-            if (releaseIndicator != ' ') {
+            if (syntaxVersion.compareTo("4") >= 0 || releaseIndicator != ' ') {
+                // Must not be blank for version 4 and above, may be blank before version 4 if not used
                 characters.setClass(releaseIndicator, CharacterClass.RELEASE_CHARACTER);
             } else {
                 releaseIndicator = '\0';
             }
 
-            if (elementRepeater != ' ') {
+            if (syntaxVersion.compareTo("4") >= 0) {
+                // Must not be blank for version 4 and above
                 characters.setClass(elementRepeater, CharacterClass.ELEMENT_REPEATER);
             } else {
                 elementRepeater = '\0';
@@ -151,14 +162,13 @@ public class EDIFACTDialect extends Dialect {
     boolean processInterchangeHeader(CharacterSet characters, char value) {
         if (index == 0) {
             characters.setClass(componentDelimiter, CharacterClass.COMPONENT_DELIMITER);
-            characters.setClass(releaseIndicator, CharacterClass.RELEASE_CHARACTER);
-            characters.setClass(elementRepeater, CharacterClass.ELEMENT_REPEATER);
-            return true;
         } else if (index == 3) {
+            /*
+             * Do not set the element delimiter until after the segment tag has been passed
+             * to prevent triggering an "element data" event prematurely.
+             */
             characters.setClass(elementDelimiter, CharacterClass.ELEMENT_DELIMITER);
-            return true;
         } else if (segmentDelimiter == value) {
-            characters.setClass(segmentDelimiter, CharacterClass.SEGMENT_DELIMITER);
             rejected = !initialize(characters);
             return isConfirmed();
         }
@@ -185,7 +195,7 @@ public class EDIFACTDialect extends Dialect {
             break;
         case 7:
             elementRepeater = value;
-            setCharacterClass(characters, CharacterClass.ELEMENT_REPEATER, value, false);
+            // Do not set the character class until initialize() is executed
             break;
         case 8:
             segmentDelimiter = value;

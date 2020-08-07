@@ -78,6 +78,13 @@ class StaEDIStreamWriterTest {
         writer.writeEndSegment();
     }
 
+    static void unconfirmedBufferEquals(String expected, EDIStreamWriter writer) {
+        StaEDIStreamWriter writerImpl = (StaEDIStreamWriter) writer;
+        writerImpl.unconfirmedBuffer.mark();
+        writerImpl.unconfirmedBuffer.flip();
+        assertEquals(expected, writerImpl.unconfirmedBuffer.toString());
+    }
+
     @Test
     void testGetProperty() {
         EDIOutputFactory factory = EDIOutputFactory.newFactory();
@@ -178,7 +185,7 @@ class StaEDIStreamWriterTest {
         writer.startInterchange();
         writer.writeStartSegment("ISA");
         writer.flush();
-        assertEquals("ISA", stream.toString());
+        unconfirmedBufferEquals("ISA", writer);
     }
 
     @Test
@@ -224,7 +231,7 @@ class StaEDIStreamWriterTest {
         writer.writeStartElement().writeElementData("E1").endElement();
         writer.writeEndSegment();
         writer.flush();
-        assertEquals("ISA*E1~", stream.toString());
+        unconfirmedBufferEquals("ISA*E1~", writer);
     }
 
     @Test
@@ -252,7 +259,7 @@ class StaEDIStreamWriterTest {
               .writeStartElement()
               .endElement();
         writer.flush();
-        assertEquals("ISA****", stream.toString());
+        unconfirmedBufferEquals("ISA****", writer);
     }
 
     @Test
@@ -355,7 +362,7 @@ class StaEDIStreamWriterTest {
               .startComponent()
               .writeEndSegment();
         writer.flush();
-        assertEquals("ISA*:~", stream.toString());
+        unconfirmedBufferEquals("ISA*:~", writer);
     }
 
     @Test
@@ -375,7 +382,8 @@ class StaEDIStreamWriterTest {
               .writeEmptyElement()
               .writeEndSegment();
         writer.flush();
-        assertEquals("ISA~", stream.toString());
+
+        unconfirmedBufferEquals("ISA~", writer);
     }
 
     @Test
@@ -422,7 +430,7 @@ class StaEDIStreamWriterTest {
         writer.writeEmptyElement();
         writer.writeEndSegment();
         writer.flush();
-        assertEquals("ISA****~", stream.toString());
+        unconfirmedBufferEquals("ISA****~", writer);
     }
 
     @Test
@@ -439,7 +447,7 @@ class StaEDIStreamWriterTest {
         writer.writeEmptyComponent();
         writer.writeEndSegment();
         writer.flush();
-        assertEquals("ISA*:::~", stream.toString());
+        unconfirmedBufferEquals("ISA*:::~", writer);
     }
 
     @Test
@@ -458,7 +466,7 @@ class StaEDIStreamWriterTest {
         writer.endElement();
         writer.writeEndSegment();
         writer.flush();
-        assertEquals("ISA~", stream.toString());
+        unconfirmedBufferEquals("ISA~", writer);
     }
 
     @Test
@@ -518,7 +526,7 @@ class StaEDIStreamWriterTest {
         writer.writeEndSegment();
         writer.flush();
 
-        assertEquals("ISA**:LAST*:::LAST*:SECOND::LAST***LAST~", stream.toString());
+        unconfirmedBufferEquals("ISA**:LAST*:::LAST*:SECOND::LAST***LAST~", writer);
     }
 
     @Test
@@ -532,7 +540,7 @@ class StaEDIStreamWriterTest {
         writer.writeElementData("TEST-ELEMENT");
         writer.writeEndSegment();
         writer.flush();
-        assertEquals("ISA*TEST-ELEMENT~", stream.toString());
+        unconfirmedBufferEquals("ISA*TEST-ELEMENT~", writer);
     }
 
     @Test
@@ -558,7 +566,7 @@ class StaEDIStreamWriterTest {
         writer.writeElementData(new char[] { 'C', 'H', 'A', 'R', 'S' }, 0, 5);
         writer.writeEndSegment();
         writer.flush();
-        assertEquals("ISA*CHARS~", stream.toString());
+        unconfirmedBufferEquals("ISA*CHARS~", writer);
     }
 
     @Test
@@ -929,6 +937,7 @@ class StaEDIStreamWriterTest {
 
         EDIOutputFactory outputFactory = EDIOutputFactory.newFactory();
         outputFactory.setProperty(EDIOutputFactory.PRETTY_PRINT, true);
+        outputFactory.setProperty(Delimiters.REPETITION, '*');
         ByteArrayOutputStream result = new ByteArrayOutputStream(16384);
         EDIStreamWriter writer = null;
 
@@ -1710,7 +1719,53 @@ class StaEDIStreamWriterTest {
     }
 
     @Test
-    void testGetDelimitersEDIFACT_defaults() throws EDIStreamException {
+    void testGetDelimitersEDIFACT_defaults_v4() throws EDIStreamException {
+        EDIOutputFactory factory = EDIOutputFactory.newFactory();
+        ByteArrayOutputStream stream = new ByteArrayOutputStream(4096);
+        EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
+
+        writer.startInterchange();
+        // UNB+UNOA:4+005435656:1+006415160:1+060515:1434+00000000000778'
+        writer.writeStartSegment("UNB");
+
+        writer.writeStartElement();
+        writer.writeComponent("UNOA");
+        writer.writeComponent("4");
+        writer.endElement();
+
+        writer.writeStartElement();
+        writer.writeComponent("005435656");
+        writer.writeComponent("1");
+        writer.endElement();
+
+        writer.writeStartElement();
+        writer.writeComponent("006415160");
+        writer.writeComponent("1");
+        writer.endElement();
+
+        writer.writeStartElement();
+        writer.writeComponent("20060515");
+        writer.writeComponent("1434");
+        writer.endElement();
+
+        writer.writeElement("00000000000778");
+        writer.writeEndSegment();
+
+        Map<String, Character> delimiters = writer.getDelimiters();
+        assertEquals('\'', delimiters.get(Delimiters.SEGMENT));
+        assertEquals('+', delimiters.get(Delimiters.DATA_ELEMENT));
+        assertEquals(':', delimiters.get(Delimiters.COMPONENT_ELEMENT));
+        assertEquals('.', delimiters.get(Delimiters.DECIMAL));
+        assertEquals('?', delimiters.get(Delimiters.RELEASE));
+        assertEquals('*', delimiters.get(Delimiters.REPETITION));
+
+        writer.flush();
+        assertEquals("UNB+UNOA:4+005435656:1+006415160:1+20060515:1434+00000000000778'",
+                     new String(stream.toByteArray()));
+    }
+
+    @Test
+    void testGetDelimitersEDIFACT_defaults_v3() throws EDIStreamException {
         EDIOutputFactory factory = EDIOutputFactory.newFactory();
         ByteArrayOutputStream stream = new ByteArrayOutputStream(4096);
         EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
@@ -1748,7 +1803,7 @@ class StaEDIStreamWriterTest {
         assertEquals(':', delimiters.get(Delimiters.COMPONENT_ELEMENT));
         assertEquals('.', delimiters.get(Delimiters.DECIMAL));
         assertEquals('?', delimiters.get(Delimiters.RELEASE));
-        assertEquals('*', delimiters.get(Delimiters.REPETITION));
+        assertNull(delimiters.get(Delimiters.REPETITION)); // Not introduced until v4
 
         writer.flush();
         assertEquals("UNB+UNOA:3+005435656:1+006415160:1+060515:1434+00000000000778'",
@@ -1756,14 +1811,14 @@ class StaEDIStreamWriterTest {
     }
 
     @Test
-    void testGetDelimitersEDIFACT_customSegment() throws EDIStreamException {
+    void testGetDelimitersEDIFACT_noRelease_v3() throws EDIStreamException {
         EDIOutputFactory factory = EDIOutputFactory.newFactory();
+        factory.setProperty(Delimiters.RELEASE, ' ');
         ByteArrayOutputStream stream = new ByteArrayOutputStream(4096);
-        factory.setProperty(Delimiters.SEGMENT, '~');
         EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
 
         writer.startInterchange();
-        // UNB+UNOA:3+005435656:1+006415160:1+060515:1434+00000000000778~
+        // UNB+UNOA:3+005435656:1+006415160:1+060515:1434+00000000000778'
         writer.writeStartSegment("UNB");
 
         writer.writeStartElement();
@@ -1790,6 +1845,53 @@ class StaEDIStreamWriterTest {
         writer.writeEndSegment();
 
         Map<String, Character> delimiters = writer.getDelimiters();
+        assertEquals('\'', delimiters.get(Delimiters.SEGMENT));
+        assertEquals('+', delimiters.get(Delimiters.DATA_ELEMENT));
+        assertEquals(':', delimiters.get(Delimiters.COMPONENT_ELEMENT));
+        assertEquals('.', delimiters.get(Delimiters.DECIMAL));
+        assertNull(delimiters.get(Delimiters.RELEASE));
+        assertNull(delimiters.get(Delimiters.REPETITION)); // Not introduced until v4
+
+        writer.flush();
+        assertEquals("UNA:+.  'UNB+UNOA:3+005435656:1+006415160:1+060515:1434+00000000000778'",
+                     new String(stream.toByteArray()));
+    }
+
+    @Test
+    void testGetDelimitersEDIFACT_customSegment() throws EDIStreamException {
+        EDIOutputFactory factory = EDIOutputFactory.newFactory();
+        ByteArrayOutputStream stream = new ByteArrayOutputStream(4096);
+        factory.setProperty(Delimiters.SEGMENT, '~');
+        EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
+
+        writer.startInterchange();
+        // UNB+UNOA:4+005435656:1+006415160:1+20060515:1434+00000000000778~
+        writer.writeStartSegment("UNB");
+
+        writer.writeStartElement();
+        writer.writeComponent("UNOA");
+        writer.writeComponent("4");
+        writer.endElement();
+
+        writer.writeStartElement();
+        writer.writeComponent("005435656");
+        writer.writeComponent("1");
+        writer.endElement();
+
+        writer.writeStartElement();
+        writer.writeComponent("006415160");
+        writer.writeComponent("1");
+        writer.endElement();
+
+        writer.writeStartElement();
+        writer.writeComponent("20060515");
+        writer.writeComponent("1434");
+        writer.endElement();
+
+        writer.writeElement("00000000000778");
+        writer.writeEndSegment();
+
+        Map<String, Character> delimiters = writer.getDelimiters();
         assertEquals('~', delimiters.get(Delimiters.SEGMENT));
         assertEquals('+', delimiters.get(Delimiters.DATA_ELEMENT));
         assertEquals(':', delimiters.get(Delimiters.COMPONENT_ELEMENT));
@@ -1798,7 +1900,7 @@ class StaEDIStreamWriterTest {
         assertEquals('*', delimiters.get(Delimiters.REPETITION));
 
         writer.flush();
-        assertEquals("UNA:+.?*~UNB+UNOA:3+005435656:1+006415160:1+060515:1434+00000000000778~",
+        assertEquals("UNA:+.?*~UNB+UNOA:4+005435656:1+006415160:1+20060515:1434+00000000000778~",
                      new String(stream.toByteArray()));
     }
 
