@@ -8,17 +8,20 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentMatchers;
 
 import io.xlate.edi.internal.stream.tokenization.CharacterSet;
 import io.xlate.edi.internal.stream.tokenization.Dialect;
 import io.xlate.edi.internal.stream.tokenization.DialectFactory;
 import io.xlate.edi.internal.stream.tokenization.EDIException;
 import io.xlate.edi.schema.EDISimpleType;
+import io.xlate.edi.stream.EDIStreamException;
 import io.xlate.edi.stream.EDIStreamValidationError;
 import io.xlate.edi.stream.EDIValidationException;
 
@@ -180,5 +183,21 @@ class AlphaNumericValidatorTest implements ValueSetTester {
         StringBuilder output = new StringBuilder();
         v.format(dialect, element, "TEST", output);
         assertEquals("TEST      ", output.toString());
+    }
+
+    @Test
+    void testFormatValidValueIOException() throws Exception {
+        EDISimpleType element = mock(EDISimpleType.class);
+        when(element.getMinLength(anyString())).thenCallRealMethod();
+        when(element.getMaxLength(anyString())).thenCallRealMethod();
+        when(element.getValueSet(anyString())).thenCallRealMethod();
+
+        when(element.getMinLength()).thenReturn(10L);
+        when(element.getMaxLength()).thenReturn(10L);
+        ElementValidator v = AlphaNumericValidator.getInstance();
+        Appendable output = mock(Appendable.class);
+        when(output.append(ArgumentMatchers.anyChar())).thenThrow(IOException.class);
+        EDIStreamException thrown = assertThrows(EDIStreamException.class, () -> v.format(dialect, element, "TEST", output));
+        assertEquals(IOException.class, thrown.getCause().getClass());
     }
 }

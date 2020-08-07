@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+
+<schema xmlns="http://xlate.io/EDISchema/v4">
+
+    <transaction>
+        <sequence>
+            <segment type="MSG" minOccurs="1" maxOccurs="1" />
+            <segment type="ORG" minOccurs="1" maxOccurs="1" />
+            <segment type="TVL" minOccurs="1" maxOccurs="1" />
+            <segment type="EQN" minOccurs="1" maxOccurs="1" />
+            <loop code="GR1_SRC" maxOccurs="999">
+                <sequence>
+                    <!-- Empty segment starts the looop -->
+                    <segment type="SRC" minOccurs="1" maxOccurs="1" />
+                    <segment type="RCI" minOccurs="1" maxOccurs="1" />
+                    <segment type="DAT" minOccurs="0" maxOccurs="1" />
+                    <segment type="ORG" minOccurs="1" maxOccurs="1" />
+                </sequence>
+             </loop>
+        </sequence>
+    </transaction>
+
+    <!-- To simplify, same as transaction -->
+    <implementation>
+        <sequence>
+            <segment type="MSG" />
+            <segment type="ORG" />
+            <segment type="TVL" />
+            <segment type="EQN" />
+            <loop code="GR1_SRC_CODE" type="GR1_SRC" >
+                <sequence>
+                    <segment type="SRC" />
+                    <segment type="RCI" />
+                    <segment type="DAT" />
+                    <segment type="ORG" />
+                </sequence>
+             </loop>
+        </sequence>
+    </implementation>
+
+    <!-- The empty segment -->
+    <segmentType name="SRC">
+        <sequence/>
+    </segmentType>
+
+    <!-- Don't mind the other data components -->
+    <segmentType name="MSG">
+        <sequence>
+            <any minOccurs="0" maxOccurs="10" />
+        </sequence>
+    </segmentType>
+
+    <segmentType name="ORG">
+        <sequence>
+            <any minOccurs="0" maxOccurs="10" />
+        </sequence>
+    </segmentType>
+
+    <segmentType name="TVL">
+        <sequence>
+            <any minOccurs="0" maxOccurs="10" />
+        </sequence>
+    </segmentType>
+
+    <segmentType name="EQN">
+        <sequence>
+            <any minOccurs="0" maxOccurs="10" />
+        </sequence>
+    </segmentType>
+
+    <segmentType name="RCI">
+        <sequence>
+            <any minOccurs="0" maxOccurs="10" />
+        </sequence>
+    </segmentType>
+
+    <segmentType name="DAT">
+        <sequence>
+            <any minOccurs="0" maxOccurs="10" />
+        </sequence>
+    </segmentType>
+
+</schema>
