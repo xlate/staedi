@@ -59,21 +59,12 @@ public class EDIValidationException extends RuntimeException {
      * @see #getNextException
      */
     public void setNextException(EDIValidationException ex) {
-
         EDIValidationException current = this;
-        for(;;) {
-            EDIValidationException next = current.nextException;
-            if (next != null) {
-                current = next;
-                continue;
-            }
 
-            if (current.nextException == null) {
-                current.nextException = ex;
-                return;
-            }
-
+        while (current.nextException != null) {
             current = current.nextException;
         }
+
+        current.nextException = ex;
     }
 }
