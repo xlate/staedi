@@ -306,55 +306,60 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         case HEADER_TAG_I: // I(SA)
         case HEADER_TAG_U: // U(NA) or U(NB)
             unconfirmedBuffer.clear();
-            // Falling through
+            writeHeader(output);
+            break;
         case HEADER_TAG_S:
         case HEADER_TAG_N:
         case INTERCHANGE_CANDIDATE:
         case HEADER_DATA:
         case HEADER_ELEMENT_END:
         case HEADER_COMPONENT_END:
-            if (dialect.appendHeader(characters, (char) output)) {
-                unconfirmedBuffer.append((char) output);
-
-                if (dialect.isConfirmed()) {
-                    // Set up the delimiters again once the dialect has confirmed them
-                    setupDelimiters();
-
-                    // Switching to non-header states to proceed after dialect is confirmed
-                    switch (state) {
-                    case HEADER_DATA:
-                        state = State.TAG_SEARCH;
-                        break;
-                    case HEADER_ELEMENT_END:
-                        state = State.ELEMENT_END;
-                        break;
-                    case HEADER_COMPONENT_END:
-                        state = State.COMPONENT_END;
-                        break;
-                    default:
-                        throw new IllegalStateException("Confirmed at state " + state);
-                    }
-
-                    unconfirmedBuffer.flip();
-
-                    if (EDIFACTDialect.UNA.equals(dialect.getHeaderTag())) {
-                        // Overlay the UNA segment repetition separator now that it has be confirmed
-                        unconfirmedBuffer.put(7, this.repetitionSeparator > 0 ? this.repetitionSeparator : ' ');
-                    }
-
-                    while (unconfirmedBuffer.hasRemaining()) {
-                        writeOutput(unconfirmedBuffer.get());
-                    }
-                }
-            } else {
-                throw new EDIStreamException(String.format("Unexpected header character: 0x%04X [%s]", output, (char) output), location);
-            }
+            writeHeader(output);
             break;
         case INVALID:
             throw new EDIException(String.format("Invalid state: %s; output 0x%04X", state, output));
         default:
             writeOutput(output);
             break;
+        }
+    }
+
+    void writeHeader(int output) throws EDIStreamException {
+        if (!dialect.appendHeader(characters, (char) output)) {
+            throw new EDIStreamException(String.format("Unexpected header character: 0x%04X [%s]", output, (char) output), location);
+        }
+
+        unconfirmedBuffer.append((char) output);
+
+        if (dialect.isConfirmed()) {
+            // Set up the delimiters again once the dialect has confirmed them
+            setupDelimiters();
+
+            // Switching to non-header states to proceed after dialect is confirmed
+            switch (state) {
+            case HEADER_DATA:
+                state = State.TAG_SEARCH;
+                break;
+            case HEADER_ELEMENT_END:
+                state = State.ELEMENT_END;
+                break;
+            case HEADER_COMPONENT_END:
+                state = State.COMPONENT_END;
+                break;
+            default:
+                throw new IllegalStateException("Confirmed at state " + state);
+            }
+
+            unconfirmedBuffer.flip();
+
+            if (EDIFACTDialect.UNA.equals(dialect.getHeaderTag())) {
+                // Overlay the UNA segment repetition separator now that it has be confirmed
+                unconfirmedBuffer.put(7, this.repetitionSeparator > 0 ? this.repetitionSeparator : ' ');
+            }
+
+            while (unconfirmedBuffer.hasRemaining()) {
+                writeOutput(unconfirmedBuffer.get());
+            }
         }
     }
 
