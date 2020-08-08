@@ -78,6 +78,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     private final Map<String, Object> properties;
     private final EDIOutputErrorReporter reporter;
     private Dialect dialect;
+    CharBuffer unconfirmedBuffer = CharBuffer.allocate(500);
 
     private final StaEDIStreamLocation location;
     private Schema controlSchema;
@@ -138,9 +139,9 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         segmentTerminator = getDelimiter(properties, Delimiters.SEGMENT, dialect::getSegmentTerminator);
         dataElementSeparator = getDelimiter(properties, Delimiters.DATA_ELEMENT, dialect::getDataElementSeparator);
         componentElementSeparator = getDelimiter(properties, Delimiters.COMPONENT_ELEMENT, dialect::getComponentElementSeparator);
-        repetitionSeparator = getDelimiter(properties, Delimiters.REPETITION, dialect::getRepetitionSeparator);
         decimalMark = getDelimiter(properties, Delimiters.DECIMAL, dialect::getDecimalMark);
         releaseIndicator = getDelimiter(properties, Delimiters.RELEASE, dialect::getReleaseIndicator);
+        repetitionSeparator = getDelimiter(properties, Delimiters.REPETITION, dialect::getRepetitionSeparator);
 
         String lineSeparator = System.getProperty("line.separator");
 
@@ -163,11 +164,11 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
                      .anyMatch(properties::containsKey);
     }
 
-    static char getDelimiter(Map<String, Object> properties, String key, Supplier<Character> defaultSupplier) {
-        if (properties.containsKey(key)) {
+    char getDelimiter(Map<String, Object> properties, String key, Supplier<Character> dialectSupplier) {
+        if (properties.containsKey(key) && !dialect.isConfirmed()) {
             return (char) properties.get(key);
         }
-        return defaultSupplier.get();
+        return dialectSupplier.get();
     }
 
     static void putDelimiter(String key, char value, Map<String, Character> delimiters) {
@@ -302,44 +303,67 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         state = state.transition(clazz);
 
         switch (state) {
-        case HEADER_TAG_I:
+        case HEADER_TAG_I: // I(SA)
+        case HEADER_TAG_U: // U(NA) or U(NB)
+            unconfirmedBuffer.clear();
+            writeHeader(output);
+            break;
         case HEADER_TAG_S:
-        case HEADER_TAG_U:
         case HEADER_TAG_N:
-            //case HEADER_TAG_A:
         case INTERCHANGE_CANDIDATE:
         case HEADER_DATA:
         case HEADER_ELEMENT_END:
         case HEADER_COMPONENT_END:
-            if (dialect.appendHeader(characters, (char) output)) {
-                if (dialect.isConfirmed()) {
-                    // Set up the delimiters again once the dialect has confirmed them
-                    setupDelimiters();
-
-                    switch (state) {
-                    case HEADER_DATA:
-                        state = State.TAG_SEARCH;
-                        break;
-                    case HEADER_ELEMENT_END:
-                        state = State.ELEMENT_END;
-                        break;
-                    case HEADER_COMPONENT_END:
-                        state = State.COMPONENT_END;
-                        break;
-                    default:
-                        throw new IllegalStateException("Confirmed at state " + state);
-                    }
-                }
-            } else {
-                throw new EDIStreamException(String.format("Unexpected header character: 0x%04X [%s]", output, (char) output), location);
-            }
+            writeHeader(output);
             break;
         case INVALID:
             throw new EDIException(String.format("Invalid state: %s; output 0x%04X", state, output));
         default:
+            writeOutput(output);
             break;
         }
+    }
 
+    void writeHeader(int output) throws EDIStreamException {
+        if (!dialect.appendHeader(characters, (char) output)) {
+            throw new EDIStreamException(String.format("Unexpected header character: 0x%04X [%s]", output, (char) output), location);
+        }
+
+        unconfirmedBuffer.append((char) output);
+
+        if (dialect.isConfirmed()) {
+            // Set up the delimiters again once the dialect has confirmed them
+            setupDelimiters();
+
+            // Switching to non-header states to proceed after dialect is confirmed
+            switch (state) {
+            case HEADER_DATA:
+                state = State.TAG_SEARCH;
+                break;
+            case HEADER_ELEMENT_END:
+                state = State.ELEMENT_END;
+                break;
+            case HEADER_COMPONENT_END:
+                state = State.COMPONENT_END;
+                break;
+            default:
+                throw new IllegalStateException("Confirmed at state " + state);
+            }
+
+            unconfirmedBuffer.flip();
+
+            if (EDIFACTDialect.UNA.equals(dialect.getHeaderTag())) {
+                // Overlay the UNA segment repetition separator now that it has be confirmed
+                unconfirmedBuffer.put(7, this.repetitionSeparator > 0 ? this.repetitionSeparator : ' ');
+            }
+
+            while (unconfirmedBuffer.hasRemaining()) {
+                writeOutput(unconfirmedBuffer.get());
+            }
+        }
+    }
+
+    void writeOutput(int output) throws EDIStreamException {
         try {
             location.incrementOffset(output);
             writer.write(output);
@@ -422,6 +446,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         write(this.dataElementSeparator);
         write(this.decimalMark);
         write(this.releaseIndicator);
+        // This will be re-written once the dialect version is detected
         write(this.repetitionSeparator);
     }
 
