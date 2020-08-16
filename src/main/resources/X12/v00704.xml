@@ -18,7 +18,7 @@
 
   <include schemaLocation="common.xml"/>
 
-  <interchange header="ISA" trailer="IEA">
+  <interchange header="ISA" trailer="IEA" title="X12 Interchange (minimum version 00704)">
     <sequence>
       <segment type="ISB" title="Grade of Service Request"/>
       <segment type="ISE" title="Deferred Delivery Request"/>

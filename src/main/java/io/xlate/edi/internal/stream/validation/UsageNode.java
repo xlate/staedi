@@ -18,7 +18,6 @@ package io.xlate.edi.internal.stream.validation;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import io.xlate.edi.internal.stream.tokenization.Dialect;
@@ -141,18 +140,12 @@ class UsageNode {
         return (EDISimpleType) link.getReferencedType();
     }
 
-    void validate(Dialect dialect, CharSequence value, boolean validateCodeValues, List<EDIStreamValidationError> errors) {
+    void validate(Dialect dialect, CharSequence value, List<EDIStreamValidationError> errors) {
         if (validator == null) {
             throw new UnsupportedOperationException("simple type only");
         }
 
-        final EDISimpleType element = getSimpleType();
-
-        if (validateCodeValues) {
-            validator.validate(dialect, element, value, errors);
-        } else {
-            validator.validate(dialect, UnenumeratedElement.from(element), value, errors);
-        }
+        validator.validate(dialect, getSimpleType(), value, errors);
     }
 
     List<EDISyntaxRule> getSyntaxRules() {
@@ -220,9 +213,7 @@ class UsageNode {
     }
 
     private UsageNode getSibling(int index) {
-        return parent != null && parent.children.size() > index
-                ? parent.children.get(index)
-                : null;
+        return parent != null ? parent.getChild(index) : null;
     }
 
     UsageNode getFirstSibling() {
@@ -234,7 +225,7 @@ class UsageNode {
     }
 
     public UsageNode getFirstChild() {
-        return (!children.isEmpty()) ? children.get(0) : null;
+        return getChild(0);
     }
 
     UsageNode getChildById(CharSequence id) {
@@ -246,83 +237,5 @@ class UsageNode {
 
     UsageNode getSiblingById(CharSequence id) {
         return parent != null ? parent.getChildById(id) : null;
-    }
-
-    private static class UnenumeratedElement implements EDISimpleType {
-        final EDISimpleType target;
-
-        static EDISimpleType from(EDISimpleType target) {
-            return new UnenumeratedElement(target);
-        }
-
-        private UnenumeratedElement(EDISimpleType target) {
-            this.target = target;
-        }
-
-        @Override
-        public String getId() {
-            return target.getId();
-        }
-
-        @Override
-        public Base getBase() {
-            return target.getBase();
-        }
-
-        @Override
-        public String getCode() {
-            return target.getCode();
-        }
-
-        @Override
-        public Type getType() {
-            return Type.ELEMENT;
-        }
-
-        /**
-         * @see io.xlate.edi.schema.EDISimpleType#getNumber()
-         * @deprecated
-         */
-        @SuppressWarnings({ "java:S1123", "java:S1133" })
-        @Override
-        @Deprecated
-        public int getNumber() {
-            return target.getNumber();
-        }
-
-        @Override
-        public long getMinLength() {
-            return target.getMinLength();
-        }
-
-        @Override
-        public long getMinLength(String version) {
-            return target.getMinLength(version);
-        }
-
-        @Override
-        public long getMaxLength() {
-            return target.getMaxLength();
-        }
-
-        @Override
-        public long getMaxLength(String version) {
-            return target.getMaxLength(version);
-        }
-
-        @Override
-        public Set<String> getValueSet() {
-            return Collections.emptySet();
-        }
-
-        @Override
-        public String getTitle() {
-            return target.getTitle();
-        }
-
-        @Override
-        public String getDescription() {
-            return target.getDescription();
-        }
     }
 }
