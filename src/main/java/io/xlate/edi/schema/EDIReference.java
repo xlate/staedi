@@ -68,4 +68,23 @@ public interface EDIReference {
     default int getMaxOccurs(String version) {
         return getMaxOccurs();
     }
+
+    /**
+     * Retrieve the title for this reference, if available.
+     *
+     * @return the reference's title
+     *
+     * @since 1.10
+     */
+    String getTitle();
+
+    /**
+     * Retrieve the description for this reference, if available.
+     *
+     * @return the reference's description
+     *
+     * @since 1.10
+     */
+    String getDescription();
+
 }

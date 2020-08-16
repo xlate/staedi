@@ -252,6 +252,16 @@ public class Validator {
             public int getMaxOccurs() {
                 return maxOccurs;
             }
+
+            @Override
+            public String getTitle() {
+                return type.getTitle();
+            }
+
+            @Override
+            public String getDescription() {
+                return type.getDescription();
+            }
         };
     }
 

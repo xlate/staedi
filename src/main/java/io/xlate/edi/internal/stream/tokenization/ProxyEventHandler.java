@@ -241,13 +241,17 @@ public class ProxyEventHandler implements EventHandler {
 
     @Override
     public boolean segmentEnd() {
-        if (validator() != null) {
-            validator().validateSyntax(dialect, this, this, location, false);
-            validator().validateVersionConstraints(dialect, this);
+        Validator validator = validator();
+        EDIReference typeReference = null;
+
+        if (validator != null) {
+            validator.validateSyntax(dialect, this, this, location, false);
+            validator.validateVersionConstraints(dialect, this);
+            typeReference = validator.getSegmentReferenceCode();
         }
 
         location.clearSegmentLocations();
-        enqueueEvent(EDIStreamEvent.END_SEGMENT, EDIStreamValidationError.NONE, segmentTag, null, location);
+        enqueueEvent(EDIStreamEvent.END_SEGMENT, EDIStreamValidationError.NONE, segmentTag, typeReference, location);
         return true;
     }
 

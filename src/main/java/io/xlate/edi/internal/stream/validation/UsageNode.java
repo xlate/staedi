@@ -314,5 +314,15 @@ class UsageNode {
         public Set<String> getValueSet() {
             return Collections.emptySet();
         }
+
+        @Override
+        public String getTitle() {
+            return target.getTitle();
+        }
+
+        @Override
+        public String getDescription() {
+            return target.getDescription();
+        }
     }
 }

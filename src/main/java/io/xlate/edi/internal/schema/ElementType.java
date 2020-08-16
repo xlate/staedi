@@ -65,8 +65,8 @@ class ElementType extends BasicType implements EDISimpleType {
         }
     }
 
-    ElementType(String id, Base base, String code, int number, long minLength, long maxLength, Set<String> values, List<Version> versions) {
-        super(id, Type.ELEMENT);
+    ElementType(String id, Base base, String code, int number, long minLength, long maxLength, Set<String> values, List<Version> versions, String title, String description) {
+        super(id, Type.ELEMENT, title, description);
         this.base = base;
         this.code = code;
         this.number = number;

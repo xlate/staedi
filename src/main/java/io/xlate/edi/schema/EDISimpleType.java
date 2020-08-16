@@ -51,7 +51,8 @@ public interface EDISimpleType extends EDIType {
     /**
      * Retrieve the element reference number for this type.
      *
-     * @return the element reference number as declared in the EDI schema
+     * @return the element reference number as declared in the EDI schema, or
+     *         <code>-1</code> if not declared
      *
      * @deprecated (since 1.8, for removal) use {@link #getCode()} and
      *             <code>code</code> attribute instead

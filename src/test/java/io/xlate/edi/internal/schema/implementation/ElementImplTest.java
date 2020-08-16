@@ -116,6 +116,14 @@ class ElementImplTest {
             public Set<String> getValueSet() {
                 return Collections.emptySet();
             }
+            @Override
+            public String getTitle() {
+                return null;
+            }
+            @Override
+            public String getDescription() {
+                return null;
+            }
         };
         EDIReference reference = new EDIReference() {
             @Override
@@ -131,6 +139,14 @@ class ElementImplTest {
             @Override
             public int getMaxOccurs() {
                 return DFLT_MAX_OCCURS;
+            }
+            @Override
+            public String getTitle() {
+                return null;
+            }
+            @Override
+            public String getDescription() {
+                return null;
             }
         };
 

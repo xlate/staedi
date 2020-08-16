@@ -33,7 +33,8 @@
     </sequence>
   </interchange>
 
-  <segmentType name="ISA">
+  <segmentType name="ISA" title="Interchange Control Header">
+    <description>To start and identify an interchange of zero or more functional groups and interchange-related control segments</description>
     <sequence>
       <element type="I01" minOccurs="1"/>
       <element type="I02" minOccurs="1"/>
