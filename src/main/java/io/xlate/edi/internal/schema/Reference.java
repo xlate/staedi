@@ -36,6 +36,9 @@ class Reference implements EDIReference {
     final int maxOccurs;
     final List<Version> versions;
 
+    private final String title;
+    private final String description;
+
     static class Version extends VersionedProperty {
         final Integer minOccurs;
         final Integer maxOccurs;
@@ -55,16 +58,18 @@ class Reference implements EDIReference {
         }
     }
 
-    Reference(String refId, String refTag, int minOccurs, int maxOccurs, List<Version> versions) {
+    Reference(String refId, String refTag, int minOccurs, int maxOccurs, List<Version> versions, String title, String description) {
         this.refId = refId;
         this.refTag = refTag;
         this.minOccurs = minOccurs;
         this.maxOccurs = maxOccurs;
         this.versions = Collections.unmodifiableList(new ArrayList<>(versions));
+        this.title = title;
+        this.description = description;
     }
 
-    Reference(String refId, String refTag, int minOccurs, int maxOccurs) {
-        this(refId, refTag, minOccurs, maxOccurs, Collections.emptyList());
+    Reference(String refId, String refTag, int minOccurs, int maxOccurs, String title, String description) {
+        this(refId, refTag, minOccurs, maxOccurs, Collections.emptyList(), title, description);
     }
 
     Reference(EDIType referencedType, int minOccurs, int maxOccurs) {
@@ -72,6 +77,8 @@ class Reference implements EDIReference {
         this.minOccurs = minOccurs;
         this.maxOccurs = maxOccurs;
         this.versions = Collections.emptyList();
+        this.title = null;
+        this.description = null;
     }
 
     <T> T getVersionAttribute(String version, BiFunction<Version, Reference, T> versionedSupplier, Supplier<T> defaultSupplier) {
@@ -131,4 +138,13 @@ class Reference implements EDIReference {
         return getVersionAttribute(version, Version::getMaxOccurs, this::getMaxOccurs);
     }
 
+    @Override
+    public String getTitle() {
+        return title;
+    }
+
+    @Override
+    public String getDescription() {
+        return description;
+    }
 }

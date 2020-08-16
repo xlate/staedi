@@ -79,8 +79,8 @@ public class Validator {
     private final boolean validateCodeValues;
     private boolean initial = true;
 
-    private final UsageNode root;
-    private final UsageNode implRoot;
+    final UsageNode root;
+    final UsageNode implRoot;
 
     private boolean segmentExpected;
     private UsageNode segment;
@@ -251,6 +251,16 @@ public class Validator {
             @Override
             public int getMaxOccurs() {
                 return maxOccurs;
+            }
+
+            @Override
+            public String getTitle() {
+                return type.getTitle();
+            }
+
+            @Override
+            public String getDescription() {
+                return type.getDescription();
             }
         };
     }
@@ -1001,14 +1011,16 @@ public class Validator {
 
     void validateElementValue(Dialect dialect, UsageNode element, UsageNode implElement, CharSequence value) {
         List<EDIStreamValidationError> errors = new ArrayList<>();
-        element.validate(dialect, value, this.validateCodeValues, errors);
+        element.validate(dialect, value, errors);
 
         for (EDIStreamValidationError error : errors) {
-            elementErrors.add(new UsageError(element, error));
+            if (this.validateCodeValues || error != INVALID_CODE_VALUE) {
+                elementErrors.add(new UsageError(element, error));
+            }
         }
 
         if (errors.isEmpty() && implSegmentSelected && implElement != null) {
-            implElement.validate(dialect, value, this.validateCodeValues, errors);
+            implElement.validate(dialect, value, errors);
 
             for (EDIStreamValidationError error : errors) {
                 if (error == INVALID_CODE_VALUE) {

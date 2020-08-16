@@ -34,8 +34,8 @@ class StructureType extends BasicType implements EDIComplexType {
     private List<EDIReference> references;
     private List<EDISyntaxRule> syntaxRules;
 
-    StructureType(String id, EDIType.Type type, String code, List<EDIReference> references, List<EDISyntaxRule> syntaxRules) {
-        super(id, type);
+    StructureType(String id, EDIType.Type type, String code, List<EDIReference> references, List<EDISyntaxRule> syntaxRules, String title, String description) {
+        super(id, type, title, description);
         Objects.requireNonNull(code, "EDIComplexType code must not be null");
         Objects.requireNonNull(references, "EDIComplexType references must not be null");
         Objects.requireNonNull(syntaxRules, "EDIComplexType id must not be null");

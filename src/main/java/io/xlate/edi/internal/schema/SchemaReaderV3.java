@@ -46,11 +46,8 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
 
     private static final Logger LOGGER = Logger.getLogger(SchemaReaderV3.class.getName());
 
-    private static final String ATTR_MIN_OCCURS = "minOccurs";
-    private static final String ATTR_MAX_OCCURS = "maxOccurs";
     private static final String ATTR_POSITION = "position";
     private static final String ATTR_DISCRIMINATOR = "discriminator";
-    private static final String ATTR_TITLE = "title";
 
     final Deque<EDITypeImplementation> implementedTypes = new LinkedList<>();
 

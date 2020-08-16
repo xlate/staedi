@@ -38,12 +38,15 @@ abstract class SchemaReaderBase implements SchemaReader {
 
     static final String LOCALNAME_ELEMENT = "element";
     static final String LOCALNAME_COMPOSITE = "composite";
+    static final String ATTR_MIN_OCCURS = "minOccurs";
+    static final String ATTR_MAX_OCCURS = "maxOccurs";
+    static final String ATTR_TITLE = "title";
 
-    static final EDIReference ANY_ELEMENT_REF_OPT = new Reference(StaEDISchema.ANY_ELEMENT_ID, LOCALNAME_ELEMENT, 0, 1);
-    static final EDIReference ANY_COMPOSITE_REF_OPT = new Reference(StaEDISchema.ANY_COMPOSITE_ID, LOCALNAME_COMPOSITE, 0, 99);
+    static final EDIReference ANY_ELEMENT_REF_OPT = new Reference(StaEDISchema.ANY_ELEMENT_ID, LOCALNAME_ELEMENT, 0, 1, null, null);
+    static final EDIReference ANY_COMPOSITE_REF_OPT = new Reference(StaEDISchema.ANY_COMPOSITE_ID, LOCALNAME_COMPOSITE, 0, 99, null, null);
 
-    static final EDIReference ANY_ELEMENT_REF_REQ = new Reference(StaEDISchema.ANY_ELEMENT_ID, LOCALNAME_ELEMENT, 1, 1);
-    static final EDIReference ANY_COMPOSITE_REF_REQ = new Reference(StaEDISchema.ANY_COMPOSITE_ID, LOCALNAME_COMPOSITE, 1, 99);
+    static final EDIReference ANY_ELEMENT_REF_REQ = new Reference(StaEDISchema.ANY_ELEMENT_ID, LOCALNAME_ELEMENT, 1, 1, null, null);
+    static final EDIReference ANY_COMPOSITE_REF_REQ = new Reference(StaEDISchema.ANY_COMPOSITE_ID, LOCALNAME_COMPOSITE, 1, 99, null, null);
 
     static final EDISimpleType ANY_ELEMENT = new ElementType(StaEDISchema.ANY_ELEMENT_ID,
                                                              Base.STRING,
@@ -52,14 +55,18 @@ abstract class SchemaReaderBase implements SchemaReader {
                                                              0,
                                                              99_999,
                                                              Collections.emptySet(),
-                                                             Collections.emptyList());
+                                                             Collections.emptyList(),
+                                                             null,
+                                                             null);
 
     static final EDIComplexType ANY_COMPOSITE = new StructureType(StaEDISchema.ANY_COMPOSITE_ID,
                                                                   Type.COMPOSITE,
                                                                   "ANY",
                                                                   IntStream.rangeClosed(0, 99).mapToObj(i -> ANY_ELEMENT_REF_OPT)
                                                                            .collect(toList()),
-                                                                  Collections.emptyList());
+                                                                  Collections.emptyList(),
+                                                                  null,
+                                                                  null);
 
     final String xmlns;
 
@@ -201,8 +208,8 @@ abstract class SchemaReaderBase implements SchemaReader {
 
         Reference headerRef = createControlReference(reader, "header");
         Reference trailerRef = createControlReference(reader, "trailer");
-
-        readDescription(reader);
+        String title = parseAttribute(reader, ATTR_TITLE, String::valueOf, null);
+        String descr = readDescription(reader);
 
         element = reader.getName();
 
@@ -252,7 +259,9 @@ abstract class SchemaReaderBase implements SchemaReader {
                                                       EDIType.Type.INTERCHANGE,
                                                       "INTERCHANGE",
                                                       refs,
-                                                      rules);
+                                                      rules,
+                                                      title,
+                                                      descr);
 
         types.put(interchange.getId(), interchange);
         nextTag(reader, "advancing after interchange");
@@ -282,8 +291,8 @@ abstract class SchemaReaderBase implements SchemaReader {
 
         Reference headerRef = createControlReference(reader, "header");
         Reference trailerRef = createControlReference(reader, "trailer");
-
-        readDescription(reader);
+        String title = parseAttribute(reader, ATTR_TITLE, String::valueOf, null);
+        String descr = readDescription(reader);
 
         if (subelement != null) {
             requireElementStart(subelement, reader);
@@ -303,11 +312,13 @@ abstract class SchemaReaderBase implements SchemaReader {
                                                  elementType,
                                                  elementType.toString(),
                                                  refs,
-                                                 Collections.emptyList());
+                                                 Collections.emptyList(),
+                                                 title,
+                                                 descr);
 
         types.put(struct.getId(), struct);
 
-        Reference structRef = new Reference(struct.getId(), element.getLocalPart(), minOccurs, maxOccurs);
+        Reference structRef = new Reference(struct.getId(), element.getLocalPart(), minOccurs, maxOccurs, title, descr);
         structRef.setReferencedType(struct);
 
         return structRef;
@@ -315,7 +326,7 @@ abstract class SchemaReaderBase implements SchemaReader {
 
     Reference createControlReference(XMLStreamReader reader, String attributeName) {
         final String refId = parseAttribute(reader, attributeName, String::valueOf);
-        return new Reference(refId, "segment", 1, 1);
+        return new Reference(refId, "segment", 1, 1, null, null);
     }
 
     void readTransaction(XMLStreamReader reader, Map<String, EDIType> types) {
@@ -392,7 +403,8 @@ abstract class SchemaReaderBase implements SchemaReader {
         final List<EDIReference> refs = new ArrayList<>(8);
         final List<EDISyntaxRule> rules = new ArrayList<>(2);
 
-        readDescription(reader);
+        String title = parseAttribute(reader, ATTR_TITLE, String::valueOf, null);
+        String descr = readDescription(reader);
         requireElementStart(qnSequence, reader);
         readReferences(reader, types, type, refs);
 
@@ -406,7 +418,7 @@ abstract class SchemaReaderBase implements SchemaReader {
         event = reader.getEventType();
 
         if (event == XMLStreamConstants.END_ELEMENT) {
-            return new StructureType(id, type, code, refs, rules);
+            return new StructureType(id, type, code, refs, rules, title, descr);
         } else {
             throw unexpectedEvent(reader);
         }
@@ -477,8 +489,9 @@ abstract class SchemaReaderBase implements SchemaReader {
         }
 
         String refTag = element.getLocalPart();
-        int minOccurs = parseAttribute(reader, "minOccurs", Integer::parseInt, 0);
-        int maxOccurs = parseAttribute(reader, "maxOccurs", Integer::parseInt, 1);
+        int minOccurs = parseAttribute(reader, ATTR_MIN_OCCURS, Integer::parseInt, 0);
+        int maxOccurs = parseAttribute(reader, ATTR_MAX_OCCURS, Integer::parseInt, 1);
+        String title = parseAttribute(reader, ATTR_TITLE, String::valueOf, null);
 
         Reference ref;
 
@@ -486,7 +499,7 @@ abstract class SchemaReaderBase implements SchemaReader {
             StructureType loop = readComplexType(reader, element, types);
             nameCheck(refId, types, reader);
             types.put(refId, loop);
-            ref = new Reference(refId, refTag, minOccurs, maxOccurs);
+            ref = new Reference(refId, refTag, minOccurs, maxOccurs, title, null);
             ref.setReferencedType(loop);
         } else if (qnComposite.equals(element) || qnElement.equals(element)) {
             List<Reference.Version> versions = null;
@@ -502,9 +515,9 @@ abstract class SchemaReaderBase implements SchemaReader {
                 versions = Collections.emptyList();
             }
 
-            ref = new Reference(refId, refTag, minOccurs, maxOccurs, versions);
+            ref = new Reference(refId, refTag, minOccurs, maxOccurs, versions, title, null);
         } else {
-            ref = new Reference(refId, refTag, minOccurs, maxOccurs);
+            ref = new Reference(refId, refTag, minOccurs, maxOccurs, title, null);
         }
 
         return ref;
@@ -514,8 +527,8 @@ abstract class SchemaReaderBase implements SchemaReader {
         requireElementStart(qnVersion, reader);
         String minVersion = parseAttribute(reader, "minVersion", String::valueOf, "");
         String maxVersion = parseAttribute(reader, "maxVersion", String::valueOf, "");
-        Integer minOccurs = parseAttribute(reader, "minOccurs", Integer::valueOf, null);
-        Integer maxOccurs = parseAttribute(reader, "maxOccurs", Integer::valueOf, null);
+        Integer minOccurs = parseAttribute(reader, ATTR_MIN_OCCURS, Integer::valueOf, null);
+        Integer maxOccurs = parseAttribute(reader, ATTR_MAX_OCCURS, Integer::valueOf, null);
 
         if (nextTag(reader, "reading version contents") != XMLStreamConstants.END_ELEMENT) {
             throw unexpectedElement(reader.getName(), reader);
@@ -577,11 +590,14 @@ abstract class SchemaReaderBase implements SchemaReader {
         int number = parseAttribute(reader, "number", Integer::parseInt, -1);
         long minLength = parseAttribute(reader, "minLength", Long::parseLong, 1L);
         long maxLength = parseAttribute(reader, "maxLength", Long::parseLong, 1L);
+        String title = parseAttribute(reader, ATTR_TITLE, String::valueOf, null);
+        String descr = readDescription(reader);
 
         final Set<String> values;
         final List<ElementType.Version> versions;
 
-        if (nextTag(reader, "reading elementType contents") == XMLStreamConstants.END_ELEMENT) {
+        // Reader was advanced by `readDescription`, check the current state to proceed.
+        if (reader.getEventType() == XMLStreamConstants.END_ELEMENT) {
             values = Collections.emptySet();
             versions = Collections.emptyList();
         } else {
@@ -603,7 +619,7 @@ abstract class SchemaReaderBase implements SchemaReader {
             }
         }
 
-        return new ElementType(name, base, code, number, minLength, maxLength, values, versions);
+        return new ElementType(name, base, code, number, minLength, maxLength, values, versions, title, descr);
     }
 
     ElementType.Version readSimpleTypeVersion(XMLStreamReader reader) {

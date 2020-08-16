@@ -36,4 +36,23 @@ public interface EDIType {
     default boolean isType(Type type) {
         return getType() == type;
     }
+
+    /**
+     * Retrieve the title for this type, if available.
+     *
+     * @return the type's title
+     *
+     * @since 1.10
+     */
+    String getTitle();
+
+    /**
+     * Retrieve the description for this type, if available.
+     *
+     * @return the type's description
+     *
+     * @since 1.10
+     */
+    String getDescription();
+
 }

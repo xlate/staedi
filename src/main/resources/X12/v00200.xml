@@ -18,7 +18,7 @@
 
   <include schemaLocation="common.xml"/>
 
-  <interchange header="ISA" trailer="IEA">
+  <interchange header="ISA" trailer="IEA" title="X12 Interchange (minimum version 00200)">
     <sequence>
       <segment type="ISB" title="Grade of Service Request"/>
       <segment type="ISE" title="Deferred Delivery Request"/>
@@ -32,7 +32,8 @@
     </sequence>
   </interchange>
 
-  <segmentType name="ISA">
+  <segmentType name="ISA" title="Interchange Control Header">
+    <description>To start and identify an interchange of zero or more functional groups and interchange-related control segments</description>
     <sequence>
       <element type="I01" minOccurs="1"/>
       <element type="I02" minOccurs="1"/>

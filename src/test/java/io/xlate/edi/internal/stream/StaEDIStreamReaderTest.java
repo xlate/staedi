@@ -1350,6 +1350,78 @@ class StaEDIStreamReaderTest implements ConstantsTest {
     }
 
     @Test
+    void testInvalidControlValidation() throws IOException, EDIStreamException {
+        ByteArrayInputStream stream = new ByteArrayInputStream((""
+                + "ISA*YY*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*`*00501*508121953*0*P*:~"
+                + "IEA*1y*508121953~").getBytes());
+
+        EDIInputFactory factory = EDIInputFactory.newFactory();
+        EDIStreamReader reader = factory.createEDIStreamReader(stream);
+        Exception thrown = null;
+        List<EDIReference> invalidReferences = new ArrayList<>();
+
+        try {
+            while (reader.hasNext()) {
+                try {
+                    switch(reader.next()) {
+                    case ELEMENT_DATA_ERROR:
+                        invalidReferences.add(reader.getSchemaTypeReference());
+                        break;
+                    default:
+                        break;
+                    }
+                } catch (Exception e) {
+                    thrown = e;
+                    break;
+                }
+            }
+        } finally {
+            reader.close();
+        }
+
+        assertNull(thrown);
+        assertEquals(2, invalidReferences.size());
+        assertEquals("I01", invalidReferences.get(0).getReferencedType().getId());
+        assertEquals("I16", invalidReferences.get(1).getReferencedType().getId());
+    }
+
+    @Test
+    void testInvalidControlValidationCodesDisabled() throws IOException, EDIStreamException {
+        ByteArrayInputStream stream = new ByteArrayInputStream((""
+                + "ISA*YY*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*`*00501*508121953*0*P*:~"
+                + "IEA*1y*508121953~").getBytes());
+
+        EDIInputFactory factory = EDIInputFactory.newFactory();
+        factory.setProperty(EDIInputFactory.EDI_VALIDATE_CONTROL_CODE_VALUES, "false");
+        EDIStreamReader reader = factory.createEDIStreamReader(stream);
+        Exception thrown = null;
+        List<EDIReference> invalidReferences = new ArrayList<>();
+
+        try {
+            while (reader.hasNext()) {
+                try {
+                    switch(reader.next()) {
+                    case ELEMENT_DATA_ERROR:
+                        invalidReferences.add(reader.getSchemaTypeReference());
+                        break;
+                    default:
+                        break;
+                    }
+                } catch (Exception e) {
+                    thrown = e;
+                    break;
+                }
+            }
+        } finally {
+            reader.close();
+        }
+
+        assertNull(thrown);
+        assertEquals(1, invalidReferences.size());
+        assertEquals("I16", invalidReferences.get(0).getReferencedType().getId());
+    }
+
+    @Test
     void testX12InterchangeServiceRequests() throws IOException, EDIStreamException {
         InputStream stream = getClass().getResourceAsStream("/x12/optionalInterchangeServices.edi");
         EDIInputFactory factory = EDIInputFactory.newFactory();
