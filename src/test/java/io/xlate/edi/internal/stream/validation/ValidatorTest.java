@@ -30,4 +30,16 @@ class ValidatorTest {
         assertNull(interchangeReference.getDescription());
     }
 
+    @Test
+    void testValidatorRootNoParent() throws EDISchemaException {
+        SchemaFactory schemaFactory = SchemaFactory.newFactory();
+        Schema schema = schemaFactory.getControlSchema(Standards.X12, new String[] { "00801" });
+        Validator validator = new Validator(schema, true, null);
+        UsageNode root = validator.root;
+
+        assertNull(root.getParent());
+        assertNull(root.getFirstSibling());
+        assertNull(root.getNextSibling());
+        assertNull(root.getSiblingById("TEST"));
+    }
 }
