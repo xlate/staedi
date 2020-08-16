@@ -1014,7 +1014,7 @@ public class Validator {
         element.validate(dialect, value, errors);
 
         for (EDIStreamValidationError error : errors) {
-            if (this.validateCodeValues || error != EDIStreamValidationError.INVALID_CODE_VALUE) {
+            if (this.validateCodeValues || error != INVALID_CODE_VALUE) {
                 elementErrors.add(new UsageError(element, error));
             }
         }
