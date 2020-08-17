@@ -696,7 +696,7 @@
   <elementType name="N407" base="string" maxLength="3"/>
   <elementType name="NM101" base="string" minLength="2" maxLength="3"/>
   <elementType name="NM102" base="string"/>
-  <elementType name="NM103" base="string" maxLength="60"/>
+  <elementType name="NM103" base="string" maxLength="60" title="Name Last or Organization Name"/>
   <elementType name="NM104" base="string" maxLength="35"/>
   <elementType name="NM105" base="string" maxLength="25"/>
   <elementType name="NM106" base="string" maxLength="10"/>
@@ -1887,11 +1887,11 @@
       <element type="N407"/>
     </sequence>
   </segmentType>
-  <segmentType name="NM1">
+  <segmentType name="NM1" title="Individual or Organizational Name">
     <sequence>
       <element type="NM101" minOccurs="1"/>
       <element type="NM102" minOccurs="1"/>
-      <element type="NM103"/>
+      <element type="NM103" title="Name Last or Organization Name"/>
       <element type="NM104"/>
       <element type="NM105"/>
       <element type="NM106"/>

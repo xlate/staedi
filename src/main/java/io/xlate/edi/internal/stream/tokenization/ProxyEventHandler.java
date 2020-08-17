@@ -212,7 +212,7 @@ public class ProxyEventHandler implements EventHandler {
 
         if (validator != null && !dialect.isServiceAdviceSegment(segmentTag)) {
             validator.validateSegment(this, segmentTag);
-            typeReference = validator.getSegmentReferenceCode();
+            typeReference = validator.getSegmentReference();
             eventsReady = !validator.isPendingDiscrimination();
         }
 
@@ -227,7 +227,7 @@ public class ProxyEventHandler implements EventHandler {
             // Now the control validator after setting transaction to false
             validator = validator();
             validator.validateSegment(this, segmentTag);
-            typeReference = validator().getSegmentReferenceCode();
+            typeReference = validator().getSegmentReference();
         }
 
         enqueueEvent(EDIStreamEvent.START_SEGMENT, EDIStreamValidationError.NONE, segmentTag, typeReference, location);
@@ -247,7 +247,7 @@ public class ProxyEventHandler implements EventHandler {
         if (validator != null) {
             validator.validateSyntax(dialect, this, this, location, false);
             validator.validateVersionConstraints(dialect, this);
-            typeReference = validator.getSegmentReferenceCode();
+            typeReference = validator.getSegmentReference();
         }
 
         location.clearSegmentLocations();

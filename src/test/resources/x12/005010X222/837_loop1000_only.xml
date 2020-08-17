@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<schema xmlns="http://xlate.io/EDISchema/v4">
+
+  <include schemaLocation="file:./target/test-classes/x12/005010/837.xml"/>
+
+  <implementation>
+    <sequence>
+      <segment type="BHT"/>
+
+      <loop code="1000A" type="L0001" discriminator="1">
+        <sequence>
+          <segment type="NM1" title="Submitter Name">
+            <sequence>
+              <element position="1">
+                <enumeration>
+                  <value>41</value>
+                </enumeration>
+              </element>
+              <element position="2"/>
+              <element position="3" title="Submitter Last or Organization Name"/>
+              <element position="4"/>
+              <element position="5"/>
+              <element position="8"/>
+              <element position="9"/>
+            </sequence>
+          </segment>
+          <segment type="PER"/>
+        </sequence>
+      </loop>
+
+      <loop code="1000B" type="L0001" discriminator="1">
+        <sequence>
+          <segment type="NM1" title="Receiver Name">
+            <sequence>
+              <element position="1">
+                <enumeration>
+                  <value>40</value>
+                </enumeration>
+              </element>
+              <element position="2"/>
+              <element position="3" title="Receiver Name"/>
+              <element position="8"/>
+              <element position="9"/>
+            </sequence>
+          </segment>
+        </sequence>
+      </loop>
+
+      <loop code="2000A" type="L0002">
+        <sequence>
+          <segment type="HL" />
+        </sequence>
+      </loop>
+    </sequence>
+  </implementation>
+</schema>
