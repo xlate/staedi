@@ -202,7 +202,7 @@ public class Validator {
         return !implSegmentCandidates.isEmpty();
     }
 
-    public EDIReference getSegmentReferenceCode() {
+    public EDIReference getSegmentReference() {
         if (implSegmentSelected) {
             return implNode.getLink();
         }
@@ -210,6 +210,10 @@ public class Validator {
     }
 
     public EDIReference getCompositeReference() {
+        if (implSegmentSelected && implComposite != null) {
+            return implComposite.getLink();
+        }
+
         return composite != null ? composite.getLink() : null;
     }
 
@@ -227,12 +231,24 @@ public class Validator {
     }
 
     public EDIReference getElementReference() {
+        if (implSegmentSelected) {
+            if (implComposite != null) {
+                return implComposite.getLink();
+            }
+
+            if (implElement != null) {
+                return implElement.getLink();
+            }
+        }
+
         if (composite != null) {
             return composite.getLink();
         }
+
         if (element != null) {
             return element.getLink();
         }
+
         return null;
     }
 
@@ -696,8 +712,8 @@ public class Validator {
                 handleImplementationSelected(candidate, implSeg, handler);
 
                 if (implNode.isFirstChild()) {
-                    //start of loop
-                    setLoopReferenceCode(events, index, count - 1, implType);
+                    //start of loop, update the loop and segment references that were already reported
+                    updateEventReferences(events, index, count - 1, implType, implSeg.getLink());
 
                     // Replace the standard loop with the implementation on the stack
                     loopStack.pop();
@@ -772,15 +788,17 @@ public class Validator {
      * @param count
      * @param implType
      */
-    static void setLoopReferenceCode(StreamEvent[] events, int index, int count, PolymorphicImplementation implType) {
+    static void updateEventReferences(StreamEvent[] events, int index, int count, EDIReference implType, EDIReference implSeg) {
         for (int i = index; i < count; i++) {
-            String stdRefCode = events[i].getReferenceCode();
-            // This is the reference code of the impl's standard type
-            String implRefCode = ((EDIComplexType) implType.getReferencedType()).getCode();
+            setReferenceWhenMatched(events[i], EDIStreamEvent.START_LOOP, implType);
+            setReferenceWhenMatched(events[i], EDIStreamEvent.START_SEGMENT, implSeg);
+        }
+    }
 
-            if (events[i].getType() == EDIStreamEvent.START_LOOP && Objects.equals(stdRefCode, implRefCode)) {
-                events[i].setTypeReference(implType);
-            }
+    static void setReferenceWhenMatched(StreamEvent event, EDIStreamEvent type, EDIReference override) {
+        // The reference type code from override is the reference code of the impl's standard type
+        if (event.getType() == type && Objects.equals(event.getReferenceCode(), override.getReferencedType().getCode())) {
+            event.setTypeReference(override);
         }
     }
 
