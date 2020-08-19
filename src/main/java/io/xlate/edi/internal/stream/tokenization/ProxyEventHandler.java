@@ -259,21 +259,21 @@ public class ProxyEventHandler implements EventHandler {
     public boolean compositeBegin(boolean isNil) {
         EDIReference typeReference = null;
         boolean eventsReady = true;
+        Validator validator = validator();
 
-        if (validator() != null && !isNil) {
-            boolean invalid = !validator().validCompositeOccurrences(dialect, location);
+        if (validator != null && !isNil) {
+            boolean invalid = !validator.validCompositeOccurrences(dialect, location);
+            typeReference = validator.getCompositeReference();
 
             if (invalid) {
-                typeReference = validator().getElementReference();
-                List<UsageError> errors = validator().getElementErrors();
+                List<UsageError> errors = validator.getElementErrors();
 
                 for (UsageError error : errors) {
                     enqueueEvent(error.getError().getCategory(), error.getError(), "", error.getTypeReference(), location);
                 }
-            } else {
-                typeReference = validator().getCompositeReference();
             }
-            eventsReady = !validator().isPendingDiscrimination();
+
+            eventsReady = !validator.isPendingDiscrimination();
         }
 
         enqueueEvent(EDIStreamEvent.START_COMPOSITE, EDIStreamValidationError.NONE, "", typeReference, location);
@@ -299,18 +299,30 @@ public class ProxyEventHandler implements EventHandler {
         boolean derivedComposite;
         EDIReference typeReference;
         boolean eventsReady = true;
+        final boolean compositeFromStream = location.getComponentPosition() > -1;
 
         elementHolder.set(text, start, length);
         dialect.elementData(elementHolder, location);
         Validator validator = validator();
+        boolean valid;
 
         if (validator != null) {
-            derivedComposite = validateElement(validator);
+            valid = validator.validateElement(dialect, location, elementHolder);
+            derivedComposite = !compositeFromStream && validator.isComposite();
             typeReference = validator.getElementReference();
+            enqueueElementOccurrenceErrors(validator, valid);
         } else {
+            valid = true;
             derivedComposite = false;
             typeReference = null;
         }
+
+        if (derivedComposite && elementHolder.getText() != null/* Not an empty composite */) {
+            this.compositeBegin(elementHolder.length() == 0);
+            location.incrementComponentPosition();
+        }
+
+        enqueueElementErrors(validator, valid);
 
         if (text != null && (!derivedComposite || length > 0) /* Not an inferred element */) {
             enqueueEvent(EDIStreamEvent.ELEMENT_DATA,
@@ -332,56 +344,51 @@ public class ProxyEventHandler implements EventHandler {
         return eventsReady;
     }
 
-    boolean validateElement(Validator validator) {
-        final boolean composite = location.getComponentPosition() > -1;
-        boolean valid = validator.validateElement(dialect, location, elementHolder);
-        boolean derivedComposite = !composite && validator.isComposite();
-
-        if (!valid) {
-            /*
-             * Process element-level errors before possibly starting a
-             * composite or reporting other data-related errors.
-             */
-            List<UsageError> errors = validator.getElementErrors();
-            Iterator<UsageError> cursor = errors.iterator();
-
-            while (cursor.hasNext()) {
-                UsageError error = cursor.next();
-
-                switch (error.getError()) {
-                case TOO_MANY_DATA_ELEMENTS:
-                case TOO_MANY_REPETITIONS:
-                    enqueueEvent(error.getError().getCategory(),
-                                 error.getError(),
-                                 elementHolder,
-                                 error.getTypeReference(),
-                                 location);
-                    cursor.remove();
-                    //$FALL-THROUGH$
-                default:
-                    continue;
-                }
-            }
+    void enqueueElementOccurrenceErrors(Validator validator, boolean valid) {
+        if (valid) {
+            return;
         }
 
-        if (derivedComposite && elementHolder.getText() != null/* Not an empty composite */) {
-            this.compositeBegin(elementHolder.length() == 0);
-            location.incrementComponentPosition();
-        }
+        /*
+         * Process element-level errors before possibly starting a
+         * composite or reporting other data-related errors.
+         */
+        List<UsageError> errors = validator.getElementErrors();
+        Iterator<UsageError> cursor = errors.iterator();
 
-        if (!valid) {
-            List<UsageError> errors = validator.getElementErrors();
+        while (cursor.hasNext()) {
+            UsageError error = cursor.next();
 
-            for (UsageError error : errors) {
+            switch (error.getError()) {
+            case TOO_MANY_DATA_ELEMENTS:
+            case TOO_MANY_REPETITIONS:
                 enqueueEvent(error.getError().getCategory(),
                              error.getError(),
                              elementHolder,
                              error.getTypeReference(),
                              location);
+                cursor.remove();
+                //$FALL-THROUGH$
+            default:
+                continue;
             }
         }
+    }
 
-        return derivedComposite;
+    void enqueueElementErrors(Validator validator, boolean valid) {
+        if (valid) {
+            return;
+        }
+
+        List<UsageError> errors = validator.getElementErrors();
+
+        for (UsageError error : errors) {
+            enqueueEvent(error.getError().getCategory(),
+                         error.getError(),
+                         elementHolder,
+                         error.getTypeReference(),
+                         location);
+        }
     }
 
     public boolean isBinaryElementLength() {
