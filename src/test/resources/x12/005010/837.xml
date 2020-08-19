@@ -555,10 +555,10 @@
   <elementType name="HI1207" base="string" maxLength="30"/>
   <elementType name="HI1208" base="string" maxLength="30"/>
   <elementType name="HI1209" base="string"/>
-  <elementType name="HL01" base="string" maxLength="12"/>
-  <elementType name="HL02" base="string" maxLength="12"/>
-  <elementType name="HL03" base="string" maxLength="2"/>
-  <elementType name="HL04" base="string"/>
+  <elementType name="HL01" base="string" maxLength="12" title="Hierarchical ID Number"/>
+  <elementType name="HL02" base="string" maxLength="12" title="Hierarchical Parent ID Number"/>
+  <elementType name="HL03" base="string" maxLength="2" title="Hierarchical Level Code"/>
+  <elementType name="HL04" base="string" title="Hierarchical Child Code"/>
   <elementType name="HSD01" base="string" minLength="2" maxLength="2"/>
   <elementType name="HSD02" base="decimal" maxLength="15"/>
   <elementType name="HSD03" base="string" minLength="2" maxLength="2"/>
@@ -694,7 +694,7 @@
   <elementType name="N405" base="string" maxLength="2"/>
   <elementType name="N406" base="string" maxLength="30"/>
   <elementType name="N407" base="string" maxLength="3"/>
-  <elementType name="NM101" base="string" minLength="2" maxLength="3"/>
+  <elementType name="NM101" base="string" minLength="2" maxLength="3" title="Entity Identifier Code"/>
   <elementType name="NM102" base="string"/>
   <elementType name="NM103" base="string" maxLength="60" title="Name Last or Organization Name"/>
   <elementType name="NM104" base="string" maxLength="35"/>

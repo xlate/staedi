@@ -3,6 +3,7 @@ package io.xlate.edi.internal.schema.implementation;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
@@ -203,7 +204,7 @@ class ElementImplTest {
                 + "NM1*41*2*SAMPLE INC*****46*496103~"
                 + "PER*IC*EDI DEPT*EM*FEEDBACK@example.com*TE*3305551212~"
                 + "NM1*40*2*PPO BLUE*****46*54771~"
-                + "HL*1**20~"
+                + "HL*1**20*1~"
                 + "SE*6*0001~"
                 + "GE*1*1~"
                 + "IEA*1*000000001~").getBytes());
@@ -244,5 +245,117 @@ class ElementImplTest {
         // Values of NM103 standard set in 837.xml
         assertEquals("Name Last or Organization Name", nm103references.get(0).getReferencedType().getTitle());
         assertEquals("Name Last or Organization Name", nm103references.get(1).getReferencedType().getTitle());
+    }
+
+    @Test
+    void testElementTypeDescriptionAccessOnDescriminator() throws EDIStreamException, EDISchemaException {
+        EDIInputFactory factory = EDIInputFactory.newFactory();
+        ByteArrayInputStream stream = new ByteArrayInputStream((""
+                + "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *200711*0100*^*00501*000000001*0*T*:~"
+                + "GS*HC*99999999999*888888888888*20111219*1340*1*X*005010X222~"
+                + "ST*837*0001*005010X222~"
+                + "BHT*0019*00*565743*20110523*154959*CH~"
+                + "NM1*41*2*SAMPLE INC*****46*496103~"
+                + "PER*IC*EDI DEPT*EM*FEEDBACK@example.com*TE*3305551212~"
+                + "NM1*40*2*PPO BLUE*****46*54771~"
+                + "HL*1**20*1~"
+                + "SE*6*0001~"
+                + "GE*1*1~"
+                + "IEA*1*000000001~").getBytes());
+
+        EDIStreamReader reader = factory.createEDIStreamReader(stream);
+        List<EDIStreamValidationError> errors = new ArrayList<>();
+        List<EDIReference> nm101references = new ArrayList<>();
+
+        while (reader.hasNext()) {
+            switch (reader.next()) {
+            case START_TRANSACTION:
+                reader.setTransactionSchema(SchemaFactory.newFactory()
+                                                         .createSchema(getClass().getResource("/x12/005010X222/837_loop1000_only.xml")));
+                break;
+            case ELEMENT_DATA:
+                if ("NM101".equals(reader.getReferenceCode())) {
+                    nm101references.add(reader.getSchemaTypeReference());
+                }
+                break;
+            case SEGMENT_ERROR:
+            case ELEMENT_OCCURRENCE_ERROR:
+            case ELEMENT_DATA_ERROR:
+                errors.add(reader.getErrorType());
+                System.out.println("Unexpected error: " + reader.getErrorType() + "; " + reader.getText() + "; " + reader.getLocation());
+                break;
+            default:
+                break;
+            }
+        }
+
+        assertEquals(0, errors.size(), () -> errors.toString());
+
+        // Values set in 837_loop1000_only.xml
+        assertEquals(2, nm101references.size());
+        assertEquals("Entity Identifier Code (Submitter)", nm101references.get(0).getTitle());
+        assertEquals("Entity Identifier Code (Receiver)", nm101references.get(1).getTitle());
+
+        // Values of NM101 standard set in 837.xml
+        assertEquals("Entity Identifier Code", nm101references.get(0).getReferencedType().getTitle());
+        assertEquals("Entity Identifier Code", nm101references.get(1).getReferencedType().getTitle());
+    }
+
+    @Test
+    void testElementTypeDescriptionAccessPriorToDescriminator() throws EDIStreamException, EDISchemaException {
+        EDIInputFactory factory = EDIInputFactory.newFactory();
+        ByteArrayInputStream stream = new ByteArrayInputStream((""
+                + "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *200711*0100*^*00501*000000001*0*T*:~"
+                + "GS*HC*99999999999*888888888888*20111219*1340*1*X*005010X222~"
+                + "ST*837*0001*005010X222~"
+                + "BHT*0019*00*565743*20110523*154959*CH~"
+                + "NM1*41*2*SAMPLE INC*****46*496103~"
+                + "PER*IC*EDI DEPT*EM*FEEDBACK@example.com*TE*3305551212~"
+                + "NM1*40*2*PPO BLUE*****46*54771~"
+                + "HL*1**20*1~"
+                + "SE*6*0001~"
+                + "GE*1*1~"
+                + "IEA*1*000000001~").getBytes());
+
+        EDIStreamReader reader = factory.createEDIStreamReader(stream);
+        List<EDIStreamValidationError> errors = new ArrayList<>();
+        List<EDIReference> hlReferences = new ArrayList<>();
+
+        while (reader.hasNext()) {
+            switch (reader.next()) {
+            case START_TRANSACTION:
+                reader.setTransactionSchema(SchemaFactory.newFactory()
+                                                         .createSchema(getClass().getResource("/x12/005010X222/837_loop1000_only.xml")));
+                break;
+            case ELEMENT_DATA:
+                if ("HL".equals(reader.getLocation().getSegmentTag())) {
+                    hlReferences.add(reader.getSchemaTypeReference());
+                }
+                break;
+            case SEGMENT_ERROR:
+            case ELEMENT_OCCURRENCE_ERROR:
+            case ELEMENT_DATA_ERROR:
+                errors.add(reader.getErrorType());
+                System.out.println("Unexpected error: " + reader.getErrorType() + "; " + reader.getText() + "; " + reader.getLocation());
+                break;
+            default:
+                break;
+            }
+        }
+
+        assertEquals(0, errors.size(), () -> errors.toString());
+
+        // Values set in 837_loop1000_only.xml, except for offset `1`
+        assertEquals(4, hlReferences.size());
+        assertEquals("Hierarchical ID Number (20)", hlReferences.get(0).getTitle());
+        assertNull(hlReferences.get(1).getTitle());
+        assertEquals("Hierarchical Level Code (20)", hlReferences.get(2).getTitle());
+        assertEquals("Hierarchical Child Code (20)", hlReferences.get(3).getTitle());
+
+        // Values of NM101 standard set in 837.xml
+        assertEquals("Hierarchical ID Number", hlReferences.get(0).getReferencedType().getTitle());
+        assertEquals("Hierarchical Parent ID Number", hlReferences.get(1).getReferencedType().getTitle());
+        assertEquals("Hierarchical Level Code", hlReferences.get(2).getReferencedType().getTitle());
+        assertEquals("Hierarchical Child Code", hlReferences.get(3).getReferencedType().getTitle());
     }
 }

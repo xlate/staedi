@@ -29,7 +29,7 @@ class SegmentImplTest {
                 + "NM1*41*2*SAMPLE INC*****46*496103~"
                 + "PER*IC*EDI DEPT*EM*FEEDBACK@example.com*TE*3305551212~"
                 + "NM1*40*2*PPO BLUE*****46*54771~"
-                + "HL*1**20~"
+                + "HL*1**20*1~"
                 + "SE*6*0001~"
                 + "GE*1*1~"
                 + "IEA*1*000000001~").getBytes());

@@ -333,6 +333,7 @@ public class StaEDIStreamReader implements EDIStreamReader {
         case END_SEGMENT:
         case ELEMENT_DATA:
         case ELEMENT_DATA_ERROR:
+        case ELEMENT_OCCURRENCE_ERROR:
         case SEGMENT_ERROR:
             break;
         default:

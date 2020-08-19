@@ -22,10 +22,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
 import io.xlate.edi.internal.schema.SchemaUtils;
+import io.xlate.edi.schema.EDIReference;
 import io.xlate.edi.schema.EDISchemaException;
 import io.xlate.edi.schema.Schema;
 import io.xlate.edi.schema.SchemaFactory;
@@ -457,12 +460,14 @@ class EventSequenceTest {
         // GE02 - 2nd occurrence
         assertEquals(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR, reader.next());
         assertEquals(EDIStreamValidationError.TOO_MANY_REPETITIONS, reader.getErrorType());
+        assertEquals("0001", reader.getText());
         assertEquals(EDIStreamEvent.ELEMENT_DATA, reader.next());
         assertEquals("0001", reader.getText());
 
         // GE02 - 3rd occurrence plus data error
         assertEquals(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR, reader.next());
         assertEquals("28", reader.getReferenceCode());
+        assertEquals("AGAIN!", reader.getText()); // data association with error
         assertEquals(EDIStreamValidationError.TOO_MANY_REPETITIONS, reader.getErrorType());
         assertEquals(EDIStreamEvent.ELEMENT_DATA_ERROR, reader.next());
         assertEquals(EDIStreamValidationError.INVALID_CHARACTER_DATA, reader.getErrorType());
@@ -474,6 +479,7 @@ class EventSequenceTest {
         // GE03 too many elements
         assertEquals(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR, reader.next());
         assertEquals(EDIStreamValidationError.TOO_MANY_DATA_ELEMENTS, reader.getErrorType());
+        assertEquals("", reader.getText()); // data association with error
 
         //assertEquals(EDIStreamEvent.END_GROUP, reader.nextTag());
 
@@ -559,5 +565,78 @@ class EventSequenceTest {
         URL schemaLocation = getClass().getResource("/x12/EDISchema997.xml");
 
         return schemaFactory.createSchema(schemaLocation);
+    }
+
+    @Test
+    void testElementReturnedOnDerivedComposite() throws EDISchemaException, EDIStreamException {
+        SchemaFactory schemaFactory = SchemaFactory.newFactory();
+        Schema schema = schemaFactory.createSchema(new ByteArrayInputStream((""
+                + "<schema xmlns='http://xlate.io/EDISchema/v4'>"
+                + "<transaction>"
+                + "  <sequence>"
+                + "    <segment type='SG1'/>"
+                + "  </sequence>"
+                + "</transaction>"
+                + ""
+                + "<elementType name=\"E1\" base=\"string\" maxLength=\"5\" />"
+                + ""
+                + "<compositeType name=\"C1\">"
+                + "  <sequence>"
+                + "    <element type='E1'/>"
+                + "    <element type='E1'/>"
+                + "  </sequence>"
+                + "</compositeType>"
+                + ""
+                + "<segmentType name=\"SG1\">"
+                + "  <sequence>"
+                + "    <element type='E1'/>"
+                + "    <composite type='C1'/>"
+                + "    <element type='E1'/>"
+                + "  </sequence>"
+                + "</segmentType>"
+                + "</schema>").getBytes()));
+
+        InputStream stream = new ByteArrayInputStream((""
+                + "ISA*01*0000000000*01*0000000000*ZZ*ABCDEFGHIJKLMNO*ZZ*123456789012345*101127*1719*`*00402*000003438*0*P*>\n" +
+                "GS*HC*99999999999*888888888888*20111219*1340*1377*X*005010\n" +
+                "ST*999*0001\n" +
+                "SG1*11111*22222`22222*33333\n" +
+                "SE*3*0001\n" +
+                "GE*1*1377\n" +
+                "IEA*1*000003438\n" +
+                "").getBytes());
+
+        EDIInputFactory factory = EDIInputFactory.newFactory();
+        EDIStreamReader reader = factory.createEDIStreamReader(stream);
+        List<EDIReference> c1refs = new ArrayList<>();
+        List<EDIReference> e1refs = new ArrayList<>();
+
+        while (reader.hasNext()) {
+            switch (reader.next()) {
+            case START_TRANSACTION:
+                reader.setTransactionSchema(schema);
+                break;
+            case START_COMPOSITE:
+                if (reader.getLocation().getSegmentTag().equals("SG1") && reader.getLocation().getElementPosition() == 2) {
+                    c1refs.add(reader.getSchemaTypeReference());
+                }
+                break;
+            case ELEMENT_DATA:
+                if (reader.getLocation().getSegmentTag().equals("SG1") && reader.getLocation().getElementPosition() == 2) {
+                    e1refs.add(reader.getSchemaTypeReference());
+                }
+                break;
+            default:
+                break;
+            }
+        }
+
+        assertEquals(2, c1refs.size());
+        assertEquals("C1", c1refs.get(0).getReferencedType().getId());
+        assertEquals("C1", c1refs.get(1).getReferencedType().getId());
+
+        assertEquals(2, e1refs.size());
+        assertEquals("E1", e1refs.get(0).getReferencedType().getId());
+        assertEquals("E1", e1refs.get(1).getReferencedType().getId());
     }
 }

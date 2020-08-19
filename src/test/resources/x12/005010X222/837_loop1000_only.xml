@@ -11,7 +11,7 @@
         <sequence>
           <segment type="NM1" title="Submitter Name">
             <sequence>
-              <element position="1">
+              <element position="1" title="Entity Identifier Code (Submitter)">
                 <enumeration>
                   <value>41</value>
                 </enumeration>
@@ -32,7 +32,7 @@
         <sequence>
           <segment type="NM1" title="Receiver Name">
             <sequence>
-              <element position="1">
+              <element position="1" title="Entity Identifier Code (Receiver)">
                 <enumeration>
                   <value>40</value>
                 </enumeration>
@@ -46,9 +46,23 @@
         </sequence>
       </loop>
 
-      <loop code="2000A" type="L0002">
+      <loop code="2000A" type="L0002" discriminator="3" title="Billing Provider Level (2000A)" >
         <sequence>
-          <segment type="HL" />
+          <segment type="HL" title="Billing Provider Level (HL)">
+            <sequence>
+              <element position="1" title="Hierarchical ID Number (20)" />
+              <element position="3" title="Hierarchical Level Code (20)">
+                <enumeration>
+                  <value title="Information Source">20</value>
+                </enumeration>
+              </element>
+              <element position="4" minOccurs="1" title="Hierarchical Child Code (20)">
+                <enumeration>
+                  <value>1</value>
+                </enumeration>
+              </element>
+            </sequence>
+          </segment>
         </sequence>
       </loop>
     </sequence>

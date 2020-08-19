@@ -210,11 +210,17 @@ public class Validator {
     }
 
     public EDIReference getCompositeReference() {
+        final EDIReference reference;
+
         if (implSegmentSelected && implComposite != null) {
-            return implComposite.getLink();
+            reference = implComposite.getLink();
+        } else if (composite != null) {
+            reference = composite.getLink();
+        } else {
+            reference = null;
         }
 
-        return composite != null ? composite.getLink() : null;
+        return reference;
     }
 
     public boolean isBinaryElementLength() {
@@ -231,25 +237,17 @@ public class Validator {
     }
 
     public EDIReference getElementReference() {
-        if (implSegmentSelected) {
-            if (implComposite != null) {
-                return implComposite.getLink();
-            }
+        final EDIReference reference;
 
-            if (implElement != null) {
-                return implElement.getLink();
-            }
+        if (implSegmentSelected && implElement != null) {
+            reference = implElement.getLink();
+        } else if (element != null) {
+            reference = element.getLink();
+        } else {
+            reference = null;
         }
 
-        if (composite != null) {
-            return composite.getLink();
-        }
-
-        if (element != null) {
-            return element.getLink();
-        }
-
-        return null;
+        return reference;
     }
 
     private static EDIReference referenceOf(EDIComplexType type, int minOccurs, int maxOccurs) {
@@ -712,12 +710,15 @@ public class Validator {
                 handleImplementationSelected(candidate, implSeg, handler);
 
                 if (implNode.isFirstChild()) {
-                    //start of loop, update the loop and segment references that were already reported
-                    updateEventReferences(events, index, count - 1, implType, implSeg.getLink());
+                    //start of loop, update the loop, segment, and element references that were already reported
+                    updateEventReferences(events, index, count, implType, implSeg.getLink());
 
                     // Replace the standard loop with the implementation on the stack
                     loopStack.pop();
                     loopStack.push(implNode.getParent());
+                } else {
+                    //update segment and element references that were already reported
+                    updateEventReferences(events, index, count, null, implSeg.getLink());
                 }
 
                 return true;
@@ -732,6 +733,16 @@ public class Validator {
         implSegmentCandidates.clear();
         implNode = implSeg;
         implSegmentSelected = true;
+
+        // TODO: Implementation nodes must be incremented and validated (#88)
+        if (this.isComposite()) {
+            this.implComposite = implSeg.getChild(this.composite.getIndex());
+            this.implElement = this.implComposite.getChild(this.element.getIndex());
+        } else if (this.element != null) {
+            // Set implementation when standard element is already set (e.g. via discriminator)
+            this.implComposite = null;
+            this.implElement = implSeg.getChild(this.element.getIndex());
+        }
 
         if (candidate.isNodeType(Type.LOOP)) {
             candidate.incrementUsage();
@@ -790,16 +801,47 @@ public class Validator {
      */
     static void updateEventReferences(StreamEvent[] events, int index, int count, EDIReference implType, EDIReference implSeg) {
         for (int i = index; i < count; i++) {
-            setReferenceWhenMatched(events[i], EDIStreamEvent.START_LOOP, implType);
-            setReferenceWhenMatched(events[i], EDIStreamEvent.START_SEGMENT, implSeg);
+            switch (events[i].getType()) {
+            case START_LOOP:
+                // Assuming implType is not null if we find a START_LOOP event
+                Objects.requireNonNull(implType, "Unexpected loop event during implementation segment selection");
+                updateReferenceWhenMatched(events[i], implType);
+                break;
+            case START_SEGMENT:
+                updateReferenceWhenMatched(events[i], implSeg);
+                break;
+            case START_COMPOSITE:
+            case END_COMPOSITE:
+            case ELEMENT_DATA:
+                // TODO: Implementation nodes must be incremented and validated (#88)
+                updateReference(events[i], (SegmentImplementation) implSeg);
+                break;
+            default:
+                break;
+            }
         }
     }
 
-    static void setReferenceWhenMatched(StreamEvent event, EDIStreamEvent type, EDIReference override) {
+    static void updateReferenceWhenMatched(StreamEvent event, EDIReference override) {
         // The reference type code from override is the reference code of the impl's standard type
-        if (event.getType() == type && Objects.equals(event.getReferenceCode(), override.getReferencedType().getCode())) {
+        if (Objects.equals(event.getReferenceCode(), override.getReferencedType().getCode())) {
             event.setTypeReference(override);
         }
+    }
+
+    static void updateReference(StreamEvent event, SegmentImplementation override) {
+        final List<EDITypeImplementation> implElements = override.getSequence();
+        final Location location = event.getLocation();
+        final int elementIndex = location.getElementPosition() - 1;
+        final int componentIndex = location.getComponentPosition() - 1;
+        EDITypeImplementation element = implElements.get(elementIndex);
+
+        if (componentIndex > -1) {
+            CompositeImplementation composite = (CompositeImplementation) implElements.get(elementIndex);
+            element = composite.getSequence().get(componentIndex);
+        }
+
+        event.setTypeReference(element);
     }
 
     /* ********************************************************************** */
