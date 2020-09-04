@@ -55,11 +55,11 @@ public class EDIException extends EDIStreamException {
     }
 
     EDIException(Integer id, String message, Location location) {
-        super(exceptionMessages.get(id) + message, location);
+        super(exceptionMessages.get(id) + "; " + message, location);
     }
 
     public EDIException(Integer id, String message) {
-        super(exceptionMessages.get(id) + ' ' + message);
+        super(exceptionMessages.get(id) + "; " + message);
     }
 
     public EDIException(Throwable cause) {
