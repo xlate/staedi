@@ -14,7 +14,7 @@
   License for the specific language governing permissions and limitations under
   the License.
 -->
-<schema xmlns="http://xlate.io/EDISchema/v4">
+<schema xmlns="http://xlate.io/EDISchema/v4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://xlate.io/EDISchema/v4 https://www.xlate.io/EDISchema/EDISchema-v4.xsd">
 
   <elementType name="I01" base="identifier" minLength="2" maxLength="2" title="Authorization Information Qualifier">
     <description>Code identifying the type of information in the Authorization Information</description>
