@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+
+<schema xmlns="http://xlate.io/EDISchema/v4">
+
+    <transaction>
+        <sequence>
+            <segment type="TVL" minOccurs="1" maxOccurs="1" />
+            <segment type="EQN" minOccurs="1" maxOccurs="1" />
+            <loop code="GR1_SRC" maxOccurs="999">
+                <sequence>
+                    <segment type="SRC" minOccurs="1" maxOccurs="1" />
+                    <segment type="RCI" minOccurs="1" maxOccurs="1" />
+                    <loop code="GR5_TVL" maxOccurs="999">
+                        <sequence>
+                            <segment type="TVL" minOccurs="1" maxOccurs="1" />
+                            <segment type="RCI" minOccurs="0" maxOccurs="1" />
+                            <loop code="GR6_DAT" maxOccurs="999">
+                                <sequence>
+                                    <segment type="DAT" minOccurs="1" maxOccurs="1" />
+                                </sequence>
+                            </loop>
+                        </sequence>
+                    </loop>
+                </sequence>
+            </loop>
+        </sequence>
+    </transaction>
+
+    <!-- ==================================== Element types ===================================== -->
+
+    <!-- Numbers -->
+    <elementType name="EQNumber" base="numeric" maxLength="3" />
+
+    <!-- Dates -->
+    <elementType name="Date" base="date" minLength="6" maxLength="6" />
+    <elementType name="DateFreeText" base="string" maxLength="35" />
+    <elementType name="Time" base="time" minLength="4" maxLength="4" />
+    <elementType name="DateTimeQualifier" base="string" maxLength="3" />
+    
+    <!-- Identifiers -->
+    <elementType name="CompanyId" base="string" maxLength="3" />
+    <elementType name="ReservationCtrlNumber" base="string" maxLength="20" />
+
+    <!-- Codes -->
+    <elementType name="ReservationCtrlType" base="string" maxLength="1" />
+
+    <!-- ==================================== Composite types ===================================== -->
+
+    <compositeType name="DateTimeCompo">
+        <sequence>
+            <element type="DateTimeQualifier" minOccurs="0"/>
+            <element type="DateFreeText" minOccurs="0"/>
+            <element type="Time" minOccurs="0"/>
+        </sequence>
+    </compositeType>
+
+    <compositeType name="ReservationCtrlInfoCompo">
+        <sequence>
+            <element type="CompanyId" minOccurs="1"/>
+            <element type="ReservationCtrlNumber" minOccurs="1"/>
+            <element type="ReservationCtrlType" minOccurs="0"/>
+            <element type="Date" minOccurs="0"/>
+            <element type="Time" minOccurs="0"/>
+        </sequence>
+    </compositeType>
+
+    <!-- ==================================== Segment types ===================================== -->
+
+    <segmentType name="RCI">
+        <sequence>
+            <!-- "The composite C330 will appear at least once and may be repeated up to eight more times." -->
+            <!-- FIXME With maxOccurs="9" doesn't work and with explicit repetitions it throws NPE -->
+            <composite type="ReservationCtrlInfoCompo" minOccurs="1" />
+            <composite type="ReservationCtrlInfoCompo" minOccurs="0" />
+            <composite type="ReservationCtrlInfoCompo" minOccurs="0" />
+            <composite type="ReservationCtrlInfoCompo" minOccurs="0" />
+            <composite type="ReservationCtrlInfoCompo" minOccurs="0" />
+            <composite type="ReservationCtrlInfoCompo" minOccurs="0" />
+            <composite type="ReservationCtrlInfoCompo" minOccurs="0" />
+            <composite type="ReservationCtrlInfoCompo" minOccurs="0" />
+            <composite type="ReservationCtrlInfoCompo" minOccurs="0" />
+        </sequence>
+    </segmentType>
+
+    <segmentType name="DAT">
+        <sequence>
+            <composite type="DateTimeCompo" minOccurs="0" />
+        </sequence>
+    </segmentType>
+
+    <segmentType name="SRC">
+        <sequence />
+    </segmentType>
+
+    <segmentType name="EQN">
+        <sequence>
+            <element type="EQNumber" minOccurs="1" />
+        </sequence>
+    </segmentType>
+
+    <segmentType name="TVL">
+        <sequence>
+            <any maxOccurs="10" />
+        </sequence>
+    </segmentType>
+
+</schema>

@@ -1647,4 +1647,42 @@ class StaEDIStreamReaderTest implements ConstantsTest {
             reader.close();
         }
     }
+
+    /**
+     * Original issue: https://github.com/xlate/staedi/issues/106
+     *
+     * @throws Exception
+     */
+    @Test
+    void testValidatorResetElement_Issue106() throws Exception {
+        EDIInputFactory factory = EDIInputFactory.newFactory();
+        Schema transSchema = SchemaFactory.newFactory().createSchema(getClass().getResourceAsStream("/EDIFACT/issue106/null-pointer-impl-schema.xml"));
+        factory.setProperty(EDIInputFactory.EDI_VALIDATE_CONTROL_STRUCTURE, true);
+        factory.setProperty(EDIInputFactory.EDI_VALIDATE_CONTROL_CODE_VALUES, false);
+        EDIStreamReader reader = factory.createEDIStreamReader(getClass().getResourceAsStream("/EDIFACT/issue106/null-pointer-example.edi"));
+        List<Object> unexpected = new ArrayList<>();
+
+        try {
+            while (reader.hasNext()) {
+                switch (reader.next()) {
+                case START_TRANSACTION:
+                    reader.setTransactionSchema(transSchema);
+                    break;
+                case SEGMENT_ERROR:
+                case ELEMENT_OCCURRENCE_ERROR:
+                case ELEMENT_DATA_ERROR:
+                    unexpected.add(reader.getErrorType());
+                    break;
+                default:
+                    break;
+                }
+            }
+        } catch (Exception e) {
+            unexpected.add(e);
+        } finally {
+            reader.close();
+        }
+
+        assertEquals(0, unexpected.size());
+    }
 }
