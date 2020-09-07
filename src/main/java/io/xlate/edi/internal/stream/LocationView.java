@@ -35,14 +35,14 @@ public class LocationView implements Location {
         segmentPosition = source.getSegmentPosition();
         segmentTag = source.getSegmentTag();
         elementPosition = source.getElementPosition();
-        componentPosition = source.getComponentPosition();
         elementOccurrence = source.getElementOccurrence();
+        componentPosition = source.getComponentPosition();
     }
 
     protected LocationView() {
         lineNumber = 1;
         columnNumber = 0;
-        characterOffset = -1;
+        characterOffset = 0;
         segmentPosition = -1;
         elementPosition = -1;
         componentPosition = -1;

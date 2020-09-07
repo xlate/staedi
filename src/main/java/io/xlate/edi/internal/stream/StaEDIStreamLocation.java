@@ -29,16 +29,9 @@ public class StaEDIStreamLocation extends LocationView implements Location {
         super(source);
     }
 
+    @Override
     public StaEDIStreamLocation copy() {
-        StaEDIStreamLocation copy = new StaEDIStreamLocation();
-        copy.lineNumber = this.lineNumber;
-        copy.columnNumber = this.columnNumber;
-        copy.characterOffset = this.characterOffset;
-        copy.segmentPosition = this.segmentPosition;
-        copy.segmentTag = this.segmentTag;
-        copy.elementPosition = this.elementPosition;
-        copy.elementOccurrence = this.elementOccurrence;
-        copy.componentPosition = this.componentPosition;
+        StaEDIStreamLocation copy = new StaEDIStreamLocation(this);
         copy.repeated = this.repeated;
         return copy;
     }
