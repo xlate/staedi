@@ -185,17 +185,21 @@ public class Validator {
         depth = 1;
 
         segmentExpected = false;
-        composite = null;
-        element = null;
-
         implSegmentSelected = false;
-        implComposite = null;
-        implElement = null;
+        clearElements();
 
         implSegmentCandidates.clear();
         useErrors.clear();
         elementErrors.clear();
         initial = true;
+    }
+
+    void clearElements() {
+        composite = null;
+        element = null;
+
+        implComposite = null;
+        implElement = null;
     }
 
     public boolean isPendingDiscrimination() {
@@ -380,6 +384,7 @@ public class Validator {
         initial = false;
         segmentExpected = true;
         implSegmentSelected = false;
+        clearElements();
 
         final int startDepth = this.depth;
 
@@ -935,12 +940,8 @@ public class Validator {
         }
 
         boolean valueReceived = value != null && value.length() > 0;
+        clearElements();
         elementErrors.clear();
-        this.composite = null;
-        this.element = null;
-
-        this.implComposite = null;
-        this.implElement = null;
 
         int elementPosition = position.getElementPosition() - 1;
         int componentIndex = position.getComponentPosition() - 1;

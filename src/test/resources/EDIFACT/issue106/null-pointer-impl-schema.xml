@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<schema xmlns="http://xlate.io/EDISchema/v4">
+    <include schemaLocation="file:./src/test/resources/EDIFACT/issue106/null-pointer-transaction-schema.xml" />
+
+    <implementation>
+        <sequence>
+            <segment type="TVL" />
+            <segment type="EQN" />
+            <loop code="GR1_SRC_PUSH" type="GR1_SRC">
+                <sequence>
+                    <segment type="SRC" />
+                    <segment type="RCI" />
+                    <loop code="GR5_TVL_PUSH" type="GR5_TVL">
+                        <sequence>
+                            <segment type="TVL" />
+                            <segment type="RCI" />
+                            <loop code="GR6_DAT_PUSH" type="GR6_DAT">
+                                <sequence>
+                                    <segment type="DAT" />
+                                </sequence>
+                            </loop>
+                        </sequence>
+                    </loop>
+               </sequence>
+            </loop>
+        </sequence>
+    </implementation>
+</schema>
