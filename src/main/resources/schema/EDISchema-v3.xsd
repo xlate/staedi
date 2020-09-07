@@ -40,6 +40,7 @@
       <enumeration value="exclusion" />
       <enumeration value="conditional" />
       <enumeration value="list" />
+      <enumeration value="firstonly" />
     </restriction>
   </simpleType>
 

@@ -120,4 +120,9 @@ public class LocationView implements Location {
     public int getElementOccurrence() {
         return elementOccurrence;
     }
+
+    @Override
+    public Location copy() {
+        return new LocationView(this);
+    }
 }

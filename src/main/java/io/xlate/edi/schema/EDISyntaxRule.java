@@ -49,7 +49,12 @@ public interface EDISyntaxRule {
          * X12: Type L
          * EDIFACT: (D6) If first, then at least one more
          */
-        LIST;
+        LIST,
+        /**
+         * X12: N/A
+         * EDIFACT: (D7) If first, then none of the others
+         */
+        FIRSTONLY;
     }
 
     Type getType();

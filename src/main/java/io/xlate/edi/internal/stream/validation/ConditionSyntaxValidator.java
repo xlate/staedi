@@ -20,21 +20,16 @@ import io.xlate.edi.schema.EDISyntaxRule;
 
 class ConditionSyntaxValidator implements SyntaxValidator {
 
-    private static final ConditionSyntaxValidator singleton = new ConditionSyntaxValidator();
+    static final ConditionSyntaxValidator INSTANCE = new ConditionSyntaxValidator();
 
     private ConditionSyntaxValidator() {
     }
 
-    static ConditionSyntaxValidator getInstance() {
-        return singleton;
-    }
-
     @Override
-    public void validate(EDISyntaxRule syntax, UsageNode structure, ValidationEventHandler handler) {
-        SyntaxStatus status = scanSyntax(syntax, structure.getChildren());
-
+    public void validate(EDISyntaxRule syntax, UsageNode structure, ValidationEventHandler handler, SyntaxStatus status) {
         if (status.anchorPresent && status.elementCount < syntax.getPositions().size()) {
             signalConditionError(syntax, structure, handler);
         }
     }
+
 }

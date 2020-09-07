@@ -90,4 +90,13 @@ public interface Location {
      * @return the current component element position
      */
     int getComponentPosition();
+
+    /**
+     * Create a new copy of this instance
+     *
+     * @return a new {@link Location } instance with the same values of the instance being copied
+     *
+     * @since 1.11
+     */
+    Location copy();
 }

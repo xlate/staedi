@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2017 xlate.io LLC, http://www.xlate.io
+ * Copyright 2020 xlate.io LLC, http://www.xlate.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -18,19 +18,17 @@ package io.xlate.edi.internal.stream.validation;
 import io.xlate.edi.internal.stream.tokenization.ValidationEventHandler;
 import io.xlate.edi.schema.EDISyntaxRule;
 
-class SingleSyntaxValidator implements SyntaxValidator {
+class FirstOnlySyntaxValidator implements SyntaxValidator {
 
-    static final SingleSyntaxValidator INSTANCE = new SingleSyntaxValidator();
+    static final FirstOnlySyntaxValidator INSTANCE = new FirstOnlySyntaxValidator();
 
-    private SingleSyntaxValidator() {
+    private FirstOnlySyntaxValidator() {
     }
 
     @Override
     public void validate(EDISyntaxRule syntax, UsageNode structure, ValidationEventHandler handler, SyntaxStatus status) {
-        if (status.elementCount > 1) {
+        if (status.anchorPresent && status.elementCount > 1) {
             signalExclusionError(syntax, structure, handler);
-        } else if (status.elementCount == 0) {
-            signalConditionError(syntax, structure, handler);
         }
     }
 

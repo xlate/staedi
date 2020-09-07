@@ -38,22 +38,25 @@ interface SyntaxValidator {
 
         switch (type) {
         case CONDITIONAL:
-            instance = ConditionSyntaxValidator.getInstance();
+            instance = ConditionSyntaxValidator.INSTANCE;
             break;
         case EXCLUSION:
-            instance = ExclusionSyntaxValidator.getInstance();
+            instance = ExclusionSyntaxValidator.INSTANCE;
             break;
         case LIST:
-            instance = ListSyntaxValidator.getInstance();
+            instance = ListSyntaxValidator.INSTANCE;
             break;
         case PAIRED:
-            instance = PairedSyntaxValidator.getInstance();
+            instance = PairedSyntaxValidator.INSTANCE;
             break;
         case REQUIRED:
-            instance = RequiredSyntaxValidator.getInstance();
+            instance = RequiredSyntaxValidator.INSTANCE;
             break;
         case SINGLE:
-            instance = SingleSyntaxValidator.getInstance();
+            instance = SingleSyntaxValidator.INSTANCE;
+            break;
+        case FIRSTONLY:
+            instance = FirstOnlySyntaxValidator.INSTANCE;
             break;
         }
 
@@ -172,5 +175,9 @@ interface SyntaxValidator {
         return position;
     }
 
-    void validate(EDISyntaxRule syntax, UsageNode structure, ValidationEventHandler handler);
+    default void validate(EDISyntaxRule syntax, UsageNode structure, ValidationEventHandler handler) {
+        validate(syntax, structure, handler, scanSyntax(syntax, structure.getChildren()));
+    }
+
+    void validate(EDISyntaxRule syntax, UsageNode structure, ValidationEventHandler handler, SyntaxStatus status);
 }
