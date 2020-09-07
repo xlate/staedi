@@ -20,19 +20,13 @@ import io.xlate.edi.schema.EDISyntaxRule;
 
 class PairedSyntaxValidator implements SyntaxValidator {
 
-    private static final PairedSyntaxValidator singleton = new PairedSyntaxValidator();
+    static final PairedSyntaxValidator INSTANCE = new PairedSyntaxValidator();
 
     private PairedSyntaxValidator() {
     }
 
-    static PairedSyntaxValidator getInstance() {
-        return singleton;
-    }
-
     @Override
-    public void validate(EDISyntaxRule syntax, UsageNode structure, ValidationEventHandler handler) {
-        SyntaxStatus status = scanSyntax(syntax, structure.getChildren());
-
+    public void validate(EDISyntaxRule syntax, UsageNode structure, ValidationEventHandler handler, SyntaxStatus status) {
         if (status.elementCount == 0) {
             return;
         }
@@ -41,4 +35,5 @@ class PairedSyntaxValidator implements SyntaxValidator {
             signalConditionError(syntax, structure, handler);
         }
     }
+
 }

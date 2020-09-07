@@ -339,6 +339,7 @@ class LexerTest {
         }
         EDIException thrown = assertThrows(EDIException.class, lexer::parse);
         assertTrue(thrown.getMessage().contains("EDIE004"));
+        assertEquals(109, thrown.getLocation().copy().getCharacterOffset());
     }
 
     @Test

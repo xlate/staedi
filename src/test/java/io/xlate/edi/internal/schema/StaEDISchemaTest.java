@@ -16,8 +16,10 @@
 package io.xlate.edi.internal.schema;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.InputStream;
 import java.net.URL;
@@ -100,16 +102,28 @@ class StaEDISchemaTest {
 
         assertEquals(EDIType.Type.TRANSACTION, schema.getType(StaEDISchema.TRANSACTION_ID).getType());
 
+        assertFalse(schema.containsSegment("DE0479"));
         EDIType ak101 = schema.getType("DE0479");
         assertEquals(EDIType.Type.ELEMENT, ak101.getType());
         assertEquals(ak101, schema.getType("DE0479"));
 
+        assertFalse(schema.containsSegment("DE0715"));
         EDIType ak901 = schema.getType("DE0715");
         assertEquals(EDIType.Type.ELEMENT, ak901.getType());
         assertNotEquals(ak101, ak901);
 
+        assertTrue(schema.containsSegment("AK9"));
         EDIType ak9 = schema.getType("AK9");
         assertEquals(EDIType.Type.SEGMENT, ak9.getType());
         assertNotEquals(ak101, ak9);
+    }
+
+    @Test
+    void testEmptyTypesMapThrowsException() throws Exception {
+        StaEDISchema schema = new StaEDISchema(StaEDISchema.INTERCHANGE_ID, StaEDISchema.TRANSACTION_ID);
+        Map<String, EDIType> types = Collections.emptyMap();
+        EDISchemaException thrown = assertThrows(EDISchemaException.class, () -> schema.setTypes(types));
+        assertEquals(String.format("Schema must contain either %s or %s", StaEDISchema.INTERCHANGE_ID, StaEDISchema.TRANSACTION_ID),
+                     thrown.getMessage());
     }
 }

@@ -64,6 +64,11 @@
           <documentation>If first, then at least one more</documentation>
         </annotation>
       </enumeration>
+      <enumeration value="firstonly">
+        <annotation>
+          <documentation>If first, then none of the others</documentation>
+        </annotation>
+      </enumeration>
     </restriction>
   </simpleType>
 

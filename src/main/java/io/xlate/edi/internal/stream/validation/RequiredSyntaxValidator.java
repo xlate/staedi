@@ -20,21 +20,16 @@ import io.xlate.edi.schema.EDISyntaxRule;
 
 class RequiredSyntaxValidator implements SyntaxValidator {
 
-    private static final RequiredSyntaxValidator singleton = new RequiredSyntaxValidator();
+    static final RequiredSyntaxValidator INSTANCE = new RequiredSyntaxValidator();
 
     private RequiredSyntaxValidator() {
     }
 
-    static RequiredSyntaxValidator getInstance() {
-        return singleton;
-    }
-
     @Override
-    public void validate(EDISyntaxRule syntax, UsageNode structure, ValidationEventHandler handler) {
-        SyntaxStatus status = scanSyntax(syntax, structure.getChildren());
-
+    public void validate(EDISyntaxRule syntax, UsageNode structure, ValidationEventHandler handler, SyntaxStatus status) {
         if (status.elementCount < 1) {
             signalConditionError(syntax, structure, handler);
         }
     }
+
 }

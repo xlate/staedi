@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<schema xmlns="http://xlate.io/EDISchema/v4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://xlate.io/EDISchema/v4 https://www.xlate.io/EDISchema/EDISchema-v4.xsd">
+
+  <transaction>
+    <sequence>
+      <segment type="UXA"/>
+    </sequence>
+  </transaction>
+
+  <elementType name="DE0000" code="0" base="string" maxLength="35"/>
+
+  <segmentType name="UXA">
+    <sequence>
+      <element type="DE0000"/>
+      <element type="DE0000"/>
+      <element type="DE0000"/>
+    </sequence>
+
+    <syntax type="firstonly">
+      <position>1</position>
+      <position>3</position>
+    </syntax>
+  </segmentType>
+</schema>
