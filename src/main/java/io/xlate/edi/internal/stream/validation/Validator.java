@@ -746,8 +746,8 @@ public class Validator {
         }
     }
 
-    public boolean selectImplementation(StreamEvent[] events, int index, int count, ValidationEventHandler handler) {
-        StreamEvent currentEvent = events[index + count - 1];
+    public boolean selectImplementation(Deque<StreamEvent> eventQueue, ValidationEventHandler handler) {
+        StreamEvent currentEvent = eventQueue.getLast();
 
         if (currentEvent.getType() != EDIStreamEvent.ELEMENT_DATA) {
             return false;
@@ -763,14 +763,14 @@ public class Validator {
 
                 if (implNode.isFirstChild()) {
                     //start of loop, update the loop, segment, and element references that were already reported
-                    updateEventReferences(events, index, count, implType, implSeg.getLink());
+                    updateEventReferences(eventQueue, implType, implSeg.getLink());
 
                     // Replace the standard loop with the implementation on the stack
                     loopStack.pop();
                     loopStack.push(implNode.getParent());
                 } else {
                     //update segment and element references that were already reported
-                    updateEventReferences(events, index, count, null, implSeg.getLink());
+                    updateEventReferences(eventQueue, null, implSeg.getLink());
                 }
 
                 return true;
@@ -886,21 +886,21 @@ public class Validator {
      * @param count
      * @param implType
      */
-    static void updateEventReferences(StreamEvent[] events, int index, int count, EDIReference implType, EDIReference implSeg) {
-        for (int i = index; i < count; i++) {
-            switch (events[i].getType()) {
+    static void updateEventReferences(Deque<StreamEvent> eventQueue, EDIReference implType, EDIReference implSeg) {
+        for (StreamEvent event : eventQueue) {
+            switch (event.getType()) {
             case START_LOOP:
                 // Assuming implType is not null if we find a START_LOOP event
                 Objects.requireNonNull(implType, "Unexpected loop event during implementation segment selection");
-                updateReferenceWhenMatched(events[i], implType);
+                updateReferenceWhenMatched(event, implType);
                 break;
             case START_SEGMENT:
-                updateReferenceWhenMatched(events[i], implSeg);
+                updateReferenceWhenMatched(event, implSeg);
                 break;
             case START_COMPOSITE:
             case END_COMPOSITE:
             case ELEMENT_DATA:
-                updateReference(events[i], (SegmentImplementation) implSeg);
+                updateReference(event, (SegmentImplementation) implSeg);
                 break;
             default:
                 break;

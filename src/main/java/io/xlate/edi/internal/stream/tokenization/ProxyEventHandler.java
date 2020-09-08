@@ -17,9 +17,13 @@ package io.xlate.edi.internal.stream.tokenization;
 
 import java.io.InputStream;
 import java.nio.CharBuffer;
+import java.util.Deque;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Queue;
+import java.util.function.Function;
 
 import io.xlate.edi.internal.stream.CharArraySequence;
 import io.xlate.edi.internal.stream.StaEDIStreamLocation;
@@ -49,17 +53,20 @@ public class ProxyEventHandler implements EventHandler {
     private String segmentTag;
     private CharArraySequence elementHolder = new CharArraySequence();
 
-    private StreamEvent[] events = new StreamEvent[99];
-    private int eventCount = 0;
-    private int eventIndex = 0;
+    private final Queue<StreamEvent> eventPool = new LinkedList<>();
+    private final Deque<StreamEvent> eventQueue;
+    private final List<StreamEvent> eventList;
+
     private Dialect dialect;
 
     public ProxyEventHandler(StaEDIStreamLocation location, Schema controlSchema) {
         this.location = location;
+
+        LinkedList<StreamEvent> events = new LinkedList<>();
+        this.eventQueue = events;
+        this.eventList = events;
+
         setControlSchema(controlSchema, true);
-        for (int i = 0; i < 99; i++) {
-            events[i] = new StreamEvent();
-        }
     }
 
     public void setControlSchema(Schema controlSchema, boolean validateCodeValues) {
@@ -87,48 +94,56 @@ public class ProxyEventHandler implements EventHandler {
     }
 
     public void resetEvents() {
-        eventCount = 0;
-        eventIndex = 0;
+        eventPool.addAll(eventQueue);
+        eventQueue.clear();
     }
 
     public EDIStreamEvent getEvent() {
-        if (hasEvents()) {
-            return events[eventIndex].type;
-        }
-        return null;
+        return current(StreamEvent::getType, null);
     }
 
     public CharBuffer getCharacters() {
-        if (hasEvents()) {
-            return events[eventIndex].getData();
+        return current(StreamEvent::getData);
+    }
+
+    public boolean nextEvent() {
+        if (eventQueue.isEmpty()) {
+            return false;
+        }
+
+        eventPool.add(eventQueue.removeFirst());
+        return !eventQueue.isEmpty();
+    }
+
+    public EDIStreamValidationError getErrorType() {
+        return current(StreamEvent::getErrorType, null);
+    }
+
+    public String getReferenceCode() {
+        return current(StreamEvent::getReferenceCode, null);
+    }
+
+    public Location getLocation() {
+        return current(event ->
+                event.location != null ? event.location : location, location);
+    }
+
+    <T> T current(Function<StreamEvent, T> mapper, T defaultValue) {
+        if (!eventQueue.isEmpty()) {
+            return mapper.apply(eventQueue.getFirst());
+        }
+        return defaultValue;
+    }
+
+    <T> T current(Function<StreamEvent, T> mapper) {
+        if (!eventQueue.isEmpty()) {
+            return mapper.apply(eventQueue.getFirst());
         }
         throw new IllegalStateException();
     }
 
-    public boolean hasEvents() {
-        return eventIndex < eventCount;
-    }
-
-    public boolean nextEvent() {
-        if (eventCount < 1) {
-            return false;
-        }
-        return ++eventIndex < eventCount;
-    }
-
-    public EDIStreamValidationError getErrorType() {
-        return events[eventIndex].errorType;
-    }
-
-    public String getReferenceCode() {
-        return hasEvents() ? events[eventIndex].getReferenceCode() : null;
-    }
-
-    public Location getLocation() {
-        if (hasEvents() && events[eventIndex].location != null) {
-            return events[eventIndex].location;
-        }
-        return location;
+    StreamEvent getPooledEvent() {
+        return eventPool.isEmpty() ? new StreamEvent() : eventPool.remove();
     }
 
     public InputStream getBinary() {
@@ -140,7 +155,7 @@ public class ProxyEventHandler implements EventHandler {
     }
 
     public EDIReference getSchemaTypeReference() {
-        return hasEvents() ? events[eventIndex].getTypeReference() : null;
+        return current(StreamEvent::getTypeReference, null);
     }
 
     @Override
@@ -332,7 +347,7 @@ public class ProxyEventHandler implements EventHandler {
                          location);
 
             if (validator != null && validator.isPendingDiscrimination()) {
-                eventsReady = validator.selectImplementation(events, eventIndex, eventCount, this);
+                eventsReady = validator.selectImplementation(eventQueue, this);
             }
         }
 
@@ -435,28 +450,35 @@ public class ProxyEventHandler implements EventHandler {
                               EDIReference typeReference,
                               Location location) {
 
-        final int index = eventCount;
-        StreamEvent target = events[index];
-        EDIStreamEvent associatedEvent = (index > 0) ? getAssociatedEvent(error) : null;
+        StreamEvent target = getPooledEvent();
+        EDIStreamEvent associatedEvent = eventQueue.isEmpty() ? null : getAssociatedEvent(error);
 
-        if (eventExists(associatedEvent, index)) {
+        if (eventExists(associatedEvent)) {
             /*
              * Ensure segment errors occur before other event types
              * when the array has other events already present.
              */
-            int offset = index;
+            int offset = eventQueue.size();
             boolean complete = false;
 
             while (!complete) {
-                if (events[offset - 1].type == associatedEvent) {
+                StreamEvent enqueuedEvent = eventList.get(offset - 1);
+
+                if (enqueuedEvent.type == associatedEvent) {
                     complete = true;
                 } else {
-                    events[offset] = events[offset - 1];
+                    if (eventList.size() == offset) {
+                        eventList.add(offset, enqueuedEvent);
+                    } else {
+                        eventList.set(offset, enqueuedEvent);
+                    }
                     offset--;
                 }
             }
 
-            events[offset] = target;
+            eventList.set(offset, target);
+        } else {
+            eventQueue.add(target);
         }
 
         target.type = event;
@@ -464,15 +486,13 @@ public class ProxyEventHandler implements EventHandler {
         target.setData(data);
         target.setTypeReference(typeReference);
         target.setLocation(location);
-
-        eventCount++;
     }
 
-    private boolean eventExists(EDIStreamEvent associatedEvent, int index) {
-        int offset = index;
+    private boolean eventExists(EDIStreamEvent associatedEvent) {
+        int offset = eventQueue.size();
 
         while (associatedEvent != null && offset > 0) {
-            if (events[offset - 1].type == associatedEvent) {
+            if (eventList.get(offset - 1).type == associatedEvent) {
                 return true;
             }
             offset--;

@@ -33,6 +33,10 @@ public class StreamEvent {
         return type;
     }
 
+    public EDIStreamValidationError getErrorType() {
+        return errorType;
+    }
+
     public CharBuffer getData() {
         return dataNull ? null : data;
     }
