@@ -210,8 +210,10 @@ class StaEDIXMLStreamWriterTest {
     }
 
     @Test
-    void testWriteComment() {
-        assertThrows(UNSUPPORTED, () -> it.writeComment(""));
+    void testWriteComment() throws XMLStreamException {
+        it.writeComment("");
+        it.flush();
+        unconfirmedBufferEquals("", ediWriter);
     }
 
     @Test

@@ -208,7 +208,8 @@ final class StaEDIXMLStreamWriter implements XMLStreamWriter {
     public void writeAttribute(String prefix,
                                String namespaceURI,
                                String localName,
-                               String value) throws XMLStreamException {
+                               String value)
+            throws XMLStreamException {
         throw new UnsupportedOperationException();
     }
 
@@ -229,7 +230,7 @@ final class StaEDIXMLStreamWriter implements XMLStreamWriter {
 
     @Override
     public void writeComment(String data) throws XMLStreamException {
-        throw new UnsupportedOperationException();
+        // No operation - ignored
     }
 
     @Override
