@@ -18,7 +18,6 @@ package io.xlate.edi.internal.stream.validation;
 import java.util.List;
 
 import io.xlate.edi.internal.stream.tokenization.Dialect;
-import io.xlate.edi.internal.stream.tokenization.EDIException;
 import io.xlate.edi.schema.EDISimpleType;
 import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamValidationError;
@@ -97,6 +96,5 @@ abstract class ElementValidator {
     abstract void format(Dialect dialect,
                          EDISimpleType element,
                          CharSequence value,
-                         Appendable result)
-            throws EDIException;
+                         StringBuilder result);
 }

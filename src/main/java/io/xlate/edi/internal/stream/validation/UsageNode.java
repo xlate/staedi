@@ -141,11 +141,11 @@ class UsageNode {
     }
 
     void validate(Dialect dialect, CharSequence value, List<EDIStreamValidationError> errors) {
-        if (validator == null) {
-            throw new UnsupportedOperationException("simple type only");
-        }
-
         validator.validate(dialect, getSimpleType(), value, errors);
+    }
+
+    void format(Dialect dialect, CharSequence value, StringBuilder result) {
+        validator.format(dialect, getSimpleType(), value, result);
     }
 
     List<EDISyntaxRule> getSyntaxRules() {

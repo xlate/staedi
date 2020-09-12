@@ -15,15 +15,11 @@
  ******************************************************************************/
 package io.xlate.edi.internal.stream.validation;
 
-import java.io.IOException;
 import java.util.List;
 
 import io.xlate.edi.internal.stream.tokenization.Dialect;
-import io.xlate.edi.internal.stream.tokenization.EDIException;
 import io.xlate.edi.schema.EDISimpleType;
-import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamValidationError;
-import io.xlate.edi.stream.EDIValidationException;
 
 class TimeValidator extends ElementValidator {
 
@@ -49,22 +45,13 @@ class TimeValidator extends ElementValidator {
     }
 
     @Override
-    void format(Dialect dialect, EDISimpleType element, CharSequence value, Appendable result) throws EDIException {
+    void format(Dialect dialect, EDISimpleType element, CharSequence value, StringBuilder result) {
         int length = value.length();
-        assertMaxLength(element, value);
 
-        if (!validValue(value)) {
-            throw new EDIValidationException(EDIStreamEvent.ELEMENT_DATA, EDIStreamValidationError.INVALID_TIME, null, value);
-        }
+        result.append(value);
 
-        try {
-            result.append(value);
-
-            for (long i = length, min = element.getMinLength(); i < min; i++) {
-                result.append('0');
-            }
-        } catch (IOException e) {
-            throw new EDIException(e);
+        for (long i = length, min = element.getMinLength(); i < min; i++) {
+            result.append('0');
         }
     }
 

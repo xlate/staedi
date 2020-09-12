@@ -18,7 +18,7 @@ class ValidatorTest {
     void testValidatorRootAttributes() throws EDISchemaException {
         SchemaFactory schemaFactory = SchemaFactory.newFactory();
         Schema schema = schemaFactory.getControlSchema(Standards.X12, new String[] { "00801" });
-        Validator validator = new Validator(schema, true, null);
+        Validator validator = new Validator(schema, null, true);
         EDIReference interchangeReference = validator.root.getLink();
 
         assertSame(schema.getStandard(), interchangeReference.getReferencedType());
@@ -34,7 +34,7 @@ class ValidatorTest {
     void testValidatorRootNoParent() throws EDISchemaException {
         SchemaFactory schemaFactory = SchemaFactory.newFactory();
         Schema schema = schemaFactory.getControlSchema(Standards.X12, new String[] { "00801" });
-        Validator validator = new Validator(schema, true, null);
+        Validator validator = new Validator(schema, null, true);
         UsageNode root = validator.root;
 
         assertNull(root.getParent());

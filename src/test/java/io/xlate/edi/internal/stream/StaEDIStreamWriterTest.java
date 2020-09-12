@@ -60,8 +60,10 @@ import io.xlate.edi.stream.Location;
 @SuppressWarnings("resource")
 class StaEDIStreamWriterTest {
 
+    private final String TEST_HEADER_X12 = "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~";
+
     private void writeHeader(EDIStreamWriter writer) throws EDIStreamException {
-        //ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~
+        // TEST_HEADER_X12
         writer.writeStartSegment("ISA");
         writer.writeElement("00").writeElement("          ");
         writer.writeElement("00").writeElement("          ");
@@ -1996,5 +1998,38 @@ class StaEDIStreamWriterTest {
         writer.flush();
         assertEquals("UNA:+.?*'UNB+UNOA:4:::2+005435656:1+006415160:1+060515:1434+00000000000778'",
                      new String(stream.toByteArray()));
+    }
+
+    @Test
+    void testElementDataPadded() throws EDIStreamException, EDISchemaException {
+        EDIOutputFactory factory = EDIOutputFactory.newFactory();
+        factory.setProperty(EDIOutputFactory.FORMAT_ELEMENTS, true);
+
+        ByteArrayOutputStream stream = new ByteArrayOutputStream(4096);
+        EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
+
+        Schema control = SchemaFactory.newFactory().getControlSchema("X12", new String[] { "00501" });
+        writer.setControlSchema(control);
+        writer.startInterchange();
+
+        writer.writeStartSegment("ISA");
+        writer.writeElement("00").writeElement(" ");
+        writer.writeElement("00").writeElement(" ");
+        writer.writeElement("ZZ").writeElement("ReceiverID");
+        writer.writeElement("ZZ").writeElement("Sender");
+        writer.writeElement("050812");
+        writer.writeElement("1953");
+        writer.writeElement("^");
+        writer.writeElement("00501");
+        writer.writeElement("508121953");
+        writer.writeElement("0");
+        writer.writeElement("P");
+        writer.writeElement(":");
+        writer.writeEndSegment();
+        writer.flush();
+        String segment = new String(stream.toByteArray());
+
+        assertEquals(106, segment.length());
+        assertEquals(TEST_HEADER_X12, segment);
     }
 }
