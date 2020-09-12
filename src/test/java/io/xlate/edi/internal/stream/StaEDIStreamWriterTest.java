@@ -708,7 +708,8 @@ class StaEDIStreamWriterTest {
                 return -1;
             }
         };
-        EDIStreamReader reader = inputFactory.createEDIStreamReader(source);
+        EDIStreamReader rawReader = inputFactory.createEDIStreamReader(source);
+        EDIStreamReader reader = inputFactory.createFilteredReader(rawReader, r -> true); // Accept all events
         ByteArrayOutputStream result = new ByteArrayOutputStream(16384);
         writeFromReader(reader, result);
         assertEquals(expected.toString().trim(), result.toString().trim());
