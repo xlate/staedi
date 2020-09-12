@@ -1,8 +1,7 @@
 package io.xlate.edi.internal.stream.tokenization;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
@@ -25,44 +24,34 @@ class CharacterSetTest {
     void testSetClassAscii() {
         CharacterSet target = new CharacterSet();
         target.setClass('\\', CharacterClass.RELEASE_CHARACTER);
-        assertTrue(target.isRelease('\\'));
+        assertTrue(target.isCharacterClass('\\', CharacterClass.RELEASE_CHARACTER));
     }
 
     @Test
     void testSetClassUTF8() {
         CharacterSet target = new CharacterSet();
-        Throwable thrown = assertThrows(ArrayIndexOutOfBoundsException.class,
-                                        () -> target.setClass('£', CharacterClass.RELEASE_CHARACTER));
-        assertEquals("Array index out of range: " + ((int) '£'), thrown.getMessage());
+        target.setClass('£', CharacterClass.RELEASE_CHARACTER);
+        assertTrue(target.isCharacterClass('£', CharacterClass.RELEASE_CHARACTER));
     }
 
     @Test
     void testGetDelimiterValidClass() {
         CharacterSet target = new CharacterSet();
         target.setClass('`', CharacterClass.ELEMENT_REPEATER);
-        assertEquals('`', target.getDelimiter(CharacterClass.ELEMENT_REPEATER));
-    }
-
-    @Test
-    void testGetDelimiterInvalidClass() {
-        CharacterSet target = new CharacterSet();
-        target.setClass('X', CharacterClass.ALPHANUMERIC);
-        Throwable thrown = assertThrows(IllegalArgumentException.class,
-                                        () -> target.getDelimiter(CharacterClass.ALPHANUMERIC));
-        assertEquals("Nondelimiter class: " + CharacterClass.ALPHANUMERIC, thrown.getMessage());
+        assertEquals(CharacterClass.ELEMENT_REPEATER, target.getClass('`'));
     }
 
     @Test
     void testIsReleaseAscii() {
         CharacterSet target = new CharacterSet();
         target.setClass('\\', CharacterClass.RELEASE_CHARACTER);
-        assertTrue(target.isRelease('\\'));
+        assertEquals(CharacterClass.RELEASE_CHARACTER, target.getClass('\\'));
     }
 
     @Test
     void testIsReleaseUTF8() {
         CharacterSet target = new CharacterSet();
-        assertFalse(target.isRelease('£'));
+        assertNotEquals(CharacterClass.RELEASE_CHARACTER, target.getClass('£'));
     }
 
     @Test

@@ -709,12 +709,42 @@ class StaEDIStreamWriterTest {
             }
         };
         EDIStreamReader reader = inputFactory.createEDIStreamReader(source);
+        ByteArrayOutputStream result = new ByteArrayOutputStream(16384);
+        writeFromReader(reader, result);
+        assertEquals(expected.toString().trim(), result.toString().trim());
+    }
 
+    @Test
+    void testInputEquivalenceX12_NonAsciiSegmentTerminator() throws Exception {
+        EDIInputFactory inputFactory = EDIInputFactory.newFactory();
+        final ByteArrayOutputStream expected = new ByteArrayOutputStream(16384);
+        final InputStream delegate = getClass().getResourceAsStream("/x12/issue109/ts214_ellipses_segterm.edi");
+
+        InputStream source = new InputStream() {
+            @Override
+            public int read() throws IOException {
+                int value = delegate.read();
+
+                if (value != -1) {
+                    expected.write(value);
+                    System.out.write(value);
+                    System.out.flush();
+                    return value;
+                }
+
+                return -1;
+            }
+        };
+        EDIStreamReader reader = inputFactory.createEDIStreamReader(source);
+        ByteArrayOutputStream result = new ByteArrayOutputStream(16384);
+        writeFromReader(reader, result);
+        assertEquals(expected.toString().trim(), result.toString().trim());
+    }
+
+    void writeFromReader(EDIStreamReader reader, OutputStream result) throws Exception {
         EDIOutputFactory outputFactory = EDIOutputFactory.newFactory();
         outputFactory.setProperty(EDIOutputFactory.PRETTY_PRINT, true);
-        ByteArrayOutputStream result = new ByteArrayOutputStream(16384);
-        EDIStreamWriter writer = outputFactory.createEDIStreamWriter(result);
-
+        EDIStreamWriter writer = null;
         EDIStreamEvent event;
         String tag = null;
         boolean composite = false;
@@ -725,6 +755,10 @@ class StaEDIStreamWriterTest {
 
                 switch (event) {
                 case START_INTERCHANGE:
+                    for (Map.Entry<String, Character> delim : reader.getDelimiters().entrySet()) {
+                        outputFactory.setProperty(delim.getKey(), delim.getValue());
+                    }
+                    writer = outputFactory.createEDIStreamWriter(result);
                     writer.startInterchange();
                     break;
                 case END_INTERCHANGE:
@@ -789,8 +823,6 @@ class StaEDIStreamWriterTest {
         } finally {
             reader.close();
         }
-
-        assertEquals(expected.toString().trim(), result.toString().trim());
     }
 
     @Test
