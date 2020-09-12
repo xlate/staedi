@@ -37,7 +37,10 @@ public class EDIStreamException extends Exception {
      *
      * @param cause
      *            a nested exception
+     * @deprecated
      */
+    @SuppressWarnings({ "java:S1133" })
+    @Deprecated/*(forRemoval = true, since = "1.11")*/
     public EDIStreamException(Throwable cause) {
         super(cause);
         location = null;

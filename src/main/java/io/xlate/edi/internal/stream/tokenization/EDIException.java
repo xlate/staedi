@@ -62,8 +62,4 @@ public class EDIException extends EDIStreamException {
         super(exceptionMessages.get(id) + "; " + message);
     }
 
-    public EDIException(Throwable cause) {
-        super(cause);
-    }
-
 }
