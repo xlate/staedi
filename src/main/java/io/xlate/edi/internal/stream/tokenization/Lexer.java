@@ -369,13 +369,21 @@ public class Lexer {
     void handleStateHeaderData(int input) throws EDIException {
         dialect.appendHeader(characters, (char) input);
 
-        if (characters.isDelimiter(input)) {
-            if (characters.getDelimiter(CharacterClass.SEGMENT_DELIMITER) == input) {
-                closeSegment();
-                state = State.HEADER_TAG_SEARCH;
+        switch (characters.getClass(input)) {
+        case SEGMENT_DELIMITER:
+            closeSegment();
+            state = State.HEADER_TAG_SEARCH;
+            break;
+        case ELEMENT_DELIMITER:
+        case ELEMENT_REPEATER:
+        case COMPONENT_DELIMITER:
+        case RELEASE_CHARACTER:
+            break;
+        default:
+            if (dialect.getDecimalMark() != input) {
+                buffer.put((char) input);
             }
-        } else if (!characters.isRelease(input) && dialect.getDecimalMark() != input) {
-            buffer.put((char) input);
+            break;
         }
     }
 

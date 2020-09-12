@@ -16,6 +16,8 @@
 package io.xlate.edi.internal.stream.tokenization;
 
 import java.util.Arrays;
+import java.util.Map;
+import java.util.TreeMap;
 
 public class CharacterSet {
 
@@ -171,70 +173,44 @@ public class CharacterSet {
     };
 
     private final CharacterClass[] list;
-    private final int size;
+    private final Map<Integer, CharacterClass> auxilary;
 
     public CharacterSet() {
         list = Arrays.copyOf(prototype, prototype.length);
-        size = list.length;
+        auxilary = new TreeMap<>();
     }
 
     public CharacterClass getClass(int character) {
-        return (character < size) ? list[character] : _OTHER;
+        return (character < list.length) ? list[character] : auxilary.getOrDefault(character, _OTHER);
     }
 
     public void reset() {
         System.arraycopy(prototype, 0, list, 0, prototype.length);
+        auxilary.clear();
     }
 
     public void setClass(int character, CharacterClass clazz) {
-        if (character < size) {
+        if (character < list.length) {
             list[character] = clazz;
         } else {
-            throw new ArrayIndexOutOfBoundsException(character);
+            auxilary.put(character, clazz);
         }
     }
 
-    public int getDelimiter(CharacterClass clazz) {
-        switch (clazz) {
+    public boolean isDelimiter(int character) {
+        switch (getClass(character)) {
         case ELEMENT_DELIMITER:
         case ELEMENT_REPEATER:
         case SEGMENT_DELIMITER:
         case COMPONENT_DELIMITER:
-            break;
+            return true;
         default:
-            throw new IllegalArgumentException("Nondelimiter class: " + clazz);
-        }
-
-        for (int i = 0, l = list.length; i < l; i++) {
-            if (list[i] == clazz) {
-                return i;
-            }
-        }
-
-        return -1;
-    }
-
-    public boolean isDelimiter(int character) {
-        if (character < size) {
-            switch (list[character]) {
-            case ELEMENT_DELIMITER:
-            case ELEMENT_REPEATER:
-            case SEGMENT_DELIMITER:
-            case COMPONENT_DELIMITER:
-                return true;
-            default:
-                return false;
-            }
-        }
-
-        return false;
-    }
-
-    public boolean isRelease(int character) {
-        if (character >= size) {
             return false;
         }
-        return list[character] == CharacterClass.RELEASE_CHARACTER;
+    }
+
+    public boolean isCharacterClass(int character, CharacterClass clazz) {
+        return getClass(character).equals(clazz);
     }
 
     public static boolean isValid(int character) {
