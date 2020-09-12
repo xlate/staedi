@@ -1446,7 +1446,7 @@ class StaEDIStreamReaderTest implements ConstantsTest {
     }
 
     @Test
-    void testX12TransactionVersionRetrieval() throws EDIStreamException, IOException {
+    void testTransactionVersionRetrievalX12() throws EDIStreamException, IOException {
         ByteArrayInputStream stream = new ByteArrayInputStream((""
                 + "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *200711*0100*U*00401*000000001*0*T*:~"
                 + "GS*FA*ReceiverDept*SenderDept*20200711*010015*1*X*005010~"
@@ -1521,6 +1521,78 @@ class StaEDIStreamReaderTest implements ConstantsTest {
         assertEquals(2, segmentEndVersionStrings.size());
         assertEquals("X.005010",  segmentEndVersionStrings.get("GS"));
         assertEquals("X.005010X230",  segmentEndVersionStrings.get("ST"));
+    }
+
+    @Test
+    void testTransactionVersionRetrievalEDIFACT() throws EDIStreamException, IOException {
+        InputStream stream = getClass().getResourceAsStream("/EDIFACT/orders-with-group.edi");
+        EDIInputFactory factory = EDIInputFactory.newFactory();
+        EDIStreamReader rawReader = factory.createEDIStreamReader(stream);
+        EDIStreamReader reader = factory.createFilteredReader(rawReader, r -> true); // Accept all events
+        Exception thrown = null;
+
+        Map<String, String[]> segmentEndVersions = new HashMap<>(2);
+        Map<String, String> segmentEndVersionStrings = new HashMap<>(2);
+        Exception initThrown = null;
+        Exception groupStartThrown = null;
+        Exception interchangeEndThrown = null;
+
+        try {
+            initThrown = assertThrows(IllegalStateException.class, () -> reader.getTransactionVersionString());
+
+            while (reader.hasNext()) {
+                try {
+                    switch (reader.next()) {
+                    case START_SEGMENT:
+                        if ("UNG".equals(reader.getText())) {
+                            groupStartThrown = assertThrows(IllegalStateException.class, () -> reader.getTransactionVersionString());
+                        }
+                        if ("UNZ".equals(reader.getText())) {
+                            interchangeEndThrown = assertThrows(IllegalStateException.class, () -> reader.getTransactionVersionString());
+                        }
+
+                        break;
+
+                    case END_SEGMENT:
+                        switch (reader.getText()) {
+                        case "UNG":
+                        case "UNH":
+                            segmentEndVersions.put(reader.getText(), reader.getTransactionVersion());
+                            segmentEndVersionStrings.put(reader.getText(), reader.getTransactionVersionString());
+                            break;
+                        default:
+                            break;
+                        }
+
+                        break;
+                    default:
+                        break;
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    thrown = e;
+                    break;
+                }
+            }
+        } finally {
+            reader.close();
+        }
+
+        assertNull(thrown);
+        assertNotNull(initThrown);
+        assertEquals("transaction version not accessible", initThrown.getMessage());
+        assertNotNull(groupStartThrown);
+        assertEquals("transaction version not accessible", groupStartThrown.getMessage());
+        assertNotNull(interchangeEndThrown);
+        assertEquals("transaction version not accessible", interchangeEndThrown.getMessage());
+
+        assertEquals(2, segmentEndVersions.size());
+        assertArrayEquals(new String[] { "UN", "D", "96A", "EAN008A" },  segmentEndVersions.get("UNG"));
+        assertArrayEquals(new String[] { "UN", "D", "96B", "EAN008B" },  segmentEndVersions.get("UNH"));
+
+        assertEquals(2, segmentEndVersionStrings.size());
+        assertEquals("UN.D.96A.EAN008A",  segmentEndVersionStrings.get("UNG"));
+        assertEquals("UN.D.96B.EAN008B",  segmentEndVersionStrings.get("UNH"));
     }
 
     @Test

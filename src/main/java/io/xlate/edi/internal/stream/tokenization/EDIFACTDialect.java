@@ -248,28 +248,66 @@ public class EDIFACTDialect extends Dialect {
 
     @Override
     public void elementData(CharSequence data, Location location) {
-        if ("UNH".equals(location.getSegmentTag())) {
-            if (location.getElementPosition() == 1) {
-                clearTransactionVersion();
-            } else if (location.getElementPosition() == 2) {
-                switch (location.getComponentPosition()) {
-                case 2:
-                    transactionVersion[TX_VERSION] = data.toString();
-                    break;
-                case 3:
-                    transactionVersion[TX_RELEASE] = data.toString();
-                    break;
-                case 4:
-                    transactionVersion[TX_AGENCY] = data.toString();
-                    updateTransactionVersionString(transactionVersion);
-                    break;
-                case 5:
-                    transactionVersion[TX_ASSIGNED_CODE] = data.toString();
-                    updateTransactionVersionString(transactionVersion);
-                    break;
-                default:
-                    break;
-                }
+        switch (location.getSegmentTag()) {
+        case "UNG":
+            groupHeaderElementData(data, location);
+            break;
+        case "UNH":
+            messageHeaderElementData(data, location);
+            break;
+        default:
+            break;
+        }
+    }
+
+    void groupHeaderElementData(CharSequence data, Location location) {
+        if (location.getElementPosition() == 1) {
+            clearTransactionVersion();
+        } else if (location.getElementPosition() == 6) {
+            transactionVersion[TX_AGENCY] = data.toString();
+        } else if (location.getElementPosition() == 7) {
+            switch (location.getComponentPosition()) {
+            case 1:
+                transactionVersion[TX_VERSION] = data.toString();
+                updateTransactionVersionString(transactionVersion);
+                break;
+            case 2:
+                transactionVersion[TX_RELEASE] = data.toString();
+                updateTransactionVersionString(transactionVersion);
+                break;
+            case 3:
+                transactionVersion[TX_ASSIGNED_CODE] = data.toString();
+                updateTransactionVersionString(transactionVersion);
+                break;
+            default:
+                break;
+            }
+        }
+    }
+
+    void messageHeaderElementData(CharSequence data, Location location) {
+        if (location.getElementPosition() == 1) {
+            clearTransactionVersion();
+        } else if (location.getElementPosition() == 2) {
+            switch (location.getComponentPosition()) {
+            case 2:
+                transactionVersion[TX_VERSION] = data.toString();
+                updateTransactionVersionString(transactionVersion);
+                break;
+            case 3:
+                transactionVersion[TX_RELEASE] = data.toString();
+                updateTransactionVersionString(transactionVersion);
+                break;
+            case 4:
+                transactionVersion[TX_AGENCY] = data.toString();
+                updateTransactionVersionString(transactionVersion);
+                break;
+            case 5:
+                transactionVersion[TX_ASSIGNED_CODE] = data.toString();
+                updateTransactionVersionString(transactionVersion);
+                break;
+            default:
+                break;
             }
         }
     }
