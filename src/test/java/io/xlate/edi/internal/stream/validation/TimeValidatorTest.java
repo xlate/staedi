@@ -2,7 +2,6 @@ package io.xlate.edi.internal.stream.validation;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -20,7 +19,6 @@ import io.xlate.edi.internal.stream.tokenization.DialectFactory;
 import io.xlate.edi.internal.stream.tokenization.EDIException;
 import io.xlate.edi.schema.EDISimpleType;
 import io.xlate.edi.stream.EDIStreamValidationError;
-import io.xlate.edi.stream.EDIValidationException;
 
 class TimeValidatorTest implements ValueSetTester {
 
@@ -128,8 +126,8 @@ class TimeValidatorTest implements ValueSetTester {
         when(element.getValueSet()).thenReturn(setOf());
         ElementValidator v = TimeValidator.getInstance();
         StringBuilder output = new StringBuilder();
-        EDIValidationException e = assertThrows(EDIValidationException.class, () -> v.format(dialect, element, "1230599999", output));
-        assertEquals(EDIStreamValidationError.DATA_ELEMENT_TOO_LONG, e.getError());
+        v.format(dialect, element, "1230599999", output);
+        assertHasError(v, dialect, element, output, EDIStreamValidationError.DATA_ELEMENT_TOO_LONG);
     }
 
     @Test
@@ -144,8 +142,8 @@ class TimeValidatorTest implements ValueSetTester {
         when(element.getValueSet()).thenReturn(setOf());
         ElementValidator v = TimeValidator.getInstance();
         StringBuilder output = new StringBuilder();
-        EDIValidationException e = assertThrows(EDIValidationException.class, () -> v.format(dialect, element, "123059AA", output));
-        assertEquals(EDIStreamValidationError.INVALID_TIME, e.getError());
+        v.format(dialect, element, "123059AA", output);
+        assertHasError(v, dialect, element, output, EDIStreamValidationError.INVALID_TIME);
     }
 
     @Test

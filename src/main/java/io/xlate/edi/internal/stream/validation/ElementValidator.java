@@ -18,11 +18,8 @@ package io.xlate.edi.internal.stream.validation;
 import java.util.List;
 
 import io.xlate.edi.internal.stream.tokenization.Dialect;
-import io.xlate.edi.internal.stream.tokenization.EDIException;
 import io.xlate.edi.schema.EDISimpleType;
-import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamValidationError;
-import io.xlate.edi.stream.EDIValidationException;
 
 abstract class ElementValidator {
 
@@ -73,22 +70,6 @@ abstract class ElementValidator {
         return true;
     }
 
-    protected static void assertMinLength(EDISimpleType element, CharSequence value) {
-        if (value.length() < element.getMinLength()) {
-            throw new EDIValidationException(EDIStreamEvent.ELEMENT_DATA, EDIStreamValidationError.DATA_ELEMENT_TOO_SHORT, null, value);
-        }
-    }
-
-    protected static void assertMaxLength(EDISimpleType element, int length, CharSequence value) {
-        if (length > element.getMaxLength()) {
-            throw new EDIValidationException(EDIStreamEvent.ELEMENT_DATA, EDIStreamValidationError.DATA_ELEMENT_TOO_LONG, null, value);
-        }
-    }
-
-    protected static void assertMaxLength(EDISimpleType element, CharSequence value) {
-        assertMaxLength(element, value.length(), value);
-    }
-
     abstract void validate(Dialect dialect,
                            EDISimpleType element,
                            CharSequence value,
@@ -97,6 +78,5 @@ abstract class ElementValidator {
     abstract void format(Dialect dialect,
                          EDISimpleType element,
                          CharSequence value,
-                         Appendable result)
-            throws EDIException;
+                         StringBuilder result);
 }

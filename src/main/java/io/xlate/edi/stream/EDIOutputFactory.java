@@ -43,6 +43,18 @@ public abstract class EDIOutputFactory extends PropertySupport {
     public static final String TRUNCATE_EMPTY_ELEMENTS = "io.xlate.edi.stream.TRUNCATE_EMPTY_ELEMENTS";
 
     /**
+     * <p>
+     * When set to true and a schema has been provided, elements written to the output will
+     * be padded to the minimum length required by the schema.
+     *
+     * <p>
+     * Default value is false.
+     *
+     * @since 1.11
+     */
+    public static final String FORMAT_ELEMENTS = "io.xlate.edi.stream.FORMAT_ELEMENTS";
+
+    /**
      * Create a new instance of the factory. This static method creates a new
      * factory instance.
      *

@@ -68,7 +68,7 @@ public class ProxyEventHandler implements EventHandler {
         }
 
         this.controlSchema = controlSchema;
-        controlValidator = controlSchema != null ? new Validator(controlSchema, validateCodeValues, null) : null;
+        controlValidator = validatorInstance(controlSchema, null, validateCodeValues);
     }
 
     public boolean isTransactionSchemaAllowed() {
@@ -82,8 +82,12 @@ public class ProxyEventHandler implements EventHandler {
     public void setTransactionSchema(Schema transactionSchema) {
         if (!Objects.equals(this.transactionSchema, transactionSchema)) {
             this.transactionSchema = transactionSchema;
-            transactionValidator = transactionSchema != null ? new Validator(transactionSchema, true, controlSchema) : null;
+            transactionValidator = validatorInstance(transactionSchema, controlSchema, true);
         }
+    }
+
+    Validator validatorInstance(Schema schema, Schema containerSchema, boolean validateCodeValues) {
+        return schema != null ? new Validator(schema, containerSchema, validateCodeValues) : null;
     }
 
     public void resetEvents() {
@@ -246,7 +250,7 @@ public class ProxyEventHandler implements EventHandler {
 
         if (validator != null) {
             validator.validateSyntax(dialect, this, this, location, false);
-            validator.validateVersionConstraints(dialect, this);
+            validator.validateVersionConstraints(dialect, this, null);
             typeReference = validator.getSegmentReference();
         }
 
@@ -307,7 +311,7 @@ public class ProxyEventHandler implements EventHandler {
         boolean valid;
 
         if (validator != null) {
-            valid = validator.validateElement(dialect, location, elementHolder);
+            valid = validator.validateElement(dialect, location, elementHolder, null);
             derivedComposite = !compositeFromStream && validator.isComposite();
             typeReference = validator.getElementReference();
             enqueueElementOccurrenceErrors(validator, valid);

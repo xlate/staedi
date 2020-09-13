@@ -77,6 +77,7 @@ public class Validator {
     private Schema containerSchema;
     private Schema schema;
     private final boolean validateCodeValues;
+    private final boolean formatElements;
     private boolean initial = true;
 
     final UsageNode root;
@@ -149,9 +150,14 @@ public class Validator {
         }
     }
 
-    public Validator(Schema schema, boolean validateCodeValues, Schema containerSchema) {
+    public Validator(Schema schema, Schema containerSchema, boolean validateCodeValues) {
+        this(schema, containerSchema, validateCodeValues, false);
+    }
+
+    public Validator(Schema schema, Schema containerSchema, boolean validateCodeValues, boolean formatElements) {
         this.schema = schema;
         this.validateCodeValues = validateCodeValues;
+        this.formatElements = formatElements;
         this.containerSchema = containerSchema;
 
         LOGGER.finer(() -> "Creating usage tree");
@@ -934,7 +940,7 @@ public class Validator {
         return composite != null && !StaEDISchema.ANY_COMPOSITE_ID.equals(composite.getId());
     }
 
-    public boolean validateElement(Dialect dialect, StaEDIStreamLocation position, CharSequence value) {
+    public boolean validateElement(Dialect dialect, StaEDIStreamLocation position, CharSequence value, StringBuilder formattedValue) {
         if (!segmentExpected) {
             return true;
         }
@@ -989,7 +995,7 @@ public class Validator {
         }
 
         if (valueReceived) {
-            validateElementValue(dialect, position, value);
+            validateElementValue(dialect, position, value, formattedValue);
         } else {
             validateDataElementRequirement(version);
         }
@@ -1026,7 +1032,7 @@ public class Validator {
         }
     }
 
-    void validateElementValue(Dialect dialect, StaEDIStreamLocation position, CharSequence value) {
+    void validateElementValue(Dialect dialect, StaEDIStreamLocation position, CharSequence value, StringBuilder formattedValue) {
         final String version = dialect.getTransactionVersionString();
 
         if (!element.isNodeType(EDIType.Type.COMPOSITE)) {
@@ -1047,12 +1053,12 @@ public class Validator {
             return;
         }
 
-        validateElementValue(dialect, this.element, this.implElement, value);
+        validateElementValue(dialect, this.element, this.implElement, value, formattedValue);
     }
 
-    public void validateVersionConstraints(Dialect dialect, ValidationEventHandler validationHandler) {
+    public void validateVersionConstraints(Dialect dialect, ValidationEventHandler validationHandler, StringBuilder formattedValue) {
         for (RevalidationNode entry : revalidationQueue) {
-            validateElementValue(dialect, entry.standard, entry.impl, entry.data);
+            validateElementValue(dialect, entry.standard, entry.impl, entry.data, formattedValue);
 
             for (UsageError error : elementErrors) {
                 validationHandler.elementError(error.getError().getCategory(),
@@ -1070,9 +1076,15 @@ public class Validator {
         revalidationQueue.clear();
     }
 
-    void validateElementValue(Dialect dialect, UsageNode element, UsageNode implElement, CharSequence value) {
+    void validateElementValue(Dialect dialect, UsageNode element, UsageNode implElement, CharSequence value, StringBuilder formattedValue) {
         List<EDIStreamValidationError> errors = new ArrayList<>();
-        element.validate(dialect, value, errors);
+        if (this.formatElements) {
+            formattedValue.setLength(0);
+            element.format(dialect, value, formattedValue);
+            value = formattedValue;
+        } else {
+            element.validate(dialect, value, errors);
+        }
 
         for (EDIStreamValidationError error : errors) {
             if (this.validateCodeValues || error != INVALID_CODE_VALUE) {

@@ -15,17 +15,13 @@
  ******************************************************************************/
 package io.xlate.edi.internal.stream.validation;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
 import io.xlate.edi.internal.stream.tokenization.CharacterSet;
 import io.xlate.edi.internal.stream.tokenization.Dialect;
-import io.xlate.edi.internal.stream.tokenization.EDIException;
 import io.xlate.edi.schema.EDISimpleType;
-import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamValidationError;
-import io.xlate.edi.stream.EDIValidationException;
 
 class AlphaNumericValidator extends ElementValidator {
 
@@ -64,33 +60,15 @@ class AlphaNumericValidator extends ElementValidator {
     }
 
     @Override
-    void format(Dialect dialect, EDISimpleType element, CharSequence value, Appendable result) throws EDIException {
+    void format(Dialect dialect, EDISimpleType element, CharSequence value, StringBuilder result) {
         int length = value.length();
-        assertMaxLength(element, value);
 
-        Set<String> valueSet = element.getValueSet();
-
-        if (!valueSet.isEmpty() && !valueSet.contains(value.toString())) {
-            throw new EDIValidationException(EDIStreamEvent.ELEMENT_DATA, EDIStreamValidationError.INVALID_CODE_VALUE, null, value);
+        for (int i = 0; i < length; i++) {
+            result.append(value.charAt(i));
         }
 
-        try {
-            for (int i = 0; i < length; i++) {
-                char character = value.charAt(i);
-
-                if (!CharacterSet.isValid(character)) {
-                    throw new EDIException(EDIException.INVALID_CHARACTER,
-                                           "Invalid character 0x" + String.format("%04X", (int) character));
-                }
-
-                result.append(character);
-            }
-
-            for (long i = length, min = element.getMinLength(); i < min; i++) {
-                result.append(' ');
-            }
-        } catch (IOException e) {
-            throw new EDIException(e);
+        for (long i = length, min = element.getMinLength(); i < min; i++) {
+            result.append(' ');
         }
     }
 }

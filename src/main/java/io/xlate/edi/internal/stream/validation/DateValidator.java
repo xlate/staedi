@@ -15,16 +15,12 @@
  ******************************************************************************/
 package io.xlate.edi.internal.stream.validation;
 
-import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
 
 import io.xlate.edi.internal.stream.tokenization.Dialect;
-import io.xlate.edi.internal.stream.tokenization.EDIException;
 import io.xlate.edi.schema.EDISimpleType;
-import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamValidationError;
-import io.xlate.edi.stream.EDIValidationException;
 
 class DateValidator extends ElementValidator {
 
@@ -51,19 +47,8 @@ class DateValidator extends ElementValidator {
     }
 
     @Override
-    void format(Dialect dialect, EDISimpleType element, CharSequence value, Appendable result) throws EDIException {
-        assertMinLength(element, value);
-        assertMaxLength(element, value);
-
-        if (!validValue(value)) {
-            throw new EDIValidationException(EDIStreamEvent.ELEMENT_DATA, EDIStreamValidationError.INVALID_DATE, null, value);
-        }
-
-        try {
-            result.append(value);
-        } catch (IOException e) {
-            throw new EDIException(e);
-        }
+    void format(Dialect dialect, EDISimpleType element, CharSequence value, StringBuilder result) {
+        result.append(value);
     }
 
     static boolean validValue(CharSequence value) {

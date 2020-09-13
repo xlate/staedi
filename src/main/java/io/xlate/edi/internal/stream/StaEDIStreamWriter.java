@@ -90,6 +90,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     private CharArraySequence dataHolder = new CharArraySequence();
     private boolean atomicElementWrite = false;
     private CharBuffer elementBuffer = CharBuffer.allocate(500);
+    private final StringBuilder formattedElement = new StringBuilder();
     private List<EDIValidationException> errors = new ArrayList<>();
 
     private char segmentTerminator;
@@ -100,6 +101,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     private char releaseIndicator;
 
     final boolean emptyElementTruncation;
+    final boolean formatElements;
     private final boolean prettyPrint;
     private String prettyPrintString;
 
@@ -118,6 +120,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         this.reporter = reporter;
         this.emptyElementTruncation = booleanValue(properties.get(EDIOutputFactory.TRUNCATE_EMPTY_ELEMENTS));
         this.prettyPrint = booleanValue(properties.get(EDIOutputFactory.PRETTY_PRINT));
+        this.formatElements = booleanValue(properties.get(EDIOutputFactory.FORMAT_ELEMENTS));
         this.location = new StaEDIStreamLocation();
     }
 
@@ -244,15 +247,19 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     public void setControlSchema(Schema controlSchema) {
         ensureLevel(LEVEL_INITIAL);
         this.controlSchema = controlSchema;
-        controlValidator = controlSchema != null ? new Validator(controlSchema, true, null) : null;
+        controlValidator = validatorInstance(controlSchema, null);
     }
 
     @Override
     public void setTransactionSchema(Schema transactionSchema) {
         if (!Objects.equals(this.transactionSchema, transactionSchema)) {
             this.transactionSchema = transactionSchema;
-            transactionValidator = transactionSchema != null ? new Validator(transactionSchema, true, controlSchema) : null;
+            transactionValidator = validatorInstance(transactionSchema, controlSchema);
         }
+    }
+
+    Validator validatorInstance(Schema schema, Schema containerSchema) {
+        return schema != null ? new Validator(schema, containerSchema, true, formatElements) : null;
     }
 
     @Override
@@ -597,8 +604,8 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     public EDIStreamWriter writeElement(CharSequence text) throws EDIStreamException {
         atomicElementWrite = true;
         writeStartElement();
-        validateElement(() -> {}, text);
-        writeElementData(text);
+        CharSequence value = validateElement(() -> {}, text);
+        writeElementData(value);
         endElement();
         atomicElementWrite = false;
         return this;
@@ -608,8 +615,8 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     public EDIStreamWriter writeElement(char[] text, int start, int end) throws EDIStreamException {
         atomicElementWrite = true;
         writeStartElement();
-        validateElement(() -> dataHolder.set(text, start, start + end), dataHolder);
-        writeElementData(text, start, end);
+        CharSequence value = validateElement(() -> dataHolder.set(text, start, start + end), dataHolder);
+        writeElementData(value);
         endElement();
         atomicElementWrite = false;
         return this;
@@ -619,6 +626,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     public EDIStreamWriter writeEmptyElement() throws EDIStreamException {
         atomicElementWrite = true;
         writeStartElement();
+        // Ignore possibly-formatted value
         validateElement(dataHolder::clear, dataHolder);
         endElement();
         atomicElementWrite = false;
@@ -629,8 +637,8 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     public EDIStreamWriter writeComponent(CharSequence text) throws EDIStreamException {
         atomicElementWrite = true;
         startComponent();
-        validateElement(() -> {}, text);
-        writeElementData(text);
+        CharSequence value = validateElement(() -> {}, text);
+        writeElementData(value);
         endComponent();
         atomicElementWrite = false;
         return this;
@@ -640,8 +648,8 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     public EDIStreamWriter writeComponent(char[] text, int start, int end) throws EDIStreamException {
         atomicElementWrite = true;
         startComponent();
-        validateElement(() -> dataHolder.set(text, start, start + end), dataHolder);
-        writeElementData(text, start, end);
+        CharSequence value = validateElement(() -> dataHolder.set(text, start, start + end), dataHolder);
+        writeElementData(value);
         endComponent();
         atomicElementWrite = false;
         return this;
@@ -651,6 +659,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     public EDIStreamWriter writeEmptyComponent() throws EDIStreamException {
         atomicElementWrite = true;
         startComponent();
+        // Ignore possibly-formatted value
         validateElement(dataHolder::clear, dataHolder);
         endComponent();
         atomicElementWrite = false;
@@ -864,19 +873,28 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         }
     }
 
-    private void validateElement(Runnable setupCommand, CharSequence data) {
-        Validator validator = validator();
+    private CharSequence validateElement(Runnable setupCommand, CharSequence data) {
+        final Validator validator = validator();
+        final CharSequence result;
 
         if (validator != null) {
+            if (this.formatElements) {
+                result = this.formattedElement;
+                this.formattedElement.setLength(0);
+                this.formattedElement.append(data); // Validator will clear and re-format if configured
+            } else {
+                result = data;
+            }
+
             errors.clear();
             setupCommand.run();
 
-            if (!validator.validateElement(dialect, location, data)) {
+            if (!validator.validateElement(dialect, location, data, this.formattedElement)) {
                 for (UsageError error : validator.getElementErrors()) {
                     elementError(error.getError().getCategory(),
                                  error.getError(),
                                  error.getTypeReference(),
-                                 data,
+                                 result,
                                  location.getElementPosition(),
                                  location.getComponentPosition(),
                                  location.getElementOccurrence());
@@ -887,8 +905,12 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
                 throw validationExceptionChain(errors);
             }
 
-            dialect.elementData(data, location);
+            dialect.elementData(result, location);
+        } else {
+            result = data;
         }
+
+        return result;
     }
 
     EDIValidationException validationExceptionChain(List<EDIValidationException> errors) {
