@@ -24,6 +24,8 @@ final class StaEDIXMLStreamWriter implements XMLStreamWriter {
 
     private final Deque<QName> elementStack = new ArrayDeque<>();
     private QName previousElement;
+    int lastElementPosition;
+    int lastComponentPosition;
 
     private NamespaceContext namespaceContext;
     private final Deque<Map<String, String>> namespaceStack = new ArrayDeque<>();
@@ -58,41 +60,105 @@ final class StaEDIXMLStreamWriter implements XMLStreamWriter {
         return name.getLocalPart().equals(previousElement.getLocalPart());
     }
 
+    int getPosition(QName name, boolean component) throws XMLStreamException {
+        int position;
+        String localPart = name.getLocalPart();
+
+        if (component) {
+            int componentIdx = localPart.indexOf('-');
+
+            if (componentIdx < 2) {
+                throw new XMLStreamException("Element " + name + " does not match naming required to map to an EDI component element - invalid component name or position");
+            }
+
+            try {
+                position = Integer.parseInt(localPart.substring(componentIdx + 1));
+            } catch (NumberFormatException e) {
+                throw new XMLStreamException("Element " + name + " does not match naming required to map to an EDI component element - non-numeric component position");
+            }
+        } else {
+            try {
+                position = Integer.parseInt(localPart.substring(localPart.length() - 2));
+            } catch (NumberFormatException e) {
+                throw new XMLStreamException("Element " + name + " does not match naming required to map to an EDI element");
+            }
+        }
+
+        return position;
+    }
+
     void writeStart(QName name) throws XMLStreamException {
         namespaceStack.push(new HashMap<>());
 
         switch (name.getNamespaceURI()) {
         case EDINamespaces.COMPOSITES:
-            if (repeatedElement(name, previousElement)) {
-                execute(ediWriter::writeRepeatElement);
-            } else {
-                execute(ediWriter::writeStartElement);
-            }
-            elementStack.push(name);
+            writeCompositeStart(name);
             break;
         case EDINamespaces.ELEMENTS:
-            if (EDINamespaces.COMPOSITES.equals(elementStack.element().getNamespaceURI())) {
-                execute(ediWriter::startComponent);
-            } else {
-                if (repeatedElement(name, previousElement)) {
-                    execute(ediWriter::writeRepeatElement);
-                } else {
-                    execute(ediWriter::writeStartElement);
-                }
-            }
-            elementStack.push(name);
+            writeElementStart(name);
             break;
         case EDINamespaces.LOOPS:
             // Loops are implicit when writing
             elementStack.push(name);
             break;
         case EDINamespaces.SEGMENTS:
+            lastElementPosition = 0;
+            lastComponentPosition = 0;
             execute(() -> ediWriter.writeStartSegment(name.getLocalPart()));
             elementStack.push(name);
             break;
         default:
             break;
         }
+    }
+
+    void writeCompositeStart(QName name) throws XMLStreamException {
+        lastComponentPosition = 0;
+        int position = getPosition(name, false);
+
+        while (position > lastElementPosition + 1) {
+            lastElementPosition++;
+            execute(ediWriter::writeEmptyElement);
+        }
+
+        if (repeatedElement(name, previousElement)) {
+            execute(ediWriter::writeRepeatElement);
+        } else {
+            execute(ediWriter::writeStartElement);
+        }
+
+        lastElementPosition++;
+        elementStack.push(name);
+    }
+
+    void writeElementStart(QName name) throws XMLStreamException {
+        if (EDINamespaces.COMPOSITES.equals(elementStack.element().getNamespaceURI())) {
+            int position = getPosition(name, true);
+
+            while (position > lastComponentPosition + 1) {
+                lastComponentPosition++;
+                execute(ediWriter::writeEmptyComponent);
+            }
+            execute(ediWriter::startComponent);
+            lastComponentPosition++;
+        } else {
+            int position = getPosition(name, false);
+
+            while (position > lastElementPosition + 1) {
+                lastElementPosition++;
+                execute(ediWriter::writeEmptyElement);
+            }
+
+            if (repeatedElement(name, previousElement)) {
+                execute(ediWriter::writeRepeatElement);
+            } else {
+                execute(ediWriter::writeStartElement);
+            }
+
+            lastElementPosition++;
+        }
+
+        elementStack.push(name);
     }
 
     void writeEnd() throws XMLStreamException {
