@@ -20,6 +20,11 @@ final class StaEDIXMLStreamWriter implements XMLStreamWriter {
 
     private static final QName INTERCHANGE = new QName(EDINamespaces.LOOPS, "INTERCHANGE");
 
+    static final String MSG_INVALID_COMPONENT_NAME = "Invalid component element name or position not given: %s";
+    static final String MSG_INVALID_COMPONENT_POSITION = "Invalid/non-numeric component element position: %s";
+    static final String MSG_INVALID_ELEMENT_NAME = "Invalid element name or position not numeric: %s";
+    static final String MSG_ILLEGAL_NONWHITESPACE = "Illegal non-whitespace characters";
+
     private final EDIStreamWriter ediWriter;
 
     private final Deque<QName> elementStack = new ArrayDeque<>();
@@ -68,19 +73,19 @@ final class StaEDIXMLStreamWriter implements XMLStreamWriter {
             int componentIdx = localPart.indexOf('-');
 
             if (componentIdx < 2) {
-                throw new XMLStreamException("Element " + name + " does not match naming required to map to an EDI component element - invalid component name or position");
+                throw new XMLStreamException(String.format(MSG_INVALID_COMPONENT_NAME, name));
             }
 
             try {
                 position = Integer.parseInt(localPart.substring(componentIdx + 1));
             } catch (NumberFormatException e) {
-                throw new XMLStreamException("Element " + name + " does not match naming required to map to an EDI component element - non-numeric component position");
+                throw new XMLStreamException(String.format(MSG_INVALID_COMPONENT_POSITION, name));
             }
         } else {
             try {
                 position = Integer.parseInt(localPart.substring(localPart.length() - 2));
             } catch (NumberFormatException e) {
-                throw new XMLStreamException("Element " + name + " does not match naming required to map to an EDI element");
+                throw new XMLStreamException(String.format(MSG_INVALID_ELEMENT_NAME, name));
             }
         }
 
@@ -92,10 +97,15 @@ final class StaEDIXMLStreamWriter implements XMLStreamWriter {
 
         switch (name.getNamespaceURI()) {
         case EDINamespaces.COMPOSITES:
-            writeCompositeStart(name);
+            lastComponentPosition = 0;
+            writeElementStart(name);
             break;
         case EDINamespaces.ELEMENTS:
-            writeElementStart(name);
+            if (EDINamespaces.COMPOSITES.equals(elementStack.element().getNamespaceURI())) {
+                writeComponentStart(name);
+            } else {
+                writeElementStart(name);
+            }
             break;
         case EDINamespaces.LOOPS:
             // Loops are implicit when writing
@@ -112,8 +122,20 @@ final class StaEDIXMLStreamWriter implements XMLStreamWriter {
         }
     }
 
-    void writeCompositeStart(QName name) throws XMLStreamException {
-        lastComponentPosition = 0;
+    void writeComponentStart(QName name) throws XMLStreamException {
+        int position = getPosition(name, true);
+
+        while (position > lastComponentPosition + 1) {
+            lastComponentPosition++;
+            execute(ediWriter::writeEmptyComponent);
+        }
+
+        execute(ediWriter::startComponent);
+        lastComponentPosition++;
+        elementStack.push(name);
+    }
+
+    void writeElementStart(QName name) throws XMLStreamException {
         int position = getPosition(name, false);
 
         while (position > lastElementPosition + 1) {
@@ -128,36 +150,6 @@ final class StaEDIXMLStreamWriter implements XMLStreamWriter {
         }
 
         lastElementPosition++;
-        elementStack.push(name);
-    }
-
-    void writeElementStart(QName name) throws XMLStreamException {
-        if (EDINamespaces.COMPOSITES.equals(elementStack.element().getNamespaceURI())) {
-            int position = getPosition(name, true);
-
-            while (position > lastComponentPosition + 1) {
-                lastComponentPosition++;
-                execute(ediWriter::writeEmptyComponent);
-            }
-            execute(ediWriter::startComponent);
-            lastComponentPosition++;
-        } else {
-            int position = getPosition(name, false);
-
-            while (position > lastElementPosition + 1) {
-                lastElementPosition++;
-                execute(ediWriter::writeEmptyElement);
-            }
-
-            if (repeatedElement(name, previousElement)) {
-                execute(ediWriter::writeRepeatElement);
-            } else {
-                execute(ediWriter::writeStartElement);
-            }
-
-            lastElementPosition++;
-        }
-
         elementStack.push(name);
     }
 
@@ -346,7 +338,7 @@ final class StaEDIXMLStreamWriter implements XMLStreamWriter {
         } else {
             for (int i = 0, m = text.length(); i < m; i++) {
                 if (!Character.isWhitespace(text.charAt(i))) {
-                    throw new XMLStreamException("Illegal non-whitespace characters");
+                    throw new XMLStreamException(MSG_ILLEGAL_NONWHITESPACE);
                 }
             }
         }
@@ -360,7 +352,7 @@ final class StaEDIXMLStreamWriter implements XMLStreamWriter {
         } else {
             for (int i = start, m = start + len; i < m; i++) {
                 if (!Character.isWhitespace(text[i])) {
-                    throw new XMLStreamException("Illegal non-whitespace characters");
+                    throw new XMLStreamException(MSG_ILLEGAL_NONWHITESPACE);
                 }
             }
         }

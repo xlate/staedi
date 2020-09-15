@@ -12,6 +12,7 @@ import java.io.ByteArrayOutputStream;
 import javax.xml.namespace.NamespaceContext;
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLStreamException;
+import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stax.StAXResult;
@@ -499,13 +500,15 @@ class StaEDIXMLStreamWriterTest {
 
         StreamSource source = new StreamSource(new ByteArrayInputStream(input.getBytes()));
         StAXResult result = new StAXResult(it);
+        Transformer tx = TransformerFactory.newInstance().newTransformer();
         Exception thrown;
-        thrown = assertThrows(TransformerException.class, () -> TransformerFactory.newInstance().newTransformer().transform(source, result));
+        thrown = assertThrows(TransformerException.class, () -> tx.transform(source, result));
         Throwable cause = thrown;
         while (cause.getCause() != null) {
             cause = cause.getCause();
         }
-        assertEquals("Element {urn:xlate.io:staedi:names:elements}B-01 does not match naming required to map to an EDI component element - invalid component name or position", cause.getMessage());
+        assertEquals(String.format(StaEDIXMLStreamWriter.MSG_INVALID_COMPONENT_NAME, "{urn:xlate.io:staedi:names:elements}B-01"),
+                     cause.getMessage());
     }
 
     @Test
@@ -526,13 +529,15 @@ class StaEDIXMLStreamWriterTest {
 
         StreamSource source = new StreamSource(new ByteArrayInputStream(input.getBytes()));
         StAXResult result = new StAXResult(it);
+        Transformer tx = TransformerFactory.newInstance().newTransformer();
         Exception thrown;
-        thrown = assertThrows(TransformerException.class, () -> TransformerFactory.newInstance().newTransformer().transform(source, result));
+        thrown = assertThrows(TransformerException.class, () -> tx.transform(source, result));
         Throwable cause = thrown;
         while (cause.getCause() != null) {
             cause = cause.getCause();
         }
-        assertEquals("Element {urn:xlate.io:staedi:names:elements}UNB01-AB does not match naming required to map to an EDI component element - non-numeric component position", cause.getMessage());
+        assertEquals(String.format(StaEDIXMLStreamWriter.MSG_INVALID_COMPONENT_POSITION, "{urn:xlate.io:staedi:names:elements}UNB01-AB"),
+                     cause.getMessage());
     }
 
     @Test
@@ -553,12 +558,14 @@ class StaEDIXMLStreamWriterTest {
 
         StreamSource source = new StreamSource(new ByteArrayInputStream(input.getBytes()));
         StAXResult result = new StAXResult(it);
+        Transformer tx = TransformerFactory.newInstance().newTransformer();
         Exception thrown;
-        thrown = assertThrows(TransformerException.class, () -> TransformerFactory.newInstance().newTransformer().transform(source, result));
+        thrown = assertThrows(TransformerException.class, () -> tx.transform(source, result));
         Throwable cause = thrown;
         while (cause.getCause() != null) {
             cause = cause.getCause();
         }
-        assertEquals("Element {urn:xlate.io:staedi:names:composites}UNBAA does not match naming required to map to an EDI element", cause.getMessage());
+        assertEquals(String.format(StaEDIXMLStreamWriter.MSG_INVALID_ELEMENT_NAME, "{urn:xlate.io:staedi:names:composites}UNBAA"),
+                     cause.getMessage());
     }
 }
