@@ -150,6 +150,18 @@ public class Validator {
         }
     }
 
+    public static Validator forSchema(Schema schema, Schema containerSchema, boolean validateCodeValues, boolean formatElements) {
+        final Validator instance;
+
+        if (schema != null) {
+            instance = new Validator(schema, containerSchema, validateCodeValues, formatElements);
+        } else {
+            instance = null;
+        }
+
+        return instance;
+    }
+
     public Validator(Schema schema, Schema containerSchema, boolean validateCodeValues) {
         this(schema, containerSchema, validateCodeValues, false);
     }

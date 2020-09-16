@@ -68,7 +68,7 @@ public class ProxyEventHandler implements EventHandler {
         }
 
         this.controlSchema = controlSchema;
-        controlValidator = validatorInstance(controlSchema, null, validateCodeValues);
+        controlValidator = Validator.forSchema(controlSchema, null, validateCodeValues, false);
     }
 
     public boolean isTransactionSchemaAllowed() {
@@ -82,12 +82,8 @@ public class ProxyEventHandler implements EventHandler {
     public void setTransactionSchema(Schema transactionSchema) {
         if (!Objects.equals(this.transactionSchema, transactionSchema)) {
             this.transactionSchema = transactionSchema;
-            transactionValidator = validatorInstance(transactionSchema, controlSchema, true);
+            transactionValidator = Validator.forSchema(transactionSchema, controlSchema, true, false);
         }
-    }
-
-    Validator validatorInstance(Schema schema, Schema containerSchema, boolean validateCodeValues) {
-        return schema != null ? new Validator(schema, containerSchema, validateCodeValues) : null;
     }
 
     public void resetEvents() {
