@@ -640,7 +640,7 @@ public class Validator {
             handled = false;
         } else {
             // End of the loop - check if the segment appears earlier in the loop
-            handled = checkPeerSegments(tag, startLoop.standard, startDepth, startDepth, handler);
+            handled = checkPeerSegments(tag, startLoop.standard, handler);
 
             if (handled) {
                 // Found the segment among the last known segment's peers so reset the depth
@@ -655,10 +655,10 @@ public class Validator {
         return handled;
     }
 
-    boolean checkPeerSegments(CharSequence tag, UsageNode current, int depth, int startDepth, ValidationEventHandler handler) {
+    boolean checkPeerSegments(CharSequence tag, UsageNode current, ValidationEventHandler handler) {
         boolean handled = false;
 
-        if (depth == startDepth && current != correctSegment) {
+        if (current != correctSegment) {
             /*
              * End of the loop; try to see if we can find the segment among
              * the siblings of the last good segment. If the last good
