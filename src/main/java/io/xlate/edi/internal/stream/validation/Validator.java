@@ -438,7 +438,7 @@ public class Validator {
                     // Advance to the next segment in the loop
                     cursor.next(nextImpl); // Impl node may be unchanged
                 } else {
-                    if (startDepth == depth) {
+                    if (startLoop == null) {
                         /*
                          * Remember the position of the last known loop's segment in case
                          * the segment being validated is an earlier sibling that is out of
