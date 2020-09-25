@@ -638,6 +638,7 @@ public class Validator {
                 handler.segmentError(next.getId(), next.getLink(), SEGMENT_NOT_IN_PROPER_SEQUENCE);
 
                 next.incrementUsage();
+                next.resetChildren();
 
                 if (next.exceedsMaximumUsage(SEGMENT_VERSION)) {
                     handler.segmentError(next.getId(), next.getLink(), SEGMENT_EXCEEDS_MAXIMUM_USE);
@@ -928,6 +929,7 @@ public class Validator {
         this.composite = this.element;
         this.element = null;
         this.composite.incrementUsage();
+        // resetChildren?
 
         if (this.composite.exceedsMaximumUsage(version)) {
             elementErrors.add(new UsageError(this.composite, TOO_MANY_REPETITIONS));
@@ -943,6 +945,7 @@ public class Validator {
 
         if (implSegmentSelected) {
             this.implComposite.incrementUsage();
+            // resetChildren?
         }
 
         return elementErrors.isEmpty();
