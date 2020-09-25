@@ -1757,4 +1757,41 @@ class StaEDIStreamReaderTest implements ConstantsTest {
 
         assertEquals(0, unexpected.size());
     }
+
+    /**
+     * Original issue: https://github.com/xlate/staedi/issues/122
+     *
+     * @throws Exception
+     */
+    @Test
+    void testValidatorLookAhead_Issue122() throws Exception {
+        EDIInputFactory factory = EDIInputFactory.newFactory();
+        Schema transSchema = SchemaFactory.newFactory().createSchema(getClass().getResourceAsStream("/EDIFACT/issue122/BAPLIE-d95b.xml"));
+        EDIStreamReader reader = factory.createEDIStreamReader(getClass().getResourceAsStream("/EDIFACT/issue122/baplie-test.edi"));
+        List<Object> unexpected = new ArrayList<>();
+
+        try {
+            while (reader.hasNext()) {
+                switch (reader.next()) {
+                case START_TRANSACTION:
+                    reader.setTransactionSchema(transSchema);
+                    break;
+                case SEGMENT_ERROR:
+                case ELEMENT_OCCURRENCE_ERROR:
+                case ELEMENT_DATA_ERROR:
+                    unexpected.add(reader.getErrorType());
+                    break;
+                default:
+                    break;
+                }
+            }
+        } catch (Exception e) {
+            unexpected.add(e);
+        } finally {
+            reader.close();
+        }
+
+        assertEquals(0, unexpected.size());
+    }
+
 }

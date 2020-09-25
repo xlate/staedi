@@ -1,0 +1,2403 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<schema xmlns="http://xlate.io/EDISchema/v4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://xlate.io/EDISchema/v4 https://www.xlate.io/EDISchema/EDISchema-v4.xsd">
+  <transaction>
+    <sequence>
+      <segment type="BGM" minOccurs="1"/>
+      <segment type="DTM" minOccurs="1"/>
+      <segment type="RFF"/>
+      <segment type="NAD" maxOccurs="3"/>
+      <loop code="L0001" minOccurs="1" maxOccurs="3">
+        <sequence>
+          <segment type="TDT" minOccurs="1"/>
+          <segment type="LOC" minOccurs="1" maxOccurs="2"/>
+          <segment type="DTM" minOccurs="1" maxOccurs="99"/>
+          <segment type="RFF"/>
+          <segment type="FTX"/>
+        </sequence>
+      </loop>
+      <loop code="L0002" maxOccurs="9999">
+        <sequence>
+          <segment type="LOC" minOccurs="1"/>
+          <segment type="GID"/>
+          <segment type="GDS"/>
+          <segment type="FTX" maxOccurs="9"/>
+          <segment type="MEA" minOccurs="1" maxOccurs="9"/>
+          <segment type="DIM" maxOccurs="9"/>
+          <segment type="TMP"/>
+          <segment type="RNG"/>
+          <segment type="LOC" maxOccurs="9"/>
+          <segment type="RFF" minOccurs="1"/>
+          <loop code="L0003" maxOccurs="3">
+            <sequence>
+              <segment type="EQD" minOccurs="1"/>
+              <segment type="EQA" maxOccurs="9"/>
+              <segment type="NAD"/>
+            </sequence>
+          </loop>
+          <loop code="L0004" maxOccurs="999">
+            <sequence>
+              <segment type="DGS" minOccurs="1"/>
+              <segment type="FTX"/>
+            </sequence>
+          </loop>
+        </sequence>
+      </loop>
+    </sequence>
+  </transaction>
+  <elementType name="DE1000" code="1000" base="string" maxLength="35"/>
+  <elementType name="DE1001" code="1001" base="identifier" maxLength="3">
+    <enumeration>
+      <value>1</value>
+      <value>2</value>
+      <value>3</value>
+      <value>4</value>
+      <value>5</value>
+      <value>6</value>
+      <value>7</value>
+      <value>8</value>
+      <value>9</value>
+      <value>10</value>
+      <value>12</value>
+      <value>13</value>
+      <value>14</value>
+      <value>15</value>
+      <value>16</value>
+      <value>17</value>
+      <value>18</value>
+      <value>19</value>
+      <value>20</value>
+      <value>21</value>
+      <value>22</value>
+      <value>23</value>
+      <value>24</value>
+      <value>25</value>
+      <value>26</value>
+      <value>27</value>
+      <value>28</value>
+      <value>29</value>
+      <value>30</value>
+      <value>31</value>
+      <value>32</value>
+      <value>33</value>
+      <value>34</value>
+      <value>35</value>
+      <value>37</value>
+      <value>59</value>
+      <value>60</value>
+      <value>61</value>
+      <value>62</value>
+      <value>63</value>
+      <value>64</value>
+      <value>65</value>
+      <value>66</value>
+      <value>67</value>
+      <value>68</value>
+      <value>69</value>
+      <value>70</value>
+      <value>71</value>
+      <value>72</value>
+      <value>73</value>
+      <value>74</value>
+      <value>75</value>
+      <value>76</value>
+      <value>77</value>
+      <value>78</value>
+      <value>79</value>
+      <value>80</value>
+      <value>81</value>
+      <value>82</value>
+      <value>83</value>
+      <value>84</value>
+      <value>85</value>
+      <value>86</value>
+      <value>87</value>
+      <value>88</value>
+      <value>89</value>
+      <value>90</value>
+      <value>91</value>
+      <value>92</value>
+      <value>93</value>
+      <value>94</value>
+      <value>95</value>
+      <value>96</value>
+      <value>97</value>
+      <value>98</value>
+      <value>99</value>
+      <value>105</value>
+      <value>110</value>
+      <value>120</value>
+      <value>130</value>
+      <value>140</value>
+      <value>150</value>
+      <value>190</value>
+      <value>201</value>
+      <value>202</value>
+      <value>203</value>
+      <value>204</value>
+      <value>205</value>
+      <value>206</value>
+      <value>207</value>
+      <value>208</value>
+      <value>209</value>
+      <value>210</value>
+      <value>211</value>
+      <value>212</value>
+      <value>215</value>
+      <value>220</value>
+      <value>221</value>
+      <value>222</value>
+      <value>223</value>
+      <value>224</value>
+      <value>225</value>
+      <value>226</value>
+      <value>227</value>
+      <value>228</value>
+      <value>229</value>
+      <value>230</value>
+      <value>231</value>
+      <value>232</value>
+      <value>233</value>
+      <value>240</value>
+      <value>241</value>
+      <value>242</value>
+      <value>245</value>
+      <value>270</value>
+      <value>271</value>
+      <value>310</value>
+      <value>311</value>
+      <value>315</value>
+      <value>320</value>
+      <value>325</value>
+      <value>326</value>
+      <value>327</value>
+      <value>328</value>
+      <value>330</value>
+      <value>335</value>
+      <value>340</value>
+      <value>341</value>
+      <value>343</value>
+      <value>345</value>
+      <value>350</value>
+      <value>351</value>
+      <value>370</value>
+      <value>380</value>
+      <value>381</value>
+      <value>382</value>
+      <value>383</value>
+      <value>384</value>
+      <value>385</value>
+      <value>386</value>
+      <value>387</value>
+      <value>388</value>
+      <value>389</value>
+      <value>390</value>
+      <value>393</value>
+      <value>394</value>
+      <value>395</value>
+      <value>396</value>
+      <value>409</value>
+      <value>412</value>
+      <value>425</value>
+      <value>426</value>
+      <value>427</value>
+      <value>428</value>
+      <value>429</value>
+      <value>430</value>
+      <value>431</value>
+      <value>435</value>
+      <value>447</value>
+      <value>448</value>
+      <value>450</value>
+      <value>451</value>
+      <value>452</value>
+      <value>454</value>
+      <value>455</value>
+      <value>456</value>
+      <value>457</value>
+      <value>458</value>
+      <value>460</value>
+      <value>465</value>
+      <value>466</value>
+      <value>467</value>
+      <value>468</value>
+      <value>469</value>
+      <value>481</value>
+      <value>485</value>
+      <value>490</value>
+      <value>491</value>
+      <value>492</value>
+      <value>493</value>
+      <value>520</value>
+      <value>530</value>
+      <value>550</value>
+      <value>575</value>
+      <value>580</value>
+      <value>610</value>
+      <value>621</value>
+      <value>622</value>
+      <value>623</value>
+      <value>624</value>
+      <value>630</value>
+      <value>631</value>
+      <value>632</value>
+      <value>633</value>
+      <value>635</value>
+      <value>640</value>
+      <value>650</value>
+      <value>655</value>
+      <value>700</value>
+      <value>701</value>
+      <value>702</value>
+      <value>703</value>
+      <value>704</value>
+      <value>705</value>
+      <value>706</value>
+      <value>707</value>
+      <value>708</value>
+      <value>709</value>
+      <value>710</value>
+      <value>711</value>
+      <value>712</value>
+      <value>713</value>
+      <value>714</value>
+      <value>715</value>
+      <value>716</value>
+      <value>720</value>
+      <value>722</value>
+      <value>723</value>
+      <value>724</value>
+      <value>730</value>
+      <value>740</value>
+      <value>741</value>
+      <value>743</value>
+      <value>744</value>
+      <value>745</value>
+      <value>746</value>
+      <value>750</value>
+      <value>760</value>
+      <value>761</value>
+      <value>763</value>
+      <value>764</value>
+      <value>765</value>
+      <value>766</value>
+      <value>770</value>
+      <value>775</value>
+      <value>780</value>
+      <value>781</value>
+      <value>782</value>
+      <value>783</value>
+      <value>784</value>
+      <value>785</value>
+      <value>786</value>
+      <value>787</value>
+      <value>788</value>
+      <value>789</value>
+      <value>790</value>
+      <value>791</value>
+      <value>792</value>
+      <value>793</value>
+      <value>794</value>
+      <value>795</value>
+      <value>796</value>
+      <value>797</value>
+      <value>798</value>
+      <value>799</value>
+      <value>810</value>
+      <value>811</value>
+      <value>812</value>
+      <value>820</value>
+      <value>821</value>
+      <value>822</value>
+      <value>823</value>
+      <value>824</value>
+      <value>825</value>
+      <value>830</value>
+      <value>833</value>
+      <value>840</value>
+      <value>841</value>
+      <value>850</value>
+      <value>851</value>
+      <value>852</value>
+      <value>853</value>
+      <value>855</value>
+      <value>856</value>
+      <value>860</value>
+      <value>861</value>
+      <value>862</value>
+      <value>863</value>
+      <value>864</value>
+      <value>865</value>
+      <value>870</value>
+      <value>890</value>
+      <value>895</value>
+      <value>896</value>
+      <value>901</value>
+      <value>910</value>
+      <value>911</value>
+      <value>913</value>
+      <value>914</value>
+      <value>915</value>
+      <value>916</value>
+      <value>917</value>
+      <value>925</value>
+      <value>926</value>
+      <value>927</value>
+      <value>929</value>
+      <value>930</value>
+      <value>931</value>
+      <value>932</value>
+      <value>933</value>
+      <value>934</value>
+      <value>935</value>
+      <value>936</value>
+      <value>937</value>
+      <value>938</value>
+      <value>940</value>
+      <value>941</value>
+      <value>950</value>
+      <value>951</value>
+      <value>952</value>
+      <value>953</value>
+      <value>954</value>
+      <value>955</value>
+      <value>960</value>
+      <value>961</value>
+      <value>962</value>
+      <value>963</value>
+      <value>964</value>
+      <value>965</value>
+      <value>966</value>
+      <value>990</value>
+      <value>991</value>
+      <value>995</value>
+      <value>996</value>
+      <value>998</value>
+    </enumeration>
+  </elementType>
+  <elementType name="DE1004" code="1004" base="string" maxLength="35"/>
+  <elementType name="DE1131" code="1131" base="identifier" maxLength="3">
+    <enumeration>
+      <value>12</value>
+      <value>16</value>
+      <value>23</value>
+      <value>25</value>
+      <value>35</value>
+      <value>36</value>
+      <value>37</value>
+      <value>38</value>
+      <value>39</value>
+      <value>42</value>
+      <value>43</value>
+      <value>44</value>
+      <value>52</value>
+      <value>53</value>
+      <value>54</value>
+      <value>55</value>
+      <value>56</value>
+      <value>57</value>
+      <value>58</value>
+      <value>59</value>
+      <value>100</value>
+      <value>101</value>
+      <value>102</value>
+      <value>103</value>
+      <value>104</value>
+      <value>105</value>
+      <value>106</value>
+      <value>107</value>
+      <value>108</value>
+      <value>109</value>
+      <value>110</value>
+      <value>112</value>
+      <value>113</value>
+      <value>114</value>
+      <value>115</value>
+      <value>116</value>
+      <value>117</value>
+      <value>118</value>
+      <value>119</value>
+      <value>120</value>
+      <value>121</value>
+      <value>122</value>
+      <value>123</value>
+      <value>125</value>
+      <value>126</value>
+      <value>127</value>
+      <value>128</value>
+      <value>129</value>
+      <value>130</value>
+      <value>131</value>
+      <value>132</value>
+      <value>133</value>
+      <value>134</value>
+      <value>135</value>
+      <value>136</value>
+      <value>137</value>
+      <value>139</value>
+      <value>140</value>
+      <value>141</value>
+      <value>142</value>
+      <value>143</value>
+      <value>144</value>
+      <value>145</value>
+      <value>146</value>
+      <value>147</value>
+      <value>148</value>
+      <value>149</value>
+      <value>150</value>
+      <value>151</value>
+      <value>152</value>
+      <value>153</value>
+      <value>154</value>
+      <value>155</value>
+      <value>156</value>
+      <value>157</value>
+      <value>158</value>
+      <value>160</value>
+      <value>161</value>
+      <value>162</value>
+      <value>163</value>
+      <value>164</value>
+      <value>165</value>
+      <value>166</value>
+      <value>167</value>
+      <value>168</value>
+      <value>169</value>
+      <value>170</value>
+      <value>172</value>
+      <value>173</value>
+      <value>174</value>
+      <value>175</value>
+      <value>176</value>
+      <value>177</value>
+      <value>178</value>
+      <value>179</value>
+      <value>180</value>
+      <value>181</value>
+      <value>182</value>
+      <value>183</value>
+      <value>184</value>
+      <value>185</value>
+      <value>186</value>
+      <value>187</value>
+      <value>188</value>
+      <value>189</value>
+      <value>190</value>
+      <value>191</value>
+      <value>192</value>
+      <value>ZZZ</value>
+    </enumeration>
+  </elementType>
+  <elementType name="DE1153" code="1153" base="identifier" maxLength="3">
+    <enumeration>
+      <value>A</value>
+      <value>C</value>
+      <value>P</value>
+      <value>AC</value>
+      <value>AE</value>
+      <value>AF</value>
+      <value>AP</value>
+      <value>AU</value>
+      <value>AV</value>
+      <value>BA</value>
+      <value>BC</value>
+      <value>BD</value>
+      <value>BE</value>
+      <value>BH</value>
+      <value>BM</value>
+      <value>BN</value>
+      <value>BO</value>
+      <value>BR</value>
+      <value>BT</value>
+      <value>BW</value>
+      <value>CD</value>
+      <value>CG</value>
+      <value>CH</value>
+      <value>CK</value>
+      <value>CM</value>
+      <value>CN</value>
+      <value>CO</value>
+      <value>CP</value>
+      <value>CR</value>
+      <value>CS</value>
+      <value>CT</value>
+      <value>CU</value>
+      <value>CV</value>
+      <value>CW</value>
+      <value>CZ</value>
+      <value>DA</value>
+      <value>DB</value>
+      <value>DI</value>
+      <value>DL</value>
+      <value>DM</value>
+      <value>DQ</value>
+      <value>DR</value>
+      <value>EA</value>
+      <value>EB</value>
+      <value>ED</value>
+      <value>EE</value>
+      <value>EI</value>
+      <value>EN</value>
+      <value>EP</value>
+      <value>EQ</value>
+      <value>ER</value>
+      <value>ET</value>
+      <value>EX</value>
+      <value>FC</value>
+      <value>FF</value>
+      <value>FI</value>
+      <value>FN</value>
+      <value>FO</value>
+      <value>FS</value>
+      <value>FT</value>
+      <value>FV</value>
+      <value>FX</value>
+      <value>GA</value>
+      <value>GC</value>
+      <value>GD</value>
+      <value>GN</value>
+      <value>HS</value>
+      <value>IA</value>
+      <value>IB</value>
+      <value>II</value>
+      <value>IL</value>
+      <value>IP</value>
+      <value>IS</value>
+      <value>IT</value>
+      <value>IV</value>
+      <value>JB</value>
+      <value>JE</value>
+      <value>LA</value>
+      <value>LB</value>
+      <value>LC</value>
+      <value>LI</value>
+      <value>LO</value>
+      <value>LS</value>
+      <value>MA</value>
+      <value>MB</value>
+      <value>MF</value>
+      <value>MG</value>
+      <value>MH</value>
+      <value>MR</value>
+      <value>MS</value>
+      <value>NA</value>
+      <value>OH</value>
+      <value>OI</value>
+      <value>ON</value>
+      <value>OP</value>
+      <value>OR</value>
+      <value>PB</value>
+      <value>PC</value>
+      <value>PD</value>
+      <value>PE</value>
+      <value>PF</value>
+      <value>PI</value>
+      <value>PK</value>
+      <value>PL</value>
+      <value>PP</value>
+      <value>PQ</value>
+      <value>PR</value>
+      <value>PS</value>
+      <value>PW</value>
+      <value>PY</value>
+      <value>RA</value>
+      <value>RC</value>
+      <value>RE</value>
+      <value>RF</value>
+      <value>RR</value>
+      <value>RT</value>
+      <value>SA</value>
+      <value>SB</value>
+      <value>SD</value>
+      <value>SE</value>
+      <value>SF</value>
+      <value>SH</value>
+      <value>SI</value>
+      <value>SM</value>
+      <value>SN</value>
+      <value>SP</value>
+      <value>SQ</value>
+      <value>SS</value>
+      <value>SW</value>
+      <value>SZ</value>
+      <value>TB</value>
+      <value>TE</value>
+      <value>TF</value>
+      <value>TI</value>
+      <value>TL</value>
+      <value>TN</value>
+      <value>TP</value>
+      <value>UC</value>
+      <value>UN</value>
+      <value>UO</value>
+      <value>VA</value>
+      <value>VC</value>
+      <value>VM</value>
+      <value>VN</value>
+      <value>VP</value>
+      <value>VR</value>
+      <value>VS</value>
+      <value>VT</value>
+      <value>VV</value>
+      <value>WE</value>
+      <value>WM</value>
+      <value>WN</value>
+      <value>WR</value>
+      <value>WS</value>
+      <value>WY</value>
+      <value>AAA</value>
+      <value>AAB</value>
+      <value>AAC</value>
+      <value>AAD</value>
+      <value>AAE</value>
+      <value>AAG</value>
+      <value>AAJ</value>
+      <value>AAK</value>
+      <value>AAL</value>
+      <value>AAM</value>
+      <value>AAN</value>
+      <value>AAO</value>
+      <value>AAP</value>
+      <value>AAQ</value>
+      <value>AAS</value>
+      <value>AAT</value>
+      <value>AAU</value>
+      <value>AAV</value>
+      <value>AAY</value>
+      <value>AAZ</value>
+      <value>ABA</value>
+      <value>ABB</value>
+      <value>ABC</value>
+      <value>ABD</value>
+      <value>ABE</value>
+      <value>ABG</value>
+      <value>ABH</value>
+      <value>ABI</value>
+      <value>ABJ</value>
+      <value>ABK</value>
+      <value>ABL</value>
+      <value>ABO</value>
+      <value>ABP</value>
+      <value>ABQ</value>
+      <value>ABR</value>
+      <value>ABS</value>
+      <value>ABT</value>
+      <value>ABU</value>
+      <value>ABW</value>
+      <value>ABY</value>
+      <value>ACB</value>
+      <value>ACC</value>
+      <value>ACD</value>
+      <value>ACE</value>
+      <value>ACF</value>
+      <value>ACG</value>
+      <value>ACH</value>
+      <value>ACI</value>
+      <value>ACJ</value>
+      <value>ACK</value>
+      <value>ACL</value>
+      <value>ACM</value>
+      <value>ACN</value>
+      <value>ACO</value>
+      <value>ACP</value>
+      <value>ACQ</value>
+      <value>ACR</value>
+      <value>ACS</value>
+      <value>ACT</value>
+      <value>ACU</value>
+      <value>ACW</value>
+      <value>ACX</value>
+      <value>ADB</value>
+      <value>ADC</value>
+      <value>ADD</value>
+      <value>ADE</value>
+      <value>ADF</value>
+      <value>ADG</value>
+      <value>ADH</value>
+      <value>ADI</value>
+      <value>ADJ</value>
+      <value>ADK</value>
+      <value>ADP</value>
+      <value>ADQ</value>
+      <value>ADR</value>
+      <value>ADS</value>
+      <value>ADT</value>
+      <value>ADU</value>
+      <value>ADV</value>
+      <value>ADW</value>
+      <value>ADY</value>
+      <value>ADZ</value>
+      <value>AEA</value>
+      <value>AEB</value>
+      <value>AEC</value>
+      <value>AED</value>
+      <value>AEE</value>
+      <value>AEF</value>
+      <value>AEG</value>
+      <value>AEH</value>
+      <value>AEI</value>
+      <value>AEJ</value>
+      <value>AEK</value>
+      <value>AEL</value>
+      <value>AEM</value>
+      <value>AEN</value>
+      <value>AEO</value>
+      <value>AEP</value>
+      <value>AEQ</value>
+      <value>AER</value>
+      <value>AES</value>
+      <value>AET</value>
+      <value>AEU</value>
+      <value>AEV</value>
+      <value>AEW</value>
+      <value>AEX</value>
+      <value>AEY</value>
+      <value>AEZ</value>
+      <value>AFA</value>
+      <value>AFB</value>
+      <value>AFC</value>
+      <value>AFD</value>
+      <value>AFE</value>
+      <value>AFF</value>
+      <value>AFG</value>
+      <value>AFI</value>
+      <value>AFJ</value>
+      <value>AFK</value>
+      <value>AFL</value>
+      <value>AFM</value>
+      <value>AFN</value>
+      <value>AFO</value>
+      <value>AFP</value>
+      <value>AFQ</value>
+      <value>AFR</value>
+      <value>AFS</value>
+      <value>AFT</value>
+      <value>AFU</value>
+      <value>AFV</value>
+      <value>AFW</value>
+      <value>AFX</value>
+      <value>AFY</value>
+      <value>AFZ</value>
+      <value>AGA</value>
+      <value>AGB</value>
+      <value>AGC</value>
+      <value>AGD</value>
+      <value>AGE</value>
+      <value>AGF</value>
+      <value>AGG</value>
+      <value>AGH</value>
+      <value>AGI</value>
+      <value>AGJ</value>
+      <value>AGK</value>
+      <value>AGL</value>
+      <value>AGM</value>
+      <value>AGN</value>
+      <value>AGO</value>
+      <value>AGP</value>
+      <value>AGQ</value>
+      <value>AGR</value>
+      <value>AGS</value>
+      <value>AGT</value>
+      <value>AGU</value>
+      <value>AGV</value>
+      <value>AGW</value>
+      <value>AGX</value>
+      <value>AGY</value>
+      <value>AGZ</value>
+      <value>AHA</value>
+      <value>AHB</value>
+      <value>AHC</value>
+      <value>AHD</value>
+      <value>AHE</value>
+      <value>AHF</value>
+      <value>AHG</value>
+      <value>AHH</value>
+      <value>AHI</value>
+      <value>AHJ</value>
+      <value>AHK</value>
+      <value>AHL</value>
+      <value>AHM</value>
+      <value>AHN</value>
+      <value>AHO</value>
+      <value>AHP</value>
+      <value>AHQ</value>
+      <value>AHR</value>
+      <value>AHS</value>
+      <value>AHT</value>
+      <value>AHU</value>
+      <value>AHV</value>
+      <value>AHW</value>
+      <value>AHX</value>
+      <value>AHY</value>
+      <value>AHZ</value>
+      <value>AIA</value>
+      <value>AIB</value>
+      <value>AIC</value>
+      <value>AID</value>
+      <value>AIE</value>
+      <value>AIF</value>
+      <value>AIG</value>
+      <value>AIH</value>
+      <value>AII</value>
+      <value>AIJ</value>
+      <value>AIK</value>
+      <value>AIL</value>
+      <value>AIM</value>
+      <value>AIN</value>
+      <value>AIO</value>
+      <value>AIP</value>
+      <value>AIQ</value>
+      <value>AIR</value>
+      <value>AIS</value>
+      <value>AIT</value>
+      <value>AIU</value>
+      <value>AIV</value>
+      <value>AIW</value>
+      <value>AIX</value>
+      <value>AIY</value>
+      <value>ASC</value>
+      <value>AWB</value>
+      <value>CAS</value>
+      <value>CEC</value>
+      <value>CFE</value>
+      <value>CFO</value>
+      <value>CKN</value>
+      <value>CMR</value>
+      <value>CNO</value>
+      <value>COF</value>
+      <value>CRN</value>
+      <value>CST</value>
+      <value>DAN</value>
+      <value>ERN</value>
+      <value>FLW</value>
+      <value>GDN</value>
+      <value>HWB</value>
+      <value>ICA</value>
+      <value>ICE</value>
+      <value>ICO</value>
+      <value>INB</value>
+      <value>INN</value>
+      <value>INO</value>
+      <value>LAN</value>
+      <value>LAR</value>
+      <value>MRN</value>
+      <value>MSS</value>
+      <value>MWB</value>
+      <value>POR</value>
+      <value>RCN</value>
+      <value>REN</value>
+      <value>SRN</value>
+      <value>STA</value>
+      <value>UAR</value>
+      <value>UCN</value>
+      <value>VON</value>
+      <value>ZZZ</value>
+    </enumeration>
+  </elementType>
+  <elementType name="DE1154" code="1154" base="string" maxLength="35"/>
+  <elementType name="DE1156" code="1156" base="string" maxLength="6"/>
+  <elementType name="DE1225" code="1225" base="identifier" maxLength="3">
+    <enumeration>
+      <value>1</value>
+      <value>2</value>
+      <value>3</value>
+      <value>4</value>
+      <value>5</value>
+      <value>6</value>
+      <value>7</value>
+      <value>8</value>
+      <value>9</value>
+      <value>10</value>
+      <value>11</value>
+      <value>12</value>
+      <value>13</value>
+      <value>14</value>
+      <value>15</value>
+      <value>16</value>
+      <value>17</value>
+      <value>18</value>
+      <value>19</value>
+      <value>20</value>
+      <value>21</value>
+      <value>22</value>
+      <value>23</value>
+      <value>24</value>
+      <value>25</value>
+      <value>26</value>
+      <value>27</value>
+      <value>28</value>
+      <value>29</value>
+      <value>30</value>
+      <value>31</value>
+      <value>32</value>
+      <value>33</value>
+      <value>34</value>
+      <value>35</value>
+      <value>36</value>
+      <value>37</value>
+      <value>38</value>
+      <value>39</value>
+      <value>40</value>
+      <value>41</value>
+      <value>42</value>
+      <value>43</value>
+      <value>44</value>
+      <value>45</value>
+      <value>46</value>
+      <value>47</value>
+      <value>48</value>
+      <value>49</value>
+      <value>50</value>
+      <value>51</value>
+      <value>52</value>
+      <value>53</value>
+    </enumeration>
+  </elementType>
+  <elementType name="DE1496" code="1496" base="decimal" maxLength="5"/>
+  <elementType name="DE2005" code="2005" base="identifier" maxLength="3">
+    <enumeration>
+      <value>2</value>
+      <value>3</value>
+      <value>4</value>
+      <value>7</value>
+      <value>8</value>
+      <value>9</value>
+      <value>10</value>
+      <value>11</value>
+      <value>12</value>
+      <value>13</value>
+      <value>14</value>
+      <value>15</value>
+      <value>16</value>
+      <value>17</value>
+      <value>18</value>
+      <value>20</value>
+      <value>21</value>
+      <value>22</value>
+      <value>35</value>
+      <value>36</value>
+      <value>37</value>
+      <value>38</value>
+      <value>39</value>
+      <value>42</value>
+      <value>44</value>
+      <value>45</value>
+      <value>46</value>
+      <value>47</value>
+      <value>48</value>
+      <value>49</value>
+      <value>50</value>
+      <value>51</value>
+      <value>52</value>
+      <value>53</value>
+      <value>54</value>
+      <value>55</value>
+      <value>58</value>
+      <value>59</value>
+      <value>60</value>
+      <value>61</value>
+      <value>63</value>
+      <value>64</value>
+      <value>65</value>
+      <value>67</value>
+      <value>69</value>
+      <value>71</value>
+      <value>72</value>
+      <value>74</value>
+      <value>75</value>
+      <value>76</value>
+      <value>79</value>
+      <value>81</value>
+      <value>84</value>
+      <value>85</value>
+      <value>89</value>
+      <value>90</value>
+      <value>91</value>
+      <value>92</value>
+      <value>93</value>
+      <value>94</value>
+      <value>95</value>
+      <value>96</value>
+      <value>97</value>
+      <value>101</value>
+      <value>107</value>
+      <value>108</value>
+      <value>109</value>
+      <value>110</value>
+      <value>111</value>
+      <value>113</value>
+      <value>114</value>
+      <value>115</value>
+      <value>117</value>
+      <value>119</value>
+      <value>123</value>
+      <value>124</value>
+      <value>125</value>
+      <value>126</value>
+      <value>128</value>
+      <value>129</value>
+      <value>131</value>
+      <value>132</value>
+      <value>133</value>
+      <value>134</value>
+      <value>135</value>
+      <value>136</value>
+      <value>137</value>
+      <value>138</value>
+      <value>140</value>
+      <value>141</value>
+      <value>143</value>
+      <value>144</value>
+      <value>146</value>
+      <value>147</value>
+      <value>148</value>
+      <value>149</value>
+      <value>150</value>
+      <value>151</value>
+      <value>152</value>
+      <value>153</value>
+      <value>154</value>
+      <value>155</value>
+      <value>156</value>
+      <value>157</value>
+      <value>158</value>
+      <value>159</value>
+      <value>160</value>
+      <value>161</value>
+      <value>162</value>
+      <value>163</value>
+      <value>164</value>
+      <value>165</value>
+      <value>166</value>
+      <value>167</value>
+      <value>168</value>
+      <value>169</value>
+      <value>170</value>
+      <value>171</value>
+      <value>172</value>
+      <value>173</value>
+      <value>174</value>
+      <value>175</value>
+      <value>176</value>
+      <value>177</value>
+      <value>178</value>
+      <value>179</value>
+      <value>180</value>
+      <value>181</value>
+      <value>182</value>
+      <value>183</value>
+      <value>184</value>
+      <value>185</value>
+      <value>186</value>
+      <value>187</value>
+      <value>188</value>
+      <value>189</value>
+      <value>190</value>
+      <value>191</value>
+      <value>192</value>
+      <value>193</value>
+      <value>194</value>
+      <value>195</value>
+      <value>196</value>
+      <value>197</value>
+      <value>198</value>
+      <value>199</value>
+      <value>200</value>
+      <value>201</value>
+      <value>202</value>
+      <value>203</value>
+      <value>204</value>
+      <value>205</value>
+      <value>206</value>
+      <value>207</value>
+      <value>208</value>
+      <value>209</value>
+      <value>210</value>
+      <value>211</value>
+      <value>212</value>
+      <value>213</value>
+      <value>214</value>
+      <value>215</value>
+      <value>216</value>
+      <value>218</value>
+      <value>219</value>
+      <value>221</value>
+      <value>222</value>
+      <value>223</value>
+      <value>224</value>
+      <value>225</value>
+      <value>226</value>
+      <value>227</value>
+      <value>228</value>
+      <value>229</value>
+      <value>230</value>
+      <value>231</value>
+      <value>232</value>
+      <value>233</value>
+      <value>234</value>
+      <value>235</value>
+      <value>236</value>
+      <value>237</value>
+      <value>238</value>
+      <value>239</value>
+      <value>240</value>
+      <value>242</value>
+      <value>243</value>
+      <value>244</value>
+      <value>245</value>
+      <value>246</value>
+      <value>247</value>
+      <value>248</value>
+      <value>249</value>
+      <value>250</value>
+      <value>251</value>
+      <value>252</value>
+      <value>253</value>
+      <value>254</value>
+      <value>255</value>
+      <value>257</value>
+      <value>258</value>
+      <value>259</value>
+      <value>260</value>
+      <value>261</value>
+      <value>262</value>
+      <value>263</value>
+      <value>264</value>
+      <value>265</value>
+      <value>266</value>
+      <value>267</value>
+      <value>268</value>
+      <value>270</value>
+      <value>271</value>
+      <value>272</value>
+      <value>273</value>
+      <value>274</value>
+      <value>275</value>
+      <value>276</value>
+      <value>277</value>
+      <value>278</value>
+      <value>279</value>
+      <value>280</value>
+      <value>281</value>
+      <value>282</value>
+      <value>283</value>
+      <value>284</value>
+      <value>285</value>
+      <value>286</value>
+      <value>287</value>
+      <value>288</value>
+      <value>290</value>
+      <value>291</value>
+      <value>292</value>
+      <value>293</value>
+      <value>294</value>
+      <value>295</value>
+      <value>296</value>
+      <value>297</value>
+      <value>298</value>
+      <value>299</value>
+      <value>300</value>
+      <value>301</value>
+      <value>302</value>
+      <value>303</value>
+      <value>304</value>
+      <value>305</value>
+      <value>306</value>
+      <value>307</value>
+      <value>308</value>
+      <value>309</value>
+      <value>310</value>
+      <value>311</value>
+      <value>312</value>
+      <value>313</value>
+      <value>314</value>
+      <value>315</value>
+      <value>316</value>
+      <value>317</value>
+      <value>318</value>
+      <value>319</value>
+      <value>320</value>
+      <value>321</value>
+      <value>322</value>
+      <value>323</value>
+      <value>324</value>
+      <value>325</value>
+      <value>326</value>
+      <value>327</value>
+      <value>328</value>
+      <value>329</value>
+      <value>330</value>
+      <value>331</value>
+      <value>332</value>
+      <value>333</value>
+      <value>334</value>
+      <value>335</value>
+      <value>336</value>
+      <value>337</value>
+      <value>338</value>
+      <value>339</value>
+      <value>340</value>
+      <value>341</value>
+      <value>342</value>
+      <value>343</value>
+      <value>344</value>
+      <value>345</value>
+      <value>346</value>
+      <value>347</value>
+      <value>348</value>
+      <value>349</value>
+      <value>350</value>
+      <value>351</value>
+      <value>352</value>
+      <value>353</value>
+      <value>354</value>
+      <value>ZZZ</value>
+    </enumeration>
+  </elementType>
+  <elementType name="DE2379" code="2379" base="identifier" maxLength="3">
+    <enumeration>
+      <value>2</value>
+      <value>3</value>
+      <value>101</value>
+      <value>102</value>
+      <value>103</value>
+      <value>105</value>
+      <value>106</value>
+      <value>107</value>
+      <value>108</value>
+      <value>109</value>
+      <value>110</value>
+      <value>201</value>
+      <value>202</value>
+      <value>203</value>
+      <value>204</value>
+      <value>301</value>
+      <value>302</value>
+      <value>303</value>
+      <value>304</value>
+      <value>305</value>
+      <value>306</value>
+      <value>401</value>
+      <value>402</value>
+      <value>404</value>
+      <value>405</value>
+      <value>501</value>
+      <value>502</value>
+      <value>503</value>
+      <value>600</value>
+      <value>601</value>
+      <value>602</value>
+      <value>603</value>
+      <value>604</value>
+      <value>608</value>
+      <value>609</value>
+      <value>610</value>
+      <value>613</value>
+      <value>614</value>
+      <value>615</value>
+      <value>616</value>
+      <value>701</value>
+      <value>702</value>
+      <value>703</value>
+      <value>704</value>
+      <value>705</value>
+      <value>706</value>
+      <value>707</value>
+      <value>708</value>
+      <value>709</value>
+      <value>710</value>
+      <value>711</value>
+      <value>713</value>
+      <value>715</value>
+      <value>716</value>
+      <value>717</value>
+      <value>718</value>
+      <value>801</value>
+      <value>802</value>
+      <value>803</value>
+      <value>804</value>
+      <value>805</value>
+      <value>806</value>
+      <value>807</value>
+      <value>808</value>
+      <value>809</value>
+      <value>810</value>
+      <value>811</value>
+      <value>812</value>
+      <value>813</value>
+      <value>814</value>
+    </enumeration>
+  </elementType>
+  <elementType name="DE2380" code="2380" base="string" maxLength="35"/>
+  <elementType name="DE3035" code="3035" base="identifier" maxLength="3">
+    <enumeration>
+      <value></value>
+      <value>AA</value>
+      <value>AB</value>
+      <value>AE</value>
+      <value>AF</value>
+      <value>AG</value>
+      <value>AH</value>
+      <value>AI</value>
+      <value>AK</value>
+      <value>AL</value>
+      <value>AM</value>
+      <value>AN</value>
+      <value>AO</value>
+      <value>AP</value>
+      <value>AQ</value>
+      <value>AR</value>
+      <value>AT</value>
+      <value>AU</value>
+      <value>AV</value>
+      <value>AW</value>
+      <value>AX</value>
+      <value>AZ</value>
+      <value>B1</value>
+      <value>B2</value>
+      <value>BA</value>
+      <value>BB</value>
+      <value>BC</value>
+      <value>BD</value>
+      <value>BE</value>
+      <value>BF</value>
+      <value>BG</value>
+      <value>BH</value>
+      <value>BI</value>
+      <value>BK</value>
+      <value>BL</value>
+      <value>BM</value>
+      <value>BN</value>
+      <value>BO</value>
+      <value>BP</value>
+      <value>BQ</value>
+      <value>BS</value>
+      <value>BT</value>
+      <value>BU</value>
+      <value>BV</value>
+      <value>BW</value>
+      <value>BX</value>
+      <value>BY</value>
+      <value>BZ</value>
+      <value>C1</value>
+      <value>C2</value>
+      <value>CA</value>
+      <value>CB</value>
+      <value>CC</value>
+      <value>CD</value>
+      <value>CE</value>
+      <value>CF</value>
+      <value>CG</value>
+      <value>CH</value>
+      <value>CI</value>
+      <value>CJ</value>
+      <value>CK</value>
+      <value>CL</value>
+      <value>CM</value>
+      <value>CN</value>
+      <value>CO</value>
+      <value>CP</value>
+      <value>CQ</value>
+      <value>CR</value>
+      <value>CS</value>
+      <value>CT</value>
+      <value>CU</value>
+      <value>CV</value>
+      <value>CW</value>
+      <value>CX</value>
+      <value>CY</value>
+      <value>CZ</value>
+      <value>DA</value>
+      <value>DB</value>
+      <value>DC</value>
+      <value>DD</value>
+      <value>DE</value>
+      <value>DF</value>
+      <value>DG</value>
+      <value>DH</value>
+      <value>DI</value>
+      <value>DJ</value>
+      <value>DK</value>
+      <value>DL</value>
+      <value>DM</value>
+      <value>DN</value>
+      <value>DO</value>
+      <value>DP</value>
+      <value>DQ</value>
+      <value>DR</value>
+      <value>DS</value>
+      <value>DT</value>
+      <value>DU</value>
+      <value>DV</value>
+      <value>DW</value>
+      <value>DX</value>
+      <value>DY</value>
+      <value>DZ</value>
+      <value>EA</value>
+      <value>EB</value>
+      <value>EC</value>
+      <value>ED</value>
+      <value>EE</value>
+      <value>EF</value>
+      <value>EG</value>
+      <value>EH</value>
+      <value>EI</value>
+      <value>EJ</value>
+      <value>EK</value>
+      <value>EL</value>
+      <value>EM</value>
+      <value>EN</value>
+      <value>EO</value>
+      <value>EP</value>
+      <value>EQ</value>
+      <value>ER</value>
+      <value>ES</value>
+      <value>ET</value>
+      <value>EU</value>
+      <value>EV</value>
+      <value>EW</value>
+      <value>EX</value>
+      <value>EY</value>
+      <value>EZ</value>
+      <value>FA</value>
+      <value>FB</value>
+      <value>FC</value>
+      <value>FD</value>
+      <value>FE</value>
+      <value>FF</value>
+      <value>FG</value>
+      <value>FH</value>
+      <value>FJ</value>
+      <value>FK</value>
+      <value>FL</value>
+      <value>FM</value>
+      <value>FN</value>
+      <value>FO</value>
+      <value>FP</value>
+      <value>FR</value>
+      <value>FT</value>
+      <value>FW</value>
+      <value>FX</value>
+      <value>FY</value>
+      <value>FZ</value>
+      <value>GA</value>
+      <value>GB</value>
+      <value>GC</value>
+      <value>GD</value>
+      <value>GE</value>
+      <value>GF</value>
+      <value>GG</value>
+      <value>GH</value>
+      <value>GI</value>
+      <value>GJ</value>
+      <value>GK</value>
+      <value>GL</value>
+      <value>GM</value>
+      <value>GN</value>
+      <value>GO</value>
+      <value>GP</value>
+      <value>GQ</value>
+      <value>GR</value>
+      <value>GS</value>
+      <value>GT</value>
+      <value>I1</value>
+      <value>I2</value>
+      <value>IB</value>
+      <value>IC</value>
+      <value>II</value>
+      <value>IM</value>
+      <value>IN</value>
+      <value>IO</value>
+      <value>IP</value>
+      <value>IS</value>
+      <value>IT</value>
+      <value>IV</value>
+      <value>LA</value>
+      <value>LN</value>
+      <value>LP</value>
+      <value>MA</value>
+      <value>MF</value>
+      <value>MG</value>
+      <value>MI</value>
+      <value>MP</value>
+      <value>MR</value>
+      <value>MS</value>
+      <value>MT</value>
+      <value>N1</value>
+      <value>N2</value>
+      <value>NI</value>
+      <value>OA</value>
+      <value>OB</value>
+      <value>OF</value>
+      <value>OI</value>
+      <value>OO</value>
+      <value>OP</value>
+      <value>OR</value>
+      <value>OS</value>
+      <value>OT</value>
+      <value>OV</value>
+      <value>OY</value>
+      <value>P1</value>
+      <value>P2</value>
+      <value>P3</value>
+      <value>P4</value>
+      <value>PA</value>
+      <value>PB</value>
+      <value>PC</value>
+      <value>PD</value>
+      <value>PE</value>
+      <value>PF</value>
+      <value>PG</value>
+      <value>PH</value>
+      <value>PI</value>
+      <value>PJ</value>
+      <value>PK</value>
+      <value>PL</value>
+      <value>PM</value>
+      <value>PN</value>
+      <value>PO</value>
+      <value>PQ</value>
+      <value>PR</value>
+      <value>PS</value>
+      <value>PT</value>
+      <value>PW</value>
+      <value>PX</value>
+      <value>PY</value>
+      <value>PZ</value>
+      <value>RA</value>
+      <value>RB</value>
+      <value>RE</value>
+      <value>RF</value>
+      <value>RH</value>
+      <value>RI</value>
+      <value>RL</value>
+      <value>RM</value>
+      <value>RP</value>
+      <value>RS</value>
+      <value>RV</value>
+      <value>RW</value>
+      <value>SB</value>
+      <value>SE</value>
+      <value>SF</value>
+      <value>SG</value>
+      <value>SI</value>
+      <value>SK</value>
+      <value>SN</value>
+      <value>SO</value>
+      <value>SR</value>
+      <value>SS</value>
+      <value>ST</value>
+      <value>SU</value>
+      <value>SX</value>
+      <value>SY</value>
+      <value>SZ</value>
+      <value>TC</value>
+      <value>TD</value>
+      <value>TR</value>
+      <value>TS</value>
+      <value>TT</value>
+      <value>UC</value>
+      <value>UD</value>
+      <value>UP</value>
+      <value>VN</value>
+      <value>WD</value>
+      <value>WH</value>
+      <value>WM</value>
+      <value>WS</value>
+      <value>COP</value>
+      <value>CPD</value>
+      <value>DCP</value>
+      <value>TCP</value>
+      <value>UHP</value>
+      <value>WPA</value>
+      <value>ZZZ</value>
+    </enumeration>
+  </elementType>
+  <elementType name="DE3036" code="3036" base="string" maxLength="35"/>
+  <elementType name="DE3039" code="3039" base="string" maxLength="35"/>
+  <elementType name="DE3042" code="3042" base="string" maxLength="35"/>
+  <elementType name="DE3045" code="3045" base="identifier" maxLength="3">
+    <enumeration>
+      <value>1</value>
+    </enumeration>
+  </elementType>
+  <elementType name="DE3055" code="3055" base="identifier" maxLength="3">
+    <enumeration>
+      <value>1</value>
+      <value>2</value>
+      <value>3</value>
+      <value>4</value>
+      <value>5</value>
+      <value>6</value>
+      <value>7</value>
+      <value>8</value>
+      <value>9</value>
+      <value>10</value>
+      <value>11</value>
+      <value>12</value>
+      <value>13</value>
+      <value>14</value>
+      <value>15</value>
+      <value>16</value>
+      <value>17</value>
+      <value>18</value>
+      <value>19</value>
+      <value>20</value>
+      <value>21</value>
+      <value>22</value>
+      <value>23</value>
+      <value>24</value>
+      <value>25</value>
+      <value>26</value>
+      <value>27</value>
+      <value>28</value>
+      <value>29</value>
+      <value>30</value>
+      <value>31</value>
+      <value>32</value>
+      <value>33</value>
+      <value>34</value>
+      <value>35</value>
+      <value>36</value>
+      <value>37</value>
+      <value>38</value>
+      <value>39</value>
+      <value>40</value>
+      <value>41</value>
+      <value>42</value>
+      <value>43</value>
+      <value>44</value>
+      <value>45</value>
+      <value>46</value>
+      <value>47</value>
+      <value>48</value>
+      <value>49</value>
+      <value>50</value>
+      <value>51</value>
+      <value>52</value>
+      <value>53</value>
+      <value>54</value>
+      <value>55</value>
+      <value>56</value>
+      <value>57</value>
+      <value>58</value>
+      <value>59</value>
+      <value>86</value>
+      <value>87</value>
+      <value>88</value>
+      <value>89</value>
+      <value>90</value>
+      <value>91</value>
+      <value>92</value>
+      <value>93</value>
+      <value>94</value>
+      <value>95</value>
+      <value>96</value>
+      <value>97</value>
+      <value>98</value>
+      <value>99</value>
+      <value>100</value>
+      <value>101</value>
+      <value>102</value>
+      <value>103</value>
+      <value>104</value>
+      <value>105</value>
+      <value>106</value>
+      <value>107</value>
+      <value>108</value>
+      <value>109</value>
+      <value>110</value>
+      <value>111</value>
+      <value>112</value>
+      <value>113</value>
+      <value>114</value>
+      <value>115</value>
+      <value>116</value>
+      <value>117</value>
+      <value>118</value>
+      <value>119</value>
+      <value>120</value>
+      <value>121</value>
+      <value>122</value>
+      <value>123</value>
+      <value>124</value>
+      <value>125</value>
+      <value>126</value>
+      <value>128</value>
+      <value>129</value>
+      <value>130</value>
+      <value>131</value>
+      <value>132</value>
+      <value>133</value>
+      <value>134</value>
+      <value>135</value>
+      <value>136</value>
+      <value>137</value>
+      <value>138</value>
+      <value>139</value>
+      <value>140</value>
+      <value>141</value>
+      <value>142</value>
+      <value>143</value>
+      <value>144</value>
+      <value>145</value>
+      <value>146</value>
+      <value>147</value>
+      <value>148</value>
+      <value>149</value>
+      <value>150</value>
+      <value>151</value>
+      <value>152</value>
+      <value>153</value>
+      <value>154</value>
+      <value>155</value>
+      <value>156</value>
+      <value>157</value>
+      <value>158</value>
+      <value>159</value>
+      <value>160</value>
+      <value>161</value>
+      <value>162</value>
+      <value>163</value>
+      <value>164</value>
+      <value>165</value>
+      <value>166</value>
+      <value>167</value>
+      <value>168</value>
+      <value>169</value>
+      <value>170</value>
+      <value>171</value>
+      <value>172</value>
+      <value>173</value>
+      <value>174</value>
+      <value>175</value>
+      <value>176</value>
+      <value>177</value>
+      <value>178</value>
+      <value>179</value>
+      <value>181</value>
+      <value>182</value>
+      <value>183</value>
+      <value>184</value>
+      <value>ZZZ</value>
+    </enumeration>
+  </elementType>
+  <elementType name="DE3124" code="3124" base="string" maxLength="35"/>
+  <elementType name="DE3127" code="3127" base="string" maxLength="17"/>
+  <elementType name="DE3128" code="3128" base="string" maxLength="35"/>
+  <elementType name="DE3164" code="3164" base="string" maxLength="35"/>
+  <elementType name="DE3207" code="3207" base="string" maxLength="3"/>
+  <elementType name="DE3222" code="3222" base="string" maxLength="70"/>
+  <elementType name="DE3223" code="3223" base="string" maxLength="25"/>
+  <elementType name="DE3224" code="3224" base="string" maxLength="17"/>
+  <elementType name="DE3225" code="3225" base="string" maxLength="25"/>
+  <elementType name="DE3227" code="3227" base="identifier" maxLength="3">
+    <enumeration>
+      <value>1</value>
+      <value>2</value>
+      <value>4</value>
+      <value>5</value>
+      <value>7</value>
+      <value>8</value>
+      <value>9</value>
+      <value>10</value>
+      <value>11</value>
+      <value>12</value>
+      <value>13</value>
+      <value>14</value>
+      <value>15</value>
+      <value>16</value>
+      <value>17</value>
+      <value>18</value>
+      <value>19</value>
+      <value>20</value>
+      <value>21</value>
+      <value>22</value>
+      <value>23</value>
+      <value>24</value>
+      <value>25</value>
+      <value>26</value>
+      <value>27</value>
+      <value>28</value>
+      <value>29</value>
+      <value>30</value>
+      <value>31</value>
+      <value>32</value>
+      <value>33</value>
+      <value>34</value>
+      <value>35</value>
+      <value>36</value>
+      <value>37</value>
+      <value>38</value>
+      <value>39</value>
+      <value>40</value>
+      <value>41</value>
+      <value>42</value>
+      <value>43</value>
+      <value>44</value>
+      <value>45</value>
+      <value>46</value>
+      <value>47</value>
+      <value>48</value>
+      <value>49</value>
+      <value>50</value>
+      <value>51</value>
+      <value>52</value>
+      <value>53</value>
+      <value>54</value>
+      <value>55</value>
+      <value>56</value>
+      <value>57</value>
+      <value>58</value>
+      <value>60</value>
+      <value>61</value>
+      <value>62</value>
+      <value>64</value>
+      <value>66</value>
+      <value>67</value>
+      <value>68</value>
+      <value>69</value>
+      <value>70</value>
+      <value>71</value>
+      <value>72</value>
+      <value>73</value>
+      <value>74</value>
+      <value>75</value>
+      <value>76</value>
+      <value>77</value>
+      <value>78</value>
+      <value>79</value>
+      <value>80</value>
+      <value>81</value>
+      <value>82</value>
+      <value>83</value>
+      <value>84</value>
+      <value>85</value>
+      <value>86</value>
+      <value>87</value>
+      <value>88</value>
+      <value>89</value>
+      <value>90</value>
+      <value>91</value>
+      <value>92</value>
+      <value>93</value>
+      <value>96</value>
+      <value>97</value>
+      <value>98</value>
+      <value>99</value>
+      <value>100</value>
+      <value>101</value>
+      <value>102</value>
+      <value>103</value>
+      <value>104</value>
+      <value>105</value>
+      <value>106</value>
+      <value>107</value>
+      <value>108</value>
+      <value>109</value>
+      <value>110</value>
+      <value>111</value>
+      <value>113</value>
+      <value>114</value>
+      <value>115</value>
+      <value>116</value>
+      <value>118</value>
+      <value>119</value>
+      <value>120</value>
+      <value>121</value>
+      <value>122</value>
+      <value>123</value>
+      <value>124</value>
+      <value>125</value>
+      <value>126</value>
+      <value>127</value>
+      <value>128</value>
+      <value>129</value>
+      <value>130</value>
+      <value>131</value>
+      <value>132</value>
+      <value>133</value>
+      <value>134</value>
+      <value>135</value>
+      <value>136</value>
+      <value>137</value>
+      <value>138</value>
+      <value>139</value>
+      <value>140</value>
+      <value>141</value>
+      <value>142</value>
+      <value>143</value>
+      <value>144</value>
+      <value>145</value>
+      <value>146</value>
+      <value>147</value>
+      <value>148</value>
+      <value>149</value>
+      <value>151</value>
+      <value>152</value>
+      <value>153</value>
+      <value>154</value>
+      <value>155</value>
+      <value>156</value>
+      <value>157</value>
+      <value>158</value>
+      <value>159</value>
+      <value>160</value>
+      <value>161</value>
+      <value>ZZZ</value>
+    </enumeration>
+  </elementType>
+  <elementType name="DE3229" code="3229" base="string" maxLength="9"/>
+  <elementType name="DE3232" code="3232" base="string" maxLength="70"/>
+  <elementType name="DE3233" code="3233" base="string" maxLength="25"/>
+  <elementType name="DE3251" code="3251" base="string" maxLength="9"/>
+  <elementType name="DE3453" code="3453" base="string" maxLength="3"/>
+  <elementType name="DE4000" code="4000" base="string" maxLength="35"/>
+  <elementType name="DE4343" code="4343" base="identifier" maxLength="3">
+    <enumeration>
+      <value>AA</value>
+      <value>AB</value>
+      <value>AC</value>
+      <value>AD</value>
+      <value>AF</value>
+      <value>AG</value>
+      <value>AP</value>
+      <value>CA</value>
+      <value>CO</value>
+      <value>NA</value>
+      <value>RE</value>
+    </enumeration>
+  </elementType>
+  <elementType name="DE4440" code="4440" base="string" maxLength="70"/>
+  <elementType name="DE4441" code="4441" base="string" maxLength="3"/>
+  <elementType name="DE4451" code="4451" base="string" maxLength="3"/>
+  <elementType name="DE4453" code="4453" base="string" maxLength="3"/>
+  <elementType name="DE5479" code="5479" base="string" maxLength="3"/>
+  <elementType name="DE6008" code="6008" base="decimal" maxLength="15"/>
+  <elementType name="DE6140" code="6140" base="decimal" maxLength="15"/>
+  <elementType name="DE6145" code="6145" base="string" maxLength="3"/>
+  <elementType name="DE6152" code="6152" base="decimal" maxLength="18"/>
+  <elementType name="DE6154" code="6154" base="string" maxLength="70"/>
+  <elementType name="DE6155" code="6155" base="string" maxLength="3"/>
+  <elementType name="DE6162" code="6162" base="decimal" maxLength="18"/>
+  <elementType name="DE6167" code="6167" base="string" maxLength="3"/>
+  <elementType name="DE6168" code="6168" base="decimal" maxLength="15"/>
+  <elementType name="DE6245" code="6245" base="string" maxLength="3"/>
+  <elementType name="DE6246" code="6246" base="decimal" minLength="3" maxLength="3"/>
+  <elementType name="DE6311" code="6311" base="string" maxLength="3"/>
+  <elementType name="DE6313" code="6313" base="string" maxLength="3"/>
+  <elementType name="DE6314" code="6314" base="decimal" maxLength="18"/>
+  <elementType name="DE6321" code="6321" base="string" maxLength="3"/>
+  <elementType name="DE6411" code="6411" base="string" maxLength="3"/>
+  <elementType name="DE6432" code="6432" base="decimal" maxLength="2"/>
+  <elementType name="DE7064" code="7064" base="string" maxLength="35"/>
+  <elementType name="DE7065" code="7065" base="string" maxLength="17"/>
+  <elementType name="DE7085" code="7085" base="string" maxLength="3"/>
+  <elementType name="DE7088" code="7088" base="string" maxLength="8"/>
+  <elementType name="DE7106" code="7106" base="decimal" minLength="3" maxLength="3"/>
+  <elementType name="DE7124" code="7124" base="decimal" minLength="4" maxLength="4"/>
+  <elementType name="DE7130" code="7130" base="string" maxLength="17"/>
+  <elementType name="DE7383" code="7383" base="string" maxLength="3"/>
+  <elementType name="DE8028" code="8028" base="string" maxLength="17"/>
+  <elementType name="DE8051" code="8051" base="string" maxLength="3"/>
+  <elementType name="DE8053" code="8053" base="string" maxLength="3"/>
+  <elementType name="DE8066" code="8066" base="string" maxLength="17"/>
+  <elementType name="DE8067" code="8067" base="string" maxLength="3"/>
+  <elementType name="DE8077" code="8077" base="string" maxLength="3"/>
+  <elementType name="DE8078" code="8078" base="string" maxLength="7"/>
+  <elementType name="DE8092" code="8092" base="string" maxLength="10"/>
+  <elementType name="DE8101" code="8101" base="string" maxLength="3"/>
+  <elementType name="DE8126" code="8126" base="string" maxLength="10"/>
+  <elementType name="DE8154" code="8154" base="string" maxLength="35"/>
+  <elementType name="DE8155" code="8155" base="string" maxLength="10"/>
+  <elementType name="DE8158" code="8158" base="string" maxLength="4"/>
+  <elementType name="DE8169" code="8169" base="string" maxLength="3"/>
+  <elementType name="DE8178" code="8178" base="string" maxLength="17"/>
+  <elementType name="DE8179" code="8179" base="string" maxLength="8"/>
+  <elementType name="DE8186" code="8186" base="string" minLength="4" maxLength="4"/>
+  <elementType name="DE8211" code="8211" base="string" maxLength="3"/>
+  <elementType name="DE8212" code="8212" base="string" maxLength="35"/>
+  <elementType name="DE8213" code="8213" base="string" maxLength="9"/>
+  <elementType name="DE8246" code="8246" base="string" maxLength="4"/>
+  <elementType name="DE8249" code="8249" base="string" maxLength="3"/>
+  <elementType name="DE8255" code="8255" base="string" maxLength="3"/>
+  <elementType name="DE8260" code="8260" base="string" maxLength="17"/>
+  <elementType name="DE8273" code="8273" base="string" maxLength="3"/>
+  <elementType name="DE8281" code="8281" base="string" maxLength="3"/>
+  <elementType name="DE8325" code="8325" base="string" maxLength="3"/>
+  <elementType name="DE8339" code="8339" base="string" maxLength="3"/>
+  <elementType name="DE8351" code="8351" base="string" maxLength="7"/>
+  <elementType name="DE8364" code="8364" base="string" maxLength="6"/>
+  <elementType name="DE8410" code="8410" base="string" maxLength="4"/>
+  <elementType name="DE8453" code="8453" base="string" maxLength="3"/>
+  <elementType name="DE8457" code="8457" base="string" maxLength="3"/>
+  <elementType name="DE8459" code="8459" base="string" maxLength="3"/>
+  <compositeType name="CEC002">
+    <sequence>
+      <element type="DE1001"/>
+      <element type="DE1131"/>
+      <element type="DE3055"/>
+      <element type="DE1000"/>
+    </sequence>
+  </compositeType>
+  <compositeType name="CEC040">
+    <sequence>
+      <element type="DE3127"/>
+      <element type="DE1131"/>
+      <element type="DE3055"/>
+      <element type="DE3128"/>
+    </sequence>
+  </compositeType>
+  <compositeType name="CEC058">
+    <sequence>
+      <element type="DE3124" minOccurs="1"/>
+      <element type="DE3124"/>
+      <element type="DE3124"/>
+      <element type="DE3124"/>
+      <element type="DE3124"/>
+    </sequence>
+  </compositeType>
+  <compositeType name="CEC059">
+    <sequence>
+      <element type="DE3042" minOccurs="1"/>
+      <element type="DE3042"/>
+      <element type="DE3042"/>
+    </sequence>
+  </compositeType>
+  <compositeType name="CEC080">
+    <sequence>
+      <element type="DE3036" minOccurs="1"/>
+      <element type="DE3036"/>
+      <element type="DE3036"/>
+      <element type="DE3036"/>
+      <element type="DE3036"/>
+      <element type="DE3045"/>
+    </sequence>
+  </compositeType>
+  <compositeType name="CEC082">
+    <sequence>
+      <element type="DE3039" minOccurs="1"/>
+      <element type="DE1131"/>
+      <element type="DE3055"/>
+    </sequence>
+  </compositeType>
+  <compositeType name="CEC107">
+    <sequence>
+      <element type="DE4441" minOccurs="1"/>
+      <element type="DE1131"/>
+      <element type="DE3055"/>
+    </sequence>
+  </compositeType>
+  <compositeType name="CEC108">
+    <sequence>
+      <element type="DE4440" minOccurs="1"/>
+      <element type="DE4440"/>
+      <element type="DE4440"/>
+      <element type="DE4440"/>
+      <element type="DE4440"/>
+    </sequence>
+  </compositeType>
+  <compositeType name="CEC174">
+    <sequence>
+      <element type="DE6411" minOccurs="1"/>
+      <element type="DE6314"/>
+      <element type="DE6162"/>
+      <element type="DE6152"/>
+      <element type="DE6432"/>
+    </sequence>
+  </compositeType>
+  <compositeType name="CEC205">
+    <sequence>
+      <element type="DE8351" minOccurs="1"/>
+      <element type="DE8078"/>
+      <element type="DE8092"/>
+    </sequence>
+  </compositeType>
+  <compositeType name="CEC211">
+    <sequence>
+      <element type="DE6411" minOccurs="1"/>
+      <element type="DE6168"/>
+      <element type="DE6140"/>
+      <element type="DE6008"/>
+    </sequence>
+  </compositeType>
+  <compositeType name="CEC213">
+    <sequence>
+      <element type="DE7065"/>
+      <element type="DE1131"/>
+      <element type="DE3055"/>
+      <element type="DE7064"/>
+    </sequence>
+  </compositeType>
+  <compositeType name="CEC220">
+    <sequence>
+      <element type="DE8067"/>
+      <element type="DE8066"/>
+    </sequence>
+  </compositeType>
+  <compositeType name="CEC222">
+    <sequence>
+      <element type="DE8213"/>
+      <element type="DE1131"/>
+      <element type="DE3055"/>
+      <element type="DE8212"/>
+      <element type="DE8453"/>
+    </sequence>
+  </compositeType>
+  <compositeType name="CEC223">
+    <sequence>
+      <element type="DE7106"/>
+      <element type="DE6411"/>
+    </sequence>
+  </compositeType>
+  <compositeType name="CEC224">
+    <sequence>
+      <element type="DE8155"/>
+      <element type="DE1131"/>
+      <element type="DE3055"/>
+      <element type="DE8154"/>
+    </sequence>
+  </compositeType>
+  <compositeType name="CEC228">
+    <sequence>
+      <element type="DE8179"/>
+      <element type="DE8178"/>
+    </sequence>
+  </compositeType>
+  <compositeType name="CEC234">
+    <sequence>
+      <element type="DE7124"/>
+      <element type="DE7088"/>
+    </sequence>
+  </compositeType>
+  <compositeType name="CEC235">
+    <sequence>
+      <element type="DE8158"/>
+      <element type="DE8186"/>
+    </sequence>
+  </compositeType>
+  <compositeType name="CEC236">
+    <sequence>
+      <element type="DE8246"/>
+      <element type="DE8246"/>
+      <element type="DE8246"/>
+    </sequence>
+  </compositeType>
+  <compositeType name="CEC237">
+    <sequence>
+      <element type="DE8260"/>
+      <element type="DE1131"/>
+      <element type="DE3055"/>
+      <element type="DE3207"/>
+    </sequence>
+  </compositeType>
+  <compositeType name="CEC239">
+    <sequence>
+      <element type="DE6246"/>
+      <element type="DE6411"/>
+    </sequence>
+  </compositeType>
+  <compositeType name="CEC280">
+    <sequence>
+      <element type="DE6411" minOccurs="1"/>
+      <element type="DE6162"/>
+      <element type="DE6152"/>
+    </sequence>
+  </compositeType>
+  <compositeType name="CEC401">
+    <sequence>
+      <element type="DE8457" minOccurs="1"/>
+      <element type="DE8459" minOccurs="1"/>
+      <element type="DE7130"/>
+    </sequence>
+  </compositeType>
+  <compositeType name="CEC502">
+    <sequence>
+      <element type="DE6313"/>
+      <element type="DE6321"/>
+      <element type="DE6155"/>
+      <element type="DE6154"/>
+    </sequence>
+  </compositeType>
+  <compositeType name="CEC506">
+    <sequence>
+      <element type="DE1153" minOccurs="1"/>
+      <element type="DE1154"/>
+      <element type="DE1156"/>
+      <element type="DE4000"/>
+    </sequence>
+  </compositeType>
+  <compositeType name="CEC507">
+    <sequence>
+      <element type="DE2005" minOccurs="1"/>
+      <element type="DE2380"/>
+      <element type="DE2379"/>
+    </sequence>
+  </compositeType>
+  <compositeType name="CEC517">
+    <sequence>
+      <element type="DE3225"/>
+      <element type="DE1131"/>
+      <element type="DE3055"/>
+      <element type="DE3224"/>
+    </sequence>
+  </compositeType>
+  <compositeType name="CEC519">
+    <sequence>
+      <element type="DE3223"/>
+      <element type="DE1131"/>
+      <element type="DE3055"/>
+      <element type="DE3222"/>
+    </sequence>
+  </compositeType>
+  <compositeType name="CEC553">
+    <sequence>
+      <element type="DE3233"/>
+      <element type="DE1131"/>
+      <element type="DE3055"/>
+      <element type="DE3232"/>
+    </sequence>
+  </compositeType>
+  <compositeType name="CEC703">
+    <sequence>
+      <element type="DE7085" minOccurs="1"/>
+      <element type="DE1131"/>
+      <element type="DE3055"/>
+    </sequence>
+  </compositeType>
+  <segmentType name="BGM">
+    <sequence>
+      <composite type="CEC002"/>
+      <element type="DE1004"/>
+      <element type="DE1225"/>
+      <element type="DE4343"/>
+    </sequence>
+  </segmentType>
+  <segmentType name="DGS">
+    <sequence>
+      <element type="DE8273"/>
+      <composite type="CEC205"/>
+      <composite type="CEC234"/>
+      <composite type="CEC223"/>
+      <element type="DE8339"/>
+      <element type="DE8364"/>
+      <element type="DE8410"/>
+      <element type="DE8126"/>
+      <composite type="CEC235"/>
+      <composite type="CEC236"/>
+      <element type="DE8255"/>
+      <element type="DE8325"/>
+      <element type="DE8211"/>
+    </sequence>
+  </segmentType>
+  <segmentType name="DIM">
+    <sequence>
+      <element type="DE6145" minOccurs="1"/>
+      <composite type="CEC211" minOccurs="1"/>
+    </sequence>
+  </segmentType>
+  <segmentType name="DTM">
+    <sequence>
+      <composite type="CEC507" minOccurs="1"/>
+    </sequence>
+  </segmentType>
+  <segmentType name="EQA">
+    <sequence>
+      <element type="DE8053" minOccurs="1"/>
+      <composite type="CEC237"/>
+    </sequence>
+  </segmentType>
+  <segmentType name="EQD">
+    <sequence>
+      <element type="DE8053" minOccurs="1"/>
+      <composite type="CEC237"/>
+      <composite type="CEC224"/>
+      <element type="DE8077"/>
+      <element type="DE8249"/>
+      <element type="DE8169"/>
+    </sequence>
+  </segmentType>
+  <segmentType name="FTX">
+    <sequence>
+      <element type="DE4451" minOccurs="1"/>
+      <element type="DE4453"/>
+      <composite type="CEC107"/>
+      <composite type="CEC108"/>
+      <element type="DE3453"/>
+    </sequence>
+  </segmentType>
+  <segmentType name="GDS">
+    <sequence>
+      <composite type="CEC703"/>
+    </sequence>
+  </segmentType>
+  <segmentType name="GID">
+    <sequence>
+      <element type="DE1496"/>
+      <composite type="CEC213"/>
+      <composite type="CEC213"/>
+      <composite type="CEC213"/>
+    </sequence>
+  </segmentType>
+  <segmentType name="LOC">
+    <sequence>
+      <element type="DE3227" minOccurs="1"/>
+      <composite type="CEC517"/>
+      <composite type="CEC519"/>
+      <composite type="CEC553"/>
+      <element type="DE5479"/>
+    </sequence>
+  </segmentType>
+  <segmentType name="MEA">
+    <sequence>
+      <element type="DE6311" minOccurs="1"/>
+      <composite type="CEC502"/>
+      <composite type="CEC174"/>
+      <element type="DE7383"/>
+    </sequence>
+  </segmentType>
+  <segmentType name="NAD">
+    <sequence>
+      <element type="DE3035" minOccurs="1"/>
+      <composite type="CEC082"/>
+      <composite type="CEC058"/>
+      <composite type="CEC080"/>
+      <composite type="CEC059"/>
+      <element type="DE3164"/>
+      <element type="DE3229"/>
+      <element type="DE3251"/>
+      <element type="DE3207"/>
+    </sequence>
+  </segmentType>
+  <segmentType name="RFF">
+    <sequence>
+      <composite type="CEC506" minOccurs="1"/>
+    </sequence>
+  </segmentType>
+  <segmentType name="RNG">
+    <sequence>
+      <element type="DE6167" minOccurs="1"/>
+      <composite type="CEC280"/>
+    </sequence>
+  </segmentType>
+  <segmentType name="TDT">
+    <sequence>
+      <element type="DE8051" minOccurs="1"/>
+      <element type="DE8028"/>
+      <composite type="CEC220"/>
+      <composite type="CEC228"/>
+      <composite type="CEC040"/>
+      <element type="DE8101"/>
+      <composite type="CEC401"/>
+      <composite type="CEC222"/>
+      <element type="DE8281"/>
+    </sequence>
+  </segmentType>
+  <segmentType name="TMP">
+    <sequence>
+      <element type="DE6245" minOccurs="1"/>
+      <composite type="CEC239"/>
+    </sequence>
+  </segmentType>
+</schema>

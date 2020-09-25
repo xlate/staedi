@@ -131,6 +131,13 @@ public class Validator {
             standard = UsageNode.getFirstChild(root);
             impl = UsageNode.getFirstChild(implRoot);
         }
+
+        UsageCursor copy() {
+            UsageCursor copy = new UsageCursor();
+            copy.standard = this.standard;
+            copy.impl = this.impl;
+            return copy;
+        }
     }
 
     static class RevalidationNode {
@@ -405,6 +412,7 @@ public class Validator {
         clearElements();
 
         final int startDepth = this.depth;
+        UsageCursor startLoop = null;
 
         cursor.standard = correctSegment;
         cursor.impl = implNode;
@@ -430,13 +438,15 @@ public class Validator {
                     // Advance to the next segment in the loop
                     cursor.next(nextImpl); // Impl node may be unchanged
                 } else {
-                    // End of the loop - check if the segment appears earlier in the loop
-                    handled = checkPeerSegments(tag, cursor.standard, startDepth, handler);
-
-                    if (!handled) {
-                        // Determine if the segment is in a loop higher in the tree or in the transaction whatsoever
-                        handled = checkParents(cursor, tag, startDepth, handler);
+                    if (startLoop == null) {
+                        /*
+                         * Remember the position of the last known loop's segment in case
+                         * the segment being validated is an earlier sibling that is out of
+                         * proper sequence.
+                         */
+                        startLoop = cursor.copy();
                     }
+                    handled = handleLoopEnd(cursor, startLoop, tag, startDepth, handler);
                 }
             }
         }
@@ -620,10 +630,35 @@ public class Validator {
         return true;
     }
 
-    boolean checkPeerSegments(CharSequence tag, UsageNode current, int startDepth, ValidationEventHandler handler) {
+    boolean handleLoopEnd(UsageCursor cursor, UsageCursor startLoop, CharSequence tag, int startDepth, ValidationEventHandler handler) {
+        boolean handled;
+
+        if (depth > 1) {
+            // Determine if the segment is in a loop higher in the tree
+            cursor.nagivateUp(this.depth);
+            this.depth--;
+            handled = false;
+        } else {
+            // End of the loop - check if the segment appears earlier in the loop
+            handled = checkPeerSegments(tag, startLoop.standard, handler);
+
+            if (handled) {
+                // Found the segment among the last known segment's peers so reset the depth
+                this.depth = startDepth;
+            } else {
+                // Determine if the segment is in the transaction whatsoever
+                cursor.reset(this.root, this.implRoot);
+                handled = checkUnexpectedSegment(tag, cursor.standard, startDepth, handler);
+            }
+        }
+
+        return handled;
+    }
+
+    boolean checkPeerSegments(CharSequence tag, UsageNode current, ValidationEventHandler handler) {
         boolean handled = false;
 
-        if (this.depth == startDepth && current != correctSegment) {
+        if (current != correctSegment) {
             /*
              * End of the loop; try to see if we can find the segment among
              * the siblings of the last good segment. If the last good
@@ -647,20 +682,6 @@ public class Validator {
                 segment = next;
                 handled = true;
             }
-        }
-
-        return handled;
-    }
-
-    boolean checkParents(UsageCursor cursor, CharSequence tag, int startDepth, ValidationEventHandler handler) {
-        boolean handled = false;
-
-        if (this.depth > 1) {
-            cursor.nagivateUp(this.depth);
-            this.depth--;
-        } else {
-            cursor.reset(this.root, this.implRoot);
-            handled = checkUnexpectedSegment(tag, cursor.standard, startDepth, handler);
         }
 
         return handled;
