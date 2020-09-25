@@ -46,6 +46,7 @@ class SegmentValidationTest {
             switch (reader.getEventType()) {
             case START_TRANSACTION:
             case SEGMENT_ERROR:
+            case ELEMENT_OCCURRENCE_ERROR:
                 return true;
             default:
                 return false;
