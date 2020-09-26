@@ -567,6 +567,11 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
             throw new IllegalStateException();
         }
 
+        if (LEVEL_ELEMENT == level) {
+            // Level is LEVEL_ELEMENT only for the first component
+            validateCompositeOccurrence();
+        }
+
         if (LEVEL_COMPOSITE == level && !emptyElementTruncation) {
             write(this.componentElementSeparator);
         }
@@ -862,6 +867,30 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         if (validator != null) {
             errors.clear();
             command.accept(validator);
+
+            if (!errors.isEmpty()) {
+                throw validationExceptionChain(errors);
+            }
+        }
+    }
+
+    private void validateCompositeOccurrence() {
+        final Validator validator = validator();
+
+        if (validator != null) {
+            errors.clear();
+
+            if (!validator.validCompositeOccurrences(dialect, location)) {
+                for (UsageError error : validator.getElementErrors()) {
+                    elementError(error.getError().getCategory(),
+                                 error.getError(),
+                                 error.getTypeReference(),
+                                 "",
+                                 location.getElementPosition(),
+                                 location.getComponentPosition(),
+                                 location.getElementOccurrence());
+                }
+            }
 
             if (!errors.isEmpty()) {
                 throw validationExceptionChain(errors);
