@@ -15,6 +15,7 @@
  ******************************************************************************/
 package io.xlate.edi.internal.stream;
 
+import static io.xlate.edi.test.StaEDITestUtil.write;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -30,6 +31,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -1507,7 +1510,7 @@ class StaEDIStreamWriterTest {
                         Schema transaction;
                         if (!schemas.containsKey(elements.get(0))) {
                             transaction = schemaFactory.createSchema(getClass().getResource("/x12/EDISchema" + elements.get(0)
-                            + ".xml"));
+                                    + ".xml"));
                             schemas.put(elements.get(0), transaction);
                         } else {
                             transaction = schemas.get(elements.get(0));
@@ -2031,5 +2034,67 @@ class StaEDIStreamWriterTest {
 
         assertEquals(106, segment.length());
         assertEquals(TEST_HEADER_X12, segment);
+    }
+
+    @Test
+    void testOutputCompositeMissingSyntax() throws Exception {
+        final String[] VERSION = { "UNOA", "4", "", "", "02" };
+        final String[] NOW = DateTimeFormatter.ofPattern("yyyyMMdd,HHmm").format(LocalDateTime.now()).split(",");
+        EDIOutputFactory factory = EDIOutputFactory.newFactory();
+        factory.setProperty(EDIOutputFactory.FORMAT_ELEMENTS, true);
+
+        ByteArrayOutputStream stream = new ByteArrayOutputStream(4096);
+        EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
+
+        Schema control = SchemaFactory.newFactory().getControlSchema("EDIFACT", VERSION);
+        writer.setControlSchema(control);
+
+        Schema message = SchemaFactory.newFactory().createSchema(getClass().getResource("/EDIFACT/CONTRL-v4r02.xml"));
+        writer.setTransactionSchema(message);
+
+        writer.startInterchange();
+        write(writer, "UNB", VERSION, "SENDER", "RECEIVER", NOW, "1");
+        write(writer, "UNH", "1", new String[] { "CONTRL", "4", "2", "UN" });
+        write(writer, "UCI", "1", "SENDER", "RECEIVER", "7");
+
+        writer.writeStartSegment("UCM").writeElement("1");
+        EDIValidationException thrown = assertThrows(EDIValidationException.class, () -> writer.writeEndSegment());
+        EDIStreamValidationError error = thrown.getError();
+        assertEquals(EDIStreamValidationError.CONDITIONAL_REQUIRED_DATA_ELEMENT_MISSING, error);
+    }
+
+    @Test
+    void testOutputCompositeTooManyRepetitions() throws Exception {
+        final String[] VERSION = { "UNOA", "4", "", "", "02" };
+        final String[] NOW = DateTimeFormatter.ofPattern("yyyyMMdd,HHmm").format(LocalDateTime.now()).split(",");
+        EDIOutputFactory factory = EDIOutputFactory.newFactory();
+        factory.setProperty(EDIOutputFactory.FORMAT_ELEMENTS, true);
+
+        ByteArrayOutputStream stream = new ByteArrayOutputStream(4096);
+        EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
+
+        Schema control = SchemaFactory.newFactory().getControlSchema("EDIFACT", VERSION);
+        writer.setControlSchema(control);
+
+        Schema message = SchemaFactory.newFactory().createSchema(getClass().getResource("/EDIFACT/CONTRL-v4r02.xml"));
+        writer.setTransactionSchema(message);
+
+        writer.startInterchange();
+        write(writer, "UNB", VERSION, "SENDER", "RECEIVER", NOW, "1");
+        write(writer, "UNH", "1", new String[] { "CONTRL", "4", "2", "UN" });
+        write(writer, "UCI", "1", "SENDER", "RECEIVER", "7");
+
+        writer.writeStartSegment("UCM")
+              .writeElement("1")
+              .writeStartElement()
+              .writeComponent("BAPLIE")
+              .writeComponent("D")
+              .writeComponent("95B")
+              .writeComponent("UN")
+              .endElement();
+        writer.writeRepeatElement();
+        EDIValidationException thrown = assertThrows(EDIValidationException.class, () -> writer.writeComponent("ANY"));
+        EDIStreamValidationError error = thrown.getError();
+        assertEquals(EDIStreamValidationError.TOO_MANY_REPETITIONS, error);
     }
 }
