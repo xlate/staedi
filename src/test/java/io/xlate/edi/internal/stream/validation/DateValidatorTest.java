@@ -11,6 +11,8 @@ import java.util.stream.IntStream;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import io.xlate.edi.internal.stream.tokenization.CharacterSet;
 import io.xlate.edi.internal.stream.tokenization.Dialect;
@@ -27,7 +29,8 @@ class DateValidatorTest implements ValueSetTester {
     void setUp() throws EDIException {
         dialect = DialectFactory.getDialect("UNA");
         CharacterSet chars = new CharacterSet();
-        "UNA=*.?^~UNB*UNOA=3*005435656=1*006415160=1*060515=1434*00000000000778~".chars().forEach(c -> dialect.appendHeader(chars, (char) c));
+        "UNA=*.?^~UNB*UNOA=3*005435656=1*006415160=1*060515=1434*00000000000778~".chars()
+                                                                                 .forEach(c -> dialect.appendHeader(chars, (char) c));
     }
 
     @Test
@@ -48,8 +51,12 @@ class DateValidatorTest implements ValueSetTester {
         assertEquals(EDIStreamValidationError.INVALID_DATE, errors.get(1));
     }
 
-    @Test
-    void testValidateInvalidLength() {
+    @ParameterizedTest
+    @ValueSource(
+            strings = { "0901000" /* Length 7 */,
+                        "AAAA0901",
+                        "20001301" /* Invalid month*/ })
+    void testValidateInvalidValues(String param) {
         EDISimpleType element = mock(EDISimpleType.class);
         when(element.getMinLength(anyString())).thenCallRealMethod();
         when(element.getMaxLength(anyString())).thenCallRealMethod();
@@ -60,24 +67,7 @@ class DateValidatorTest implements ValueSetTester {
         when(element.getValueSet()).thenReturn(setOf());
         ElementValidator v = DateValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
-        v.validate(dialect, element, "0901000", errors); // Length 7
-        assertEquals(1, errors.size());
-        assertEquals(EDIStreamValidationError.INVALID_DATE, errors.get(0));
-    }
-
-    @Test
-    void testValidateInvalidValue() {
-        EDISimpleType element = mock(EDISimpleType.class);
-        when(element.getMinLength(anyString())).thenCallRealMethod();
-        when(element.getMaxLength(anyString())).thenCallRealMethod();
-        when(element.getValueSet(anyString())).thenCallRealMethod();
-
-        when(element.getMinLength()).thenReturn(6L);
-        when(element.getMaxLength()).thenReturn(8L);
-        when(element.getValueSet()).thenReturn(setOf());
-        ElementValidator v = DateValidator.getInstance();
-        List<EDIStreamValidationError> errors = new ArrayList<>();
-        v.validate(dialect, element, "AAAA0901", errors);
+        v.validate(dialect, element, param, errors);
         assertEquals(1, errors.size());
         assertEquals(EDIStreamValidationError.INVALID_DATE, errors.get(0));
     }
@@ -167,23 +157,6 @@ class DateValidatorTest implements ValueSetTester {
         v.validate(dialect, element, "19960229", errors);
         assertEquals(0, errors.size());
         v.validate(dialect, element, "19000229", errors);
-        assertEquals(1, errors.size());
-        assertEquals(EDIStreamValidationError.INVALID_DATE, errors.get(0));
-    }
-
-    @Test
-    void testValidateInvalidMonth() {
-        EDISimpleType element = mock(EDISimpleType.class);
-        when(element.getMinLength(anyString())).thenCallRealMethod();
-        when(element.getMaxLength(anyString())).thenCallRealMethod();
-        when(element.getValueSet(anyString())).thenCallRealMethod();
-
-        when(element.getMinLength()).thenReturn(6L);
-        when(element.getMaxLength()).thenReturn(8L);
-        when(element.getValueSet()).thenReturn(setOf());
-        ElementValidator v = DateValidator.getInstance();
-        List<EDIStreamValidationError> errors = new ArrayList<>();
-        v.validate(dialect, element, "20001301", errors);
         assertEquals(1, errors.size());
         assertEquals(EDIStreamValidationError.INVALID_DATE, errors.get(0));
     }
