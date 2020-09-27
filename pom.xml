@@ -52,6 +52,7 @@
     <maven.compiler.target>1.8</maven.compiler.target>
 
     <!-- Sonar settings -->
+    <sonar.projectKey>xlate_staedi</sonar.projectKey>
     <sonar.host.url>https://sonarcloud.io</sonar.host.url>
     <sonar.organization>xlate</sonar.organization>
 
