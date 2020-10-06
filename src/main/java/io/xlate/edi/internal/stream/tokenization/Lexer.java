@@ -62,8 +62,7 @@ public class Lexer {
     private ByteBuffer readByteBuf = ByteBuffer.allocate(4);
 
     private final StaEDIStreamLocation location;
-
-    private CharacterSet characters = new CharacterSet();
+    private final CharacterSet characters;
     private CharBuffer buffer = CharBuffer.allocate(4096);
     private Dialect dialect;
 
@@ -79,7 +78,7 @@ public class Lexer {
     private Notifier en;
     private Notifier bn;
 
-    public Lexer(InputStream stream, Charset charset, EventHandler handler, StaEDIStreamLocation location) {
+    public Lexer(InputStream stream, Charset charset, EventHandler handler, StaEDIStreamLocation location, boolean extraneousIgnored) {
         if (stream.markSupported()) {
             this.stream = stream;
         } else {
@@ -89,6 +88,7 @@ public class Lexer {
         this.decoder = charset.newDecoder();
 
         this.location = location;
+        this.characters = new CharacterSet(extraneousIgnored);
 
         isn = (notifyState, start, length) -> {
             handler.interchangeBegin(dialect);
@@ -206,13 +206,17 @@ public class Lexer {
             case TRAILER_TAG_N:
             case TRAILER_TAG_Z:
             case ELEMENT_DATA:
-            case ELEMENT_INVALID_DATA:
             case TRAILER_ELEMENT_DATA:
                 buffer.put((char) input);
                 break;
-            case HEADER_TAG_1:
-            case HEADER_TAG_2:
-            case HEADER_TAG_3:
+            case ELEMENT_INVALID_DATA:
+                if (!characters.isIgnored(input)) {
+                    buffer.put((char) input);
+                }
+                break;
+            case HEADER_TAG_1: // U - When UNA is present
+            case HEADER_TAG_2: // N - When UNA is present
+            case HEADER_TAG_3: // B - When UNA is present
                 handleStateHeaderTag(input);
                 break;
             case DATA_RELEASE:
@@ -222,6 +226,7 @@ public class Lexer {
                 handleStateElementDataBinary();
                 break;
             case INTERCHANGE_CANDIDATE:
+                // ISA, UNA, or UNB was found
                 handleStateInterchangeCandidate(input);
                 break;
             case HEADER_DATA:
@@ -272,7 +277,9 @@ public class Lexer {
                 eventsReady = nextEvent();
                 break;
             default:
-                if (clazz != CharacterClass.INVALID) {
+                if (characters.isIgnored(input)) {
+                    state = previous;
+                } else if (clazz != CharacterClass.INVALID) {
                     throw invalidStateError();
                 } else {
                     throw error(EDIException.INVALID_CHARACTER);
@@ -380,7 +387,7 @@ public class Lexer {
         case RELEASE_CHARACTER:
             break;
         default:
-            if (dialect.getDecimalMark() != input) {
+            if (dialect.getDecimalMark() != input && !characters.isIgnored(input)) {
                 buffer.put((char) input);
             }
             break;

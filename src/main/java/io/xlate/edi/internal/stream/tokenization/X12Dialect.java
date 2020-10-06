@@ -157,7 +157,16 @@ public class X12Dialect extends Dialect {
                 elementDelimiter = value;
                 characters.setClass(elementDelimiter, CharacterClass.ELEMENT_DELIMITER);
                 break;
+            case X12_REPEAT_OFFSET:
+            case X12_COMPONENT_OFFSET:
+            case X12_SEGMENT_OFFSET:
+                break;
             default:
+                if (characters.isIgnored(value)) {
+                    // Discard control character if not used as a delimiter
+                    index--;
+                    return true;
+                }
                 break;
             }
 
