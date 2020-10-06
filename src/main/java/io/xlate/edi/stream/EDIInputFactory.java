@@ -40,6 +40,14 @@ public abstract class EDIInputFactory extends PropertySupport {
     public static final String XML_DECLARE_TRANSACTION_XMLNS = "io.xlate.edi.stream.XML_DECLARE_TRANSACTION_XMLNS";
 
     /**
+     * When set to true, non-graphical, control characters will be ignored in the EDI
+     * input stream. This includes characters ranging from 0x00 through 0x1F and 0x7F.
+     *
+     * @since 1.13
+     */
+    public static final String EDI_IGNORE_EXTRANEOUS_CHARACTERS = "io.xlate.edi.stream.EDI_IGNORE_EXTRANEOUS_CHARACTERS";
+
+    /**
      * Create a new instance of the factory. This static method creates a new
      * factory instance.
      *

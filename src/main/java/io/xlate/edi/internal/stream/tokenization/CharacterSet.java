@@ -174,10 +174,16 @@ public class CharacterSet {
 
     private final CharacterClass[] list;
     private final Map<Integer, CharacterClass> auxilary;
+    private final boolean extraneousIgnored;
 
     public CharacterSet() {
-        list = Arrays.copyOf(prototype, prototype.length);
-        auxilary = new TreeMap<>();
+        this(false);
+    }
+
+    public CharacterSet(boolean extraneousIgnored) {
+        this.list = Arrays.copyOf(prototype, prototype.length);
+        this.auxilary = new TreeMap<>();
+        this.extraneousIgnored = extraneousIgnored;
     }
 
     public CharacterClass getClass(int character) {
@@ -204,6 +210,17 @@ public class CharacterSet {
         case SEGMENT_DELIMITER:
         case COMPONENT_DELIMITER:
             return true;
+        default:
+            return false;
+        }
+    }
+
+    public boolean isIgnored(int character) {
+        switch (getClass(character)) {
+        case CONTROL:
+        case INVALID:
+        case WHITESPACE:
+            return extraneousIgnored;
         default:
             return false;
         }

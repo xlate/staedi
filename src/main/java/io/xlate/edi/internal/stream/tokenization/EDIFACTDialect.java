@@ -146,17 +146,25 @@ public class EDIFACTDialect extends Dialect {
 
     @Override
     public boolean appendHeader(CharacterSet characters, char value) {
+        boolean proceed = true;
+
         if (++index == 0) {
             header = new StringBuilder();
         }
 
-        header.append(value);
-
         if (UNB.equals(headerTag)) {
-            return processInterchangeHeader(characters, value);
+            if (characters.isIgnored(value)) {
+                index--;
+            } else {
+                header.append(value);
+                proceed = processInterchangeHeader(characters, value);
+            }
+        } else {
+            header.append(value);
+            proceed = processServiceStringAdvice(characters, value);
         }
 
-        return processServiceStringAdvice(characters, value);
+        return proceed;
     }
 
     boolean processInterchangeHeader(CharacterSet characters, char value) {
@@ -177,6 +185,8 @@ public class EDIFACTDialect extends Dialect {
     }
 
     boolean processServiceStringAdvice(CharacterSet characters, char value) {
+        boolean proceed = true;
+
         switch (index) {
         case 3:
             componentDelimiter = value;
@@ -206,10 +216,12 @@ public class EDIFACTDialect extends Dialect {
         }
 
         if (index > EDIFACT_UNA_LENGTH) {
-            if (unbStart > -1 && (index - unbStart) > 3) {
+            if (characters.isIgnored(value)) {
+                header.deleteCharAt(index--);
+            } else if (isIndexBeyondUNBFirstElement()) {
                 if (value == elementDelimiter) {
                     rejected = !initialize(characters);
-                    return isConfirmed();
+                    proceed = isConfirmed();
                 }
             } else if (value == 'B') {
                 CharSequence un = header.subSequence(index - 2, index);
@@ -218,15 +230,23 @@ public class EDIFACTDialect extends Dialect {
                     unbStart = index - 2;
                 } else {
                     // Some other segment / element?
-                    return false;
+                    proceed = false;
                 }
-            } else if (unbStart < 0 && value == elementDelimiter) {
+            } else if (isUnexpectedSegmentDetected(value)) {
                 // Some other segment / element?
-                return false;
+                proceed = false;
             }
         }
 
-        return true;
+        return proceed;
+    }
+
+    boolean isIndexBeyondUNBFirstElement() {
+        return unbStart > -1 && (index - unbStart) > 3;
+    }
+
+    boolean isUnexpectedSegmentDetected(int value) {
+        return unbStart < 0 && value == elementDelimiter;
     }
 
     void setCharacterClass(CharacterSet characters, CharacterClass charClass, char value, boolean allowSpace) {

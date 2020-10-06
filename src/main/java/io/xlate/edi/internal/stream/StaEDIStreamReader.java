@@ -69,7 +69,7 @@ public class StaEDIStreamReader implements EDIStreamReader {
         this.properties = new HashMap<>(properties);
         this.reporter = reporter;
         this.proxy = new ProxyEventHandler(location, this.controlSchema);
-        this.lexer = new Lexer(stream, charset, proxy, location);
+        this.lexer = new Lexer(stream, charset, proxy, location, ignoreExtraneousCharacters());
     }
 
     private void ensureOpen() {
@@ -470,6 +470,10 @@ public class StaEDIStreamReader implements EDIStreamReader {
         }
 
         return getBooleanProperty(EDIInputFactory.EDI_VALIDATE_CONTROL_STRUCTURE, true);
+    }
+
+    boolean ignoreExtraneousCharacters() {
+        return getBooleanProperty(EDIInputFactory.EDI_IGNORE_EXTRANEOUS_CHARACTERS, false);
     }
 
     boolean getBooleanProperty(String propertyName, boolean defaultValue) {
