@@ -53,13 +53,14 @@ public class StaEDIInputFactory extends EDIInputFactory {
 
     @Override
     public EDIStreamReader createEDIStreamReader(InputStream stream, Schema schema) {
+        Objects.requireNonNull(stream, "stream must not be null");
         return new StaEDIStreamReader(stream, StandardCharsets.UTF_8, schema, properties, getErrorReporter());
     }
 
     @SuppressWarnings("resource")
     @Override
     public EDIStreamReader createEDIStreamReader(InputStream stream, String encoding, Schema schema) throws EDIStreamException {
-        Objects.requireNonNull(stream);
+        Objects.requireNonNull(stream, "stream must not be null");
 
         if (Charset.isSupported(encoding)) {
             return new StaEDIStreamReader(stream, Charset.forName(encoding), schema, properties, getErrorReporter());
