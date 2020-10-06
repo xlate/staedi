@@ -148,40 +148,36 @@ public class X12Dialect extends Dialect {
     public boolean appendHeader(CharacterSet characters, char value) {
         index++;
 
-        if (index < X12_ISA_LENGTH) {
-            switch (index) {
-            case 0:
-                header = new char[X12_ISA_LENGTH];
-                break;
-            case X12_ELEMENT_OFFSET:
-                elementDelimiter = value;
-                characters.setClass(elementDelimiter, CharacterClass.ELEMENT_DELIMITER);
-                break;
-            case X12_REPEAT_OFFSET:
-            case X12_COMPONENT_OFFSET:
-            case X12_SEGMENT_OFFSET:
-                break;
-            default:
-                if (characters.isIgnored(value)) {
-                    // Discard control character if not used as a delimiter
-                    index--;
-                    return true;
-                }
-                break;
+        switch (index) {
+        case 0:
+            header = new char[X12_ISA_LENGTH];
+            break;
+        case X12_ELEMENT_OFFSET:
+            elementDelimiter = value;
+            characters.setClass(elementDelimiter, CharacterClass.ELEMENT_DELIMITER);
+            break;
+        case X12_REPEAT_OFFSET:
+        case X12_COMPONENT_OFFSET:
+        case X12_SEGMENT_OFFSET:
+            break;
+        default:
+            if (characters.isIgnored(value)) {
+                // Discard control character if not used as a delimiter
+                index--;
+                return true;
             }
-
-            header[index] = value;
-
-            if (index == X12_ISA_LENGTH - 1) {
-                rejected = !initialize(characters);
-                return isConfirmed();
-            }
-        } else {
-            rejected = true;
-            return false;
+            break;
         }
 
-        return true;
+        header[index] = value;
+        boolean proceed = true;
+
+        if (index == X12_SEGMENT_OFFSET) {
+            rejected = !initialize(characters);
+            proceed = isConfirmed();
+        }
+
+        return proceed;
     }
 
     void clearTransactionVersion() {
