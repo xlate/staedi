@@ -40,8 +40,9 @@ public abstract class EDIInputFactory extends PropertySupport {
     public static final String XML_DECLARE_TRANSACTION_XMLNS = "io.xlate.edi.stream.XML_DECLARE_TRANSACTION_XMLNS";
 
     /**
-     * When set to true, non-graphical, control characters will be ignored in the EDI
-     * input stream. This includes characters ranging from 0x00 through 0x1F and 0x7F.
+     * When set to true, non-graphical, control characters will be ignored in
+     * the EDI input stream. This includes characters ranging from 0x00 through
+     * 0x1F and 0x7F.
      *
      * @since 1.13
      */
@@ -215,6 +216,25 @@ public abstract class EDIInputFactory extends PropertySupport {
      * @see EDINamespaces
      */
     public abstract XMLStreamReader createXMLStreamReader(EDIStreamReader reader) throws XMLStreamException;
+
+    /**
+     * Creates a new JSON parser of type <code>J</code> that uses the given
+     * reader as its data source. The reader should be positioned before the
+     * start of an interchange or at the start of an interchange.
+     *
+     * @param <J>
+     *            the type of the parser being created
+     * @param reader
+     *            the reader to wrap
+     * @param type
+     *            the type of the parser being created
+     * @return a new JSON parser of type <code>J</code>
+     *
+     * @throws IllegalArgumentException when type is an unsupported parser type
+     *
+     * @since 1.14
+     */
+    public abstract <J> J createJsonParser(EDIStreamReader reader, Class<J> type);
 
     /**
      * Retrieves the reporter that will be set on any EDIStreamReader created by

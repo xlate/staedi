@@ -79,6 +79,25 @@ public class StaEDIInputFactory extends EDIInputFactory {
         return new StaEDIXMLStreamReader(reader, properties);
     }
 
+    @SuppressWarnings("unchecked")
+    @Override
+    public <J> J createJsonParser(EDIStreamReader reader, Class<J> type) {
+        final J parser;
+
+        switch (type.getName()) {
+        case "jakarta.json.stream.JsonParser":
+            parser = (J) new StaEDIJakartaJsonParser(reader, properties);
+            break;
+        case "javax.json.stream.JsonParser":
+            parser = (J) new StaEDIJavaxJsonParser(reader, properties);
+            break;
+        default:
+            throw new IllegalArgumentException("Unsupported JSON parser type: " + type);
+        }
+
+        return parser;
+    }
+
     @Override
     public EDIInputErrorReporter getErrorReporter() {
         return reporter;
