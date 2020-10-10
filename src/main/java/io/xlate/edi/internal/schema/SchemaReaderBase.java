@@ -50,6 +50,7 @@ abstract class SchemaReaderBase implements SchemaReader {
 
     static final EDISimpleType ANY_ELEMENT = new ElementType(StaEDISchema.ANY_ELEMENT_ID,
                                                              Base.STRING,
+                                                             -1,
                                                              "ANY",
                                                              0,
                                                              0,
@@ -100,7 +101,7 @@ abstract class SchemaReaderBase implements SchemaReader {
     protected XMLStreamReader reader;
     protected Map<String, Object> properties;
 
-    public SchemaReaderBase(String xmlns, XMLStreamReader reader, Map<String, Object> properties) {
+    protected SchemaReaderBase(String xmlns, XMLStreamReader reader, Map<String, Object> properties) {
         this.xmlns = xmlns;
         qnSchema = new QName(xmlns, "schema");
         qnInclude = new QName(xmlns, "include");
@@ -587,6 +588,7 @@ abstract class SchemaReaderBase implements SchemaReader {
         String name = parseAttribute(reader, "name", String::valueOf);
         String code = parseAttribute(reader, "code", String::valueOf, name);
         Base base = parseAttribute(reader, "base", val -> Base.valueOf(val.toUpperCase()), Base.STRING);
+        int scale = (Base.NUMERIC == base) ? parseAttribute(reader, "scale", Integer::parseInt, 0) : -1;
         int number = parseAttribute(reader, "number", Integer::parseInt, -1);
         long minLength = parseAttribute(reader, "minLength", Long::parseLong, 1L);
         long maxLength = parseAttribute(reader, "maxLength", Long::parseLong, 1L);
@@ -619,7 +621,7 @@ abstract class SchemaReaderBase implements SchemaReader {
             }
         }
 
-        return new ElementType(name, base, code, number, minLength, maxLength, values, versions, title, descr);
+        return new ElementType(name, base, scale, code, number, minLength, maxLength, values, versions, title, descr);
     }
 
     ElementType.Version readSimpleTypeVersion(XMLStreamReader reader) {

@@ -33,6 +33,7 @@ class ElementType extends BasicType implements EDISimpleType {
     private static final String TOSTRING_FORMAT = "id: %s, type: %s, base: %s, code: %s, minLength: %d, maxLength: %d, values: %s";
 
     final Base base;
+    final int scale;
     final String code;
     final int number;
     final long minLength;
@@ -65,9 +66,10 @@ class ElementType extends BasicType implements EDISimpleType {
         }
     }
 
-    ElementType(String id, Base base, String code, int number, long minLength, long maxLength, Set<String> values, List<Version> versions, String title, String description) {
+    ElementType(String id, Base base, int scale, String code, int number, long minLength, long maxLength, Set<String> values, List<Version> versions, String title, String description) {
         super(id, Type.ELEMENT, title, description);
         this.base = base;
+        this.scale = scale;
         this.code = code;
         this.number = number;
         this.minLength = minLength;
@@ -94,6 +96,16 @@ class ElementType extends BasicType implements EDISimpleType {
     @Override
     public Base getBase() {
         return base;
+    }
+
+    @Override
+    public Integer getScale() {
+        if (scale > -1) {
+            return Integer.valueOf(scale);
+        }
+
+        // Use the default value otherwise
+        return EDISimpleType.super.getScale();
     }
 
     @Override

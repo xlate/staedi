@@ -27,6 +27,8 @@ import static org.junit.jupiter.api.Assertions.fail;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -50,8 +52,10 @@ import io.xlate.edi.schema.EDIComplexType;
 import io.xlate.edi.schema.EDIReference;
 import io.xlate.edi.schema.EDISchemaException;
 import io.xlate.edi.schema.EDISimpleType;
+import io.xlate.edi.schema.EDIType;
 import io.xlate.edi.schema.Schema;
 import io.xlate.edi.schema.SchemaFactory;
+import io.xlate.edi.schema.EDIType.Type;
 import io.xlate.edi.stream.EDIInputFactory;
 import io.xlate.edi.stream.EDIStreamConstants.Delimiters;
 import io.xlate.edi.stream.EDIStreamEvent;
@@ -1794,4 +1798,69 @@ class StaEDIStreamReaderTest implements ConstantsTest {
         assertEquals(0, unexpected.size());
     }
 
+    @Test
+    void testDecimalScaleAvailableFromSchema() throws EDISchemaException, IOException {
+        EDIInputFactory factory = EDIInputFactory.newFactory();
+        Schema transSchema = SchemaFactory.newFactory().createSchema(getClass().getResourceAsStream("/x12/EDISchema810.xml"));
+        EDIStreamReader reader = factory.createEDIStreamReader(getClass().getResourceAsStream("/x12/invoice810_po850_dual.edi"));
+        boolean startTx = false;
+        BigDecimal tds01 = null;
+        boolean inTransaction = false;
+
+        try {
+            while (reader.hasNext()) {
+                switch (reader.next()) {
+                case START_TRANSACTION:
+                    inTransaction = true;
+                    startTx = true;
+                    break;
+                case END_TRANSACTION:
+                    inTransaction = false;
+                    break;
+                case ELEMENT_DATA:
+                    Location l = reader.getLocation();
+
+                    if (startTx && l.getElementPosition() == 1) {
+                        if ("810".equals(reader.getText())) {
+                            reader.setTransactionSchema(transSchema);
+                        } else {
+                            reader.setTransactionSchema(null);
+                        }
+                    } else if ("TDS".equals(l.getSegmentTag()) && l.getElementPosition() == 1) {
+                        BigInteger unscaled = new BigInteger(reader.getText());
+                        EDIType tds01Type = reader.getSchemaTypeReference().getReferencedType();
+                        tds01 = new BigDecimal(unscaled, ((EDISimpleType) tds01Type).getScale());
+                    } else if (inTransaction && !reader.getText().isEmpty()) {
+                        // Only check for unexpected scaled numerics within the transaction
+                        EDIReference ref = reader.getSchemaTypeReference();
+                        if (ref != null && ref.getReferencedType().isType(Type.ELEMENT)) {
+                            if (((EDISimpleType) ref.getReferencedType()).getScale() != null) {
+                                // SE01 is an expected N0 element
+                                if (!"SE".equals(l.getSegmentTag()) || l.getElementPosition() != 1) {
+                                    fail("Unexpected non-null scale " + l);
+                                }
+                            }
+                        }
+                    }
+                    break;
+                case END_SEGMENT:
+                    startTx = false;
+                    break;
+                case SEGMENT_ERROR:
+                case ELEMENT_OCCURRENCE_ERROR:
+                case ELEMENT_DATA_ERROR:
+                    fail("Unexpected error condition: " + reader.getErrorType() + " " + reader.getLocation());
+                    break;
+                default:
+                    break;
+                }
+            }
+        } catch (Exception e) {
+            fail("Unexpected exception: " + e.getMessage() + " " + reader.getLocation(), e);
+        } finally {
+            reader.close();
+        }
+
+        assertEquals(new BigDecimal("2554.38"), tds01);
+    }
 }

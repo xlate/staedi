@@ -677,6 +677,15 @@
             </annotation>
           </attribute>
 
+          <attribute name="scale" use="optional" type="nonNegativeInteger" default="0">
+            <annotation>
+              <documentation>
+                For numeric base types only, scale is the number of digits to the right of an implied decimal point. When not specified, the
+                default value of zero is used (i.e. the data type is integer)
+              </documentation>
+            </annotation>
+          </attribute>
+
           <attributeGroup ref="tns:lengthAttributeGroup"/>
         </extension>
       </complexContent>
