@@ -101,7 +101,7 @@ abstract class SchemaReaderBase implements SchemaReader {
     protected XMLStreamReader reader;
     protected Map<String, Object> properties;
 
-    public SchemaReaderBase(String xmlns, XMLStreamReader reader, Map<String, Object> properties) {
+    protected SchemaReaderBase(String xmlns, XMLStreamReader reader, Map<String, Object> properties) {
         this.xmlns = xmlns;
         qnSchema = new QName(xmlns, "schema");
         qnInclude = new QName(xmlns, "include");
