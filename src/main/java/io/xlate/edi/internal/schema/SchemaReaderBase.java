@@ -588,7 +588,7 @@ abstract class SchemaReaderBase implements SchemaReader {
         String name = parseAttribute(reader, "name", String::valueOf);
         String code = parseAttribute(reader, "code", String::valueOf, name);
         Base base = parseAttribute(reader, "base", val -> Base.valueOf(val.toUpperCase()), Base.STRING);
-        int scale = (Base.NUMERIC == base) ? parseAttribute(reader, "scale", Integer::parseInt, -1) : -1;
+        int scale = (Base.NUMERIC == base) ? parseAttribute(reader, "scale", Integer::parseInt, 0) : -1;
         int number = parseAttribute(reader, "number", Integer::parseInt, -1);
         long minLength = parseAttribute(reader, "minLength", Long::parseLong, 1L);
         long maxLength = parseAttribute(reader, "maxLength", Long::parseLong, 1L);

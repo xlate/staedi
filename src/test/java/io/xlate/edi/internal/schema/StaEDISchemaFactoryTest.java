@@ -706,4 +706,15 @@ class StaEDISchemaFactoryTest {
         }
         assertTrue(root instanceof IOException);
     }
+
+    @Test
+    void testControlNumbersHaveZeroScaleByDefault() throws EDISchemaException {
+        SchemaFactory factory = SchemaFactory.newFactory();
+        Schema schema = factory.getControlSchema(Standards.X12, new String[] { "00501" });
+        assertNotNull(schema);
+        // ISA13 = N0
+        assertEquals(Integer.valueOf(0), ((EDISimpleType) ((EDIComplexType) schema.getType("ISA")).getReferences().get(12).getReferencedType()).getScale());
+        // GS06 = N0
+        assertEquals(Integer.valueOf(0), ((EDISimpleType) ((EDIComplexType) schema.getType("GS")).getReferences().get(5).getReferencedType()).getScale());
+    }
 }

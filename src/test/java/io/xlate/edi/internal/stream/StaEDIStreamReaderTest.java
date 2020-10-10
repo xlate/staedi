@@ -1805,12 +1805,17 @@ class StaEDIStreamReaderTest implements ConstantsTest {
         EDIStreamReader reader = factory.createEDIStreamReader(getClass().getResourceAsStream("/x12/invoice810_po850_dual.edi"));
         boolean startTx = false;
         BigDecimal tds01 = null;
+        boolean inTransaction = false;
 
         try {
             while (reader.hasNext()) {
                 switch (reader.next()) {
                 case START_TRANSACTION:
+                    inTransaction = true;
                     startTx = true;
+                    break;
+                case END_TRANSACTION:
+                    inTransaction = false;
                     break;
                 case ELEMENT_DATA:
                     Location l = reader.getLocation();
@@ -1825,11 +1830,15 @@ class StaEDIStreamReaderTest implements ConstantsTest {
                         BigInteger unscaled = new BigInteger(reader.getText());
                         EDIType tds01Type = reader.getSchemaTypeReference().getReferencedType();
                         tds01 = new BigDecimal(unscaled, ((EDISimpleType) tds01Type).getScale());
-                    } else if (!reader.getText().isEmpty()) {
+                    } else if (inTransaction && !reader.getText().isEmpty()) {
+                        // Only check for unexpected scaled numerics within the transaction
                         EDIReference ref = reader.getSchemaTypeReference();
                         if (ref != null && ref.getReferencedType().isType(Type.ELEMENT)) {
                             if (((EDISimpleType) ref.getReferencedType()).getScale() != null) {
-                                fail("Unexpected non-null scale " + l);
+                                // SE01 is an expected N0 element
+                                if (!"SE".equals(l.getSegmentTag()) || l.getElementPosition() != 1) {
+                                    fail("Unexpected non-null scale " + l);
+                                }
                             }
                         }
                     }
