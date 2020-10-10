@@ -35,6 +35,20 @@ public interface EDISimpleType extends EDIType {
     Base getBase();
 
     /**
+     * Returns the <i>scale</i> of this {@code EDISimpleType} when the
+     * <i>base</i> is <i>NUMERIC</i>. The scale is the number of digits to the
+     * right of an implied decimal point.
+     *
+     * @return the scale of this {@code EDISimpleType} if <i>NUMERIC</i>,
+     *         otherwise null.
+     *
+     * @since 1.13
+     */
+    default Integer getScale() {
+        return null;
+    }
+
+    /**
      * Returns true if this element has additional version(s) defined beyond the
      * default. Versions may be used to specify different minimum/maximum length
      * restrictions or enumerated values that only apply to specific versions a

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<schema xmlns="http://xlate.io/EDISchema/v3">
+<schema xmlns="http://xlate.io/EDISchema/v4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://xlate.io/EDISchema/v4 https://www.xlate.io/EDISchema/EDISchema-v4.xsd">
     <!-- Version 004010 -->
     <transaction>
         <sequence>
@@ -331,9 +331,9 @@
     <elementType name="ITD05" base="decimal" maxLength="3"/>
     <elementType name="ITD06" base="date" minLength="8" maxLength="8"/>
     <elementType name="ITD07" base="decimal" maxLength="3"/>
-    <elementType name="ITD08" base="numeric" maxLength="10"/>
+    <elementType name="ITD08" base="numeric" scale="2" maxLength="10"/>
     <elementType name="ITD09" base="date" minLength="8" maxLength="8"/>
-    <elementType name="ITD10" base="numeric" maxLength="10"/>
+    <elementType name="ITD10" base="numeric" scale="2" maxLength="10"/>
     <elementType name="ITD11" base="decimal" maxLength="5"/>
     <elementType name="ITD12" base="string" maxLength="80"/>
     <elementType name="ITD13" base="decimal" maxLength="2"/>
@@ -539,7 +539,7 @@
     <elementType name="SAC02" base="string" minLength="4" maxLength="4"/>
     <elementType name="SAC03" base="string" minLength="2" maxLength="2"/>
     <elementType name="SAC04" base="string" maxLength="10"/>
-    <elementType name="SAC05" base="numeric" maxLength="15"/>
+    <elementType name="SAC05" base="numeric" scale="2" maxLength="15"/>
     <elementType name="SAC06" base="string"/>
     <elementType name="SAC07" base="decimal" maxLength="6"/>
     <elementType name="SAC08" base="decimal" maxLength="9"/>
@@ -629,10 +629,10 @@
     <elementType name="SR11" base="string" maxLength="48"/>
     <elementType name="TC201" base="string"/>
     <elementType name="TC202" base="string" maxLength="30"/>
-    <elementType name="TDS01" base="numeric" maxLength="15"/>
-    <elementType name="TDS02" base="numeric" maxLength="15"/>
-    <elementType name="TDS03" base="numeric" maxLength="15"/>
-    <elementType name="TDS04" base="numeric" maxLength="15"/>
+    <elementType name="TDS01" base="numeric" scale="2" maxLength="15"/>
+    <elementType name="TDS02" base="numeric" scale="2" maxLength="15"/>
+    <elementType name="TDS03" base="numeric" scale="2" maxLength="15"/>
+    <elementType name="TDS04" base="numeric" scale="2" maxLength="15"/>
     <elementType name="TXI01" base="string" minLength="2" maxLength="2"/>
     <elementType name="TXI02" base="decimal" maxLength="18"/>
     <elementType name="TXI03" base="decimal" maxLength="10"/>
