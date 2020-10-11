@@ -15,42 +15,35 @@
  ******************************************************************************/
 package io.xlate.edi.internal.stream;
 
-import java.io.IOException;
 import java.util.Map;
 
-import io.xlate.edi.stream.EDIStreamException;
 import io.xlate.edi.stream.EDIStreamReader;
 
-final class StaEDIJavaxJsonParser extends StaEDIJsonParser implements javax.json.stream.JsonParser {
-
-    protected final Location location;
-
-    private class Location extends JsonLocation implements javax.json.stream.JsonLocation {
-    }
+final class StaEDIJavaxJsonParser extends StaEDIJsonParser
+implements javax.json.stream.JsonParser, javax.json.stream.JsonLocation {
 
     StaEDIJavaxJsonParser(EDIStreamReader ediReader, Map<String, Object> properties) {
         super(ediReader, properties);
-        this.location = new Location();
+    }
+
+    @Override
+    protected RuntimeException newJsonException(String message, Throwable cause) {
+        return new javax.json.JsonException(message, cause);
+    }
+
+    @Override
+    protected RuntimeException newJsonParsingException(String message, Throwable cause) {
+        return new javax.json.stream.JsonParsingException(message, cause, this);
     }
 
     @Override
     public javax.json.stream.JsonLocation getLocation() {
-        return location;
+        return this;
     }
 
     @Override
     public javax.json.stream.JsonParser.Event next() {
-        final StaEDIJsonParser.Event next;
-
-        try {
-            next = nextEvent();
-        } catch (EDIStreamException e) {
-            if (e.getCause() instanceof IOException) {
-                throw new javax.json.JsonException(MSG_EXCEPTION, e);
-            } else {
-                throw new javax.json.stream.JsonParsingException(MSG_EXCEPTION, e, location);
-            }
-        }
+        final StaEDIJsonParser.Event next = nextEvent();
 
         switch (next) {
         case END_ARRAY:
@@ -63,18 +56,15 @@ final class StaEDIJavaxJsonParser extends StaEDIJsonParser implements javax.json
             return javax.json.stream.JsonParser.Event.START_ARRAY;
         case START_OBJECT:
             return javax.json.stream.JsonParser.Event.START_OBJECT;
-        case VALUE_FALSE:
-            return javax.json.stream.JsonParser.Event.VALUE_FALSE;
         case VALUE_NULL:
             return javax.json.stream.JsonParser.Event.VALUE_NULL;
         case VALUE_NUMBER:
             return javax.json.stream.JsonParser.Event.VALUE_NUMBER;
         case VALUE_STRING:
             return javax.json.stream.JsonParser.Event.VALUE_STRING;
-        case VALUE_TRUE:
-            return javax.json.stream.JsonParser.Event.VALUE_TRUE;
         default:
-            throw new javax.json.stream.JsonParsingException(MSG_UNEXPECTED + next, location);
+            // JSON 'true' and 'false' are not expected in the EDI stream
+            throw new javax.json.stream.JsonParsingException(MSG_UNEXPECTED + next, this);
         }
     }
 

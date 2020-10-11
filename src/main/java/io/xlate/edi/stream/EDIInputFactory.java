@@ -49,6 +49,28 @@ public abstract class EDIInputFactory extends PropertySupport {
     public static final String EDI_IGNORE_EXTRANEOUS_CHARACTERS = "io.xlate.edi.stream.EDI_IGNORE_EXTRANEOUS_CHARACTERS";
 
     /**
+     * When set to true, simple data elements not containing data will be
+     * represented via the JSON parsers as a <i>null</i> value.
+     *
+     * Default value: false
+     *
+     * @since 1.14
+     */
+    public static final String JSON_NULL_EMPTY_ELEMENTS = "io.xlate.edi.stream.JSON_NULL_EMPTY_ELEMENTS";
+
+    /**
+     * When set to true, simple data elements will be represented via the JSON
+     * parsers as JSON objects. When false, simple elements will be JSON
+     * primitive values (string, number) in the data array of their containing
+     * structures.
+     *
+     * Default value: false
+     *
+     * @since 1.14
+     */
+    public static final String JSON_OBJECT_ELEMENTS = "io.xlate.edi.stream.JSON_OBJECT_ELEMENTS";
+
+    /**
      * Create a new instance of the factory. This static method creates a new
      * factory instance.
      *
@@ -230,7 +252,8 @@ public abstract class EDIInputFactory extends PropertySupport {
      *            the type of the parser being created
      * @return a new JSON parser of type <code>J</code>
      *
-     * @throws IllegalArgumentException when type is an unsupported parser type
+     * @throws IllegalArgumentException
+     *             when type is an unsupported parser type
      *
      * @since 1.14
      */

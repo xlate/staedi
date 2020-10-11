@@ -15,42 +15,35 @@
  ******************************************************************************/
 package io.xlate.edi.internal.stream;
 
-import java.io.IOException;
 import java.util.Map;
 
-import io.xlate.edi.stream.EDIStreamException;
 import io.xlate.edi.stream.EDIStreamReader;
 
-final class StaEDIJakartaJsonParser extends StaEDIJsonParser implements jakarta.json.stream.JsonParser {
-
-    protected final Location location;
-
-    private class Location extends JsonLocation implements jakarta.json.stream.JsonLocation {
-    }
+final class StaEDIJakartaJsonParser extends StaEDIJsonParser
+        implements jakarta.json.stream.JsonParser, jakarta.json.stream.JsonLocation {
 
     StaEDIJakartaJsonParser(EDIStreamReader ediReader, Map<String, Object> properties) {
         super(ediReader, properties);
-        this.location = new Location();
+    }
+
+    @Override
+    protected RuntimeException newJsonException(String message, Throwable cause) {
+        return new jakarta.json.JsonException(message, cause);
+    }
+
+    @Override
+    protected RuntimeException newJsonParsingException(String message, Throwable cause) {
+        return new jakarta.json.stream.JsonParsingException(message, cause, this);
     }
 
     @Override
     public jakarta.json.stream.JsonLocation getLocation() {
-        return location;
+        return this;
     }
 
     @Override
     public jakarta.json.stream.JsonParser.Event next() {
-        final StaEDIJsonParser.Event next;
-
-        try {
-            next = nextEvent();
-        } catch (EDIStreamException e) {
-            if (e.getCause() instanceof IOException) {
-                throw new jakarta.json.JsonException(MSG_EXCEPTION, e);
-            } else {
-                throw new jakarta.json.stream.JsonParsingException(MSG_EXCEPTION, e, location);
-            }
-        }
+        final StaEDIJsonParser.Event next = nextEvent();
 
         switch (next) {
         case END_ARRAY:
@@ -63,18 +56,15 @@ final class StaEDIJakartaJsonParser extends StaEDIJsonParser implements jakarta.
             return jakarta.json.stream.JsonParser.Event.START_ARRAY;
         case START_OBJECT:
             return jakarta.json.stream.JsonParser.Event.START_OBJECT;
-        case VALUE_FALSE:
-            return jakarta.json.stream.JsonParser.Event.VALUE_FALSE;
         case VALUE_NULL:
             return jakarta.json.stream.JsonParser.Event.VALUE_NULL;
         case VALUE_NUMBER:
             return jakarta.json.stream.JsonParser.Event.VALUE_NUMBER;
         case VALUE_STRING:
             return jakarta.json.stream.JsonParser.Event.VALUE_STRING;
-        case VALUE_TRUE:
-            return jakarta.json.stream.JsonParser.Event.VALUE_TRUE;
         default:
-            throw new jakarta.json.stream.JsonParsingException(MSG_UNEXPECTED + next, location);
+            // JSON 'true' and 'false' are not expected in the EDI stream
+            throw new jakarta.json.stream.JsonParsingException(MSG_UNEXPECTED + next, this);
         }
     }
 
