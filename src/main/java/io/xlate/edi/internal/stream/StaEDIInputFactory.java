@@ -23,6 +23,7 @@ import java.util.Objects;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
+import io.xlate.edi.internal.stream.json.JsonParserFactory;
 import io.xlate.edi.schema.Schema;
 import io.xlate.edi.stream.EDIInputErrorReporter;
 import io.xlate.edi.stream.EDIInputFactory;
@@ -82,23 +83,9 @@ public class StaEDIInputFactory extends EDIInputFactory {
         return new StaEDIXMLStreamReader(reader, properties);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public <J> J createJsonParser(EDIStreamReader reader, Class<J> type) {
-        final J parser;
-
-        switch (type.getName()) {
-        case "jakarta.json.stream.JsonParser":
-            parser = (J) new StaEDIJakartaJsonParser(reader, properties);
-            break;
-        case "javax.json.stream.JsonParser":
-            parser = (J) new StaEDIJavaxJsonParser(reader, properties);
-            break;
-        default:
-            throw new IllegalArgumentException("Unsupported JSON parser type: " + type);
-        }
-
-        return parser;
+        return JsonParserFactory.createJsonParser(reader, type, properties);
     }
 
     @Override

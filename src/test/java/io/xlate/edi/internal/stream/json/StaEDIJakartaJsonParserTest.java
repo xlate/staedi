@@ -1,4 +1,4 @@
-package io.xlate.edi.internal.stream;
+package io.xlate.edi.internal.stream.json;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;

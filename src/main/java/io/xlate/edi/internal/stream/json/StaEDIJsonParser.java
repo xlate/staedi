@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  ******************************************************************************/
-package io.xlate.edi.internal.stream;
+package io.xlate.edi.internal.stream.json;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.logging.Logger;
 
+import io.xlate.edi.internal.stream.Configurable;
 import io.xlate.edi.schema.EDISimpleType;
 import io.xlate.edi.schema.EDISimpleType.Base;
 import io.xlate.edi.schema.EDIType;
