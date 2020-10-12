@@ -62,6 +62,7 @@
 
     <version.junit-jupiter>5.7.0</version.junit-jupiter>
     <version.xmlunit>2.7.0</version.xmlunit>
+    <version.jsonassert>1.5.0</version.jsonassert>
   </properties>
 
   <build>
@@ -243,6 +244,11 @@
         <artifactId>xmlunit-matchers</artifactId>
         <version>${version.xmlunit}</version>
       </dependency>
+      <dependency>
+        <groupId>org.skyscreamer</groupId>
+        <artifactId>jsonassert</artifactId>
+        <version>${version.jsonassert}</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
@@ -302,6 +308,11 @@
     <dependency>
       <groupId>org.xmlunit</groupId>
       <artifactId>xmlunit-matchers</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.skyscreamer</groupId>
+      <artifactId>jsonassert</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>

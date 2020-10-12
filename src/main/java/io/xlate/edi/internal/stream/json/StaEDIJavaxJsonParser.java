@@ -20,7 +20,7 @@ import java.util.Map;
 import io.xlate.edi.stream.EDIStreamReader;
 
 final class StaEDIJavaxJsonParser extends StaEDIJsonParser
-implements javax.json.stream.JsonParser, javax.json.stream.JsonLocation {
+        implements javax.json.stream.JsonParser, javax.json.stream.JsonLocation {
 
     StaEDIJavaxJsonParser(EDIStreamReader ediReader, Map<String, Object> properties) {
         super(ediReader, properties);
