@@ -1,12 +1,15 @@
 package io.xlate.edi.internal.stream.json;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.nio.file.Files;
@@ -18,6 +21,7 @@ import java.util.Map;
 import javax.json.Json;
 import javax.json.stream.JsonGenerator;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -31,17 +35,43 @@ import io.xlate.edi.stream.EDIStreamReader;
 
 class StaEDIJsonParserTest {
 
+    Map<String, Object> ediReaderConfig;
+    EDIInputFactory factory;
+    EDIStreamReader ediReader;
+
+    @BeforeEach
+    void setup() throws Exception {
+        ediReaderConfig = new HashMap<>();
+        factory = EDIInputFactory.newFactory();
+    }
+
+    void setupReader(EDIInputFactory factory, String ediResource, String schemaResource) throws Exception {
+        InputStream stream = getClass().getResourceAsStream(ediResource);
+        ediReaderConfig.forEach(factory::setProperty);
+        ediReader = factory.createEDIStreamReader(stream);
+        SchemaFactory schemaFactory = SchemaFactory.newFactory();
+        Schema transactionSchema = schemaFactory.createSchema(getClass().getResource(schemaResource));
+        ediReader = factory.createFilteredReader(ediReader, (reader) -> {
+            if (reader.getEventType() == EDIStreamEvent.START_TRANSACTION) {
+                reader.setTransactionSchema(transactionSchema);
+            }
+            return true;
+        });
+    }
+
     @SuppressWarnings("unchecked")
-    <T> T invoke(Object instance, String methodName, Class<T> returnType) {
+    <T> T invoke(Object instance, String methodName, Class<T> returnType) throws Throwable {
         try {
             Method method = instance.getClass().getMethod(methodName);
             return (T) method.invoke(instance);
+        } catch (InvocationTargetException e) {
+            throw e.getTargetException();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    void copyParserToGenerator(EDIStreamReader ediReader, Object jsonParser, OutputStream buffer) {
+    void copyParserToGenerator(EDIStreamReader ediReader, Object jsonParser, OutputStream buffer) throws Throwable {
         Map<String, Object> jsonConfig = new HashMap<>();
         jsonConfig.put(JsonGenerator.PRETTY_PRINTING, Boolean.TRUE);
         JsonGenerator jsonGenerator = Json.createGeneratorFactory(jsonConfig).createGenerator(buffer);
@@ -106,25 +136,9 @@ class StaEDIJsonParserTest {
                         jakarta.json.stream.JsonParser.class,
                         javax.json.stream.JsonParser.class
             })
-    void testNullElementsAsArray(Class<?> parserInterface) throws Exception {
-        Map<String, Object> ediReaderConfig = new HashMap<>();
+    void testNullElementsAsArray(Class<?> parserInterface) throws Throwable {
         ediReaderConfig.put(EDIInputFactory.JSON_NULL_EMPTY_ELEMENTS, true);
-        //ediReaderConfig.put(EDIInputFactory.JSON_OBJECT_ELEMENTS, false);
-
-        EDIInputFactory factory = EDIInputFactory.newFactory();
-        ediReaderConfig.forEach(factory::setProperty);
-
-        InputStream stream = getClass().getResourceAsStream("/x12/sample837-original.edi");
-        EDIStreamReader ediReader = factory.createEDIStreamReader(stream);
-        SchemaFactory schemaFactory = SchemaFactory.newFactory();
-        Schema transactionSchema = schemaFactory.createSchema(getClass().getResource("/x12/005010/837.xml"));
-        ediReader = factory.createFilteredReader(ediReader, (reader) -> {
-            if (reader.getEventType() == EDIStreamEvent.START_TRANSACTION) {
-                reader.setTransactionSchema(transactionSchema);
-            }
-            return true;
-        });
-
+        setupReader(factory, "/x12/sample837-original.edi", "/x12/005010/837.xml");
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
         Object jsonParser = JsonParserFactory.createJsonParser(ediReader, parserInterface, ediReaderConfig);
         copyParserToGenerator(ediReader, jsonParser, buffer);
@@ -139,29 +153,80 @@ class StaEDIJsonParserTest {
                         jakarta.json.stream.JsonParser.class,
                         javax.json.stream.JsonParser.class
             })
-    void testElementsAsObjects(Class<?> parserInterface) throws Exception {
-        Map<String, Object> ediReaderConfig = new HashMap<>();
+    void testElementsAsObjects(Class<?> parserInterface) throws Throwable {
         ediReaderConfig.put(EDIInputFactory.JSON_OBJECT_ELEMENTS, true);
-
-        EDIInputFactory factory = EDIInputFactory.newFactory();
-        ediReaderConfig.forEach(factory::setProperty);
-
-        InputStream stream = getClass().getResourceAsStream("/x12/sample837-original.edi");
-        EDIStreamReader ediReader = factory.createEDIStreamReader(stream);
-        SchemaFactory schemaFactory = SchemaFactory.newFactory();
-        Schema transactionSchema = schemaFactory.createSchema(getClass().getResource("/x12/005010/837.xml"));
-        ediReader = factory.createFilteredReader(ediReader, (reader) -> {
-            if (reader.getEventType() == EDIStreamEvent.START_TRANSACTION) {
-                reader.setTransactionSchema(transactionSchema);
-            }
-            return true;
-        });
-
+        setupReader(factory, "/x12/sample837-original.edi", "/x12/005010/837.xml");
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
         Object jsonParser = JsonParserFactory.createJsonParser(ediReader, parserInterface, ediReaderConfig);
         copyParserToGenerator(ediReader, jsonParser, buffer);
         List<String> expected = Files.readAllLines(Paths.get(getClass().getResource("/x12/sample837-original-object-elements.json").toURI()));
         System.out.println(buffer.toString());
         JSONAssert.assertEquals(String.join("", expected), buffer.toString(), true);
+    }
+
+    @ParameterizedTest
+    @ValueSource(
+            classes = {
+                        jakarta.json.stream.JsonParser.class,
+                        javax.json.stream.JsonParser.class
+            })
+    void testNumbersAllComparable(Class<?> parserInterface) throws Throwable {
+        setupReader(factory, "/x12/sample837-original.edi", "/x12/005010/837.xml");
+        Object jsonParser = JsonParserFactory.createJsonParser(ediReader, parserInterface, ediReaderConfig);
+
+        while (invoke(jsonParser, "hasNext", Boolean.class)) {
+            String eventName = invoke(jsonParser, "next", Object.class).toString();
+
+            switch (eventName) {
+            case "VALUE_NUMBER":
+                int intValue = invoke(jsonParser, "getInt", Integer.class);
+                long longValue = invoke(jsonParser, "getLong", Long.class);
+                BigDecimal decimalValue = invoke(jsonParser, "getBigDecimal", BigDecimal.class);
+
+                assertEquals(longValue, intValue);
+
+                if (invoke(jsonParser, "isIntegralNumber", Boolean.class)) {
+                    assertTrue(decimalValue.compareTo(BigDecimal.valueOf(intValue)) == 0, decimalValue + " failed comparison with " + intValue);
+                    assertTrue(decimalValue.compareTo(BigDecimal.valueOf(longValue)) == 0, decimalValue + " failed comparison with " + longValue);
+                } else {
+                    assertEquals(decimalValue.longValue(), intValue, decimalValue + " failed comparison with " + intValue);
+                    assertEquals(decimalValue.longValue(), longValue, decimalValue + " failed comparison with " + longValue);
+                }
+
+                break;
+            default:
+                break;
+            }
+        }
+
+        invoke(jsonParser, "close", Void.class);
+    }
+
+    @ParameterizedTest
+    @ValueSource(
+            classes = {
+                        jakarta.json.stream.JsonParser.class,
+                        javax.json.stream.JsonParser.class
+            })
+    void testTextStatesNotIllegal(Class<?> parserInterface) throws Throwable {
+        setupReader(factory, "/x12/sample837-original.edi", "/x12/005010/837.xml");
+        Object jsonParser = JsonParserFactory.createJsonParser(ediReader, parserInterface, ediReaderConfig);
+
+        while (invoke(jsonParser, "hasNext", Boolean.class)) {
+            String eventName = invoke(jsonParser, "next", Object.class).toString();
+
+            switch (eventName) {
+            case "KEY_NAME":
+            case "VALUE_STRING":
+            case "VALUE_NUMBER":
+                assertDoesNotThrow(() -> invoke(jsonParser, "getString", String.class));
+                break;
+            default:
+                assertThrows(IllegalStateException.class, () -> invoke(jsonParser, "getString", String.class));
+                break;
+            }
+        }
+
+        invoke(jsonParser, "close", Void.class);
     }
 }

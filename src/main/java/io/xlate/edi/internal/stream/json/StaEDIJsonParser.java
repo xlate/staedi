@@ -30,6 +30,7 @@ import io.xlate.edi.stream.EDIInputFactory;
 import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamException;
 import io.xlate.edi.stream.EDIStreamReader;
+import io.xlate.edi.stream.EDIValidationException;
 
 abstract class StaEDIJsonParser implements Configurable {
 
@@ -48,18 +49,22 @@ abstract class StaEDIJsonParser implements Configurable {
         public String getId() {
             return null;
         }
+
         @Override
         public String getCode() {
             return null;
         }
+
         @Override
         public Type getType() {
             return null;
         }
+
         @Override
         public String getTitle() {
             return null;
         }
+
         @Override
         public String getDescription() {
             return null;
@@ -79,14 +84,6 @@ abstract class StaEDIJsonParser implements Configurable {
     EDIType currentType;
     String currentValue;
     Number currentNumberValue;
-
-    private final StringBuilder cdataBuilder = new StringBuilder();
-    /*private final OutputStream cdataStream = new OutputStream() {
-        @Override
-        public void write(int b) throws IOException {
-            cdataBuilder.append((char) b);
-        }
-    };*/
 
     enum Event {
         /**
@@ -179,7 +176,6 @@ abstract class StaEDIJsonParser implements Configurable {
 
     void enqueueEvent(EDIStreamEvent ediEvent) {
         LOGGER.finer(() -> "Enqueue EDI event: " + ediEvent);
-        cdataBuilder.setLength(0);
 
         switch (ediEvent) {
         case ELEMENT_DATA:
@@ -210,32 +206,6 @@ abstract class StaEDIJsonParser implements Configurable {
             }
 
             break;
-
-        //        case ELEMENT_DATA_BINARY:
-        //            /*
-        //             * This section will read the binary data and Base64 the stream
-        //             * into an XML CDATA section.
-        //             * */
-        //            name = buildName(elementStack.getFirst(), EDINamespaces.ELEMENTS);
-        //            enqueueEvent(START_ELEMENT, name, false);
-        //            enqueueEvent(CDATA, DUMMY_QNAME, false);
-        //
-        //            // This only will work if using a validation filter!
-        //            InputStream input = ediReader.getBinaryData();
-        //            byte[] buffer = new byte[4096];
-        //            int amount;
-        //
-        //            try (OutputStream output = Base64.getEncoder().wrap(cdataStream)) {
-        //                while ((amount = input.read(buffer)) > -1) {
-        //                    output.write(buffer, 0, amount);
-        //                }
-        //            } catch (IOException e) {
-        //                throw new XMLStreamException(e);
-        //            }
-        //
-        //            enqueueEvent(END_ELEMENT, name, false);
-        //            break;
-        //
         case START_INTERCHANGE:
             enqueueStructureBegin("loop", "INTERCHANGE");
             break;
@@ -261,18 +231,11 @@ abstract class StaEDIJsonParser implements Configurable {
             enqueue(Event.END_OBJECT, null, null);
             break;
 
-        //        case SEGMENT_ERROR:
-        //            throw new XMLStreamException(String.format("Segment %s has error %s",
-        //                                                       ediReader.getText(),
-        //                                                       ediReader.getErrorType()),
-        //                                         this.location);
-        //
-        //        case ELEMENT_OCCURRENCE_ERROR:
-        //        case ELEMENT_DATA_ERROR:
-        //            throw new XMLStreamException(String.format("Element %s has error %s",
-        //                                                       ediReader.getText(),
-        //                                                       ediReader.getErrorType()),
-        //                                         this.location);
+        case SEGMENT_ERROR:
+        case ELEMENT_OCCURRENCE_ERROR:
+        case ELEMENT_DATA_ERROR:
+            Throwable cause = new EDIValidationException(ediEvent, ediReader.getErrorType(), ediReader.getLocation(), ediReader.getText());
+            throw newJsonParsingException("Unhandled EDI validation error", cause);
 
         default:
             throw new IllegalStateException("Unknown state: " + ediEvent);
