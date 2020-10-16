@@ -174,6 +174,7 @@ final class StaEDIXMLStreamWriter implements XMLStreamWriter {
             // Loops are implicit when writing
             break;
         case EDINamespaces.SEGMENTS:
+            previousElement = null;
             execute(ediWriter::writeEndSegment);
             break;
         default:
