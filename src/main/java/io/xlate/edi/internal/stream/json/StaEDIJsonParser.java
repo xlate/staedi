@@ -17,15 +17,17 @@ package io.xlate.edi.internal.stream.json;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.text.DecimalFormat;
+import java.text.ParsePosition;
 import java.util.ArrayDeque;
 import java.util.Map;
 import java.util.Queue;
 import java.util.logging.Logger;
 
 import io.xlate.edi.internal.stream.Configurable;
+import io.xlate.edi.schema.EDIReference;
 import io.xlate.edi.schema.EDISimpleType;
 import io.xlate.edi.schema.EDISimpleType.Base;
-import io.xlate.edi.schema.EDIType;
 import io.xlate.edi.stream.EDIInputFactory;
 import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamException;
@@ -44,46 +46,20 @@ abstract class StaEDIJsonParser implements Configurable {
     static final String KEY_META = "meta";
     static final String KEY_DATA = "data";
 
-    static final EDIType TYPE_DUMMY = new EDIType() {
-        @Override
-        public String getId() {
-            return null;
-        }
-
-        @Override
-        public String getCode() {
-            return null;
-        }
-
-        @Override
-        public Type getType() {
-            return null;
-        }
-
-        @Override
-        public String getTitle() {
-            return null;
-        }
-
-        @Override
-        public String getDescription() {
-            return null;
-        }
-    };
-
     protected final EDIStreamReader ediReader;
     protected final Map<String, Object> properties;
     protected final boolean emptyElementsNull;
     protected final boolean elementsAsObject;
 
     final Queue<Event> eventQueue = new ArrayDeque<>();
-    final Queue<EDIType> typeQueue = new ArrayDeque<>();
     final Queue<String> valueQueue = new ArrayDeque<>();
 
+    final DecimalFormat decimalParser = new DecimalFormat();
+    final ParsePosition decimalPosition = new ParsePosition(0);
+
     Event currentEvent;
-    EDIType currentType;
     String currentValue;
-    Number currentNumberValue;
+    BigDecimal currentNumber;
 
     enum Event {
         /**
@@ -142,69 +118,95 @@ abstract class StaEDIJsonParser implements Configurable {
 
     @Override
     public Object getProperty(String name) {
-        if (name == null) {
-            throw new IllegalArgumentException("Name must not be null");
-        }
         return properties.get(name);
     }
 
     void advanceEvent() {
         currentEvent = eventQueue.remove();
-        currentType = typeQueue.remove();
         currentValue = valueQueue.remove();
-        currentNumberValue = null;
     }
 
-    void enqueue(Event event, EDIType type, String value) {
+    void parseNumber(EDISimpleType elementType, String text) {
+        if (elementType.getBase() == Base.NUMERIC) {
+            final Integer scale = elementType.getScale();
+            final long unscaled = Long.parseLong(text);
+
+            this.currentNumber = BigDecimal.valueOf(unscaled, scale);
+        } else {
+            decimalPosition.setIndex(0);
+            decimalParser.setParseBigDecimal(true);
+
+            this.currentNumber = (BigDecimal) decimalParser.parse(text, decimalPosition);
+        }
+    }
+
+    void enqueue(Event event, String value) {
         eventQueue.add(event);
-        typeQueue.add(type != null ? type : TYPE_DUMMY);
         valueQueue.add(value != null ? value : "");
     }
 
     void enqueueStructureBegin(String typeName, String structureName) {
-        enqueue(Event.START_OBJECT, null, null);
+        enqueue(Event.START_OBJECT, null);
 
-        enqueue(Event.KEY_NAME, null, KEY_NAME);
-        enqueue(Event.VALUE_STRING, null, structureName);
+        enqueue(Event.KEY_NAME, KEY_NAME);
+        enqueue(Event.VALUE_STRING, structureName);
 
-        enqueue(Event.KEY_NAME, null, KEY_TYPE);
-        enqueue(Event.VALUE_STRING, null, typeName);
+        enqueue(Event.KEY_NAME, KEY_TYPE);
+        enqueue(Event.VALUE_STRING, typeName);
 
-        enqueue(Event.KEY_NAME, null, KEY_DATA);
-        enqueue(Event.START_ARRAY, null, null);
+        enqueue(Event.KEY_NAME, KEY_DATA);
+        enqueue(Event.START_ARRAY, null);
+    }
+
+    void enqueueDataElement() {
+        EDIReference referencedType = ediReader.getSchemaTypeReference();
+        EDISimpleType elementType = null;
+
+        if (referencedType != null) {
+            elementType = (EDISimpleType) referencedType.getReferencedType();
+        }
+
+        if (elementsAsObject) {
+            enqueue(Event.START_OBJECT, null);
+            enqueue(Event.KEY_NAME, KEY_TYPE);
+            enqueue(Event.VALUE_STRING, "element");
+            enqueue(Event.KEY_NAME, KEY_DATA);
+        }
+
+        final Event dataEvent;
+        final String dataText = ediReader.getText();
+
+        if (dataText.isEmpty() || elementType == null) {
+            dataEvent = this.emptyElementsNull ? Event.VALUE_NULL : Event.VALUE_STRING;
+        } else if (elementType.getBase() == Base.DECIMAL || elementType.getBase() == Base.NUMERIC) {
+            Event numberEvent;
+
+            try {
+                parseNumber(elementType, dataText);
+                numberEvent = Event.VALUE_NUMBER;
+            } catch (Exception e) {
+                numberEvent = Event.VALUE_STRING;
+            }
+
+            dataEvent = numberEvent;
+        } else {
+            dataEvent = Event.VALUE_STRING;
+        }
+
+        enqueue(dataEvent, dataText);
+
+        if (elementsAsObject) {
+            enqueue(Event.END_OBJECT, null);
+        }
     }
 
     void enqueueEvent(EDIStreamEvent ediEvent) {
         LOGGER.finer(() -> "Enqueue EDI event: " + ediEvent);
+        currentNumber = null;
 
         switch (ediEvent) {
         case ELEMENT_DATA:
-            EDISimpleType elementType = (EDISimpleType) ediReader.getSchemaTypeReference().getReferencedType();
-
-            if (elementsAsObject) {
-                enqueue(Event.START_OBJECT, null, null);
-                enqueue(Event.KEY_NAME, null, KEY_TYPE);
-                enqueue(Event.VALUE_STRING, null, "element");
-                enqueue(Event.KEY_NAME, null, KEY_DATA);
-            }
-
-            final Event dataEvent;
-            final String dataText = ediReader.getText();
-
-            if (dataText.isEmpty()) {
-                dataEvent = this.emptyElementsNull ? Event.VALUE_NULL : Event.VALUE_STRING;
-            } else if (elementType.getBase() == Base.DECIMAL || elementType.getBase() == Base.NUMERIC) {
-                dataEvent = Event.VALUE_NUMBER;
-            } else {
-                dataEvent = Event.VALUE_STRING;
-            }
-
-            enqueue(dataEvent, elementType, dataText);
-
-            if (elementsAsObject) {
-                enqueue(Event.END_OBJECT, null, null);
-            }
-
+            enqueueDataElement();
             break;
         case START_INTERCHANGE:
             enqueueStructureBegin("loop", "INTERCHANGE");
@@ -227,8 +229,8 @@ abstract class StaEDIJsonParser implements Configurable {
         case END_LOOP:
         case END_SEGMENT:
         case END_COMPOSITE:
-            enqueue(Event.END_ARRAY, null, null);
-            enqueue(Event.END_OBJECT, null, null);
+            enqueue(Event.END_ARRAY, null);
+            enqueue(Event.END_OBJECT, null);
             break;
 
         case SEGMENT_ERROR:
@@ -311,16 +313,6 @@ abstract class StaEDIJsonParser implements Configurable {
         }
     }
 
-    long pow(long base, int exponent) {
-        long result = 1;
-
-        for (int i = 1; i <= exponent; i++) {
-            result *= base;
-        }
-
-        return result;
-    }
-
     /**
      * @see jakarta.json.stream.JsonParser#hasNext()
      * @see javax.json.stream.JsonParser#hasNext()
@@ -342,30 +334,7 @@ abstract class StaEDIJsonParser implements Configurable {
      */
     public BigDecimal getBigDecimal() {
         assertEventValueNumber();
-
-        if (currentNumberValue instanceof BigDecimal) {
-            return (BigDecimal) currentNumberValue;
-        }
-
-        final EDISimpleType type = (EDISimpleType) this.currentType;
-        final String value = this.currentValue;
-        final BigDecimal decimalValue;
-
-        try {
-            if (type.getBase() == Base.NUMERIC) {
-                final Integer scale = type.getScale();
-                final long unscaled = Long.parseLong(value);
-                decimalValue = BigDecimal.valueOf(unscaled, scale);
-            } else {
-                decimalValue = new BigDecimal(value);
-            }
-        } catch (NumberFormatException e) {
-            throw new IllegalStateException("Value not a number: " + value, e);
-        }
-
-        currentNumberValue = decimalValue;
-
-        return decimalValue;
+        return currentNumber;
     }
 
     /**
@@ -380,31 +349,7 @@ abstract class StaEDIJsonParser implements Configurable {
      */
     public long getLong() {
         assertEventValueNumber();
-
-        if (currentNumberValue != null) {
-            return currentNumberValue.longValue();
-        }
-
-        final EDISimpleType type = (EDISimpleType) this.currentType;
-        final String value = this.currentValue;
-        final Number parsedValue;
-
-        try {
-            if (type.getBase() == Base.NUMERIC) {
-                final Integer scale = type.getScale();
-                final long unscaled = Long.parseLong(value);
-                parsedValue = unscaled / this.pow(10, scale);
-            } else {
-                // Optimize?
-                parsedValue = new BigDecimal(value);
-            }
-        } catch (NumberFormatException e) {
-            throw new IllegalStateException("Value not a number: " + value, e);
-        }
-
-        currentNumberValue = parsedValue;
-
-        return parsedValue.longValue();
+        return currentNumber.longValue();
     }
 
     /**
@@ -420,7 +365,7 @@ abstract class StaEDIJsonParser implements Configurable {
      */
     public boolean isIntegralNumber() {
         assertEventValueNumber();
-        return this.currentValue.indexOf('.') < 0;
+        return currentNumber.scale() == 0;
     }
 
 }

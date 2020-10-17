@@ -19,7 +19,7 @@ public class EDIValidationException extends RuntimeException {
         super("Encountered " + event + " [" + error + "]" + (location != null ? " " + location.toString() : ""));
         this.event = event;
         this.error = error;
-        this.location = location;
+        this.location = location != null ? location.copy() : null;
         this.data = data;
     }
 

@@ -3,7 +3,6 @@ package io.xlate.edi.internal.stream.json;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.ByteArrayOutputStream;
@@ -14,6 +13,7 @@ import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +32,7 @@ import io.xlate.edi.schema.SchemaFactory;
 import io.xlate.edi.stream.EDIInputFactory;
 import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamReader;
+import io.xlate.edi.stream.EDIValidationException;
 
 class StaEDIJsonParserTest {
 
@@ -49,14 +50,17 @@ class StaEDIJsonParserTest {
         InputStream stream = getClass().getResourceAsStream(ediResource);
         ediReaderConfig.forEach(factory::setProperty);
         ediReader = factory.createEDIStreamReader(stream);
-        SchemaFactory schemaFactory = SchemaFactory.newFactory();
-        Schema transactionSchema = schemaFactory.createSchema(getClass().getResource(schemaResource));
-        ediReader = factory.createFilteredReader(ediReader, (reader) -> {
-            if (reader.getEventType() == EDIStreamEvent.START_TRANSACTION) {
-                reader.setTransactionSchema(transactionSchema);
-            }
-            return true;
-        });
+
+        if (schemaResource != null) {
+            SchemaFactory schemaFactory = SchemaFactory.newFactory();
+            Schema transactionSchema = schemaFactory.createSchema(getClass().getResource(schemaResource));
+            ediReader = factory.createFilteredReader(ediReader, (reader) -> {
+                if (reader.getEventType() == EDIStreamEvent.START_TRANSACTION) {
+                    reader.setTransactionSchema(transactionSchema);
+                }
+                return true;
+            });
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -171,7 +175,7 @@ class StaEDIJsonParserTest {
                         javax.json.stream.JsonParser.class
             })
     void testNumbersAllComparable(Class<?> parserInterface) throws Throwable {
-        setupReader(factory, "/x12/sample837-original.edi", "/x12/005010/837.xml");
+        setupReader(factory, "/x12/simple810.edi", "/x12/EDISchema810.xml");
         Object jsonParser = JsonParserFactory.createJsonParser(ediReader, parserInterface, ediReaderConfig);
 
         while (invoke(jsonParser, "hasNext", Boolean.class)) {
@@ -186,8 +190,8 @@ class StaEDIJsonParserTest {
                 assertEquals(longValue, intValue);
 
                 if (invoke(jsonParser, "isIntegralNumber", Boolean.class)) {
-                    assertTrue(decimalValue.compareTo(BigDecimal.valueOf(intValue)) == 0, decimalValue + " failed comparison with " + intValue);
-                    assertTrue(decimalValue.compareTo(BigDecimal.valueOf(longValue)) == 0, decimalValue + " failed comparison with " + longValue);
+                    assertEquals(0, decimalValue.compareTo(BigDecimal.valueOf(intValue)), decimalValue + " failed comparison with " + intValue);
+                    assertEquals(0, decimalValue.compareTo(BigDecimal.valueOf(longValue)), decimalValue + " failed comparison with " + longValue);
                 } else {
                     assertEquals(decimalValue.longValue(), intValue, decimalValue + " failed comparison with " + intValue);
                     assertEquals(decimalValue.longValue(), longValue, decimalValue + " failed comparison with " + longValue);
@@ -228,5 +232,59 @@ class StaEDIJsonParserTest {
         }
 
         invoke(jsonParser, "close", Void.class);
+    }
+
+    @ParameterizedTest
+    @ValueSource(
+            classes = {
+                        jakarta.json.stream.JsonParser.class,
+                        javax.json.stream.JsonParser.class
+            })
+    void testTextStatesIllegalForNumber(Class<?> parserInterface) throws Throwable {
+        setupReader(factory, "/x12/sample837-original.edi", "/x12/005010/837.xml");
+        Object jsonParser = JsonParserFactory.createJsonParser(ediReader, parserInterface, ediReaderConfig);
+
+        while (invoke(jsonParser, "hasNext", Boolean.class)) {
+            String eventName = invoke(jsonParser, "next", Object.class).toString();
+
+            switch (eventName) {
+            case "VALUE_NUMBER":
+                assertDoesNotThrow(() -> invoke(jsonParser, "getInt", Integer.class));
+                break;
+            default:
+                assertThrows(IllegalStateException.class, () -> invoke(jsonParser, "getInt", Integer.class));
+                break;
+            }
+        }
+
+        invoke(jsonParser, "close", Void.class);
+    }
+
+    @ParameterizedTest
+    @ValueSource(
+            classes = {
+                        jakarta.json.stream.JsonParser.class,
+                        javax.json.stream.JsonParser.class
+            })
+    void testInvalidNumberThrowsException(Class<?> parserInterface) throws Throwable {
+        setupReader(factory, "/x12/invalid997_min.edi", null);
+        Object jsonParser = JsonParserFactory.createJsonParser(ediReader, parserInterface, ediReaderConfig);
+        List<Exception> errors = new ArrayList<>();
+
+        while (invoke(jsonParser, "hasNext", Boolean.class)) {
+            try {
+                invoke(jsonParser, "next", Object.class).toString();
+            } catch (Exception e) {
+                errors.add(e);
+            }
+        }
+
+        invoke(jsonParser, "close", Void.class);
+        assertEquals(4, errors.size());
+        // Invalid GS time, invalid GS date, GE02 too long, GE02 invalid chars
+        // GS date reported after time due to version of GS date element selected
+        EDIValidationException cause = (EDIValidationException) errors.get(3).getCause();
+        assertEquals("GE", cause.getLocation().getSegmentTag());
+        assertEquals(2, cause.getLocation().getElementPosition());
     }
 }
