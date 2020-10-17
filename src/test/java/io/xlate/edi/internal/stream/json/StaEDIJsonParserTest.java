@@ -6,6 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.ByteArrayOutputStream;
+import java.io.FilterInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
@@ -24,6 +26,7 @@ import javax.json.stream.JsonGenerator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.skyscreamer.jsonassert.JSONAssert;
 
@@ -144,7 +147,7 @@ class StaEDIJsonParserTest {
         ediReaderConfig.put(EDIInputFactory.JSON_NULL_EMPTY_ELEMENTS, true);
         setupReader(factory, "/x12/sample837-original.edi", "/x12/005010/837.xml");
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-        Object jsonParser = JsonParserFactory.createJsonParser(ediReader, parserInterface, ediReaderConfig);
+        Object jsonParser = factory.createJsonParser(ediReader, parserInterface);
         copyParserToGenerator(ediReader, jsonParser, buffer);
         List<String> expected = Files.readAllLines(Paths.get(getClass().getResource("/x12/sample837-original.json").toURI()));
         System.out.println(buffer.toString());
@@ -286,5 +289,42 @@ class StaEDIJsonParserTest {
         EDIValidationException cause = (EDIValidationException) errors.get(3).getCause();
         assertEquals("GE", cause.getLocation().getSegmentTag());
         assertEquals(2, cause.getLocation().getElementPosition());
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+        "jakarta.json.stream.JsonParser,jakarta.json.JsonException",
+        "javax.json.stream.JsonParser,javax.json.JsonException"
+    })
+    void testIOExceptionThrowsCorrectJsonException(String parserName, String exceptionName) throws Throwable {
+        InputStream stream = getClass().getResourceAsStream("/x12/sample837-original.edi");
+        ediReaderConfig.forEach(factory::setProperty);
+        ediReader = factory.createEDIStreamReader(new FilterInputStream(stream) {
+            @Override
+            public int read() throws IOException {
+                if (ediReader.getLocation().getCharacterOffset() > 50) {
+                    throw new IOException("Fatal stream error");
+                }
+                return super.read();
+            }
+        });
+
+        Class<?> parserInterface = Class.forName(parserName);
+        Class<?> exceptionType = Class.forName(exceptionName);
+
+        Object jsonParser = JsonParserFactory.createJsonParser(ediReader, parserInterface, ediReaderConfig);
+        List<Exception> errors = new ArrayList<>();
+
+        while (invoke(jsonParser, "hasNext", Boolean.class)) {
+            try {
+                invoke(jsonParser, "next", Object.class).toString();
+            } catch (Exception e) {
+                errors.add(e);
+                break;
+            }
+        }
+
+        assertEquals(1, errors.size());
+        assertEquals(exceptionType, errors.get(0).getClass());
     }
 }

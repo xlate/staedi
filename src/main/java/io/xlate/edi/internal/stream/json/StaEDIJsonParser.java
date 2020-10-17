@@ -104,6 +104,11 @@ abstract class StaEDIJsonParser implements Configurable {
         END_ARRAY
     }
 
+    @FunctionalInterface
+    interface EDIStreamReaderRunner<T> {
+        T execute() throws EDIStreamException;
+    }
+
     StaEDIJsonParser(EDIStreamReader ediReader, Map<String, Object> properties) {
         super();
         this.ediReader = ediReader;
@@ -119,6 +124,18 @@ abstract class StaEDIJsonParser implements Configurable {
     @Override
     public Object getProperty(String name) {
         return properties.get(name);
+    }
+
+    <T> T executeWithReader(EDIStreamReaderRunner<T> runner) {
+        try {
+            return runner.execute();
+        } catch (EDIStreamException e) {
+            if (e.getCause() instanceof IOException) {
+                throw newJsonException(MSG_EXCEPTION, e);
+            } else {
+                throw newJsonParsingException(MSG_EXCEPTION, e);
+            }
+        }
     }
 
     void advanceEvent() {
@@ -247,15 +264,7 @@ abstract class StaEDIJsonParser implements Configurable {
     Event nextEvent() {
         if (eventQueue.isEmpty()) {
             LOGGER.finer(() -> "eventQueue is empty, calling ediReader.next()");
-            try {
-                enqueueEvent(ediReader.next());
-            } catch (EDIStreamException e) {
-                if (e.getCause() instanceof IOException) {
-                    throw newJsonException(MSG_EXCEPTION, e);
-                } else {
-                    throw newJsonParsingException(MSG_EXCEPTION, e);
-                }
-            }
+            enqueueEvent(executeWithReader(ediReader::next));
         }
 
         advanceEvent();
@@ -318,15 +327,7 @@ abstract class StaEDIJsonParser implements Configurable {
      * @see javax.json.stream.JsonParser#hasNext()
      */
     public boolean hasNext() {
-        try {
-            return !eventQueue.isEmpty() || ediReader.hasNext();
-        } catch (EDIStreamException e) {
-            if (e.getCause() instanceof IOException) {
-                throw newJsonException(MSG_EXCEPTION, e);
-            } else {
-                throw newJsonParsingException(MSG_EXCEPTION, e);
-            }
-        }
+        return !eventQueue.isEmpty() || executeWithReader(ediReader::hasNext);
     }
 
     /**
