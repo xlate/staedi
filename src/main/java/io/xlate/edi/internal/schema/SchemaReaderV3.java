@@ -122,7 +122,7 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
                                                                  Spliterator.ORDERED),
                              false)
                      .filter(type -> type.getType() != Type.ELEMENT)
-                     .map(type -> (BaseComplexImpl) type)
+                     .map(BaseComplexImpl.class::cast)
                      .forEach(type -> setReferences(type, types));
     }
 

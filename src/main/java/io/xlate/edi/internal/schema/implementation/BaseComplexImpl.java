@@ -10,7 +10,7 @@ public abstract class BaseComplexImpl extends BaseImpl<EDIComplexType> {
 
     protected final List<EDITypeImplementation> sequence;
 
-    public BaseComplexImpl(List<EDITypeImplementation> sequence, String title, String description) {
+    protected BaseComplexImpl(List<EDITypeImplementation> sequence, String title, String description) {
         super(title, description);
         this.sequence = sequence;
     }

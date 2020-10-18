@@ -39,6 +39,8 @@ import java.util.stream.StreamSupport;
 import javax.xml.stream.XMLStreamException;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import io.xlate.edi.schema.EDIComplexType;
 import io.xlate.edi.schema.EDISchemaException;
@@ -245,111 +247,27 @@ class StaEDISchemaFactoryTest {
         assertEquals(schema3.getMainLoop(), schema1.getStandard());
     }
 
-    @Test
-    void testDuplicateImplPositionSpecified() {
+    @ParameterizedTest
+    @CsvSource({
+        "/x12/implSchemaDuplicatePosition.xml, Duplicate value for position 1",
+        "/x12/discriminators/element-too-large.xml, Discriminator element position invalid: 3.1",
+        "/x12/discriminators/element-too-small.xml, Discriminator element position invalid: 0.1",
+        "/x12/discriminators/element-not-specified.xml, Discriminator position is unused (not specified): 2.1",
+        "/x12/discriminators/component-too-large.xml, Discriminator component position invalid: 2.3",
+        "/x12/discriminators/component-too-small.xml, Discriminator component position invalid: 2.0",
+        "/x12/discriminators/element-without-enumeration.xml, Discriminator element does not specify value enumeration: 2.2",
+        "/EDIFACT/fragment-uci-invalid-syntax-type.xml, Invalid syntax 'type': [conditional-junk]",
+        "/EDIFACT/fragment-uci-invalid-min-occurs.xml, Invalid minOccurs",
+        "/EDIFACT/fragment-uci-duplicate-element-names.xml, duplicate name: DE0004"
+    })
+    void testSchemaExceptions(String resourceName, String exceptionMessage) {
         SchemaFactory factory = SchemaFactory.newFactory();
         assertTrue(factory instanceof StaEDISchemaFactory, "Not an instance");
-        InputStream stream = getClass().getResourceAsStream("/x12/implSchemaDuplicatePosition.xml");
+        InputStream stream = getClass().getResourceAsStream(resourceName);
         EDISchemaException thrown = assertThrows(EDISchemaException.class, () -> factory.createSchema(stream));
         Throwable cause = thrown.getCause();
         assertNotNull(cause);
-        assertEquals("Duplicate value for position 1", cause.getMessage());
-    }
-
-    @Test
-    void testDiscriminatorElementTooLarge() {
-        SchemaFactory factory = SchemaFactory.newFactory();
-        assertTrue(factory instanceof StaEDISchemaFactory, "Not an instance");
-        InputStream stream = getClass().getResourceAsStream("/x12/discriminators/element-too-large.xml");
-        EDISchemaException thrown = assertThrows(EDISchemaException.class, () -> factory.createSchema(stream));
-        Throwable cause = thrown.getCause();
-        assertNotNull(cause);
-        assertEquals("Discriminator element position invalid: 3.1", cause.getMessage());
-    }
-
-    @Test
-    void testDiscriminatorElementTooSmall() {
-        SchemaFactory factory = SchemaFactory.newFactory();
-        assertTrue(factory instanceof StaEDISchemaFactory, "Not an instance");
-        InputStream stream = getClass().getResourceAsStream("/x12/discriminators/element-too-small.xml");
-        EDISchemaException thrown = assertThrows(EDISchemaException.class, () -> factory.createSchema(stream));
-        Throwable cause = thrown.getCause();
-        assertNotNull(cause);
-        assertEquals("Discriminator element position invalid: 0.1", cause.getMessage());
-    }
-
-    @Test
-    void testDiscriminatorElementNotSpecified() {
-        SchemaFactory factory = SchemaFactory.newFactory();
-        assertTrue(factory instanceof StaEDISchemaFactory, "Not an instance");
-        InputStream stream = getClass().getResourceAsStream("/x12/discriminators/element-not-specified.xml");
-        EDISchemaException thrown = assertThrows(EDISchemaException.class, () -> factory.createSchema(stream));
-        Throwable cause = thrown.getCause();
-        assertNotNull(cause);
-        assertEquals("Discriminator position is unused (not specified): 2.1", cause.getMessage());
-    }
-
-    @Test
-    void testDiscriminatorComponentTooLarge() {
-        SchemaFactory factory = SchemaFactory.newFactory();
-        assertTrue(factory instanceof StaEDISchemaFactory, "Not an instance");
-        InputStream stream = getClass().getResourceAsStream("/x12/discriminators/component-too-large.xml");
-        EDISchemaException thrown = assertThrows(EDISchemaException.class, () -> factory.createSchema(stream));
-        Throwable cause = thrown.getCause();
-        assertNotNull(cause);
-        assertEquals("Discriminator component position invalid: 2.3", cause.getMessage());
-    }
-
-    @Test
-    void testDiscriminatorComponentTooSmall() {
-        SchemaFactory factory = SchemaFactory.newFactory();
-        assertTrue(factory instanceof StaEDISchemaFactory, "Not an instance");
-        InputStream stream = getClass().getResourceAsStream("/x12/discriminators/component-too-small.xml");
-        EDISchemaException thrown = assertThrows(EDISchemaException.class, () -> factory.createSchema(stream));
-        Throwable cause = thrown.getCause();
-        assertNotNull(cause);
-        assertEquals("Discriminator component position invalid: 2.0", cause.getMessage());
-    }
-
-    @Test
-    void testDiscriminatorMissingEnumeration() {
-        SchemaFactory factory = SchemaFactory.newFactory();
-        assertTrue(factory instanceof StaEDISchemaFactory, "Not an instance");
-        InputStream stream = getClass().getResourceAsStream("/x12/discriminators/element-without-enumeration.xml");
-        EDISchemaException thrown = assertThrows(EDISchemaException.class, () -> factory.createSchema(stream));
-        Throwable cause = thrown.getCause();
-        assertNotNull(cause);
-        assertEquals("Discriminator element does not specify value enumeration: 2.2", cause.getMessage());
-    }
-
-    @Test
-    void testInvalidSyntaxTypeValue() {
-        SchemaFactory factory = SchemaFactory.newFactory();
-        InputStream stream = getClass().getResourceAsStream("/EDIFACT/fragment-uci-invalid-syntax-type.xml");
-        EDISchemaException thrown = assertThrows(EDISchemaException.class, () -> factory.createSchema(stream));
-        Throwable cause = thrown.getCause();
-        assertNotNull(cause);
-        assertEquals("Invalid syntax 'type': [conditional-junk]", cause.getMessage());
-    }
-
-    @Test
-    void testInvalidMinOccursValue() {
-        SchemaFactory factory = SchemaFactory.newFactory();
-        InputStream stream = getClass().getResourceAsStream("/EDIFACT/fragment-uci-invalid-min-occurs.xml");
-        EDISchemaException thrown = assertThrows(EDISchemaException.class, () -> factory.createSchema(stream));
-        Throwable cause = thrown.getCause();
-        assertNotNull(cause);
-        assertEquals("Invalid minOccurs", cause.getMessage());
-    }
-
-    @Test
-    void testDuplicateElementTypeNames() {
-        SchemaFactory factory = SchemaFactory.newFactory();
-        InputStream stream = getClass().getResourceAsStream("/EDIFACT/fragment-uci-duplicate-element-names.xml");
-        EDISchemaException thrown = assertThrows(EDISchemaException.class, () -> factory.createSchema(stream));
-        Throwable cause = thrown.getCause();
-        assertNotNull(cause);
-        assertEquals("duplicate name: DE0004", cause.getMessage());
+        assertEquals(exceptionMessage, cause.getMessage());
     }
 
     @Test

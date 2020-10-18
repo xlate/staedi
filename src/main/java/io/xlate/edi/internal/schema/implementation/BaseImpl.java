@@ -15,7 +15,7 @@ public abstract class BaseImpl<T extends EDIType> implements EDITypeImplementati
     protected String title;
     protected String description;
 
-    public BaseImpl(String title, String description) {
+    protected BaseImpl(String title, String description) {
         super();
         this.title = title;
         this.description = description;
