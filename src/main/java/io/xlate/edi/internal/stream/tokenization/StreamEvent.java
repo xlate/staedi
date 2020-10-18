@@ -38,10 +38,7 @@ public class StreamEvent {
     }
 
     public void setData(CharSequence data) {
-        if (data instanceof CharArraySequence) {
-            this.data = put(this.data, (CharArraySequence) data);
-            this.dataNull = false;
-        } else if (data != null) {
+        if (data != null) {
             this.data = put(this.data, data);
             this.dataNull = false;
         } else {
@@ -81,35 +78,26 @@ public class StreamEvent {
         this.location.set(location);
     }
 
-    static CharBuffer put(CharBuffer buffer, CharArraySequence data) {
-        final int length = data.length();
-
-        if (buffer == null || buffer.capacity() < length) {
-            buffer = CharBuffer.allocate(length);
-        }
-
-        buffer.clear();
-
-        if (length > 0) {
-            data.putToBuffer(buffer);
-        }
-
-        buffer.flip();
-
-        return buffer;
-    }
-
     static CharBuffer put(CharBuffer buffer, CharSequence text) {
-        int length = text.length();
+        final int length = text.length();
 
         if (buffer == null || buffer.capacity() < length) {
             buffer = CharBuffer.allocate(length);
         }
 
         buffer.clear();
-        for (int i = 0; i < length; i++) {
-            buffer.put(text.charAt(i));
+
+        if (text instanceof CharArraySequence) {
+            if (length > 0) {
+                // Slightly optimized
+                ((CharArraySequence) text).putToBuffer(buffer);
+            }
+        } else {
+            for (int i = 0; i < length; i++) {
+                buffer.put(text.charAt(i));
+            }
         }
+
         buffer.flip();
 
         return buffer;

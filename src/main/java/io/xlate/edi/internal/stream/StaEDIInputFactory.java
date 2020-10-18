@@ -23,6 +23,7 @@ import java.util.Objects;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
+import io.xlate.edi.internal.stream.json.JsonParserFactory;
 import io.xlate.edi.schema.Schema;
 import io.xlate.edi.stream.EDIInputErrorReporter;
 import io.xlate.edi.stream.EDIInputFactory;
@@ -39,6 +40,9 @@ public class StaEDIInputFactory extends EDIInputFactory {
         supportedProperties.add(EDI_VALIDATE_CONTROL_CODE_VALUES);
         supportedProperties.add(XML_DECLARE_TRANSACTION_XMLNS);
         supportedProperties.add(EDI_IGNORE_EXTRANEOUS_CHARACTERS);
+
+        supportedProperties.add(JSON_NULL_EMPTY_ELEMENTS);
+        supportedProperties.add(JSON_OBJECT_ELEMENTS);
     }
 
     @Override
@@ -77,6 +81,11 @@ public class StaEDIInputFactory extends EDIInputFactory {
     @Override
     public XMLStreamReader createXMLStreamReader(EDIStreamReader reader) throws XMLStreamException {
         return new StaEDIXMLStreamReader(reader, properties);
+    }
+
+    @Override
+    public <J> J createJsonParser(EDIStreamReader reader, Class<J> type) {
+        return JsonParserFactory.createJsonParser(reader, type, properties);
     }
 
     @Override

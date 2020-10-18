@@ -44,7 +44,7 @@ import io.xlate.edi.stream.EDIStreamReader;
 import io.xlate.edi.stream.EDIStreamValidationError;
 import io.xlate.edi.stream.Location;
 
-public class StaEDIStreamReader implements EDIStreamReader {
+public class StaEDIStreamReader implements EDIStreamReader, Configurable {
 
     private static final Logger LOGGER = Logger.getLogger(StaEDIStreamReader.class.getName());
 
@@ -461,7 +461,7 @@ public class StaEDIStreamReader implements EDIStreamReader {
     /**************************************************************************/
 
     boolean validateControlCodeValues() {
-        return getBooleanProperty(EDIInputFactory.EDI_VALIDATE_CONTROL_CODE_VALUES, true);
+        return getProperty(EDIInputFactory.EDI_VALIDATE_CONTROL_CODE_VALUES, Boolean::parseBoolean, true);
     }
 
     boolean useInternalControlSchema() {
@@ -469,20 +469,10 @@ public class StaEDIStreamReader implements EDIStreamReader {
             return false;
         }
 
-        return getBooleanProperty(EDIInputFactory.EDI_VALIDATE_CONTROL_STRUCTURE, true);
+        return getProperty(EDIInputFactory.EDI_VALIDATE_CONTROL_STRUCTURE, Boolean::parseBoolean, true);
     }
 
     boolean ignoreExtraneousCharacters() {
-        return getBooleanProperty(EDIInputFactory.EDI_IGNORE_EXTRANEOUS_CHARACTERS, false);
-    }
-
-    boolean getBooleanProperty(String propertyName, boolean defaultValue) {
-        Object property = properties.get(propertyName);
-
-        if (property == null) {
-            return defaultValue;
-        }
-
-        return Boolean.parseBoolean(property.toString());
+        return getProperty(EDIInputFactory.EDI_IGNORE_EXTRANEOUS_CHARACTERS, Boolean::parseBoolean, false);
     }
 }

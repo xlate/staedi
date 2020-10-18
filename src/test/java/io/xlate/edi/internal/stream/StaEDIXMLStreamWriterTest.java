@@ -1,5 +1,6 @@
 package io.xlate.edi.internal.stream;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -567,5 +568,13 @@ class StaEDIXMLStreamWriterTest {
         }
         assertEquals(String.format(StaEDIXMLStreamWriter.MSG_INVALID_ELEMENT_NAME, "{urn:xlate.io:staedi:names:composites}UNBAA"),
                      cause.getMessage());
+    }
+
+    @Test
+    void testRepeatedSegmentClearsPreviousElement() throws Exception {
+        StreamSource source = new StreamSource(getClass().getResourceAsStream("/x12/issue134/repeated-ctx-ctx01.xml"));
+        StAXResult result = new StAXResult(it);
+        Transformer tx = TransformerFactory.newInstance().newTransformer();
+        assertDoesNotThrow(() -> tx.transform(source, result));
     }
 }
