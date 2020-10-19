@@ -232,10 +232,17 @@ public class Validator {
     }
 
     public EDIReference getSegmentReference() {
+        final EDIReference reference;
+
         if (implSegmentSelected) {
-            return implNode.getLink();
+            reference = implNode.getLink();
+        } else if (segmentExpected) {
+            reference = segment.getLink();
+        } else  {
+            reference = null;
         }
-        return segment.getLink();
+
+        return reference;
     }
 
     public EDIReference getCompositeReference() {
