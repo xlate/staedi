@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import io.xlate.edi.schema.EDISchemaException;
 import io.xlate.edi.schema.Schema;
@@ -49,53 +51,36 @@ class StaEDIStreamReaderSyntaxTest {
         return new Object[] { errors, errorLocations };
     }
 
-    @Test
-    void testFirstSyntaxValidation_NonePresent() throws Exception {
-        Object[] result = readInterchange(""
-                + "UNB+UNOA:3+SENDER+RECEIVER+200906:1148+1'"
-                + "UNH+1+INVOIC:D:93A:UN'"
-                + "UXA+++'"
-                + "UNT+3+1'"
-                + "UNZ+1+1'", "/EDIFACT/fragment-first-syntax-validation.xml");
-
-        List<EDIStreamValidationError> errors = (List<EDIStreamValidationError>) result[0];
-        assertEquals(0, errors.size(), () -> "Unexpected errors: " + errors);
-    }
-
-    @Test
-    void testFirstSyntaxValidation_FirstOnlyPresent() throws Exception {
-        Object[] result = readInterchange(""
-                + "UNB+UNOA:3+SENDER+RECEIVER+200906:1148+1'"
-                + "UNH+1+INVOIC:D:93A:UN'"
-                + "UXA+FIRST++'"
-                + "UNT+3+1'"
-                + "UNZ+1+1'", "/EDIFACT/fragment-first-syntax-validation.xml");
-
-        List<EDIStreamValidationError> errors = (List<EDIStreamValidationError>) result[0];
-        assertEquals(0, errors.size(), () -> "Unexpected errors: " + errors);
-    }
-
-    @Test
-    void testFirstSyntaxValidation_FirstAndSecondPresent() throws Exception {
-        Object[] result = readInterchange(""
-                + "UNB+UNOA:3+SENDER+RECEIVER+200906:1148+1'"
-                + "UNH+1+INVOIC:D:93A:UN'"
-                + "UXA+FIRST+SECOND+'"
-                + "UNT+3+1'"
-                + "UNZ+1+1'", "/EDIFACT/fragment-first-syntax-validation.xml");
-
-        List<EDIStreamValidationError> errors = (List<EDIStreamValidationError>) result[0];
-        assertEquals(0, errors.size(), () -> "Unexpected errors: " + errors);
-    }
-
-    @Test
-    void testFirstSyntaxValidation_SecondAndThirdPresent() throws Exception {
-        Object[] result = readInterchange(""
-                + "UNB+UNOA:3+SENDER+RECEIVER+200906:1148+1'"
-                + "UNH+1+INVOIC:D:93A:UN'"
-                + "UXA++SECOND+THIRD'"
-                + "UNT+3+1'"
-                + "UNZ+1+1'", "/EDIFACT/fragment-first-syntax-validation.xml");
+    @ParameterizedTest
+    @ValueSource(
+            strings = {
+                        "" // None Present
+                                + "UNB+UNOA:3+SENDER+RECEIVER+200906:1148+1'"
+                                + "UNH+1+INVOIC:D:93A:UN'"
+                                + "UXA+++'"
+                                + "UNT+3+1'"
+                                + "UNZ+1+1'",
+                        "" // First Only Present
+                                + "UNB+UNOA:3+SENDER+RECEIVER+200906:1148+1'"
+                                + "UNH+1+INVOIC:D:93A:UN'"
+                                + "UXA+FIRST++'"
+                                + "UNT+3+1'"
+                                + "UNZ+1+1'",
+                        "" // First And Second Present
+                                + "UNB+UNOA:3+SENDER+RECEIVER+200906:1148+1'"
+                                + "UNH+1+INVOIC:D:93A:UN'"
+                                + "UXA+FIRST+SECOND+'"
+                                + "UNT+3+1'"
+                                + "UNZ+1+1'",
+                        "" // Second And Third Present
+                                + "UNB+UNOA:3+SENDER+RECEIVER+200906:1148+1'"
+                                + "UNH+1+INVOIC:D:93A:UN'"
+                                + "UXA++SECOND+THIRD'"
+                                + "UNT+3+1'"
+                                + "UNZ+1+1'"
+            })
+    void testFirstSyntaxValidation_Valid(String interchange) throws Exception {
+        Object[] result = readInterchange(interchange, "/EDIFACT/fragment-first-syntax-validation.xml");
 
         List<EDIStreamValidationError> errors = (List<EDIStreamValidationError>) result[0];
         assertEquals(0, errors.size(), () -> "Unexpected errors: " + errors);

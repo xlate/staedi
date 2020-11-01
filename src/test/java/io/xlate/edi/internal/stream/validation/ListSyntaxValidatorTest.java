@@ -5,9 +5,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -113,10 +113,7 @@ class ListSyntaxValidatorTest extends SyntaxValidatorTestBase {
     @Test
     void testValidateListConditionalMissingRequired_Composite() {
         when(structure.isNodeType(EDIType.Type.COMPOSITE)).thenReturn(true);
-
-        UsageNode parent = mock(UsageNode.class);
-        when(structure.getParent()).thenReturn(parent);
-        when(parent.getIndex()).thenReturn(0); // composite is the first element in the parent segment
+        when(structure.getIndex()).thenReturn(2); // composite is the third element in the parent segment
 
         when(syntax.getPositions()).thenReturn(Arrays.asList(1, 3, 4));
 
@@ -125,24 +122,23 @@ class ListSyntaxValidatorTest extends SyntaxValidatorTestBase {
                                                  mockUsageNode(false, 3)/*,
                                                                         mockUsageNode(false, 4)*/);
         when(structure.getChildren()).thenReturn(children);
-        final AtomicInteger count = new AtomicInteger(0);
-        final AtomicInteger element = new AtomicInteger(0);
+        final List<Integer> elements = new ArrayList<>();
 
         doAnswer((Answer<Void>) invocation -> {
-            count.incrementAndGet();
-            element.set(invocation.getArgument(4));
+            elements.add(invocation.getArgument(5));
             return null;
         }).when(handler)
           .elementError(eq(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR),
                         eq(EDIStreamValidationError.CONDITIONAL_REQUIRED_DATA_ELEMENT_MISSING),
                         nullable(EDIReference.class),
                         nullable(CharSequence.class),
-                        any(Integer.class),
+                        eq(3),
                         any(Integer.class),
                         any(Integer.class));
 
         validator.validate(syntax, structure, handler);
-        assertEquals(1, element.get());
-        assertEquals(2, count.get()); // Error for both positions 3 and 4
+        assertEquals(2, elements.size()); // Error for both positions 3 and 4
+        assertEquals(3, elements.get(0));
+        assertEquals(4, elements.get(1));
     }
 }

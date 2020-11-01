@@ -169,7 +169,7 @@ interface SyntaxValidator {
 
     static int getElementPosition(UsageNode structure, int position) {
         if (structure.isNodeType(EDIType.Type.COMPOSITE)) {
-            return structure.getParent().getIndex() + 1;
+            return structure.getIndex() + 1;
         }
 
         return position;

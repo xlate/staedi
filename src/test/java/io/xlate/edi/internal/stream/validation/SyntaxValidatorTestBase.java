@@ -43,7 +43,6 @@ abstract class SyntaxValidatorTestBase {
         when(typeReference.getReferencedType()).thenReturn(type);
         when(node.getLink()).thenReturn(typeReference);
         when(node.isUsed()).thenReturn(used);
-        when(node.getParent()).thenReturn(structure);
         when(node.getIndex()).thenReturn(index);
 
         return node;
