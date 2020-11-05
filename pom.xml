@@ -55,7 +55,7 @@
     <sonar.host.url>https://sonarcloud.io</sonar.host.url>
     <sonar.organization>xlate</sonar.organization>
 
-    <version.jakarta.xml.bind.api>2.3.3</version.jakarta.xml.bind.api>
+    <version.jakarta.xml.bind.api>3.0.0</version.jakarta.xml.bind.api>
     <version.jakarta.json.api>2.0.0</version.jakarta.json.api>
     <version.javax.json.api>1.1.4</version.javax.json.api>
     <version.jackson>2.11.3</version.jackson>
