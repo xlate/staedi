@@ -30,7 +30,6 @@ class DecimalValidator extends NumericValidator {
 
     @Override
     int validate(Dialect dialect, CharSequence value) {
-        final char decimalMark = dialect.getDecimalMark();
         int length = value.length();
 
         int dec = 0;
@@ -65,7 +64,7 @@ class DecimalValidator extends NumericValidator {
                 break;
 
             default:
-                if (value.charAt(i) == decimalMark) {
+                if (dialect.isDecimalMark(value.charAt(i))) {
                     length--;
                     invalid = !validDecimalSymbol(++dec, exp, invalid);
                 } else {

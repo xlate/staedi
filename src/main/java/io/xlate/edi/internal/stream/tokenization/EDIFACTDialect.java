@@ -31,6 +31,7 @@ public class EDIFACTDialect extends Dialect {
     static final char DFLT_REPETITION_SEPARATOR = '*';
     static final char DFLT_RELEASE_CHARACTER = '?';
     static final char DFLT_DECIMAL_MARK = '.';
+    static final char ALT_DECIMAL_MARK = ',';
 
     private static final int EDIFACT_UNA_LENGTH = 9;
 
@@ -41,6 +42,7 @@ public class EDIFACTDialect extends Dialect {
     private int unbStart = -1;
     private boolean initialized;
     private boolean rejected;
+    private boolean ignoreDecimalAdvice;
 
     private static final int TX_AGENCY = 0;
     private static final int TX_VERSION = 1;
@@ -70,12 +72,22 @@ public class EDIFACTDialect extends Dialect {
         return headerTag;
     }
 
+    @Override
+    public boolean isDecimalMark(char value) {
+        if (!this.ignoreDecimalAdvice) {
+            return super.isDecimalMark(value);
+        }
+
+        return value == DFLT_DECIMAL_MARK || value == ALT_DECIMAL_MARK;
+    }
+
     boolean initialize(CharacterSet characters) {
         String[] parsedVersion = parseVersion();
 
         if (parsedVersion.length > 1) {
             this.version = parsedVersion;
             final String syntaxVersion = this.version[1];
+            this.ignoreDecimalAdvice = syntaxVersion.compareTo("4") >= 0;
 
             characters.setClass(componentDelimiter, CharacterClass.COMPONENT_DELIMITER);
             characters.setClass(elementDelimiter, CharacterClass.ELEMENT_DELIMITER);

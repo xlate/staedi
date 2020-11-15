@@ -50,6 +50,10 @@ public abstract class Dialect {
         return segmentDelimiter;
     }
 
+    public boolean isDecimalMark(char value) {
+        return value == getDecimalMark();
+    }
+
     public abstract String getStandard();
 
     public abstract String[] getVersion();
