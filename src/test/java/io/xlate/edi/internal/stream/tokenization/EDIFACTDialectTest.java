@@ -97,6 +97,18 @@ class EDIFACTDialectTest {
     }
 
     @Test
+    void testDecimalMarkIgnoredVersion4() throws EDIException {
+        EDIFACTDialect edifact = (EDIFACTDialect) DialectFactory.getDialect("UNA".toCharArray(), 0, 3);
+        CharacterSet characters = new CharacterSet();
+        "UNA:+_ *'UNB+UNOA:4+111111111:1+222222222:1+200726:1455+1'".chars().forEach(c -> edifact.appendHeader(characters, (char) c));
+
+        assertTrue(edifact.initialize(characters));
+        assertTrue(edifact.isDecimalMark('.'));
+        assertTrue(edifact.isDecimalMark(','));
+        assertFalse(edifact.isDecimalMark('_'));
+    }
+
+    @Test
     void testBlankSegmentTermPreVersion4() throws EDIException {
         EDIFACTDialect edifact = (EDIFACTDialect) DialectFactory.getDialect("UNA".toCharArray(), 0, 3);
         CharacterSet characters = new CharacterSet();
@@ -109,6 +121,17 @@ class EDIFACTDialectTest {
         assertEquals('.', edifact.getDecimalMark());
         assertEquals('\0', edifact.getRepetitionSeparator());
         assertEquals('\\', edifact.getReleaseIndicator());
+    }
+
+    @Test
+    void testDecimalMarkUsedPreVersion4() throws EDIException {
+        EDIFACTDialect edifact = (EDIFACTDialect) DialectFactory.getDialect("UNA".toCharArray(), 0, 3);
+        CharacterSet characters = new CharacterSet();
+        "UNA:+,\\* UNB+UNOA:3+111111111:1+222222222:1+200726:1455+1 ".chars().forEach(c -> edifact.appendHeader(characters, (char) c));
+
+        assertTrue(edifact.initialize(characters));
+        assertFalse(edifact.isDecimalMark('.'));
+        assertTrue(edifact.isDecimalMark(','));
     }
 
     @Test
