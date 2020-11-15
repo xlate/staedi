@@ -84,6 +84,24 @@ class TimeValidatorTest implements ValueSetTester {
         assertEquals(EDIStreamValidationError.INVALID_TIME, errors.get(0));
     }
 
+
+    @Test
+    void testValidateInvalidPartialSeconds() {
+        EDISimpleType element = mock(EDISimpleType.class);
+        when(element.getMinLength(anyString())).thenCallRealMethod();
+        when(element.getMaxLength(anyString())).thenCallRealMethod();
+        when(element.getValueSet(anyString())).thenCallRealMethod();
+
+        when(element.getMinLength()).thenReturn(4L);
+        when(element.getMaxLength()).thenReturn(8L);
+        when(element.getValueSet()).thenReturn(setOf());
+        ElementValidator v = TimeValidator.getInstance();
+        List<EDIStreamValidationError> errors = new ArrayList<>();
+        v.validate(dialect, element, "12305", errors);
+        assertEquals(1, errors.size());
+        assertEquals(EDIStreamValidationError.INVALID_TIME, errors.get(0));
+    }
+
     @Test
     void testValidateValidValue() {
         EDISimpleType element = mock(EDISimpleType.class);
@@ -97,6 +115,22 @@ class TimeValidatorTest implements ValueSetTester {
         ElementValidator v = TimeValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
         v.validate(dialect, element, "12305900", errors);
+        assertEquals(0, errors.size());
+    }
+
+    @Test
+    void testValidateValidValueFractionalSeconds() {
+        EDISimpleType element = mock(EDISimpleType.class);
+        when(element.getMinLength(anyString())).thenCallRealMethod();
+        when(element.getMaxLength(anyString())).thenCallRealMethod();
+        when(element.getValueSet(anyString())).thenCallRealMethod();
+
+        when(element.getMinLength()).thenReturn(4L);
+        when(element.getMaxLength()).thenReturn(8L);
+        when(element.getValueSet()).thenReturn(setOf());
+        ElementValidator v = TimeValidator.getInstance();
+        List<EDIStreamValidationError> errors = new ArrayList<>();
+        v.validate(dialect, element, "1230591", errors);
         assertEquals(0, errors.size());
     }
 
