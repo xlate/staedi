@@ -35,6 +35,9 @@ public final class JsonParserFactory {
         case "javax.json.stream.JsonParser":
             parser = (J) new StaEDIJavaxJsonParser(reader, properties);
             break;
+        case "com.fasterxml.jackson.core.JsonParser":
+            parser = (J) new StaEDIJacksonJsonParser(reader, properties);
+            break;
         default:
             throw new IllegalArgumentException("Unsupported JSON parser type: " + type);
         }
