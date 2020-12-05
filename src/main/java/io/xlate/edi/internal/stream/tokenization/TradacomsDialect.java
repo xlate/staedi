@@ -55,11 +55,6 @@ public class TradacomsDialect extends Dialect {
         return STX;
     }
 
-    @Override
-    public boolean isDecimalMark(char value) {
-        return false; // Decimal mark always implied in TRADACOMS
-    }
-
     boolean initialize(CharacterSet characters) {
         String[] parsedVersion = parseVersion();
 

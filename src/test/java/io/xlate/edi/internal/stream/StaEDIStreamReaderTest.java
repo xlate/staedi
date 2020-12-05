@@ -44,6 +44,8 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
@@ -53,9 +55,9 @@ import io.xlate.edi.schema.EDIReference;
 import io.xlate.edi.schema.EDISchemaException;
 import io.xlate.edi.schema.EDISimpleType;
 import io.xlate.edi.schema.EDIType;
+import io.xlate.edi.schema.EDIType.Type;
 import io.xlate.edi.schema.Schema;
 import io.xlate.edi.schema.SchemaFactory;
-import io.xlate.edi.schema.EDIType.Type;
 import io.xlate.edi.stream.EDIInputFactory;
 import io.xlate.edi.stream.EDIStreamConstants.Delimiters;
 import io.xlate.edi.stream.EDIStreamEvent;
@@ -125,10 +127,14 @@ class StaEDIStreamReaderTest implements ConstantsTest {
         assertEquals(1, delimiterExceptions, "Unexpected exceptions");
     }
 
-    @Test
-    void testGetDelimitersTradacoms() throws EDIStreamException {
+    @ParameterizedTest
+    @CsvSource({
+        "Basic TRADACOMS, /TRADACOMS/order.edi",
+        "Basic TRADACOMS (extra MHD data), /TRADACOMS/order-extra-mhd-data.edi",
+    })
+    void testGetDelimitersTRADACOMS(String title, String resourceName) throws EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
-        InputStream stream = getClass().getResourceAsStream("/TRADACOMS/order.edi");
+        InputStream stream = getClass().getResourceAsStream(resourceName);
         EDIStreamReader reader = factory.createEDIStreamReader(stream);
         Map<String, Character> expected = new HashMap<>(5);
         expected.put(Delimiters.SEGMENT, '\'');
@@ -1627,6 +1633,74 @@ class StaEDIStreamReaderTest implements ConstantsTest {
         assertEquals(2, segmentEndVersionStrings.size());
         assertEquals("UN.D.96A.EAN008A",  segmentEndVersionStrings.get("UNG"));
         assertEquals("UN.D.96B.EAN008B",  segmentEndVersionStrings.get("UNH"));
+    }
+
+
+    @Test
+    void testTransactionVersionRetrievalTRADACOMS() throws EDIStreamException, IOException {
+        InputStream stream = getClass().getResourceAsStream("/TRADACOMS/order.edi");
+        EDIInputFactory factory = EDIInputFactory.newFactory();
+        EDIStreamReader rawReader = factory.createEDIStreamReader(stream);
+        EDIStreamReader reader = factory.createFilteredReader(rawReader, r -> true); // Accept all events
+        Exception thrown = null;
+
+        List<String[]> segmentEndVersions = new ArrayList<>(3);
+        List<String> segmentEndVersionStrings = new ArrayList<>(3);
+        Exception initThrown = null;
+        Exception interchangeEndThrown = null;
+
+        try {
+            initThrown = assertThrows(IllegalStateException.class, () -> reader.getTransactionVersionString());
+
+            while (reader.hasNext()) {
+                try {
+                    switch (reader.next()) {
+                    case START_SEGMENT:
+                        if ("END".equals(reader.getText())) {
+                            interchangeEndThrown = assertThrows(IllegalStateException.class, () -> reader.getTransactionVersionString());
+                        }
+
+                        break;
+
+                    case END_SEGMENT:
+                        switch (reader.getText()) {
+                        case "MHD":
+                            segmentEndVersions.add(reader.getTransactionVersion());
+                            segmentEndVersionStrings.add(reader.getTransactionVersionString());
+                            break;
+                        default:
+                            break;
+                        }
+
+                        break;
+                    default:
+                        break;
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    thrown = e;
+                    break;
+                }
+            }
+        } finally {
+            reader.close();
+        }
+
+        assertNull(thrown);
+        assertNotNull(initThrown);
+        assertEquals("transaction version not accessible", initThrown.getMessage());
+        assertNotNull(interchangeEndThrown);
+        assertEquals("transaction version not accessible", interchangeEndThrown.getMessage());
+
+        assertEquals(3, segmentEndVersions.size());
+        assertArrayEquals(new String[] { "ORDHDR", "9" },  segmentEndVersions.get(0));
+        assertArrayEquals(new String[] { "ORDERS", "9" },  segmentEndVersions.get(1));
+        assertArrayEquals(new String[] { "ORDTLR", "9" },  segmentEndVersions.get(2));
+
+        assertEquals(3, segmentEndVersionStrings.size());
+        assertEquals("ORDHDR.9",  segmentEndVersionStrings.get(0));
+        assertEquals("ORDERS.9",  segmentEndVersionStrings.get(1));
+        assertEquals("ORDTLR.9",  segmentEndVersionStrings.get(2));
     }
 
     @Test

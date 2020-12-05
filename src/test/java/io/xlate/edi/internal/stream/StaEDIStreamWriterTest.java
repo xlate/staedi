@@ -678,13 +678,17 @@ class StaEDIStreamWriterTest {
 
     @ParameterizedTest
     @CsvSource({
-                 "X12 with BIN Segment, /x12/sample275_with_HL7_valid_BIN01.edi",
-                 "X12 with Non-ASCII Segment Terminator, /x12/issue109/ts214_ellipses_segterm.edi",
-                 "Basic TRADACOMS, /TRADACOMS/order.edi"
+                 "X12 with BIN Segment, /x12/sample275_with_HL7_valid_BIN01.edi, false",
+                 "X12 with Non-ASCII Segment Terminator, /x12/issue109/ts214_ellipses_segterm.edi, false",
+                 "Basic TRADACOMS, /TRADACOMS/order.edi, false",
+                 "Basic TRADACOMS 40 Blocked, /TRADACOMS/order-blocked.edi, true",
     })
-    void testInputEquivalence(String title, String resourceName) throws Exception {
+    void testInputEquivalence(String title, String resourceName, boolean blocked) throws Exception {
         EDIInputFactory inputFactory = EDIInputFactory.newFactory();
-        final ByteArrayOutputStream expected = new ByteArrayOutputStream(16384);
+        if (blocked) {
+            inputFactory.setProperty(EDIInputFactory.EDI_IGNORE_EXTRANEOUS_CHARACTERS, "true");
+        }
+        final ByteArrayOutputStream readBuffer = new ByteArrayOutputStream(16384);
         final InputStream delegate = getClass().getResourceAsStream(resourceName);
 
         InputStream source = new InputStream() {
@@ -693,7 +697,7 @@ class StaEDIStreamWriterTest {
                 int value = delegate.read();
 
                 if (value != -1) {
-                    expected.write(value);
+                    readBuffer.write(value);
                     System.out.write(value);
                     System.out.flush();
                     return value;
@@ -705,13 +709,16 @@ class StaEDIStreamWriterTest {
         EDIStreamReader rawReader = inputFactory.createEDIStreamReader(source);
         EDIStreamReader reader = inputFactory.createFilteredReader(rawReader, r -> true); // Accept all events
         ByteArrayOutputStream result = new ByteArrayOutputStream(16384);
-        writeFromReader(reader, result);
-        assertEquals(expected.toString().trim(), result.toString().trim());
+        writeFromReader(reader, blocked, result);
+        final String expected = blocked ? readBuffer.toString().replace("\n", "") : readBuffer.toString();
+        assertEquals(expected.trim(), result.toString().trim());
     }
 
-    void writeFromReader(EDIStreamReader reader, OutputStream result) throws Exception {
+    void writeFromReader(EDIStreamReader reader, boolean blocked, OutputStream result) throws Exception {
         EDIOutputFactory outputFactory = EDIOutputFactory.newFactory();
-        outputFactory.setProperty(EDIOutputFactory.PRETTY_PRINT, true);
+        if (!blocked) {
+            outputFactory.setProperty(EDIOutputFactory.PRETTY_PRINT, true);
+        }
         EDIStreamWriter writer = null;
         EDIStreamEvent event;
         String tag = null;

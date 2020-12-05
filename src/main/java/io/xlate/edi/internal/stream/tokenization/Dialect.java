@@ -33,7 +33,7 @@ public abstract class Dialect {
     protected final String[] transactionVersion;
     protected String transactionVersionString;
 
-    public Dialect(String[] initialTransactionVersion) {
+    protected Dialect(String[] initialTransactionVersion) {
         this.transactionVersion = initialTransactionVersion;
     }
 
