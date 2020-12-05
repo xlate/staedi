@@ -35,36 +35,29 @@ public class EDIFACTDialect extends Dialect {
 
     private static final int EDIFACT_UNA_LENGTH = 9;
 
-    private String headerTag;
+    private final String headerTag;
     private String[] version;
     StringBuilder header;
     private int index = -1;
     private int unbStart = -1;
-    private boolean initialized;
-    private boolean rejected;
     private boolean ignoreDecimalAdvice;
 
     private static final int TX_AGENCY = 0;
     private static final int TX_VERSION = 1;
     private static final int TX_RELEASE = 2;
     private static final int TX_ASSIGNED_CODE = 3;
-    private String[] transactionVersion = new String[4];
-    private String transactionVersionString;
 
-    EDIFACTDialect() {
+    EDIFACTDialect(String headerTag) {
+        super(new String[4]);
         componentDelimiter = DFLT_COMPONENT_ELEMENT_SEPARATOR;
         elementDelimiter = DFLT_DATA_ELEMENT_SEPARATOR;
         decimalMark = DFLT_DECIMAL_MARK;
         releaseIndicator = DFLT_RELEASE_CHARACTER;
         elementRepeater = DFLT_REPETITION_SEPARATOR;
         segmentDelimiter = DFLT_SEGMENT_TERMINATOR;
+        this.headerTag = headerTag;
 
         clearTransactionVersion();
-    }
-
-    @Override
-    public void setHeaderTag(String tag) {
-        headerTag = tag;
     }
 
     @Override
@@ -132,18 +125,8 @@ public class EDIFACTDialect extends Dialect {
     }
 
     @Override
-    public boolean isConfirmed() {
-        return initialized;
-    }
-
-    @Override
-    public boolean isRejected() {
-        return rejected;
-    }
-
-    @Override
-    public boolean isServiceAdviceSegment(String tag) {
-        return UNA.equals(tag);
+    public boolean isServiceAdviceSegment(CharSequence tag) {
+        return UNA.contentEquals(tag);
     }
 
     @Override
@@ -267,7 +250,8 @@ public class EDIFACTDialect extends Dialect {
         }
     }
 
-    void clearTransactionVersion() {
+    @Override
+    public void clearTransactionVersion() {
         for (int i = 0; i < transactionVersion.length; i++) {
             transactionVersion[i] = "";
         }
@@ -344,23 +328,4 @@ public class EDIFACTDialect extends Dialect {
         }
     }
 
-    @Override
-    public void transactionEnd() {
-        clearTransactionVersion();
-    }
-
-    @Override
-    public void groupEnd() {
-        clearTransactionVersion();
-    }
-
-    @Override
-    public String[] getTransactionVersion() {
-        return transactionVersionString.isEmpty() ? null : transactionVersion;
-    }
-
-    @Override
-    public String getTransactionVersionString() {
-        return transactionVersionString;
-    }
 }

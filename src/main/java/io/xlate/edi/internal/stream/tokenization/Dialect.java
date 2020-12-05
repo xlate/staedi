@@ -20,11 +20,22 @@ import io.xlate.edi.stream.Location;
 public abstract class Dialect {
 
     protected char segmentDelimiter;
+    protected char segmentTagTerminator = '\0';
     protected char elementDelimiter;
     protected char decimalMark;
     protected char releaseIndicator;
     protected char componentDelimiter;
     protected char elementRepeater;
+
+    protected boolean initialized;
+    protected boolean rejected;
+
+    protected final String[] transactionVersion;
+    protected String transactionVersionString;
+
+    protected Dialect(String[] initialTransactionVersion) {
+        this.transactionVersion = initialTransactionVersion;
+    }
 
     public char getComponentElementSeparator() {
         return componentDelimiter;
@@ -50,23 +61,39 @@ public abstract class Dialect {
         return segmentDelimiter;
     }
 
+    public char getSegmentTagTerminator() {
+        return segmentTagTerminator;
+    }
+
     public boolean isDecimalMark(char value) {
         return value == getDecimalMark();
+    }
+
+    public boolean isConfirmed() {
+        return initialized;
+    }
+
+    public boolean isRejected() {
+        return rejected;
+    }
+
+    /**
+     * Check if the given segment tag is this dialect's service advice segment.
+     * E.g. <code>UNA</code> resolves to <code>true</code> for EDIFACT.
+     *
+     * @param segmentTag the character tag of the segment
+     * @return true when the segmentTag is the dialect's service segment,
+     *         otherwise false
+     */
+    public boolean isServiceAdviceSegment(CharSequence segmentTag) {
+        return false; // Service segment not used by default
     }
 
     public abstract String getStandard();
 
     public abstract String[] getVersion();
 
-    public abstract void setHeaderTag(String tag);
-
     public abstract String getHeaderTag();
-
-    public abstract boolean isConfirmed();
-
-    public abstract boolean isRejected();
-
-    public abstract boolean isServiceAdviceSegment(String tag);
 
     public abstract boolean appendHeader(CharacterSet characters, char value);
 
@@ -81,15 +108,21 @@ public abstract class Dialect {
      */
     public abstract void elementData(CharSequence data, Location location);
 
+    protected abstract void clearTransactionVersion();
+
     /**
      * Notify the dialect that a transaction is complete.
      */
-    public abstract void transactionEnd();
+    public void transactionEnd() {
+        clearTransactionVersion();
+    }
 
     /**
      * Notify the dialect that a group is complete.
      */
-    public abstract void groupEnd();
+    public void groupEnd() {
+        clearTransactionVersion();
+    }
 
     /**
      * Returns the identifying elements of the current transaction's version.
@@ -97,7 +130,9 @@ public abstract class Dialect {
      * @return the array of elements identifying the current transaction's
      *         version
      */
-    public abstract String[] getTransactionVersion();
+    public String[] getTransactionVersion() {
+        return transactionVersionString.isEmpty() ? null : transactionVersion;
+    }
 
     /**
      * Returns the identifying elements of the current transaction's version as
@@ -106,5 +141,7 @@ public abstract class Dialect {
      * @return the String representation of the elements identifying the current
      *         transaction's version
      */
-    public abstract String getTransactionVersionString();
+    public String getTransactionVersionString() {
+        return transactionVersionString;
+    }
 }

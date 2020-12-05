@@ -29,6 +29,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import io.xlate.edi.internal.stream.ConstantsTest;
 import io.xlate.edi.internal.stream.StaEDIStreamLocation;
@@ -316,9 +318,13 @@ class LexerTest {
         assertTrue(s > 0, "No events");
     }
 
-    @Test
-    void testRejectedX12Dialect() {
-        InputStream stream = new ByteArrayInputStream("ISA*00?          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~".getBytes());
+    @ParameterizedTest
+    @CsvSource({
+        "X12 (bad element delimiter), ISA*00?          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~",
+        "TRADACOMS (simple version), STX=1+5000000000000:SOME STORES LTD+5010000000000:SUPPLIER UK LTD+070315:130233+000007+PASSW+ORDHDR+B'"
+    })
+    void testRejectedDialect(String dialect, String segment) {
+        InputStream stream = new ByteArrayInputStream(segment.getBytes());
         TestLexerEventHandler eventHandler = new TestLexerEventHandler();
         final StaEDIStreamLocation location = new StaEDIStreamLocation();
         final Lexer lexer = new Lexer(stream, StandardCharsets.UTF_8, eventHandler, location, false);

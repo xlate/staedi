@@ -192,19 +192,24 @@ public class Lexer {
             case TAG_SEARCH:
             case HEADER_TAG_SEARCH:
                 break;
-            case HEADER_TAG_I:
-            case HEADER_TAG_N:
-            case HEADER_TAG_S:
-            case HEADER_TAG_U:
+            case HEADER_X12_I:
+            case HEADER_X12_S:
+            case HEADER_EDIFACT_N:
+            case HEADER_EDIFACT_U:
+            case HEADER_TRADACOMS_S:
+            case HEADER_TRADACOMS_T:
             case TAG_1:
             case TAG_2:
             case TAG_3:
-            case TRAILER_TAG_I:
-            case TRAILER_TAG_E:
-            case TRAILER_TAG_A:
-            case TRAILER_TAG_U:
-            case TRAILER_TAG_N:
-            case TRAILER_TAG_Z:
+            case TRAILER_X12_I:
+            case TRAILER_X12_E:
+            case TRAILER_X12_A:
+            case TRAILER_EDIFACT_U:
+            case TRAILER_EDIFACT_N:
+            case TRAILER_EDIFACT_Z:
+            case TRAILER_TRADACOMS_E:
+            case TRAILER_TRADACOMS_N:
+            case TRAILER_TRADACOMS_D:
             case ELEMENT_DATA:
             case TRAILER_ELEMENT_DATA:
                 buffer.put((char) input);
@@ -381,6 +386,7 @@ public class Lexer {
             closeSegment();
             state = State.HEADER_TAG_SEARCH;
             break;
+        case SEGMENT_TAG_DELIMITER:
         case ELEMENT_DELIMITER:
         case ELEMENT_REPEATER:
         case COMPONENT_DELIMITER:
@@ -412,7 +418,6 @@ public class Lexer {
 
     private EDIException invalidStateError() {
         StringBuilder message = new StringBuilder();
-        message.append(": ");
         message.append(state);
         message.append(" (previous: ");
         message.append(previous);

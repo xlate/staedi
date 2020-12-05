@@ -94,6 +94,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     private List<EDIValidationException> errors = new ArrayList<>();
 
     private char segmentTerminator;
+    private char segmentTagTerminator;
     private char dataElementSeparator;
     private char componentElementSeparator;
     private char repetitionSeparator;
@@ -140,6 +141,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
 
     private void setupDelimiters() {
         segmentTerminator = getDelimiter(properties, Delimiters.SEGMENT, dialect::getSegmentTerminator);
+        segmentTagTerminator = dialect.getSegmentTagTerminator(); // Not configurable - TRADACOMS
         dataElementSeparator = getDelimiter(properties, Delimiters.DATA_ELEMENT, dialect::getDataElementSeparator);
         componentElementSeparator = getDelimiter(properties, Delimiters.COMPONENT_ELEMENT, dialect::getComponentElementSeparator);
         decimalMark = getDelimiter(properties, Delimiters.DECIMAL, dialect::getDecimalMark);
@@ -306,18 +308,20 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         state = state.transition(clazz);
 
         switch (state) {
-        case HEADER_TAG_I: // I(SA)
-        case HEADER_TAG_U: // U(NA) or U(NB)
+        case HEADER_X12_I: // I(SA)
+        case HEADER_EDIFACT_U: // U(NA) or U(NB)
+        case HEADER_TRADACOMS_S: // S(TX)
             unconfirmedBuffer.clear();
-            writeHeader(output);
+            writeHeader((char) output);
             break;
-        case HEADER_TAG_S:
-        case HEADER_TAG_N:
+        case HEADER_X12_S:
+        case HEADER_EDIFACT_N:
+        case HEADER_TRADACOMS_T:
         case INTERCHANGE_CANDIDATE:
         case HEADER_DATA:
         case HEADER_ELEMENT_END:
         case HEADER_COMPONENT_END:
-            writeHeader(output);
+            writeHeader((char) output);
             break;
         case INVALID:
             throw new EDIException(String.format("Invalid state: %s; output 0x%04X", state, output));
@@ -327,12 +331,12 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         }
     }
 
-    void writeHeader(int output) throws EDIStreamException {
-        if (!dialect.appendHeader(characters, (char) output)) {
-            throw new EDIStreamException(String.format("Unexpected header character: 0x%04X [%s]", output, (char) output), location);
+    void writeHeader(char output) throws EDIStreamException {
+        if (!dialect.appendHeader(characters, output)) {
+            throw new EDIStreamException(String.format("Unexpected header character: 0x%04X [%s]", (int) output, output), location);
         }
 
-        unconfirmedBuffer.append((char) output);
+        unconfirmedBuffer.append(output);
 
         if (dialect.isConfirmed()) {
             // Set up the delimiters again once the dialect has confirmed them
@@ -432,10 +436,20 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
 
         level = LEVEL_SEGMENT;
         emptyElements = 0;
-        // Treat the segment tag as an unterminated element that must be closed when element data is encountered
-        unterminatedElement = true;
+        terminateSegmentTag();
 
         return this;
+    }
+
+    void terminateSegmentTag() throws EDIStreamException {
+        if (this.segmentTagTerminator != '\0') {
+            write(this.segmentTagTerminator);
+            // TRADACOMS - Empty segments not supported due to fixed segment tag terminator requirement
+            unterminatedElement = false;
+        } else {
+            // Treat the segment tag as an unterminated element that must be closed when element data is encountered
+            unterminatedElement = true;
+        }
     }
 
     void writeServiceAdviceString() throws EDIStreamException {
@@ -503,7 +517,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         emptyComponents = 0;
         unterminatedComponent = false;
 
-        if (!emptyElementTruncation) {
+        if (!emptyElementTruncation && unterminatedElement) {
             write(this.dataElementSeparator);
         }
 

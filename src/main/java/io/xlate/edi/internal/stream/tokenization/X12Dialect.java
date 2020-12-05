@@ -44,19 +44,16 @@ public class X12Dialect extends Dialect {
     private String[] version;
     char[] header;
     private int index = -1;
-    private boolean initialized;
-    private boolean rejected;
 
     private CharacterSet characters;
     private static final int TX_AGENCY = 0;
     private static final int TX_VERSION = 1;
 
-    private String[] transactionVersion = new String[2];
-    private String transactionVersionString;
     private String agencyCode;
     private String groupVersion;
 
     X12Dialect() {
+        super(new String[2]);
         segmentDelimiter = DFLT_SEGMENT_TERMINATOR;
         elementDelimiter = DFLT_DATA_ELEMENT_SEPARATOR;
         decimalMark = '.';
@@ -120,28 +117,8 @@ public class X12Dialect extends Dialect {
     }
 
     @Override
-    public void setHeaderTag(String tag) {
-        // No operation, can only be ISA
-    }
-
-    @Override
     public String getHeaderTag() {
         return ISA;
-    }
-
-    @Override
-    public boolean isConfirmed() {
-        return initialized;
-    }
-
-    @Override
-    public boolean isRejected() {
-        return rejected;
-    }
-
-    @Override
-    public boolean isServiceAdviceSegment(String tag) {
-        return false; // X12 does not use a service advice string
     }
 
     @Override
@@ -180,7 +157,8 @@ public class X12Dialect extends Dialect {
         return proceed;
     }
 
-    void clearTransactionVersion() {
+    @Override
+    public void clearTransactionVersion() {
         agencyCode = "";
         groupVersion = "";
         transactionVersion[TX_AGENCY] = agencyCode;
@@ -228,18 +206,4 @@ public class X12Dialect extends Dialect {
         updateTransactionVersionString(transactionVersion);
     }
 
-    @Override
-    public void groupEnd() {
-        clearTransactionVersion();
-    }
-
-    @Override
-    public String[] getTransactionVersion() {
-        return transactionVersionString.isEmpty() ? null : transactionVersion;
-    }
-
-    @Override
-    public String getTransactionVersionString() {
-        return transactionVersionString;
-    }
 }

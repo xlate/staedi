@@ -21,26 +21,34 @@ public enum CharacterClass {
      * Characters are mapped into these character classes. This allows for a
      * significant reduction in the size of the state transition table.
      */
-    SPACE(0),
-    LATIN_A(1),
-    LATIN_B(2),
-    LATIN_E(3),
-    LATIN_I(4),
-    LATIN_N(5),
-    LATIN_S(6),
-    LATIN_U(7),
-    LATIN_Z(8),
-    ALPHANUMERIC(9),
-    SEGMENT_DELIMITER(10),
-    ELEMENT_DELIMITER(11),
-    COMPONENT_DELIMITER(12),
-    ELEMENT_REPEATER(13),
-    RELEASE_CHARACTER(14),
+    SPACE(ClassSequence.sequence++),
+    LATIN_A(ClassSequence.sequence++),
+    LATIN_B(ClassSequence.sequence++),
+    LATIN_D(ClassSequence.sequence++),
+    LATIN_E(ClassSequence.sequence++),
+    LATIN_I(ClassSequence.sequence++),
+    LATIN_N(ClassSequence.sequence++),
+    LATIN_S(ClassSequence.sequence++),
+    LATIN_T(ClassSequence.sequence++),
+    LATIN_U(ClassSequence.sequence++),
+    LATIN_X(ClassSequence.sequence++),
+    LATIN_Z(ClassSequence.sequence++),
+    ALPHANUMERIC(ClassSequence.sequence++),
+    SEGMENT_DELIMITER(ClassSequence.sequence++),
+    ELEMENT_DELIMITER(ClassSequence.sequence++),
+    COMPONENT_DELIMITER(ClassSequence.sequence++),
+    ELEMENT_REPEATER(ClassSequence.sequence++),
+    RELEASE_CHARACTER(ClassSequence.sequence++),
 
-    WHITESPACE(15), /* Other white space */
-    CONTROL(16), /* Control Characters */
-    OTHER(17), /* Everything else */
-    INVALID(18);
+    WHITESPACE(ClassSequence.sequence++), /* Other white space */
+    CONTROL(ClassSequence.sequence++), /* Control Characters */
+    OTHER(ClassSequence.sequence++), /* Everything else */
+    INVALID(ClassSequence.sequence++),
+    SEGMENT_TAG_DELIMITER(ClassSequence.sequence++) /* Used for TRADACOMS only */;
+
+    private static class ClassSequence {
+        static int sequence = 0;
+    }
 
     protected final int code;
 

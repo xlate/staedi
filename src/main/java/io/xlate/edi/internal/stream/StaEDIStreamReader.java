@@ -115,7 +115,10 @@ public class StaEDIStreamReader implements EDIStreamReader, Configurable {
         delimiters.put(Delimiters.SEGMENT, dialect.getSegmentTerminator());
         delimiters.put(Delimiters.DATA_ELEMENT, dialect.getDataElementSeparator());
         delimiters.put(Delimiters.COMPONENT_ELEMENT, dialect.getComponentElementSeparator());
-        delimiters.put(Delimiters.DECIMAL, dialect.getDecimalMark());
+
+        if (dialect.getDecimalMark() != '\0') {
+            delimiters.put(Delimiters.DECIMAL, dialect.getDecimalMark());
+        }
 
         if (dialect.getRepetitionSeparator() != '\0') {
             delimiters.put(Delimiters.REPETITION, dialect.getRepetitionSeparator());

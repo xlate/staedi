@@ -11,7 +11,7 @@ class CharacterSetTest {
     @Test
     void testGetClassAscii() {
         CharacterSet target = new CharacterSet();
-        assertEquals(CharacterClass.ALPHANUMERIC, target.getClass('X'));
+        assertEquals(CharacterClass.ALPHANUMERIC, target.getClass('Y'));
     }
 
     @Test

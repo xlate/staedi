@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<schema xmlns="http://xlate.io/EDISchema/v4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://xlate.io/EDISchema/v4 https://www.xlate.io/EDISchema/EDISchema-v4.xsd">
+  <interchange header="STX" trailer="END">
+    <sequence>
+      <group header="BAT" trailer="EOB">
+        <transaction header="MHD" trailer="MTR"/>
+      </group>
+      <transaction header="MHD" trailer="MTR"/>
+    </sequence>
+    <syntax type="single">
+      <position>2</position>
+      <position>3</position>
+    </syntax>
+  </interchange>
+
+  <elementType name="DE0001" base="string" minLength="1" maxLength="4" title="Syntax Rules Identifier"/>
+  <elementType name="DE0002" base="numeric" minLength="1" maxLength="1" title="Syntax Rules Version"/>
+  <elementType name="DE0003" base="string" maxLength="14" title="Transmission Party Code"/>
+  <elementType name="DE0004" base="string" maxLength="35" title="Transmission Party Name"/>
+  <elementType name="DE0005" base="date" minLength="6" maxLength="6" title="Date"/>
+  <elementType name="DE0006" base="time" minLength="6" maxLength="6" title="Time"/>
+  <elementType name="DE0007" code="SNRF" base="string" maxLength="14" title="Sender's Transmission Reference"/>
+  <elementType name="DE0008" code="RCRF" base="string" maxLength="14" title="Receiver's Transmission Reference"/>
+  <elementType name="DE0009" code="APRF" base="string" maxLength="14" title="Application Reference"/>
+
+  <elementType name="DE0010" code="PRCD" base="identifier" minLength="1" maxLength="1" title="Transmission Priority Code">
+      <enumeration>
+        <value title="Urgent">A</value>
+        <value title="Normal">B</value>
+        <value title="Low">C</value>
+      </enumeration>
+  </elementType>
+
+  <elementType name="DE0011" base="string" maxLength="14" title="Batch Reference"/>
+  <elementType name="DE0012" base="numeric" maxLength="10" title="Batch Message Count"/>
+
+  <elementType name="DE0013" code="MSRF" base="numeric" maxLength="12" title="Message Reference"/>
+  <elementType name="DE0014" base="string" minLength="6" maxLength="6" title="Message Type"/>
+  <elementType name="DE0015" base="numeric" minLength="1" maxLength="1" title="Message Version"/>
+  <elementType name="DE0016" code="NOSG" base="numeric" maxLength="10" title="Message Segment Count"/>
+
+  <elementType name="DE0017" code="NMST" base="numeric" maxLength="5" title="Transmission Message Count"/>
+
+  <compositeType name="STDS" title="Syntax Rules Identifier">
+    <sequence>
+      <element type="DE0001" minOccurs="1"/>
+      <element type="DE0002" minOccurs="1"/>
+    </sequence>
+  </compositeType>
+
+  <compositeType name="FROM" title="Identification of Transmission Sender">
+    <sequence>
+      <element type="DE0003"/>
+      <element type="DE0004"/>
+    </sequence>
+    <syntax type="required">
+      <position>1</position>
+      <position>2</position>
+    </syntax>
+  </compositeType>
+
+  <compositeType name="UNTO" title="Identification of Transmission Receiver">
+    <sequence>
+      <element type="DE0003"/>
+      <element type="DE0004"/>
+    </sequence>
+    <syntax type="required">
+      <position>1</position>
+      <position>2</position>
+    </syntax>
+  </compositeType>
+
+  <compositeType name="TRDT" title="Transmission Date">
+    <sequence>
+      <element type="DE0005" minOccurs="1"/>
+      <element type="DE0006"/>
+    </sequence>
+  </compositeType>
+
+  <compositeType name="TYPE" title="Type of Message">
+    <sequence>
+      <element type="DE0014" minOccurs="1"/>
+      <element type="DE0015" minOccurs="1"/>
+    </sequence>
+  </compositeType>
+
+  <segmentType name="STX" title="Start of Transmission">
+    <sequence>
+      <composite type="STDS" minOccurs="1"/>
+      <composite type="FROM" minOccurs="1"/>
+      <composite type="UNTO" minOccurs="1"/>
+      <composite type="TRDT" minOccurs="1"/>
+      <element type="DE0007" minOccurs="1"/>
+      <element type="DE0008"/>
+      <element type="DE0009"/>
+      <element type="DE0010"/>
+    </sequence>
+  </segmentType>
+
+  <segmentType name="END" title="End of Transmission">
+    <sequence>
+      <element type="DE0017" minOccurs="1"/>
+    </sequence>
+  </segmentType>
+
+  <segmentType name="BAT" title="Start of Batch">
+    <sequence>
+      <element type="DE0011" minOccurs="1"/>
+    </sequence>
+  </segmentType>
+
+  <segmentType name="EOB" title="End of Batch">
+    <sequence>
+      <element type="DE0012" minOccurs="1"/>
+    </sequence>
+  </segmentType>
+
+  <segmentType name="MHD" title="Message Header">
+    <sequence>
+      <element type="DE0013" minOccurs="1"/>
+      <composite type="TYPE" minOccurs="1"/>
+    </sequence>
+  </segmentType>
+
+  <segmentType name="MTR" title="Message Trailer">
+    <sequence>
+      <element type="DE0016" minOccurs="1"/>
+    </sequence>
+  </segmentType>
+</schema>
