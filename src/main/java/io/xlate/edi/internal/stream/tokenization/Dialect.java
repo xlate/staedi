@@ -30,6 +30,13 @@ public abstract class Dialect {
     protected boolean initialized;
     protected boolean rejected;
 
+    protected final String[] transactionVersion;
+    protected String transactionVersionString;
+
+    public Dialect(String[] initialTransactionVersion) {
+        this.transactionVersion = initialTransactionVersion;
+    }
+
     public char getComponentElementSeparator() {
         return componentDelimiter;
     }
@@ -74,7 +81,7 @@ public abstract class Dialect {
      * Check if the given segment tag is this dialect's service advice segment.
      * E.g. <code>UNA</code> resolves to <code>true</code> for EDIFACT.
      *
-     * @param segmentTag
+     * @param segmentTag the character tag of the segment
      * @return true when the segmentTag is the dialect's service segment,
      *         otherwise false
      */
@@ -101,15 +108,21 @@ public abstract class Dialect {
      */
     public abstract void elementData(CharSequence data, Location location);
 
+    protected abstract void clearTransactionVersion();
+
     /**
      * Notify the dialect that a transaction is complete.
      */
-    public abstract void transactionEnd();
+    public void transactionEnd() {
+        clearTransactionVersion();
+    }
 
     /**
      * Notify the dialect that a group is complete.
      */
-    public abstract void groupEnd();
+    public void groupEnd() {
+        clearTransactionVersion();
+    }
 
     /**
      * Returns the identifying elements of the current transaction's version.
@@ -117,7 +130,9 @@ public abstract class Dialect {
      * @return the array of elements identifying the current transaction's
      *         version
      */
-    public abstract String[] getTransactionVersion();
+    public String[] getTransactionVersion() {
+        return transactionVersionString.isEmpty() ? null : transactionVersion;
+    }
 
     /**
      * Returns the identifying elements of the current transaction's version as
@@ -126,5 +141,7 @@ public abstract class Dialect {
      * @return the String representation of the elements identifying the current
      *         transaction's version
      */
-    public abstract String getTransactionVersionString();
+    public String getTransactionVersionString() {
+        return transactionVersionString;
+    }
 }

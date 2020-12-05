@@ -37,10 +37,8 @@ public class TradacomsDialect extends Dialect {
     private static final int TX_AGENCY = 0;
     private static final int TX_VERSION = 1;
 
-    private String[] transactionVersion = new String[2];
-    private String transactionVersionString;
-
     TradacomsDialect() {
+        super(new String[2]);
         componentDelimiter = DFLT_COMPONENT_ELEMENT_SEPARATOR;
         elementDelimiter = DFLT_DATA_ELEMENT_SEPARATOR;
         decimalMark = 0;
@@ -139,7 +137,8 @@ public class TradacomsDialect extends Dialect {
         return true;
     }
 
-    void clearTransactionVersion() {
+    @Override
+    protected void clearTransactionVersion() {
         for (int i = 0; i < transactionVersion.length; i++) {
             transactionVersion[i] = "";
         }
@@ -176,23 +175,4 @@ public class TradacomsDialect extends Dialect {
         }
     }
 
-    @Override
-    public void transactionEnd() {
-        clearTransactionVersion();
-    }
-
-    @Override
-    public void groupEnd() {
-        clearTransactionVersion();
-    }
-
-    @Override
-    public String[] getTransactionVersion() {
-        return transactionVersionString.isEmpty() ? null : transactionVersion;
-    }
-
-    @Override
-    public String getTransactionVersionString() {
-        return transactionVersionString;
-    }
 }
