@@ -33,8 +33,6 @@ public class TradacomsDialect extends Dialect {
     private String[] version;
     StringBuilder header;
     private int index = -1;
-    private boolean initialized;
-    private boolean rejected;
 
     private static final int TX_AGENCY = 0;
     private static final int TX_VERSION = 1;
@@ -87,21 +85,6 @@ public class TradacomsDialect extends Dialect {
         }
 
         return EMPTY;
-    }
-
-    @Override
-    public boolean isConfirmed() {
-        return initialized;
-    }
-
-    @Override
-    public boolean isRejected() {
-        return rejected;
-    }
-
-    @Override
-    public boolean isServiceAdviceSegment(CharSequence tag) {
-        return false; // TRADACOMS does not use a service advice string
     }
 
     @Override

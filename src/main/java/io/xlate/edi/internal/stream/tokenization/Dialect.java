@@ -27,6 +27,9 @@ public abstract class Dialect {
     protected char componentDelimiter;
     protected char elementRepeater;
 
+    protected boolean initialized;
+    protected boolean rejected;
+
     public char getComponentElementSeparator() {
         return componentDelimiter;
     }
@@ -59,17 +62,31 @@ public abstract class Dialect {
         return value == getDecimalMark();
     }
 
+    public boolean isConfirmed() {
+        return initialized;
+    }
+
+    public boolean isRejected() {
+        return rejected;
+    }
+
+    /**
+     * Check if the given segment tag is this dialect's service advice segment.
+     * E.g. <code>UNA</code> resolves to <code>true</code> for EDIFACT.
+     *
+     * @param segmentTag
+     * @return true when the segmentTag is the dialect's service segment,
+     *         otherwise false
+     */
+    public boolean isServiceAdviceSegment(CharSequence segmentTag) {
+        return false; // Service segment not used by default
+    }
+
     public abstract String getStandard();
 
     public abstract String[] getVersion();
 
     public abstract String getHeaderTag();
-
-    public abstract boolean isConfirmed();
-
-    public abstract boolean isRejected();
-
-    public abstract boolean isServiceAdviceSegment(CharSequence tag);
 
     public abstract boolean appendHeader(CharacterSet characters, char value);
 

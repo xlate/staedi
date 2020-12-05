@@ -44,8 +44,6 @@ public class X12Dialect extends Dialect {
     private String[] version;
     char[] header;
     private int index = -1;
-    private boolean initialized;
-    private boolean rejected;
 
     private CharacterSet characters;
     private static final int TX_AGENCY = 0;
@@ -122,21 +120,6 @@ public class X12Dialect extends Dialect {
     @Override
     public String getHeaderTag() {
         return ISA;
-    }
-
-    @Override
-    public boolean isConfirmed() {
-        return initialized;
-    }
-
-    @Override
-    public boolean isRejected() {
-        return rejected;
-    }
-
-    @Override
-    public boolean isServiceAdviceSegment(CharSequence tag) {
-        return false; // X12 does not use a service advice string
     }
 
     @Override

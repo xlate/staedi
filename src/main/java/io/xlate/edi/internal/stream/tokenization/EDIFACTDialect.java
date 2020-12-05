@@ -40,8 +40,6 @@ public class EDIFACTDialect extends Dialect {
     StringBuilder header;
     private int index = -1;
     private int unbStart = -1;
-    private boolean initialized;
-    private boolean rejected;
     private boolean ignoreDecimalAdvice;
 
     private static final int TX_AGENCY = 0;
@@ -125,16 +123,6 @@ public class EDIFACTDialect extends Dialect {
     int findVersionStart() {
         // Skip four characters: UNB<delim>
         return UNB.equals(headerTag) ? 4 : unbStart + 4;
-    }
-
-    @Override
-    public boolean isConfirmed() {
-        return initialized;
-    }
-
-    @Override
-    public boolean isRejected() {
-        return rejected;
     }
 
     @Override
