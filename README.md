@@ -9,7 +9,7 @@ The API follows the same conventions as StAX (XML API available in the standard 
 using a "pull" processing flow for EDI parsing and an emit flow for EDI generation.
 
 ## Features
-- Support for **X12** and **EDIFACT** standards
+- Support for **X12**, **EDIFACT**, and **TRADACOMS** standards
 - Read structures from an EDI stream in sequence (start loop, start segment, element data, end segment, etc.)
 - EDI Schema that allows for user-specified **validation** rules
 - Validation of **EDI standards** (segment occurrences, element type, element length constraints, etc.)
@@ -66,7 +66,7 @@ String segmentName = reader.getText();
 <dependency>
   <groupId>io.xlate</groupId>
   <artifactId>staedi</artifactId>
-  <version>1.14.2</version>
+  <version>1.15.0</version>
 </dependency>
 ```
 
@@ -78,39 +78,39 @@ EDI stream is represented using derived events.
 
 ```
 + Start Interchange
-| +-- Start Segment (ISA/UNB)
+| +-- Start Segment (ISA / UNB / STX)
 | |     Element Data (repeats)
-| +-- End Segment (ISA / UNB)
+| +-- End Segment (ISA / UNB / STX)
 | |
-| +-- Start Functional Group (Optional for EDIFACT)
-| |   +-- Start Segment (GS / UNG)
+| +-- Start Functional Group (Optional for EDIFACT and TRADACOMS)
+| |   +-- Start Segment (GS / UNG / BAT)
 | |   |     Element Data (repeats)
-| |   +-- End Segment (GS / UNG)
+| |   +-- End Segment (GS / UNG / BAT)
 | |
 | |   +-- Start Transaction/Message
-| |   |  +-- Start Segment (ST / UNH)
+| |   |  +-- Start Segment (ST / UNH / MHD)
 | |   |  |     Element Data (repeats)
-| |   |  +-- End Segment (ST / UNH)
+| |   |  +-- End Segment (ST / UNH / MHD)
 | |   |
 | |   |  // Segments / Loops specific to the transaction
 | |   |
-| |   |  +-- Start Segment (SE / UNT)
+| |   |  +-- Start Segment (SE / UNT / MTR)
 | |   |  |     Element Data (repeats)
-| |   |  +-- End Segment (SE / UNT)
+| |   |  +-- End Segment (SE / UNT / MTR)
 | |   +-- End Transaction/Message
 | |
-| |   +-- Start Segment (GE / UNE)
+| |   +-- Start Segment (GE / UNE / EOB)
 | |   |     Element Data (repeats)
-| |   +-- End Segment (GE / UNE)
+| |   +-- End Segment (GE / UNE / EOB)
 | +-- End Functional Group
 | |
-| +-- Start Transaction/Message (EDIFACT only, if functional group(s) not used)
+| +-- Start Transaction/Message (EDIFACT and TRADACOMS only, if functional group(s) not used)
 | |   // Same content as messages within group
 | +-- End Transaction/Message
 | |
-| +-- Start Segment (IEA / UNZ)
+| +-- Start Segment (IEA / UNZ / END)
 | |     Element Data (repeats)
-| +-- End Segment (IEA / UNZ)
+| +-- End Segment (IEA / UNZ / END)
 + End Interchange
 ```
 
@@ -125,7 +125,7 @@ EDIStreamReader reader = factory.createEDIStreamReader(stream);
 while (reader.hasNext()) {
   switch (reader.next()) {
   case START_INTERCHANGE:
-    /* Retrieve the standard - "X12" or "EDIFACT" */
+    /* Retrieve the standard - "X12", "EDIFACT", or "TRADACOMS" */
     String standard = reader.getStandard();
 
     /*
@@ -138,7 +138,7 @@ while (reader.hasNext()) {
     break;
 
   case START_SEGMENT:
-    // Retrieve the segment name - e.g. "ISA" (X12) or "UNB" (EDIFACT)
+    // Retrieve the segment name - e.g. "ISA" (X12), "UNB" (EDIFACT), or "STX" (TRADACOMS)
     String segmentName = reader.getText();
     break;
 

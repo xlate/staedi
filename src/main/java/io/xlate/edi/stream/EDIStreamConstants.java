@@ -21,8 +21,21 @@ public interface EDIStreamConstants {
         private Standards() {
         }
 
+        /**
+         * Constant name for the EDIFACT EDI Dialect
+         */
         public static final String EDIFACT = "EDIFACT";
+
+        /**
+         * Constant name for the TRADACOMS EDI Dialect
+         * @since 1.15
+         */
+
         public static final String TRADACOMS = "TRADACOMS";
+
+        /**
+         * Constant name for the X12 EDI Dialect
+         */
         public static final String X12 = "X12";
     }
 
