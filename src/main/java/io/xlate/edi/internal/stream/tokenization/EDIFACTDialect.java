@@ -35,7 +35,7 @@ public class EDIFACTDialect extends Dialect {
 
     private static final int EDIFACT_UNA_LENGTH = 9;
 
-    private String headerTag;
+    private final String headerTag;
     private String[] version;
     StringBuilder header;
     private int index = -1;
@@ -51,20 +51,16 @@ public class EDIFACTDialect extends Dialect {
     private String[] transactionVersion = new String[4];
     private String transactionVersionString;
 
-    EDIFACTDialect() {
+    EDIFACTDialect(String headerTag) {
         componentDelimiter = DFLT_COMPONENT_ELEMENT_SEPARATOR;
         elementDelimiter = DFLT_DATA_ELEMENT_SEPARATOR;
         decimalMark = DFLT_DECIMAL_MARK;
         releaseIndicator = DFLT_RELEASE_CHARACTER;
         elementRepeater = DFLT_REPETITION_SEPARATOR;
         segmentDelimiter = DFLT_SEGMENT_TERMINATOR;
+        this.headerTag = headerTag;
 
         clearTransactionVersion();
-    }
-
-    @Override
-    public void setHeaderTag(String tag) {
-        headerTag = tag;
     }
 
     @Override
@@ -142,8 +138,8 @@ public class EDIFACTDialect extends Dialect {
     }
 
     @Override
-    public boolean isServiceAdviceSegment(String tag) {
-        return UNA.equals(tag);
+    public boolean isServiceAdviceSegment(CharSequence tag) {
+        return UNA.contentEquals(tag);
     }
 
     @Override

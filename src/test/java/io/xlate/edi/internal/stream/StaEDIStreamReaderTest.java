@@ -126,6 +126,36 @@ class StaEDIStreamReaderTest implements ConstantsTest {
     }
 
     @Test
+    void testGetDelimitersTradacoms() throws EDIStreamException {
+        EDIInputFactory factory = EDIInputFactory.newFactory();
+        InputStream stream = getClass().getResourceAsStream("/TRADACOMS/order.edi");
+        EDIStreamReader reader = factory.createEDIStreamReader(stream);
+        Map<String, Character> expected = new HashMap<>(5);
+        expected.put(Delimiters.SEGMENT, '\'');
+        expected.put(Delimiters.DATA_ELEMENT, '+');
+        expected.put(Delimiters.COMPONENT_ELEMENT, ':');
+        expected.put(Delimiters.RELEASE, '?');
+
+        Map<String, Character> delimiters = null;
+        int delimiterExceptions = 0;
+
+        while (reader.hasNext()) {
+            try {
+                reader.getDelimiters();
+            } catch (IllegalStateException e) {
+                delimiterExceptions++;
+            }
+
+            if (reader.next() == EDIStreamEvent.START_INTERCHANGE) {
+                delimiters = reader.getDelimiters();
+            }
+        }
+
+        assertEquals(expected, delimiters, "Unexpected delimiters");
+        assertEquals(1, delimiterExceptions, "Unexpected exceptions");
+    }
+
+    @Test
     void testGetDelimitersEDIFACTA() throws EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = getClass().getResourceAsStream("/EDIFACT/invoic_d93a_una.edi");

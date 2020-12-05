@@ -20,7 +20,8 @@ public interface DialectFactory {
     enum DialectTag {
         X12("ISA"),
         EDIFACT_A("UNA"),
-        EDIFACT_B("UNB");
+        EDIFACT_B("UNB"),
+        TRADACOMS("STX");
 
         private String tag;
 
@@ -47,8 +48,19 @@ public interface DialectFactory {
         DialectTag type = DialectTag.fromValue(tag);
 
         if (type != null) {
-            Dialect dialect = (type == DialectTag.X12) ? new X12Dialect() : new EDIFACTDialect();
-            dialect.setHeaderTag(tag);
+            Dialect dialect;
+
+            switch (type) {
+            case X12:
+                dialect = new X12Dialect();
+                break;
+            case TRADACOMS:
+                dialect = new TradacomsDialect();
+                break;
+            default:
+                dialect = new EDIFACTDialect(tag);
+                break;
+            }
 
             return dialect;
         }

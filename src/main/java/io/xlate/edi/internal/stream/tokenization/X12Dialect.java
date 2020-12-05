@@ -120,11 +120,6 @@ public class X12Dialect extends Dialect {
     }
 
     @Override
-    public void setHeaderTag(String tag) {
-        // No operation, can only be ISA
-    }
-
-    @Override
     public String getHeaderTag() {
         return ISA;
     }
@@ -140,7 +135,7 @@ public class X12Dialect extends Dialect {
     }
 
     @Override
-    public boolean isServiceAdviceSegment(String tag) {
+    public boolean isServiceAdviceSegment(CharSequence tag) {
         return false; // X12 does not use a service advice string
     }
 

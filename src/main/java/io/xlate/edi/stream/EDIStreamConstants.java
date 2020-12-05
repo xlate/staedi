@@ -21,8 +21,9 @@ public interface EDIStreamConstants {
         private Standards() {
         }
 
-        public static final String X12 = "X12";
         public static final String EDIFACT = "EDIFACT";
+        public static final String TRADACOMS = "TRADACOMS";
+        public static final String X12 = "X12";
     }
 
     public static class Delimiters {

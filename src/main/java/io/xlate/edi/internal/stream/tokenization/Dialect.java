@@ -20,6 +20,7 @@ import io.xlate.edi.stream.Location;
 public abstract class Dialect {
 
     protected char segmentDelimiter;
+    protected char segmentTagTerminator = '\0';
     protected char elementDelimiter;
     protected char decimalMark;
     protected char releaseIndicator;
@@ -50,6 +51,10 @@ public abstract class Dialect {
         return segmentDelimiter;
     }
 
+    public char getSegmentTagTerminator() {
+        return segmentTagTerminator;
+    }
+
     public boolean isDecimalMark(char value) {
         return value == getDecimalMark();
     }
@@ -58,15 +63,13 @@ public abstract class Dialect {
 
     public abstract String[] getVersion();
 
-    public abstract void setHeaderTag(String tag);
-
     public abstract String getHeaderTag();
 
     public abstract boolean isConfirmed();
 
     public abstract boolean isRejected();
 
-    public abstract boolean isServiceAdviceSegment(String tag);
+    public abstract boolean isServiceAdviceSegment(CharSequence tag);
 
     public abstract boolean appendHeader(CharacterSet characters, char value);
 
