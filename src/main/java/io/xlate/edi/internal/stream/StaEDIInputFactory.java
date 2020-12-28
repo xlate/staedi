@@ -39,6 +39,7 @@ public class StaEDIInputFactory extends EDIInputFactory {
         supportedProperties.add(EDI_VALIDATE_CONTROL_STRUCTURE);
         supportedProperties.add(EDI_VALIDATE_CONTROL_CODE_VALUES);
         supportedProperties.add(XML_DECLARE_TRANSACTION_XMLNS);
+        supportedProperties.add(XML_WRAP_TRANSACTION_CONTENTS);
         supportedProperties.add(EDI_IGNORE_EXTRANEOUS_CHARACTERS);
 
         supportedProperties.add(JSON_NULL_EMPTY_ELEMENTS);

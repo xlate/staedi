@@ -183,6 +183,19 @@ public interface EDIStreamReader extends Closeable, EDIStreamConstants {
     String getTransactionVersionString();
 
     /**
+     * The transaction type string as received in a standard-specific location.
+     * For example, the ST01 or UNH02-1 elements.
+     *
+     * @return the transaction type
+     * @throws IllegalStateException
+     *             when the type has not yet been determined, prior to the
+     *             parsing of the transaction begin segment
+     *
+     * @since 1.16
+     */
+    String getTransactionType();
+
+    /**
      * Returns the control schema currently set on the reader. If none has been
      * set, then null will be returned.
      *

@@ -40,6 +40,20 @@ public abstract class EDIInputFactory extends PropertySupport {
     public static final String XML_DECLARE_TRANSACTION_XMLNS = "io.xlate.edi.stream.XML_DECLARE_TRANSACTION_XMLNS";
 
     /**
+     * When set to true, XMLStreamReader instances created from an
+     * EDIInputFactory will generate an element wrapper around the transaction's
+     * content element. The wrapper will not contain the elements representing
+     * the transaction's header and trailer segments.
+     *
+     * The wrapper element will be in the {@link EDINamespaces#LOOPS LOOPS} XML
+     * name space and the local name will be constructed as follows: <br>
+     * {@code <Standard Name> + '-' + <Transaction Code> + '-' + <Transaction Version String>}
+     *
+     * @since 1.16
+     */
+    public static final String XML_WRAP_TRANSACTION_CONTENTS = "io.xlate.edi.stream.XML_WRAP_TRANSACTION_CONTENTS";
+
+    /**
      * When set to true, non-graphical, control characters will be ignored in
      * the EDI input stream. This includes characters ranging from 0x00 through
      * 0x1F and 0x7F.

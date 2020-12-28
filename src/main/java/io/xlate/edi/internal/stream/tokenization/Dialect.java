@@ -30,6 +30,7 @@ public abstract class Dialect {
     protected boolean initialized;
     protected boolean rejected;
 
+    protected String transactionType;
     protected final String[] transactionVersion;
     protected String transactionVersionString;
 
@@ -114,6 +115,7 @@ public abstract class Dialect {
      * Notify the dialect that a transaction is complete.
      */
     public void transactionEnd() {
+        transactionType = null;
         clearTransactionVersion();
     }
 
@@ -122,6 +124,17 @@ public abstract class Dialect {
      */
     public void groupEnd() {
         clearTransactionVersion();
+    }
+
+    /**
+     * Returns the transaction type code, or null if not within a transaction
+     *
+     * @return the transaction type code, or null if not within a transaction
+     *
+     * @since 1.16
+     */
+    public String getTransactionType() {
+        return transactionType;
     }
 
     /**

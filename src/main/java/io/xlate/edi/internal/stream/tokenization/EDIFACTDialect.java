@@ -306,6 +306,9 @@ public class EDIFACTDialect extends Dialect {
             clearTransactionVersion();
         } else if (location.getElementPosition() == 2) {
             switch (location.getComponentPosition()) {
+            case 1:
+                transactionType = data.toString();
+                break;
             case 2:
                 transactionVersion[TX_VERSION] = data.toString();
                 updateTransactionVersionString(transactionVersion);
