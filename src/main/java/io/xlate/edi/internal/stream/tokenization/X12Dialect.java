@@ -194,14 +194,26 @@ public class X12Dialect extends Dialect {
             default:
                 break;
             }
-        } else if (ST.equals(location.getSegmentTag()) && location.getElementPosition() == 3 && data.length() > 0) {
-            transactionVersion[TX_VERSION] = data.toString();
-            updateTransactionVersionString(transactionVersion);
+        } else if (ST.equals(location.getSegmentTag())) {
+            switch (location.getElementPosition()) {
+            case 1:
+                transactionType = data.toString();
+                break;
+            case 3:
+                if (data.length() > 0) {
+                    transactionVersion[TX_VERSION] = data.toString();
+                    updateTransactionVersionString(transactionVersion);
+                }
+                break;
+            default:
+                break;
+            }
         }
     }
 
     @Override
     public void transactionEnd() {
+        transactionType = null;
         transactionVersion[TX_VERSION] = groupVersion;
         updateTransactionVersionString(transactionVersion);
     }

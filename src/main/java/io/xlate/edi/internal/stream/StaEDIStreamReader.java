@@ -84,10 +84,22 @@ public class StaEDIStreamReader implements EDIStreamReader, Configurable {
         }
     }
 
-    void ensureVersionAvailable(Function<Dialect, String[]> versionSupplier, String versionType) {
-        if (lexer.getDialect() == null || versionSupplier.apply(lexer.getDialect()) == null) {
-            throw new IllegalStateException(versionType + " not accessible");
+    void ensureValueAvailable(Function<Dialect, Object> valueSupplier, String valueType) {
+        if (lexer.getDialect() == null || valueSupplier.apply(lexer.getDialect()) == null) {
+            throw new IllegalStateException(valueType + " not accessible");
         }
+    }
+
+    void requireEvent(String message, EDIStreamEvent... events) {
+        EDIStreamEvent current = proxy.getEvent();
+
+        for (EDIStreamEvent e : events) {
+            if (current == e) {
+                return;
+            }
+        }
+
+        throw new IllegalStateException(message);
     }
 
     private CharBuffer getBuffer() {
@@ -254,22 +266,28 @@ public class StaEDIStreamReader implements EDIStreamReader, Configurable {
 
     @Override
     public String[] getVersion() {
-        ensureVersionAvailable(Dialect::getVersion, "version");
+        ensureValueAvailable(Dialect::getVersion, "version");
         String[] version = lexer.getDialect().getVersion();
         return Arrays.copyOf(version, version.length);
     }
 
     @Override
     public String[] getTransactionVersion() {
-        ensureVersionAvailable(Dialect::getTransactionVersion, "transaction version");
+        ensureValueAvailable(Dialect::getTransactionVersion, "transaction version");
         String[] version = lexer.getDialect().getTransactionVersion();
         return Arrays.copyOf(version, version.length);
     }
 
     @Override
     public String getTransactionVersionString() {
-        ensureVersionAvailable(Dialect::getTransactionVersion, "transaction version");
+        ensureValueAvailable(Dialect::getTransactionVersion, "transaction version");
         return lexer.getDialect().getTransactionVersionString();
+    }
+
+    @Override
+    public String getTransactionType() {
+        ensureValueAvailable(Dialect::getTransactionType, "transaction type");
+        return lexer.getDialect().getTransactionType();
     }
 
     @Override
@@ -312,18 +330,19 @@ public class StaEDIStreamReader implements EDIStreamReader, Configurable {
 
     @Override
     public EDIStreamValidationError getErrorType() {
-        switch (getEventType()) {
-        case ELEMENT_DATA_ERROR:
-        case ELEMENT_OCCURRENCE_ERROR:
-        case SEGMENT_ERROR:
-            return proxy.getErrorType();
-        default:
-            throw new IllegalStateException("not a valid error state");
-        }
+        requireEvent("not a valid error state",
+                     EDIStreamEvent.ELEMENT_DATA_ERROR,
+                     EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR,
+                     EDIStreamEvent.SEGMENT_ERROR);
+        return proxy.getErrorType();
     }
 
     private void checkTextState() {
         EDIStreamEvent event = getEventType();
+
+        if (event == null) {
+            throw new IllegalStateException("not a valid text state [" + event + ']');
+        }
 
         switch (event) {
         case START_GROUP:
@@ -432,27 +451,17 @@ public class StaEDIStreamReader implements EDIStreamReader, Configurable {
     @Override
     public void setBinaryDataLength(long length) throws EDIStreamException {
         ensureOpen();
-
-        switch (getEventType()) {
-        case START_SEGMENT:
-        case ELEMENT_DATA:
-        case END_COMPOSITE:
-            break;
-        default:
-            throw new IllegalStateException();
-        }
-
+        requireEvent("invalid state for setting binary length",
+                     EDIStreamEvent.START_SEGMENT,
+                     EDIStreamEvent.ELEMENT_DATA,
+                     EDIStreamEvent.END_COMPOSITE);
         lexer.setBinaryLength(length);
     }
 
     @Override
     public InputStream getBinaryData() {
         ensureOpen();
-
-        if (getEventType() != EDIStreamEvent.ELEMENT_DATA_BINARY) {
-            throw new IllegalStateException();
-        }
-
+        requireEvent("not binary data element", EDIStreamEvent.ELEMENT_DATA_BINARY);
         return proxy.getBinary();
     }
 

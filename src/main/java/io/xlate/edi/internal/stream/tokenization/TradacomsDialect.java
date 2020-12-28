@@ -34,11 +34,10 @@ public class TradacomsDialect extends Dialect {
     StringBuilder header;
     private int index = -1;
 
-    private static final int TX_AGENCY = 0;
-    private static final int TX_VERSION = 1;
+    private static final int TX_VERSION = 0;
 
     TradacomsDialect() {
-        super(new String[2]);
+        super(new String[1]);
         componentDelimiter = DFLT_COMPONENT_ELEMENT_SEPARATOR;
         elementDelimiter = DFLT_DATA_ELEMENT_SEPARATOR;
         decimalMark = 0;
@@ -134,9 +133,7 @@ public class TradacomsDialect extends Dialect {
 
     @Override
     protected void clearTransactionVersion() {
-        for (int i = 0; i < transactionVersion.length; i++) {
-            transactionVersion[i] = "";
-        }
+        transactionVersion[TX_VERSION] = ""; // Single position only
         updateTransactionVersionString(null);
     }
 
@@ -157,8 +154,7 @@ public class TradacomsDialect extends Dialect {
         } else if (location.getElementPosition() == 2) {
             switch (location.getComponentPosition()) {
             case 1:
-                transactionVersion[TX_AGENCY] = data.toString();
-                updateTransactionVersionString(transactionVersion);
+                transactionType = data.toString();
                 break;
             case 2:
                 transactionVersion[TX_VERSION] = data.toString();

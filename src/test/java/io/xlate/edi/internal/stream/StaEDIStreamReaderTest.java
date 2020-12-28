@@ -36,6 +36,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -129,8 +130,8 @@ class StaEDIStreamReaderTest implements ConstantsTest {
 
     @ParameterizedTest
     @CsvSource({
-        "Basic TRADACOMS, /TRADACOMS/order.edi",
-        "Basic TRADACOMS (extra MHD data), /TRADACOMS/order-extra-mhd-data.edi",
+                 "Basic TRADACOMS, /TRADACOMS/order.edi",
+                 "Basic TRADACOMS (extra MHD data), /TRADACOMS/order-extra-mhd-data.edi",
     })
     void testGetDelimitersTRADACOMS(String title, String resourceName) throws EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
@@ -786,9 +787,9 @@ class StaEDIStreamReaderTest implements ConstantsTest {
 
     @Test
     void testGetErrorType()
-                                   throws EDIStreamException,
-                                   EDISchemaException,
-                                   IOException {
+            throws EDIStreamException,
+            EDISchemaException,
+            IOException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = getClass().getResourceAsStream("/x12/invalid997.edi");
         SchemaFactory schemaFactory = SchemaFactory.newFactory();
@@ -825,6 +826,11 @@ class StaEDIStreamReaderTest implements ConstantsTest {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = getClass().getResourceAsStream("/x12/simple997.edi");
         EDIStreamReader reader = factory.createEDIStreamReader(stream);
+
+        assertThrows(IllegalStateException.class, () -> reader.getText());
+        assertTrue(reader.hasNext());
+        reader.next();
+        assertThrows(IllegalStateException.class, () -> reader.getText());
 
         int s = 0;
 
@@ -1208,6 +1214,7 @@ class StaEDIStreamReaderTest implements ConstantsTest {
 
                 if (reader.getEventType() == EDIStreamEvent.START_TRANSACTION) {
                     reader.setTransactionSchema(schema);
+                    assertThrows(IllegalStateException.class, () -> reader.setBinaryDataLength(1L));
                 } else {
                     tag = reader.getText();
 
@@ -1225,10 +1232,10 @@ class StaEDIStreamReaderTest implements ConstantsTest {
 
     @Test
     void testGetBinaryDataValid()
-                                         throws EDIStreamException,
-                                         IOException,
-                                         ParserConfigurationException,
-                                         SAXException {
+            throws EDIStreamException,
+            IOException,
+            ParserConfigurationException,
+            SAXException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = getClass().getResourceAsStream("/x12/sample275_with_HL7_valid_BIN01.edi");
         EDIStreamReader reader = factory.createEDIStreamReader(stream);
@@ -1403,7 +1410,7 @@ class StaEDIStreamReaderTest implements ConstantsTest {
         try {
             while (reader.hasNext()) {
                 try {
-                    switch(reader.next()) {
+                    switch (reader.next()) {
                     case ELEMENT_DATA_ERROR:
                         invalidReferences.add(reader.getSchemaTypeReference());
                         break;
@@ -1440,7 +1447,7 @@ class StaEDIStreamReaderTest implements ConstantsTest {
         try {
             while (reader.hasNext()) {
                 try {
-                    switch(reader.next()) {
+                    switch (reader.next()) {
                     case ELEMENT_DATA_ERROR:
                         invalidReferences.add(reader.getSchemaTypeReference());
                         break;
@@ -1485,94 +1492,30 @@ class StaEDIStreamReaderTest implements ConstantsTest {
         assertNull(thrown);
     }
 
-    @Test
-    void testTransactionVersionRetrievalX12() throws EDIStreamException, IOException {
-        ByteArrayInputStream stream = new ByteArrayInputStream((""
-                + "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *200711*0100*U*00401*000000001*0*T*:~"
-                + "GS*FA*ReceiverDept*SenderDept*20200711*010015*1*X*005010~"
-                + "ST*997*0001*005010X230~"
-                + "SE*2*0001~"
-                + "GE*1*1~"
-                + "IEA*1*000000001~").getBytes());
+    @ParameterizedTest
+    @CsvSource({
+                 "/x12/empty997.edi, GS, IEA, ST, X.005010, X.005010X230, 997",
+                 "/EDIFACT/orders-with-group.edi, UNG, UNZ, UNH, UN.D.96A.EAN008A, UN.D.96B.EAN008B, ORDERS",
+                 "/TRADACOMS/order.edi, , END, MHD, , 9|9|9, ORDHDR|ORDERS|ORDTLR"
+    })
+    void testTransactionVersionAndTypeRetrieval(String resourceName,
+                                                String groupStart,
+                                                String interchangeEnd,
+                                                String transactionStart,
+                                                String expectedGroupVersion,
+                                                String expectedTxVersion,
+                                                String expectedTxType)
+            throws EDIStreamException, IOException {
 
+        InputStream stream = getClass().getResourceAsStream(resourceName);
         EDIInputFactory factory = EDIInputFactory.newFactory();
         EDIStreamReader rawReader = factory.createEDIStreamReader(stream);
         EDIStreamReader reader = factory.createFilteredReader(rawReader, r -> true); // Accept all events
         Exception thrown = null;
 
-        Map<String, String[]> segmentEndVersions = new HashMap<>(2);
-        Map<String, String> segmentEndVersionStrings = new HashMap<>(2);
-        Exception initThrown = null;
-        Exception gsStartThrown = null;
-        Exception ieaStartThrown = null;
-
-        try {
-            initThrown = assertThrows(IllegalStateException.class, () -> reader.getTransactionVersionString());
-
-            while (reader.hasNext()) {
-                try {
-                    switch (reader.next()) {
-                    case START_SEGMENT:
-                        if ("GS".equals(reader.getText())) {
-                            gsStartThrown = assertThrows(IllegalStateException.class, () -> reader.getTransactionVersionString());
-                        }
-                        if ("IEA".equals(reader.getText())) {
-                            ieaStartThrown = assertThrows(IllegalStateException.class, () -> reader.getTransactionVersionString());
-                        }
-
-                        break;
-
-                    case END_SEGMENT:
-                        switch (reader.getText()) {
-                        case "GS":
-                        case "ST":
-                            segmentEndVersions.put(reader.getText(), reader.getTransactionVersion());
-                            segmentEndVersionStrings.put(reader.getText(), reader.getTransactionVersionString());
-                            break;
-                        default:
-                            break;
-                        }
-
-                        break;
-                    default:
-                        break;
-                    }
-                } catch (Exception e) {
-                    thrown = e;
-                    break;
-                }
-            }
-        } finally {
-            reader.close();
-        }
-
-        assertNull(thrown);
-        assertNotNull(initThrown);
-        assertEquals("transaction version not accessible", initThrown.getMessage());
-        assertNotNull(gsStartThrown);
-        assertEquals("transaction version not accessible", gsStartThrown.getMessage());
-        assertNotNull(ieaStartThrown);
-        assertEquals("transaction version not accessible", ieaStartThrown.getMessage());
-
-        assertEquals(2, segmentEndVersions.size());
-        assertArrayEquals(new String[] { "X", "005010" },  segmentEndVersions.get("GS"));
-        assertArrayEquals(new String[] { "X", "005010X230" },  segmentEndVersions.get("ST"));
-
-        assertEquals(2, segmentEndVersionStrings.size());
-        assertEquals("X.005010",  segmentEndVersionStrings.get("GS"));
-        assertEquals("X.005010X230",  segmentEndVersionStrings.get("ST"));
-    }
-
-    @Test
-    void testTransactionVersionRetrievalEDIFACT() throws EDIStreamException, IOException {
-        InputStream stream = getClass().getResourceAsStream("/EDIFACT/orders-with-group.edi");
-        EDIInputFactory factory = EDIInputFactory.newFactory();
-        EDIStreamReader rawReader = factory.createEDIStreamReader(stream);
-        EDIStreamReader reader = factory.createFilteredReader(rawReader, r -> true); // Accept all events
-        Exception thrown = null;
-
-        Map<String, String[]> segmentEndVersions = new HashMap<>(2);
-        Map<String, String> segmentEndVersionStrings = new HashMap<>(2);
+        Map<String, List<String[]>> segmentEndVersions = new HashMap<>(2);
+        Map<String, List<String>> segmentEndVersionStrings = new HashMap<>(2);
+        List<String> transactionTypeStrings = new ArrayList<>();
         Exception initThrown = null;
         Exception groupStartThrown = null;
         Exception interchangeEndThrown = null;
@@ -1584,26 +1527,25 @@ class StaEDIStreamReaderTest implements ConstantsTest {
                 try {
                     switch (reader.next()) {
                     case START_SEGMENT:
-                        if ("UNG".equals(reader.getText())) {
+                        if (Objects.equals(groupStart, reader.getText())) {
                             groupStartThrown = assertThrows(IllegalStateException.class, () -> reader.getTransactionVersionString());
                         }
-                        if ("UNZ".equals(reader.getText())) {
+                        if (interchangeEnd.equals(reader.getText())) {
                             interchangeEndThrown = assertThrows(IllegalStateException.class, () -> reader.getTransactionVersionString());
                         }
 
                         break;
 
                     case END_SEGMENT:
-                        switch (reader.getText()) {
-                        case "UNG":
-                        case "UNH":
-                            segmentEndVersions.put(reader.getText(), reader.getTransactionVersion());
-                            segmentEndVersionStrings.put(reader.getText(), reader.getTransactionVersionString());
-                            break;
-                        default:
-                            break;
+                        if (Objects.equals(groupStart, reader.getText()) || transactionStart.equals(reader.getText())) {
+                            segmentEndVersions.computeIfAbsent(reader.getText(), k -> new ArrayList<>())
+                                              .add(reader.getTransactionVersion());
+                            segmentEndVersionStrings.computeIfAbsent(reader.getText(), k -> new ArrayList<>())
+                                                    .add(reader.getTransactionVersionString());
+                            if (transactionStart.equals(reader.getText())) {
+                                transactionTypeStrings.add(reader.getTransactionType());
+                            }
                         }
-
                         break;
                     default:
                         break;
@@ -1618,23 +1560,46 @@ class StaEDIStreamReaderTest implements ConstantsTest {
             reader.close();
         }
 
-        assertNull(thrown);
+        Throwable finalThrown = thrown;
+        assertNull(thrown, () -> "Unexpected exception: " + finalThrown);
+
         assertNotNull(initThrown);
         assertEquals("transaction version not accessible", initThrown.getMessage());
-        assertNotNull(groupStartThrown);
-        assertEquals("transaction version not accessible", groupStartThrown.getMessage());
+        if (groupStart != null) {
+            assertNotNull(groupStartThrown);
+            assertEquals("transaction version not accessible", groupStartThrown.getMessage());
+        }
         assertNotNull(interchangeEndThrown);
         assertEquals("transaction version not accessible", interchangeEndThrown.getMessage());
 
-        assertEquals(2, segmentEndVersions.size());
-        assertArrayEquals(new String[] { "UN", "D", "96A", "EAN008A" },  segmentEndVersions.get("UNG"));
-        assertArrayEquals(new String[] { "UN", "D", "96B", "EAN008B" },  segmentEndVersions.get("UNH"));
+        assertEquals(groupStart != null ? 2 : 1, segmentEndVersions.size());
 
-        assertEquals(2, segmentEndVersionStrings.size());
-        assertEquals("UN.D.96A.EAN008A",  segmentEndVersionStrings.get("UNG"));
-        assertEquals("UN.D.96B.EAN008B",  segmentEndVersionStrings.get("UNH"));
+        if (expectedGroupVersion != null) {
+            assertArrayEquals(expectedGroupVersion.split("\\."), segmentEndVersions.get(groupStart).get(0));
+        }
+
+        int i = 0;
+
+        for (String expected : expectedTxVersion.split("\\|")) {
+            assertArrayEquals(expected.split("\\."), segmentEndVersions.get(transactionStart).get(i++));
+        }
+
+        assertEquals(groupStart != null ? 2 : 1, segmentEndVersionStrings.size());
+
+        if (expectedGroupVersion != null) {
+            assertEquals(expectedGroupVersion, segmentEndVersionStrings.get(groupStart).get(0));
+        }
+
+        i = 0;
+        for (String expected : expectedTxVersion.split("\\|")) {
+            assertEquals(expected, segmentEndVersionStrings.get(transactionStart).get(i++));
+        }
+
+        i = 0;
+        for (String expected : expectedTxType.split("\\|")) {
+            assertEquals(expected, transactionTypeStrings.get(i++));
+        }
     }
-
 
     @Test
     void testTransactionVersionRetrievalTRADACOMS() throws EDIStreamException, IOException {
@@ -1693,14 +1658,14 @@ class StaEDIStreamReaderTest implements ConstantsTest {
         assertEquals("transaction version not accessible", interchangeEndThrown.getMessage());
 
         assertEquals(3, segmentEndVersions.size());
-        assertArrayEquals(new String[] { "ORDHDR", "9" },  segmentEndVersions.get(0));
-        assertArrayEquals(new String[] { "ORDERS", "9" },  segmentEndVersions.get(1));
-        assertArrayEquals(new String[] { "ORDTLR", "9" },  segmentEndVersions.get(2));
+        assertArrayEquals(new String[] { "9" }, segmentEndVersions.get(0));
+        assertArrayEquals(new String[] { "9" }, segmentEndVersions.get(1));
+        assertArrayEquals(new String[] { "9" }, segmentEndVersions.get(2));
 
         assertEquals(3, segmentEndVersionStrings.size());
-        assertEquals("ORDHDR.9",  segmentEndVersionStrings.get(0));
-        assertEquals("ORDERS.9",  segmentEndVersionStrings.get(1));
-        assertEquals("ORDTLR.9",  segmentEndVersionStrings.get(2));
+        assertEquals("9", segmentEndVersionStrings.get(0));
+        assertEquals("9", segmentEndVersionStrings.get(1));
+        assertEquals("9", segmentEndVersionStrings.get(2));
     }
 
     @Test
@@ -1739,7 +1704,8 @@ class StaEDIStreamReaderTest implements ConstantsTest {
                         if ("GS".equals(reader.getLocation().getSegmentTag()) && reader.getLocation().getElementPosition() == 8) {
                             // Version has been determined
                             String version = reader.getTransactionVersionString();
-                            EDIReference gsDateReference = ((EDIComplexType) reader.getControlSchema().getType("GS")).getReferences().get(3);
+                            EDIReference gsDateReference = ((EDIComplexType) reader.getControlSchema().getType("GS")).getReferences()
+                                                                                                                     .get(3);
                             gsDateMinVersion003040 = ((EDISimpleType) gsDateReference.getReferencedType()).getMinLength(version);
                             gsDateMaxVersion003040 = ((EDISimpleType) gsDateReference.getReferencedType()).getMaxLength(version);
                         }
@@ -1782,7 +1748,8 @@ class StaEDIStreamReaderTest implements ConstantsTest {
     void testEmptySegmentAtLoopStartValidation() throws Exception {
 
         EDIInputFactory factory = EDIInputFactory.newFactory();
-        Schema transSchema = SchemaFactory.newFactory().createSchema(getClass().getResourceAsStream("/EDIFACT/empty-segment-loop-schema.xml"));
+        Schema transSchema = SchemaFactory.newFactory()
+                                          .createSchema(getClass().getResourceAsStream("/EDIFACT/empty-segment-loop-schema.xml"));
         factory.setProperty(EDIInputFactory.EDI_VALIDATE_CONTROL_STRUCTURE, true);
         factory.setProperty(EDIInputFactory.EDI_VALIDATE_CONTROL_CODE_VALUES, false);
 
@@ -1817,7 +1784,11 @@ class StaEDIStreamReaderTest implements ConstantsTest {
                     // Fails printing:
                     // java.lang.AssertionError: SEGMENT_ERROR: SEGMENT_EXCEEDS_MAXIMUM_USE (refCode=RCI, seg=null, elemPos=-1, compoPos=-1, textOnError=EQN)
                     Assertions.fail(String.format("%s: %s (refCode=%s, textOnError=%s, loc=%s)",
-                            error.getCategory(), error, reader.getReferenceCode(), textOnError, loc));
+                                                  error.getCategory(),
+                                                  error,
+                                                  reader.getReferenceCode(),
+                                                  textOnError,
+                                                  loc));
                     break;
                 default:
                     break;
@@ -1836,7 +1807,8 @@ class StaEDIStreamReaderTest implements ConstantsTest {
     @Test
     void testValidatorResetElement_Issue106() throws Exception {
         EDIInputFactory factory = EDIInputFactory.newFactory();
-        Schema transSchema = SchemaFactory.newFactory().createSchema(getClass().getResourceAsStream("/EDIFACT/issue106/null-pointer-impl-schema.xml"));
+        Schema transSchema = SchemaFactory.newFactory()
+                                          .createSchema(getClass().getResourceAsStream("/EDIFACT/issue106/null-pointer-impl-schema.xml"));
         factory.setProperty(EDIInputFactory.EDI_VALIDATE_CONTROL_STRUCTURE, true);
         factory.setProperty(EDIInputFactory.EDI_VALIDATE_CONTROL_CODE_VALUES, false);
         EDIStreamReader reader = factory.createEDIStreamReader(getClass().getResourceAsStream("/EDIFACT/issue106/null-pointer-example.edi"));
