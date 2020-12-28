@@ -24,6 +24,7 @@ import java.util.Base64;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.logging.Logger;
@@ -34,6 +35,8 @@ import javax.xml.stream.Location;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
+import io.xlate.edi.schema.EDIComplexType;
+import io.xlate.edi.schema.EDIReference;
 import io.xlate.edi.stream.EDIInputFactory;
 import io.xlate.edi.stream.EDINamespaces;
 import io.xlate.edi.stream.EDIStreamEvent;
@@ -49,12 +52,17 @@ final class StaEDIXMLStreamReader implements XMLStreamReader {
     private final EDIStreamReader ediReader;
     private final Map<String, Object> properties;
     private final boolean transactionDeclaresXmlns;
+    private final boolean wrapTransactionContents;
     private final Location location = new ProxyLocation();
 
     private final Queue<Integer> eventQueue = new ArrayDeque<>(3);
     private final Queue<QName> elementQueue = new ArrayDeque<>(3);
     private final Deque<QName> elementStack = new ArrayDeque<>(5);
 
+    private boolean withinTransaction = false;
+    private boolean transactionWrapperEnqueued = false;
+    private String transactionStartSegment = null;
+    private String transactionEndSegment = null;
     private int currentEvent = -1;
     private QName currentElement;
 
@@ -75,6 +83,7 @@ final class StaEDIXMLStreamReader implements XMLStreamReader {
         this.ediReader = ediReader;
         this.properties = new HashMap<>(properties);
         transactionDeclaresXmlns = Boolean.valueOf(String.valueOf(properties.get(EDIInputFactory.XML_DECLARE_TRANSACTION_XMLNS)));
+        wrapTransactionContents = Boolean.valueOf(String.valueOf(properties.get(EDIInputFactory.XML_WRAP_TRANSACTION_CONTENTS)));
 
         if (ediReader.getEventType() == EDIStreamEvent.START_INTERCHANGE) {
             enqueueEvent(EDIStreamEvent.START_INTERCHANGE);
@@ -147,6 +156,7 @@ final class StaEDIXMLStreamReader implements XMLStreamReader {
         final QName name;
         cdataBuilder.setLength(0);
         cdata = null;
+        String readerText = null;
 
         switch (ediEvent) {
         case ELEMENT_DATA:
@@ -188,12 +198,21 @@ final class StaEDIXMLStreamReader implements XMLStreamReader {
             break;
 
         case START_SEGMENT:
-            name = buildName(elementStack.getFirst(), EDINamespaces.SEGMENTS, ediReader.getText());
+            readerText = ediReader.getText();
+            performTransactionWrapping(readerText);
+            name = buildName(elementStack.getFirst(), EDINamespaces.SEGMENTS, readerText);
             enqueueEvent(START_ELEMENT, name, true);
             break;
 
-        case START_GROUP:
         case START_TRANSACTION:
+            withinTransaction = true;
+            readerText = ediReader.getText();
+            name = buildName(elementStack.getFirst(), EDINamespaces.LOOPS, readerText);
+            enqueueEvent(START_ELEMENT, name, true);
+            determineTransactionSegments();
+            break;
+
+        case START_GROUP:
         case START_LOOP:
             name = buildName(elementStack.getFirst(), EDINamespaces.LOOPS, ediReader.getText());
             enqueueEvent(START_ELEMENT, name, true);
@@ -211,8 +230,13 @@ final class StaEDIXMLStreamReader implements XMLStreamReader {
             enqueueEvent(END_DOCUMENT, DUMMY_QNAME, false);
             break;
 
-        case END_GROUP:
         case END_TRANSACTION:
+            withinTransaction = false;
+            compositeCode = null;
+            enqueueEvent(END_ELEMENT, elementStack.removeFirst(), false);
+            break;
+
+        case END_GROUP:
         case END_LOOP:
         case END_SEGMENT:
         case END_COMPOSITE:
@@ -235,6 +259,36 @@ final class StaEDIXMLStreamReader implements XMLStreamReader {
 
         default:
             throw new IllegalStateException("Unknown state: " + ediEvent);
+        }
+    }
+
+    private void determineTransactionSegments() {
+        transactionStartSegment = null;
+        transactionEndSegment = null;
+
+        if (wrapTransactionContents) {
+            EDIComplexType tx = (EDIComplexType) ediReader.getSchemaTypeReference().getReferencedType();
+            List<EDIReference> segments = tx.getReferences();
+            transactionStartSegment = segments.get(0).getReferencedType().getId();
+            transactionEndSegment = segments.get(segments.size() - 1).getReferencedType().getId();
+        }
+    }
+
+    private void performTransactionWrapping(String readerText) {
+        if (withinTransaction && wrapTransactionContents) {
+            if (transactionWrapperEnqueued) {
+                if (readerText.equals(this.transactionEndSegment)) {
+                    enqueueEvent(END_ELEMENT, elementStack.removeFirst(), false);
+                    transactionWrapperEnqueued = false;
+                }
+            } else {
+                if (!readerText.equals(this.transactionStartSegment)) {
+                    String local = ediReader.getStandard() + '-' + ediReader.getTransactionType() + '-' + ediReader.getTransactionVersionString();
+                    QName wrapper = new QName(EDINamespaces.LOOPS, local, prefixOf(EDINamespaces.LOOPS));
+                    enqueueEvent(START_ELEMENT, wrapper, true);
+                    transactionWrapperEnqueued = true;
+                }
+            }
         }
     }
 
