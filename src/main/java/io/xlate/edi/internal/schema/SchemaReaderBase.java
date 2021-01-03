@@ -15,6 +15,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.IntStream;
 
 import javax.xml.namespace.QName;
@@ -32,6 +34,8 @@ import io.xlate.edi.schema.EDIType;
 import io.xlate.edi.schema.EDIType.Type;
 
 abstract class SchemaReaderBase implements SchemaReader {
+
+    private static final Logger LOGGER = Logger.getLogger(SchemaReaderBase.class.getName());
 
     static final String REFERR_UNDECLARED = "Type %s references undeclared %s with ref='%s'";
     static final String REFERR_ILLEGAL = "Type '%s' must not be referenced as '%s' in definition of type '%s'";
@@ -758,6 +762,8 @@ abstract class SchemaReaderBase implements SchemaReader {
              .stream()
              .filter(type -> type instanceof StructureType)
              .forEach(struct -> setReferences((StructureType) struct, types));
+
+        logUnusedTypes(types, Level.INFO);
     }
 
     void setReferences(StructureType struct, Map<String, EDIType> types) {
@@ -776,6 +782,25 @@ abstract class SchemaReaderBase implements SchemaReader {
             }
 
             impl.setReferencedType(target);
+        }
+    }
+
+    void logUnusedTypes(Map<String, EDIType> types, Level level) {
+        if (LOGGER.isLoggable(level)) {
+            Set<String> unused = new HashSet<>(types.keySet());
+            unused.remove(StaEDISchema.TRANSACTION_ID);
+            unused.remove(ANY_COMPOSITE.getId());
+
+            types.values()
+                 .stream()
+                 .filter(type -> type instanceof StructureType)
+                 .map(StructureType.class::cast)
+                 .flatMap(struct -> struct.getReferences().stream())
+                 .forEach(ref -> unused.remove(ref.getReferencedType().getId()));
+
+            for (String u : unused) {
+                LOGGER.log(level, String.format("Unused %s '%s'", types.get(u).getType(), u));
+            }
         }
     }
 
