@@ -7,7 +7,6 @@ import java.io.StringWriter;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;
 import java.math.BigDecimal;
-import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Deque;
@@ -40,6 +39,8 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
+import io.xlate.edi.stream.EDINamespaces;
+
 class TransactionBindTest {
 
     final String XSD = "http://www.w3.org/2001/XMLSchema";
@@ -61,7 +62,7 @@ class TransactionBindTest {
         });
         //assertEquals(1, results.size());
 
-        QName rootElementName = getRootElementName(TestTx.class);
+        //QName rootElementName = getRootElementName(TestTx.class);
 
         for (DOMResult result : results.values()) {
             StringWriter writer = new StringWriter();
@@ -77,20 +78,31 @@ class TransactionBindTest {
             }
         }
 
-        Document doc = (Document) results.get(rootElementName.getNamespaceURI()).getNode();
+        //Document doc = (Document) results.get(rootElementName.getNamespaceURI()).getNode();
 
-        Element rootElement = elementStream(doc.getElementsByTagNameNS(XSD, "element"))
+        /*Element rootElement = elementStream(doc.getElementsByTagNameNS(XSD, "element"))
                                 .filter(e -> rootElementName.getLocalPart().equals(e.getAttribute("name")))
                                 .findFirst()
-                                .orElse(null);
+                                .orElse(null);*/
 
-        complexTypes = elementStream(doc.getElementsByTagNameNS(XSD, "complexType"))
-                .collect(Collectors.toMap(e -> e.getAttribute("name"), e -> e));
-        simpleTypes = elementStream(doc.getElementsByTagNameNS(XSD, "simpleType"))
+        complexTypes = results.values()
+            .stream()
+            .map(result -> result.getNode())
+            .map(Document.class::cast)
+            .map(document -> document.getElementsByTagNameNS(XSD, "complexType"))
+            .flatMap(this::elementStream)
+            .collect(Collectors.toMap(e -> e.getAttribute("name"), e -> e));
+
+        simpleTypes = results.values()
+                .stream()
+                .map(result -> result.getNode())
+                .map(Document.class::cast)
+                .map(document -> document.getElementsByTagNameNS(XSD, "simpleType"))
+                .flatMap(this::elementStream)
                 .collect(Collectors.toMap(e -> e.getAttribute("name"), e -> e));
 
-        Element rootType = complexTypes.get(rootElement.getAttribute("type"));
-        print("", elementStream(rootType.getElementsByTagNameNS(XSD, "element")), new ArrayDeque<>(Arrays.asList(TestTx.class)));
+        //Element rootType = complexTypes.get(rootElement.getAttribute("type"));
+        //print("", elementStream(rootType.getElementsByTagNameNS(XSD, "element")), new ArrayDeque<>(Arrays.asList(TestTx.class)));
     }
 
     QName getRootElementName(Class<?> type) {
@@ -220,57 +232,57 @@ class TransactionBindTest {
                 .orElse(null);
     }
 
-    @XmlRootElement()
-    @XmlType(propOrder = { "aa1", "aa2", "loop" })
+    @XmlRootElement(namespace = EDINamespaces.LOOPS)
+    @XmlType(propOrder = { "aa1", "aa2", "loop" }, namespace = EDINamespaces.LOOPS)
     public static class TestTx {
-        @XmlElement(name = "AA1")
+        @XmlElement(name = "AA1", namespace = EDINamespaces.SEGMENTS)
         Aa1 aa1;
-        @XmlElement(name = "AA2")
+        @XmlElement(name = "AA2", namespace = EDINamespaces.SEGMENTS)
         Aa2 aa2;
-        @XmlElement(name = "L9000")
+        @XmlElement(name = "L9000", namespace = EDINamespaces.LOOPS)
         Loop9000 loop;
     }
 
-    @XmlType(propOrder = { "aa1", "aa2" })
+    @XmlType(namespace = EDINamespaces.LOOPS, propOrder = { "aa1", "aa2" })
     public static class Loop9000 {
-        @XmlElement(name = "AA1")
+        @XmlElement(name = "AA1", namespace = EDINamespaces.SEGMENTS)
         Aa1 aa1;
-        @XmlElement(name = "AA2")
+        @XmlElement(name = "AA2", namespace = EDINamespaces.SEGMENTS)
         Aa2 aa2;
     }
 
-    @XmlType(propOrder = { "aa101", "aa102", "aa103" })
+    @XmlType(namespace = EDINamespaces.SEGMENTS, propOrder = { "aa101", "aa102", "aa103" })
     public static class Aa1 {
-        @XmlElement(name = "AA101")
+        @XmlElement(name = "AA101", namespace = EDINamespaces.ELEMENTS)
         private String aa101;
-        @XmlElement(name = "AA102")
+        @XmlElement(name = "AA102", namespace = EDINamespaces.ELEMENTS)
         private Integer aa102;
-        @XmlElement(name = "AA103")
+        @XmlElement(name = "AA103", namespace = EDINamespaces.ELEMENTS)
         @XmlSchemaType(name = "date")
         private Date aa103;
     }
 
-    @XmlType(propOrder = { "aa201", "aa202", "aa203" })
+    @XmlType(namespace = EDINamespaces.SEGMENTS, propOrder = { "aa201", "aa202", "aa203" })
     public static class Aa2 {
-        @XmlElement(name = "AA201")
+        @XmlElement(name = "AA201", namespace = EDINamespaces.ELEMENTS)
         private String aa201;
-        @XmlElement(name = "AA202")
+        @XmlElement(name = "AA202", namespace = EDINamespaces.ELEMENTS)
         private List<Integer> aa202;
-        @XmlElement(name = "AA203")
+        @XmlElement(name = "AA203", namespace = EDINamespaces.COMPOSITES)
         private Comp1 aa203;
     }
 
-    @XmlType(name = "COMP1", propOrder = { "comp11", "comp12", "comp13" })
+    @XmlType(namespace = EDINamespaces.COMPOSITES, name = "COMP1", propOrder = { "comp11", "comp12", "comp13" })
     public static class Comp1 {
-        @XmlElement(name = "COMP1-1")
+        @XmlElement(name = "COMP1-1", namespace = EDINamespaces.ELEMENTS)
         private String comp11;
-        @XmlElement(name = "COMP1-2")
+        @XmlElement(name = "COMP1-2", namespace = EDINamespaces.ELEMENTS)
         private Integer comp12;
-        @XmlElement(name = "COMP1-3")
+        @XmlElement(name = "COMP1-3", namespace = EDINamespaces.ELEMENTS)
         private NumberType comp13;
     }
 
-    @XmlType(name = "E600")
+    @XmlType(name = "E600", namespace = EDINamespaces.ELEMENTS)
     public static class NumberType {
         @XmlValue
         BigDecimal value;
