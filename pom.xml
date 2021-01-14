@@ -109,8 +109,13 @@
           <artifactId>maven-javadoc-plugin</artifactId>
           <version>3.2.0</version>
           <configuration>
+            <additionalOptions>-html5</additionalOptions>
             <sourcepath>src/main/java:src/main/java9</sourcepath>
             <excludePackageNames>io.xlate.edi.internal.*</excludePackageNames>
+            <links>
+              <link>https://docs.oracle.com/en/java/javase/11/docs/api</link>
+              <link>https://jakarta.ee/specifications/platform/8/apidocs</link>
+            </links>
           </configuration>
         </plugin>
         <plugin>
