@@ -21,7 +21,7 @@ import java.util.Map;
 
 import io.xlate.edi.schema.Schema;
 
-public interface EDIStreamWriter {
+public interface EDIStreamWriter extends AutoCloseable {
 
     /**
      * Get the value of a feature/property from the underlying implementation
@@ -41,6 +41,7 @@ public interface EDIStreamWriter {
      * @throws EDIStreamException
      *             if there are errors freeing associated resources
      */
+    @Override
     void close() throws EDIStreamException;
 
     /**
