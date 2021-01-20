@@ -214,6 +214,7 @@ public class CharacterSet {
         case ELEMENT_REPEATER:
         case SEGMENT_DELIMITER:
         case COMPONENT_DELIMITER:
+        case RELEASE_CHARACTER:
             return true;
         default:
             return false;

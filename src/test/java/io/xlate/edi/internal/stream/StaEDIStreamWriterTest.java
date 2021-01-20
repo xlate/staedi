@@ -2066,4 +2066,32 @@ class StaEDIStreamWriterTest {
         EDIStreamValidationError error = thrown.getError();
         assertEquals(EDIStreamValidationError.TOO_MANY_REPETITIONS, error);
     }
+
+    @Test
+    void testEscapeCharEscaped() throws IOException, EDIStreamException {
+        final EDIOutputFactory factory = EDIOutputFactory.newFactory();
+        ByteArrayOutputStream stream = new ByteArrayOutputStream(4096);
+
+        try (EDIStreamWriter writer = factory.createEDIStreamWriter(stream)){
+            writer.startInterchange();
+            writer.writeStartSegment("UNB")
+                .writeStartElement()
+                    .writeComponent("UNO1")
+                    .writeComponent("1")
+                .endElement()
+                .writeEmptyElement()
+                .writeEmptyElement()
+                .writeEmptyElement()
+                .writeEmptyElement()
+                .writeEndSegment();
+
+            writer.writeStartSegment("ISA")
+                  .writeElement("???")
+                  .writeEndSegment();
+
+            writer.endInterchange();
+        }
+
+        assertEquals("UNB+UNO1:1++++'ISA+??????'", new String(stream.toByteArray()));
+    }
 }
