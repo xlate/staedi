@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
 
@@ -92,6 +93,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     private CharBuffer elementBuffer = CharBuffer.allocate(500);
     private final StringBuilder formattedElement = new StringBuilder();
     private List<EDIValidationException> errors = new ArrayList<>();
+    private CharArraySequence elementHolder = new CharArraySequence();
 
     private char segmentTerminator;
     private char segmentTagTerminator;
@@ -403,12 +405,6 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     public EDIStreamWriter writeStartSegment(String name) throws EDIStreamException {
         ensureLevel(LEVEL_INTERCHANGE);
         location.incrementSegmentPosition(name);
-        validate(validator -> validator.validateSegment(this, name));
-
-        if (exitTransaction(name)) {
-            transaction = false;
-            validate(validator -> validator.validateSegment(this, name));
-        }
 
         if (state == State.INITIAL) {
             dialect = DialectFactory.getDialect(name);
@@ -422,19 +418,24 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
                      */
                     dialect = DialectFactory.getDialect(EDIFACTDialect.UNA);
                     writeServiceAdviceString();
+                    segmentValidation(name);
                     // Now write the UNB
                     writeString(name);
                 } else {
-                    writeString(name);
-
                     if (EDIFACTDialect.UNA.equals(name)) {
+                        writeString(name);
                         writeServiceAdviceCharacters();
+                    } else {
+                        segmentValidation(name);
+                        writeString(name);
                     }
                 }
             } else {
+                segmentValidation(name);
                 writeString(name);
             }
         } else {
+            segmentValidation(name);
             writeString(name);
         }
 
@@ -443,6 +444,15 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         terminateSegmentTag();
 
         return this;
+    }
+
+    void segmentValidation(String name) {
+        validate(validator -> validator.validateSegment(this, name));
+
+        if (exitTransaction(name)) {
+            transaction = false;
+            validate(validator -> validator.validateSegment(this, name));
+        }
     }
 
     void terminateSegmentTag() throws EDIStreamException {
@@ -820,7 +830,15 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
 
     @Override
     public boolean elementData(char[] text, int start, int length) {
-        // No operation
+        elementHolder.set(text, start, length);
+        dialect.elementData(elementHolder, location);
+
+        withValidator(validator -> {
+            if (!validator.validateElement(dialect, location, elementHolder, null)) {
+                reportElementErrors(validator, elementHolder);
+            }
+        });
+
         return true;
     }
 
@@ -880,80 +898,89 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     }
 
     private void validate(Consumer<Validator> command) {
-        Validator validator = validator();
-
-        if (validator != null) {
+        withValidator(validator -> {
             errors.clear();
             command.accept(validator);
 
             if (!errors.isEmpty()) {
                 throw validationExceptionChain(errors);
             }
-        }
+        });
     }
 
     private void validateCompositeOccurrence() {
-        final Validator validator = validator();
-
-        if (validator != null) {
+        withValidator(validator -> {
             errors.clear();
 
             if (!validator.validCompositeOccurrences(dialect, location)) {
-                for (UsageError error : validator.getElementErrors()) {
-                    elementError(error.getError().getCategory(),
-                                 error.getError(),
-                                 error.getTypeReference(),
-                                 "",
-                                 location.getElementPosition(),
-                                 location.getComponentPosition(),
-                                 location.getElementOccurrence());
-                }
+                reportElementErrors(validator, "");
             }
 
             if (!errors.isEmpty()) {
                 throw validationExceptionChain(errors);
             }
-        }
+        });
     }
 
     private CharSequence validateElement(Runnable setupCommand, CharSequence data) {
-        final Validator validator = validator();
-        final CharSequence result;
+        return withValidator(validator -> {
+            CharSequence elementData;
 
-        if (validator != null) {
             if (this.formatElements) {
-                result = this.formattedElement;
+                elementData = this.formattedElement;
                 this.formattedElement.setLength(0);
                 this.formattedElement.append(data); // Validator will clear and re-format if configured
             } else {
-                result = data;
+                elementData = data;
             }
 
             errors.clear();
             setupCommand.run();
 
             if (!validator.validateElement(dialect, location, data, this.formattedElement)) {
-                for (UsageError error : validator.getElementErrors()) {
-                    elementError(error.getError().getCategory(),
-                                 error.getError(),
-                                 error.getTypeReference(),
-                                 result,
-                                 location.getElementPosition(),
-                                 location.getComponentPosition(),
-                                 location.getElementOccurrence());
-                }
+                reportElementErrors(validator, elementData);
             }
 
             if (!errors.isEmpty()) {
                 throw validationExceptionChain(errors);
             }
 
-            dialect.elementData(result, location);
+            dialect.elementData(elementData, location);
+            return elementData;
+        }, () -> data);
+    }
+
+    void withValidator(Consumer<Validator> process) {
+        final Validator validator = validator();
+
+        if (validator != null) {
+            process.accept(validator);
+        }
+    }
+
+    <T> T withValidator(Function<Validator, T> process, Supplier<T> unvalidatedResult) {
+        final Validator validator = validator();
+        final T result;
+
+        if (validator != null) {
+            result = process.apply(validator);
         } else {
-            result = data;
+            result = unvalidatedResult.get();
         }
 
         return result;
+    }
+
+    void reportElementErrors(Validator validator, CharSequence data) {
+        for (UsageError error : validator.getElementErrors()) {
+            elementError(error.getError().getCategory(),
+                         error.getError(),
+                         error.getTypeReference(),
+                         data,
+                         location.getElementPosition(),
+                         location.getComponentPosition(),
+                         location.getElementOccurrence());
+        }
     }
 
     EDIValidationException validationExceptionChain(List<EDIValidationException> errors) {
