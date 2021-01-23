@@ -92,6 +92,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     private CharBuffer elementBuffer = CharBuffer.allocate(500);
     private final StringBuilder formattedElement = new StringBuilder();
     private List<EDIValidationException> errors = new ArrayList<>();
+    private CharArraySequence elementHolder = new CharArraySequence();
 
     private char segmentTerminator;
     private char segmentTagTerminator;
@@ -403,12 +404,6 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     public EDIStreamWriter writeStartSegment(String name) throws EDIStreamException {
         ensureLevel(LEVEL_INTERCHANGE);
         location.incrementSegmentPosition(name);
-        validate(validator -> validator.validateSegment(this, name));
-
-        if (exitTransaction(name)) {
-            transaction = false;
-            validate(validator -> validator.validateSegment(this, name));
-        }
 
         if (state == State.INITIAL) {
             dialect = DialectFactory.getDialect(name);
@@ -422,19 +417,24 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
                      */
                     dialect = DialectFactory.getDialect(EDIFACTDialect.UNA);
                     writeServiceAdviceString();
+                    segmentValidation(name);
                     // Now write the UNB
                     writeString(name);
                 } else {
-                    writeString(name);
-
                     if (EDIFACTDialect.UNA.equals(name)) {
+                        writeString(name);
                         writeServiceAdviceCharacters();
+                    } else {
+                        segmentValidation(name);
+                        writeString(name);
                     }
                 }
             } else {
+                segmentValidation(name);
                 writeString(name);
             }
         } else {
+            segmentValidation(name);
             writeString(name);
         }
 
@@ -443,6 +443,15 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         terminateSegmentTag();
 
         return this;
+    }
+
+    void segmentValidation(String name) {
+        validate(validator -> validator.validateSegment(this, name));
+
+        if (exitTransaction(name)) {
+            transaction = false;
+            validate(validator -> validator.validateSegment(this, name));
+        }
     }
 
     void terminateSegmentTag() throws EDIStreamException {
@@ -820,7 +829,14 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
 
     @Override
     public boolean elementData(char[] text, int start, int length) {
-        // No operation
+        elementHolder.set(text, start, length);
+        dialect.elementData(elementHolder, location);
+        Validator validator = validator();
+
+        if (validator != null && !validator.validateElement(dialect, location, elementHolder, null)) {
+            reportElementErrors(validator, elementHolder);
+        }
+
         return true;
     }
 
@@ -899,15 +915,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
             errors.clear();
 
             if (!validator.validCompositeOccurrences(dialect, location)) {
-                for (UsageError error : validator.getElementErrors()) {
-                    elementError(error.getError().getCategory(),
-                                 error.getError(),
-                                 error.getTypeReference(),
-                                 "",
-                                 location.getElementPosition(),
-                                 location.getComponentPosition(),
-                                 location.getElementOccurrence());
-                }
+                reportElementErrors(validator, "");
             }
 
             if (!errors.isEmpty()) {
@@ -933,15 +941,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
             setupCommand.run();
 
             if (!validator.validateElement(dialect, location, data, this.formattedElement)) {
-                for (UsageError error : validator.getElementErrors()) {
-                    elementError(error.getError().getCategory(),
-                                 error.getError(),
-                                 error.getTypeReference(),
-                                 result,
-                                 location.getElementPosition(),
-                                 location.getComponentPosition(),
-                                 location.getElementOccurrence());
-                }
+                reportElementErrors(validator, result);
             }
 
             if (!errors.isEmpty()) {
@@ -954,6 +954,18 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         }
 
         return result;
+    }
+
+    void reportElementErrors(Validator validator, CharSequence data) {
+        for (UsageError error : validator.getElementErrors()) {
+            elementError(error.getError().getCategory(),
+                         error.getError(),
+                         error.getTypeReference(),
+                         data,
+                         location.getElementPosition(),
+                         location.getComponentPosition(),
+                         location.getElementOccurrence());
+        }
     }
 
     EDIValidationException validationExceptionChain(List<EDIValidationException> errors) {

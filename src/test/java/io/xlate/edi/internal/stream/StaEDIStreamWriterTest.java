@@ -55,6 +55,7 @@ import io.xlate.edi.stream.EDIOutputErrorReporter;
 import io.xlate.edi.stream.EDIOutputFactory;
 import io.xlate.edi.stream.EDIStreamConstants;
 import io.xlate.edi.stream.EDIStreamConstants.Delimiters;
+import io.xlate.edi.stream.EDIStreamConstants.Standards;
 import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamException;
 import io.xlate.edi.stream.EDIStreamReader;
@@ -2026,7 +2027,7 @@ class StaEDIStreamWriterTest {
         write(writer, "UNH", "1", new String[] { "CONTRL", "4", "2", "UN" });
         write(writer, "UCI", "1", "SENDER", "RECEIVER", "7");
 
-        writer.writeStartSegment("UCM").writeElement("1");
+        writer.writeStartSegment("UCM").writeElement("1").writeEmptyElement().writeElement("7");
         EDIValidationException thrown = assertThrows(EDIValidationException.class, () -> writer.writeEndSegment());
         EDIStreamValidationError error = thrown.getError();
         assertEquals(EDIStreamValidationError.CONDITIONAL_REQUIRED_DATA_ELEMENT_MISSING, error);
@@ -2116,5 +2117,37 @@ class StaEDIStreamWriterTest {
         }
 
         assertEquals("UNA:+.? 'UNB+UNOA:3'UNH", new String(stream.toByteArray()));
+    }
+
+    @Test
+    void testIncompleteUNBValidated() throws IOException, EDIStreamException, EDISchemaException {
+        final EDIOutputFactory factory = EDIOutputFactory.newFactory();
+        ByteArrayOutputStream stream = new ByteArrayOutputStream(4096);
+        EDIValidationException thrown = null;
+
+        try (EDIStreamWriter writer = factory.createEDIStreamWriter(stream)) {
+            Schema schema = SchemaFactory.newFactory().getControlSchema(Standards.EDIFACT, new String[] { "UNOA", "3" });
+            writer.setControlSchema(schema);
+
+            writer.startInterchange();
+            writer.writeStartSegment("UNA")
+                .writeEndSegment();
+            writer.writeStartSegment("UNB")
+                .writeStartElement()
+                    .writeComponent("UNOA")
+                    .writeComponent("3")
+                .endElement();
+
+            thrown = assertThrows(EDIValidationException.class, () -> writer.writeEndSegment());
+        }
+
+        for (int position : Arrays.asList(2, 3, 4, 5)) {
+            assertEquals(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR, thrown.getEvent());
+            assertEquals(EDIStreamValidationError.REQUIRED_DATA_ELEMENT_MISSING, thrown.getError());
+            assertEquals("UNB", thrown.getLocation().getSegmentTag());
+            assertEquals(2, thrown.getLocation().getSegmentPosition());
+            assertEquals(position, thrown.getLocation().getElementPosition());
+            thrown = thrown.getNextException();
+        }
     }
 }
