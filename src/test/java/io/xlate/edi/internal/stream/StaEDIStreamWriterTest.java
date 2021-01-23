@@ -2094,4 +2094,27 @@ class StaEDIStreamWriterTest {
 
         assertEquals("UNB+UNO1:1++++'ISA+??????'", new String(stream.toByteArray()));
     }
+
+    @Test
+    void testIncompleteUNB() throws IOException, EDIStreamException, EDISchemaException {
+        final EDIOutputFactory factory = EDIOutputFactory.newFactory();
+        ByteArrayOutputStream stream = new ByteArrayOutputStream(4096);
+
+        try (EDIStreamWriter writer = factory.createEDIStreamWriter(stream)) {
+            writer.startInterchange();
+            writer.writeStartSegment("UNA")
+                .writeEndSegment();
+            writer.writeStartSegment("UNB")
+                .writeStartElement()
+                    .writeComponent("UNOA")
+                    .writeComponent("3")
+                .endElement()
+                .writeEndSegment();
+
+            writer.writeStartSegment("UNH");
+            writer.flush();
+        }
+
+        assertEquals("UNA:+.? 'UNB+UNOA:3'UNH", new String(stream.toByteArray()));
+    }
 }

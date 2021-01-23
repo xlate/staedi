@@ -321,6 +321,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         case HEADER_DATA:
         case HEADER_ELEMENT_END:
         case HEADER_COMPONENT_END:
+        case HEADER_SEGMENT_END:
             writeHeader((char) output);
             break;
         case INVALID:
@@ -352,6 +353,9 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
                 break;
             case HEADER_COMPONENT_END:
                 state = State.COMPONENT_END;
+                break;
+            case HEADER_SEGMENT_END:
+                state = State.SEGMENT_END;
                 break;
             default:
                 throw new IllegalStateException("Confirmed at state " + state);
