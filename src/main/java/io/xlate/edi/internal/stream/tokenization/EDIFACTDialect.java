@@ -23,8 +23,6 @@ public class EDIFACTDialect extends Dialect {
     public static final String UNA = "UNA";
     public static final String UNB = "UNB";
 
-    private static final String[] EMPTY = new String[0];
-
     static final char DFLT_SEGMENT_TERMINATOR = '\'';
     static final char DFLT_DATA_ELEMENT_SEPARATOR = '+';
     static final char DFLT_COMPONENT_ELEMENT_SEPARATOR = ':';
@@ -109,19 +107,30 @@ public class EDIFACTDialect extends Dialect {
     }
 
     private String[] parseVersion() {
-        int versionStart = findVersionStart();
-        int versionEnd = header.indexOf(String.valueOf(elementDelimiter), versionStart);
+        final int versionStart = findVersionStart();
+        String versionComposite = findVersionString(versionStart, elementDelimiter);
 
-        if (versionEnd - versionStart > 1) {
-            return header.substring(versionStart, versionEnd).split('\\' + String.valueOf(componentDelimiter));
+        if (versionComposite == null) {
+            // Handle the case where the segment was terminated prematurely (zero or one element)
+            versionComposite = findVersionString(versionStart, segmentDelimiter);
         }
 
-        return EMPTY;
+        return versionComposite.split('\\' + String.valueOf(componentDelimiter));
     }
 
     int findVersionStart() {
         // Skip four characters: UNB<delim>
         return UNB.equals(headerTag) ? 4 : unbStart + 4;
+    }
+
+    String findVersionString(int versionStart, char delimiter) {
+        final int versionEnd = header.indexOf(String.valueOf(delimiter), versionStart);
+
+        if (versionEnd - versionStart > -1) {
+            return header.substring(versionStart, versionEnd);
+        }
+
+        return null;
     }
 
     @Override
@@ -214,7 +223,7 @@ public class EDIFACTDialect extends Dialect {
             if (characters.isIgnored(value)) {
                 header.deleteCharAt(index--);
             } else if (isIndexBeyondUNBFirstElement()) {
-                if (value == elementDelimiter) {
+                if (value == elementDelimiter || value == segmentDelimiter) {
                     rejected = !initialize(characters);
                     proceed = isConfirmed();
                 }
