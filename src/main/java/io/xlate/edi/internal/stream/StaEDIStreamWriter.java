@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
 
@@ -831,11 +832,12 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     public boolean elementData(char[] text, int start, int length) {
         elementHolder.set(text, start, length);
         dialect.elementData(elementHolder, location);
-        Validator validator = validator();
 
-        if (validator != null && !validator.validateElement(dialect, location, elementHolder, null)) {
-            reportElementErrors(validator, elementHolder);
-        }
+        withValidator(validator -> {
+            if (!validator.validateElement(dialect, location, elementHolder, null)) {
+                reportElementErrors(validator, elementHolder);
+            }
+        });
 
         return true;
     }
@@ -896,22 +898,18 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     }
 
     private void validate(Consumer<Validator> command) {
-        Validator validator = validator();
-
-        if (validator != null) {
+        withValidator(validator -> {
             errors.clear();
             command.accept(validator);
 
             if (!errors.isEmpty()) {
                 throw validationExceptionChain(errors);
             }
-        }
+        });
     }
 
     private void validateCompositeOccurrence() {
-        final Validator validator = validator();
-
-        if (validator != null) {
+        withValidator(validator -> {
             errors.clear();
 
             if (!validator.validCompositeOccurrences(dialect, location)) {
@@ -921,36 +919,53 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
             if (!errors.isEmpty()) {
                 throw validationExceptionChain(errors);
             }
-        }
+        });
     }
 
     private CharSequence validateElement(Runnable setupCommand, CharSequence data) {
-        final Validator validator = validator();
-        final CharSequence result;
+        return withValidator(validator -> {
+            CharSequence elementData;
 
-        if (validator != null) {
             if (this.formatElements) {
-                result = this.formattedElement;
+                elementData = this.formattedElement;
                 this.formattedElement.setLength(0);
                 this.formattedElement.append(data); // Validator will clear and re-format if configured
             } else {
-                result = data;
+                elementData = data;
             }
 
             errors.clear();
             setupCommand.run();
 
             if (!validator.validateElement(dialect, location, data, this.formattedElement)) {
-                reportElementErrors(validator, result);
+                reportElementErrors(validator, elementData);
             }
 
             if (!errors.isEmpty()) {
                 throw validationExceptionChain(errors);
             }
 
-            dialect.elementData(result, location);
+            dialect.elementData(elementData, location);
+            return elementData;
+        }, () -> data);
+    }
+
+    void withValidator(Consumer<Validator> process) {
+        final Validator validator = validator();
+
+        if (validator != null) {
+            process.accept(validator);
+        }
+    }
+
+    <T> T withValidator(Function<Validator, T> process, Supplier<T> unvalidatedResult) {
+        final Validator validator = validator();
+        final T result;
+
+        if (validator != null) {
+            result = process.apply(validator);
         } else {
-            result = data;
+            result = unvalidatedResult.get();
         }
 
         return result;
