@@ -29,8 +29,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
 
@@ -293,9 +293,17 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         return delimiters;
     }
 
-    private Validator validator() {
+    private Optional<Validator> validator() {
+        Validator validator;
+
         // Do not use the transactionValidator in the period where it may be set/mutated by the user
-        return transaction && !transactionSchemaAllowed ? transactionValidator : controlValidator;
+        if (transaction && !transactionSchemaAllowed) {
+            validator = transactionValidator;
+        } else {
+            validator = controlValidator;
+        }
+
+        return Optional.ofNullable(validator);
     }
 
     private void write(int output) throws EDIStreamException {
@@ -833,7 +841,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         elementHolder.set(text, start, length);
         dialect.elementData(elementHolder, location);
 
-        withValidator(validator -> {
+        validator().ifPresent(validator -> {
             if (!validator.validateElement(dialect, location, elementHolder, null)) {
                 reportElementErrors(validator, elementHolder);
             }
@@ -898,7 +906,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     }
 
     private void validate(Consumer<Validator> command) {
-        withValidator(validator -> {
+        validator().ifPresent(validator -> {
             errors.clear();
             command.accept(validator);
 
@@ -909,7 +917,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     }
 
     private void validateCompositeOccurrence() {
-        withValidator(validator -> {
+        validator().ifPresent(validator -> {
             errors.clear();
 
             if (!validator.validCompositeOccurrences(dialect, location)) {
@@ -923,7 +931,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     }
 
     private CharSequence validateElement(Runnable setupCommand, CharSequence data) {
-        return withValidator(validator -> {
+        return validator().map(validator -> {
             CharSequence elementData;
 
             if (this.formatElements) {
@@ -947,28 +955,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
 
             dialect.elementData(elementData, location);
             return elementData;
-        }, () -> data);
-    }
-
-    void withValidator(Consumer<Validator> process) {
-        final Validator validator = validator();
-
-        if (validator != null) {
-            process.accept(validator);
-        }
-    }
-
-    <T> T withValidator(Function<Validator, T> process, Supplier<T> unvalidatedResult) {
-        final Validator validator = validator();
-        final T result;
-
-        if (validator != null) {
-            result = process.apply(validator);
-        } else {
-            result = unvalidatedResult.get();
-        }
-
-        return result;
+        }).orElse(data);
     }
 
     void reportElementErrors(Validator validator, CharSequence data) {
