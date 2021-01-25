@@ -788,7 +788,9 @@ abstract class SchemaReaderBase implements SchemaReader {
     void logUnusedTypes(Map<String, EDIType> types, Level level) {
         if (LOGGER.isLoggable(level)) {
             Set<String> unused = new HashSet<>(types.keySet());
+            unused.remove(StaEDISchema.INTERCHANGE_ID);
             unused.remove(StaEDISchema.TRANSACTION_ID);
+            unused.remove(StaEDISchema.IMPLEMENTATION_ID);
             unused.remove(ANY_COMPOSITE.getId());
 
             types.values()
