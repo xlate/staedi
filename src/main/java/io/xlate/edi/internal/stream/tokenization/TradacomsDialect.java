@@ -37,7 +37,7 @@ public class TradacomsDialect extends Dialect {
     private static final int TX_VERSION = 0;
 
     TradacomsDialect() {
-        super(new String[1]);
+        super(State.DialectCode.TRADACOMS, new String[1]);
         componentDelimiter = DFLT_COMPONENT_ELEMENT_SEPARATOR;
         elementDelimiter = DFLT_DATA_ELEMENT_SEPARATOR;
         decimalMark = 0;

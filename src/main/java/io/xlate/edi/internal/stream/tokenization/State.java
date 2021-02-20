@@ -15,72 +15,111 @@
  ******************************************************************************/
 package io.xlate.edi.internal.stream.tokenization;
 
+import java.util.Objects;
+
 /*
  * Processing states.
  */
 public enum State {
 
-    INVALID(-1),
+    // Initial States
+    INVALID(DialectCode.UNKNOWN, Category.INVALID),
+    INITIAL(DialectCode.UNKNOWN, Category.INITIAL),
+    INTERCHANGE_END(DialectCode.UNKNOWN, Category.INITIAL),
+    HEADER_EDIFACT_U(DialectCode.UNKNOWN, Category.EDIFACT_1),
+    HEADER_EDIFACT_N(DialectCode.UNKNOWN, Category.EDIFACT_2),
+    HEADER_TRADACOMS_S(DialectCode.UNKNOWN, Category.TRADACOMS_1),
+    HEADER_TRADACOMS_T(DialectCode.UNKNOWN, Category.TRADACOMS_2),
+    HEADER_X12_I(DialectCode.UNKNOWN, Category.X12_1),
+    HEADER_X12_S(DialectCode.UNKNOWN, Category.X12_2),
 
-    INITIAL(0),
-    INTERCHANGE_END(0),
+    // Common States (shared among dialects)
+    INTERCHANGE_CANDIDATE(Category.HEADER), // IC
+    HEADER_DATA(Category.HEADER), // HD
+    HEADER_SEGMENT_BEGIN(Category.HEADER),
+    HEADER_INVALID_DATA(Category.HEADER), // HV
+    HEADER_COMPONENT_END(Category.HEADER), // HC
+    HEADER_ELEMENT_END(Category.HEADER), // HE
+    HEADER_SEGMENT_END(Category.HEADER),
+    HEADER_RELEASE(Category.HEADER_RELEASE), // HR
+    TAG_SEARCH(Category.TAG_SEARCH),
+    SEGMENT_END(Category.TAG_SEARCH),
+    SEGMENT_EMPTY(Category.TAG_SEARCH),
+    TAG_1(Category.TAG_1),
+    TAG_2(Category.TAG_2),
+    TAG_3(Category.TAG_3),
+    SEGMENT_BEGIN(Category.ELEMENT_PROCESS),
+    ELEMENT_DATA(Category.ELEMENT_PROCESS),
+    ELEMENT_INVALID_DATA(Category.ELEMENT_PROCESS),
+    COMPONENT_END(Category.ELEMENT_PROCESS),
+    ELEMENT_REPEAT(Category.ELEMENT_PROCESS),
+    ELEMENT_END(Category.ELEMENT_PROCESS),
+    DATA_RELEASE(Category.DATA_RELEASE),
+    ELEMENT_DATA_BINARY(Category.DATA_BINARY),
+    ELEMENT_END_BINARY(Category.DATA_BINARY_END),
+    TRAILER_BEGIN(Category.TRAILER),
+    TRAILER_ELEMENT_DATA(Category.TRAILER),
+    TRAILER_ELEMENT_END(Category.TRAILER),
 
-    HEADER_X12_I(1),
-    HEADER_X12_S(2),
-    TRAILER_X12_I(3),
-    TRAILER_X12_E(4),
-    TRAILER_X12_A(5),
+    // EDIFACT
+    TRAILER_EDIFACT_U(Category.TERM_7),
+    TRAILER_EDIFACT_N(Category.TERM_8),
+    TRAILER_EDIFACT_Z(Category.TERM_9),
+    HEADER_EDIFACT_UNB_SEARCH(Category.EDIFACT_UNB_0), // EDIFACT UNA -> UNB Only
+    HEADER_EDIFACT_UNB_1(Category.EDIFACT_UNB_1),      // EDIFACT UNA -> UNB Only
+    HEADER_EDIFACT_UNB_2(Category.EDIFACT_UNB_2),      // EDIFACT UNA -> UNB Only
+    HEADER_EDIFACT_UNB_3(Category.EDIFACT_UNB_3),      // EDIFACT UNA -> UNB Only
 
-    HEADER_EDIFACT_U(6),
-    HEADER_EDIFACT_N(7),
-    TRAILER_EDIFACT_U(8),
-    TRAILER_EDIFACT_N(9),
-    TRAILER_EDIFACT_Z(10),
+    // TRADACOMS
+    TRAILER_TRADACOMS_E(Category.TERM_7),
+    TRAILER_TRADACOMS_N(Category.TERM_8),
+    TRAILER_TRADACOMS_D(Category.TERM_9),
 
-    HEADER_TRADACOMS_S(11),
-    HEADER_TRADACOMS_T(12),
-    TRAILER_TRADACOMS_E(13),
-    TRAILER_TRADACOMS_N(14),
-    TRAILER_TRADACOMS_D(15),
+    // X12
+    TRAILER_X12_I(Category.TERM_7),
+    TRAILER_X12_E(Category.TERM_8),
+    TRAILER_X12_A(Category.TERM_9);
 
-    // start at last header_tag + 1
-    INTERCHANGE_CANDIDATE(16), // IC
-    HEADER_DATA(16), // HD
-    HEADER_SEGMENT_BEGIN(16),
-    HEADER_INVALID_DATA(16), // HV
-    HEADER_COMPONENT_END(16), // HC
-    HEADER_ELEMENT_END(16), // HE
-    HEADER_SEGMENT_END(16),
+    public static final class DialectCode {
+        private DialectCode() {}
+        public static final int UNKNOWN   = 0;
+        public static final int EDIFACT   = 1;
+        public static final int TRADACOMS = 2;
+        public static final int X12       = 3;
+    }
 
-    HEADER_TAG_SEARCH(17),
-    HEADER_TAG_1(18),
-    HEADER_TAG_2(19),
-    HEADER_TAG_3(20),
+    private static final class Category {
+        // Initial
+        static final int INVALID            = -1;
+        static final int INITIAL            = 0;
+        static final int EDIFACT_1          = 1;
+        static final int EDIFACT_2          = 2;
+        static final int TRADACOMS_1        = 3;
+        static final int TRADACOMS_2        = 4;
+        static final int X12_1              = 5;
+        static final int X12_2              = 6;
 
-    TAG_SEARCH(21),
-    SEGMENT_END(21),
-    SEGMENT_EMPTY(21),
-    TAG_1(22),
-    // TODO: Clear ELEMT for TAG_2 and TAG_3 states for TRADACOMS (requires dialect-specific transition tables)
-    TAG_2(23),
-    TAG_3(24),
-
-    SEGMENT_BEGIN(25),
-    ELEMENT_DATA(25),
-    ELEMENT_INVALID_DATA(25),
-    COMPONENT_END(25),
-    ELEMENT_REPEAT(25),
-    ELEMENT_END(25),
-
-    // TODO: Data Release (DR) needs a header equivalent
-    DATA_RELEASE(26),
-
-    ELEMENT_DATA_BINARY(27),
-    ELEMENT_END_BINARY(28),
-
-    TRAILER_BEGIN(29),
-    TRAILER_ELEMENT_DATA(29),
-    TRAILER_ELEMENT_END(29);
+        // Common (placed in dialect-specific tables)
+        static final int HEADER             = 0;
+        static final int HEADER_RELEASE     = 1;
+        static final int TAG_1              = 2;
+        static final int TAG_2              = 3;  // Common for EDIFACT & X12, overridden TRADACOMS
+        static final int TAG_3              = 4;  // Common for EDIFACT & X12, overridden TRADACOMS
+        static final int ELEMENT_PROCESS    = 5;
+        static final int DATA_RELEASE       = 6;
+        static final int DATA_BINARY        = 7;
+        static final int DATA_BINARY_END    = 8;
+        static final int TRAILER            = 9;
+        // Dialect-Specific
+        static final int TAG_SEARCH         = 10; // Each dialect has their own version to support transition to interchange end segments
+        static final int TERM_7             = 11; // EDIFACT Unz, TRADACOMS End, X12 Iea
+        static final int TERM_8             = 12; // EDIFACT uNz, TRADACOMS eNd, X12 iEa
+        static final int TERM_9             = 13; // EDIFACT unZ, TRADACOMS enD, X12 ieA
+        static final int EDIFACT_UNB_0      = 14;
+        static final int EDIFACT_UNB_1      = 15;
+        static final int EDIFACT_UNB_2      = 16;
+        static final int EDIFACT_UNB_3      = 17;
+    }
 
     private static final State __ = State.INVALID;
 
@@ -107,15 +146,16 @@ public enum State {
     private static final State IC = State.INTERCHANGE_CANDIDATE;
 
     private static final State HD = State.HEADER_DATA;
+    private static final State HR = State.HEADER_RELEASE;
     private static final State HV = State.HEADER_INVALID_DATA;
     private static final State HC = State.HEADER_COMPONENT_END;
     private static final State HE = State.HEADER_ELEMENT_END;
     private static final State HZ = State.HEADER_SEGMENT_END;
 
-    private static final State B0 = State.HEADER_TAG_SEARCH;
-    private static final State B1 = State.HEADER_TAG_1;
-    private static final State B2 = State.HEADER_TAG_2;
-    private static final State B3 = State.HEADER_TAG_3;
+    private static final State B0 = State.HEADER_EDIFACT_UNB_SEARCH;
+    private static final State B1 = State.HEADER_EDIFACT_UNB_1;
+    private static final State B2 = State.HEADER_EDIFACT_UNB_2;
+    private static final State B3 = State.HEADER_EDIFACT_UNB_3;
     private static final State BB = State.HEADER_SEGMENT_BEGIN;
 
     private static final State TS = State.TAG_SEARCH;
@@ -149,60 +189,172 @@ public enum State {
      * of the text the state is initial and if the mode list is empty.
      */
     // @formatter:off
-    private static final State[][] TRANSITION_TABLE = {
-        /*-
-         *                     SPACE                                               SEGMT   CMPST   RELSE   CNTRL   INVLD     *
-         *                       |   A   B   D   E   I   N   S   T   U   X   Z       |       |       |       |       |       *
-         *                       |   |   |   |   |   |   |   |   |   |   |   | ALNUM | ELEMT | RPEAT | WHITE | OTHER | SEGTG *
-         *                       |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   *
-         *                       |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   */
-        /* II | IE Initial  */ { II, __, __, __, __, X1, __, C1, __, U1, __, __, __, __, __, __, __, __, II, II, __, __, __ },
+    /*-
+     *                                                  SPACE                                               SEGMT   CMPST   RELSE   CNTRL   INVLD     *
+     *                                                    |   A   B   D   E   I   N   S   T   U   X   Z       |       |       |       |       |       *
+     *                                                    |   |   |   |   |   |   |   |   |   |   |   | ALNUM | ELEMT | RPEAT | WHITE | OTHER | SEGTG *
+     *                                                    |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   *
+     *                                                    |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   */
+    /******************* Initial */
+    private static final State[] FROM_INITIAL         = { II, __, __, __, __, X1, __, C1, __, U1, __, __, __, __, __, __, __, __, II, II, __, __, __ };
+    /* ^ 0              */
+    private static final State[] FROM_EDIFACT_1       = { __, __, __, __, __, __, U2, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __ };
+    private static final State[] FROM_EDIFACT_2       = { __, IC, IC, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __ };
+    private static final State[] FROM_TRADACOMS_1     = { __, __, __, __, __, __, __, __, C2, __, __, __, __, __, __, __, __, __, __, __, __, __, __ };
+    private static final State[] FROM_TRADACOMS_2     = { __, __, __, __, __, __, __, __, __, __, IC, __, __, __, __, __, __, __, __, __, __, __, __ };
+    private static final State[] FROM_X12_1           = { __, __, __, __, __, __, __, X2, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __ };
+    /* ^ 5              */
+    private static final State[] FROM_X12_2           = { __, IC, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __ };
 
-        /* X1 (ISA / I)     */ { __, __, __, __, __, __, __, X2, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __ },
-        /* X2 (ISA / S)     */ { __, IC, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __ },
-        /* X7 (IEA / I)     */ { __, T2, T2, T2, X8, T2, T2, T2, T2, T2, T2, T2, T2, __, __, __, __, __, __, __, __, __, __ },
-        /* X8 (IEA / E)     */ { __, X9, T3, T3, T3, T3, T3, T3, T3, T3, T3, T3, T3, __, SB, __, __, __, __, __, __, __, __ },
-        /* X9 (IEA / A)     */ { __, __, __, __, __, __, __, __, __, __, __, __, __, __, TB, __, __, __, __, __, __, __, __ },
-        /* ^ 5              */
-        /* U1 (UNB / U)     */ { __, __, __, __, __, __, U2, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __ },
-        /* U2 (UNB / N)     */ { __, IC, IC, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __ },
-        /* U7 (UNZ / U)     */ { __, T2, T2, T2, T2, T2, U8, T2, T2, T2, T2, T2, T2, __, __, __, __, __, __, __, __, __, __ },
-        /* U8 (UNZ / N)     */ { __, T3, T3, T3, T3, T3, T3, T3, T3, T3, T3, U9, T3, __, SB, __, __, __, __, __, __, __, __ },
-        /* U9 (UNZ / Z)     */ { __, __, __, __, __, __, __, __, __, __, __, __, __, __, TB, __, __, __, __, __, __, __, __ },
-        /* ^ 10             */
-        /* C1 (STX / S)     */ { __, __, __, __, __, __, __, __, C2, __, __, __, __, __, __, __, __, __, __, __, __, __, __ },
-        /* C2 (STX / T)     */ { __, __, __, __, __, __, __, __, __, __, IC, __, __, __, __, __, __, __, __, __, __, __, __ },
-        /* C7 (END / E)     */ { __, T2, T2, T2, T2, T2, C8, T2, T2, T2, T2, T2, T2, __, __, __, __, __, __, __, __, __, __ },
-        /* C8 (END / N)     */ { __, T3, T3, C9, T3, T3, T3, T3, T3, T3, T3, T3, T3, __, __, __, __, __, __, __, __, __, SB },
-        /* C9 (END / D)     */ { __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, TB },
-        /* ^ 15             */
-        /* IC | HD          */ { HD, HD, HD, HD, HD, HD, HD, HD, HD, HD, HD, HD, HD, HZ, HE, HC, __, DR, HD, HD, HD, HV, HE },
-        /* B0 (Header Search*/ { B0, __, __, __, __, __, __, __, B1, B1, __, __, __, __, __, __, __, __, B0, __, __, __, __ },
-        /* B1 (UNB / U)     */ { __, __, __, __, __, __, B2, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __ },
-        /* B2 (UNB / N)     */ { __, __, B3, __, __, __, __, __, __, __, __, __, __, __, BB, __, __, __, __, __, __, __, __ },
-        /* B3 (UNB / B)     */ { __, __, __, __, __, __, __, __, __, __, __, __, __, __, BB, __, __, __, __, __, __, __, __ },
-        /* ^ 20             */
-        /* SE+TS Tag Search */ { TS, T1, T1, C7, C7, X7, T1, T1, T1, U7, T1, T1, T1, __, __, __, __, __, TS, __, __, __, __ },
-        /* T1  Tag Char 1 * */ { __, T2, T2, T2, T2, T2, T2, T2, T2, T2, T2, T2, T2, __, __, __, __, __, __, __, __, __, __ },
-        /* T2  Tag Char 2 * */ { __, T3, T3, T3, T3, T3, T3, T3, T3, T3, T3, T3, T3, SY, SB, __, __, __, __, __, __, __, SB },
-        /* T3  Tag Char 3 * */ { __, __, __, __, __, __, __, __, __, __, __, __, __, SY, SB, __, __, __, __, __, __, __, SB },
-        /* Element Process  */ { ED, ED, ED, ED, ED, ED, ED, ED, ED, ED, ED, ED, ED, SE, EE, CE, ER, DR, EI, EI, ED, EI, __ },
-        /* ^ 25             */
-        /* Data Release     */ { ED, ED, ED, ED, ED, ED, ED, ED, ED, ED, ED, ED, ED, ED, ED, ED, ED, ED, EI, EI, ED, EI, ED },
-        /* Binary Data      */ { BD, BD, BD, BD, BD, BD, BD, BD, BD, BD, BD, BD, BD, BD, BD, BD, BD, BD, BD, BD, BD, BD, BD },
-        /* Binary Data End  */ { __, __, __, __, __, __, __, __, __, __, __, __, __, SE, EE, __, __, __, __, __, __, __, __ },
-        /* TB | TD | TE IEA */ { TD, TD, TD, TD, TD, TD, TD, TD, TD, TD, TD, TD, TD, IE, TE, __, __, __, __, __, TD, __, __ }
-        /* ^ 29             */
-        };
+    /******************* Common */
+    private static final State[] FROM_HEADER          = { HD, HD, HD, HD, HD, HD, HD, HD, HD, HD, HD, HD, HD, HZ, HE, HC, __, HR, HD, HD, HD, HV, HE };
+    /* ^ 0              */
+    private static final State[] FROM_HEADER_RELEASE  = { HD, HD, HD, HD, HD, HD, HD, HD, HD, HD, HD, HD, HD, HD, HD, HD, HD, HD, HV, HV, HD, HV, HD };
+    private static final State[] FROM_TAG_1           = { __, T2, T2, T2, T2, T2, T2, T2, T2, T2, T2, T2, T2, __, __, __, __, __, __, __, __, __, __ };
+    private static final State[] FROM_TAG_2           = { __, T3, T3, T3, T3, T3, T3, T3, T3, T3, T3, T3, T3, SY, SB, __, __, __, __, __, __, __, __ };
+    private static final State[] FROM_TAG_3           = { __, __, __, __, __, __, __, __, __, __, __, __, __, SY, SB, __, __, __, __, __, __, __, __ };
+    private static final State[] FROM_ED              = { ED, ED, ED, ED, ED, ED, ED, ED, ED, ED, ED, ED, ED, SE, EE, CE, ER, DR, EI, EI, ED, EI, __ };
+    /* ^ 5              */
+    private static final State[] FROM_DR              = { ED, ED, ED, ED, ED, ED, ED, ED, ED, ED, ED, ED, ED, ED, ED, ED, ED, ED, EI, EI, ED, EI, ED };
+    private static final State[] FROM_BD              = { BD, BD, BD, BD, BD, BD, BD, BD, BD, BD, BD, BD, BD, BD, BD, BD, BD, BD, BD, BD, BD, BD, BD };
+    private static final State[] FROM_BE              = { __, __, __, __, __, __, __, __, __, __, __, __, __, SE, EE, __, __, __, __, __, __, __, __ };
+    private static final State[] FROM_TRAILER         = { TD, TD, TD, TD, TD, TD, TD, TD, TD, TD, TD, TD, TD, IE, TE, __, __, __, __, __, TD, __, __ };
+    /* ^ 9              */
+
+    /******************* EDIFACT */
+    private static final State[] FROM_TS_EDIFACT      = { TS, T1, T1, T1, T1, T1, T1, T1, T1, U7, T1, T1, T1, __, __, __, __, __, TS, __, __, __, __ };
+    /* ^ 10 (follows common) */
+    private static final State[] FROM_EDIFACT_7       = { __, T2, T2, T2, T2, T2, U8, T2, T2, T2, T2, T2, T2, __, __, __, __, __, __, __, __, __, __ };
+    private static final State[] FROM_EDIFACT_8       = { __, T3, T3, T3, T3, T3, T3, T3, T3, T3, T3, U9, T3, __, SB, __, __, __, __, __, __, __, __ };
+    private static final State[] FROM_EDIFACT_9       = { __, __, __, __, __, __, __, __, __, __, __, __, __, __, TB, __, __, __, __, __, __, __, __ };
+    private static final State[] FROM_EDIFACT_UNB_0   = { B0, __, __, __, __, __, __, __, B1, B1, __, __, __, __, __, __, __, __, B0, __, __, __, __ };
+    private static final State[] FROM_EDIFACT_UNB_1   = { __, __, __, __, __, __, B2, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __ };
+    private static final State[] FROM_EDIFACT_UNB_2   = { __, __, B3, __, __, __, __, __, __, __, __, __, __, __, BB, __, __, __, __, __, __, __, __ };
+    private static final State[] FROM_EDIFACT_UNB_3   = { __, __, __, __, __, __, __, __, __, __, __, __, __, __, BB, __, __, __, __, __, __, __, __ };
+
+    /******************* TRADACOMS */
+    private static final State[] FROM_TS_TRADACOMS    = { TS, T1, T1, T1, C7, T1, T1, T1, T1, T1, T1, T1, T1, __, __, __, __, __, TS, __, __, __, __ };
+    /* ^ 10 (follows common) */
+    private static final State[] FROM_TRADACOMS_7     = { __, T2, T2, T2, T2, T2, C8, T2, T2, T2, T2, T2, T2, __, __, __, __, __, __, __, __, __, __ };
+    private static final State[] FROM_TRADACOMS_8     = { __, T3, T3, C9, T3, T3, T3, T3, T3, T3, T3, T3, T3, __, __, __, __, __, __, __, __, __, SB };
+    private static final State[] FROM_TRADACOMS_9     = { __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, TB };
+    private static final State[] FROM_TAG_2_TRADACOMS = { __, T3, T3, T3, T3, T3, T3, T3, T3, T3, T3, T3, T3, SY, __, __, __, __, __, __, __, __, SB };
+    private static final State[] FROM_TAG_3_TRADACOMS = { __, __, __, __, __, __, __, __, __, __, __, __, __, SY, __, __, __, __, __, __, __, __, SB };
+
+    /******************* X12 */
+    private static final State[] FROM_TS_X12          = { TS, T1, T1, T1, T1, X7, T1, T1, T1, T1, T1, T1, T1, __, __, __, __, __, TS, __, __, __, __ };
+    /* ^ 10 (follows common) */
+    private static final State[] FROM_X12_7           = { __, T2, T2, T2, X8, T2, T2, T2, T2, T2, T2, T2, T2, __, __, __, __, __, __, __, __, __, __ };
+    private static final State[] FROM_X12_8           = { __, X9, T3, T3, T3, T3, T3, T3, T3, T3, T3, T3, T3, __, SB, __, __, __, __, __, __, __, __ };
+    private static final State[] FROM_X12_9           = { __, __, __, __, __, __, __, __, __, __, __, __, __, __, TB, __, __, __, __, __, __, __, __ };
+
+    private static final State[][] TRANSITION_INITIAL = {
+        FROM_INITIAL,
+        FROM_EDIFACT_1,
+        FROM_EDIFACT_2,
+        FROM_TRADACOMS_1,
+        FROM_TRADACOMS_2,
+        FROM_X12_1,
+        FROM_X12_2
+    };
+
+    private static final State[][] TRANSITION_EDIFACT = {
+        // Common
+        FROM_HEADER,
+        FROM_HEADER_RELEASE,
+        FROM_TAG_1,
+        FROM_TAG_2,
+        FROM_TAG_3,
+        FROM_ED,
+        FROM_DR,
+        FROM_BD,
+        FROM_BE,
+        FROM_TRAILER,
+        // Dialect-specific
+        FROM_TS_EDIFACT,
+        FROM_EDIFACT_7,
+        FROM_EDIFACT_8,
+        FROM_EDIFACT_9,
+        FROM_EDIFACT_UNB_0,
+        FROM_EDIFACT_UNB_1,
+        FROM_EDIFACT_UNB_2,
+        FROM_EDIFACT_UNB_3
+    };
+
+    private static final State[][] TRANSITION_TRADACOMS = {
+        // Common
+        FROM_HEADER,
+        FROM_HEADER_RELEASE,
+        FROM_TAG_1,
+        FROM_TAG_2_TRADACOMS, // Overrides common transitions
+        FROM_TAG_3_TRADACOMS, // Overrides common transitions
+        FROM_ED,
+        FROM_DR,
+        FROM_BD,
+        FROM_BE,
+        FROM_TRAILER,
+        // Dialect-specific
+        FROM_TS_TRADACOMS,
+        FROM_TRADACOMS_7,
+        FROM_TRADACOMS_8,
+        FROM_TRADACOMS_9
+    };
+
+    private static final State[][] TRANSITION_X12 = {
+        // Common
+        FROM_HEADER,
+        FROM_HEADER_RELEASE,
+        FROM_TAG_1,
+        FROM_TAG_2,
+        FROM_TAG_3,
+        FROM_ED,
+        FROM_DR,
+        FROM_BD,
+        FROM_BE,
+        FROM_TRAILER,
+        // Dialect-specific
+        FROM_TS_X12,
+        FROM_X12_7,
+        FROM_X12_8,
+        FROM_X12_9
+    };
+
+    private static final State[][][] TRANSITIONS = {
+        TRANSITION_INITIAL,
+        TRANSITION_EDIFACT,
+        TRANSITION_TRADACOMS,
+        TRANSITION_X12
+    };
     // @formatter:on
 
-    private int code;
+    private final int table;
+    private final int code;
 
-    State(int code) {
+    State(int table, int code) {
+        this.table = table;
         this.code = code;
     }
 
-    public State transition(CharacterClass clazz) {
-        return TRANSITION_TABLE[code][clazz.code];
+    State(int code) {
+        this(-1, code);
     }
+
+    public static State transition(State state, Dialect dialect, CharacterClass clazz) {
+        if (state.table != -1) {
+            /*
+             * A state's table is set to force transition to another table. For example,
+             * end of interchange states transition back to the unknown dialect transition
+             * table.
+             */
+            return state.transition(state.table, clazz);
+        }
+
+        Objects.requireNonNull(dialect, "dialect was unexpectedly null");
+        return state.transition(dialect.getDialectStateCode(), clazz);
+    }
+
+    public State transition(int dialect, CharacterClass clazz) {
+        return TRANSITIONS[dialect][code][clazz.code];
+    }
+
 }

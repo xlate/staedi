@@ -19,6 +19,9 @@ import io.xlate.edi.stream.Location;
 
 public abstract class Dialect {
 
+    protected final String[] transactionVersion;
+    protected final int dialectStateCode;
+
     protected char segmentDelimiter;
     protected char segmentTagTerminator = '\0';
     protected char elementDelimiter;
@@ -31,11 +34,23 @@ public abstract class Dialect {
     protected boolean rejected;
 
     protected String transactionType;
-    protected final String[] transactionVersion;
     protected String transactionVersionString;
 
-    protected Dialect(String[] initialTransactionVersion) {
+    protected Dialect(int dialectStateCode, String[] initialTransactionVersion) {
+        this.dialectStateCode = dialectStateCode;
         this.transactionVersion = initialTransactionVersion;
+    }
+
+    public static String getStandard(Dialect dialect) {
+        return dialect != null ? dialect.getStandard() : "UNKNOWN";
+    }
+
+    public int getDialectStateCode() {
+        return dialectStateCode;
+    }
+
+    public State getTagSearchState() {
+        return State.TAG_SEARCH;
     }
 
     public char getComponentElementSeparator() {

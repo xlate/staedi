@@ -46,7 +46,7 @@ public class EDIFACTDialect extends Dialect {
     private static final int TX_ASSIGNED_CODE = 3;
 
     EDIFACTDialect(String headerTag) {
-        super(new String[4]);
+        super(State.DialectCode.EDIFACT, new String[4]);
         componentDelimiter = DFLT_COMPONENT_ELEMENT_SEPARATOR;
         elementDelimiter = DFLT_DATA_ELEMENT_SEPARATOR;
         decimalMark = DFLT_DECIMAL_MARK;
@@ -136,6 +136,14 @@ public class EDIFACTDialect extends Dialect {
     @Override
     public boolean isServiceAdviceSegment(CharSequence tag) {
         return UNA.contentEquals(tag);
+    }
+
+    @Override
+    public State getTagSearchState() {
+        if (isServiceAdviceSegment(this.headerTag)) {
+            return State.HEADER_EDIFACT_UNB_SEARCH;
+        }
+        return State.TAG_SEARCH;
     }
 
     @Override

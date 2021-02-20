@@ -53,7 +53,7 @@ public class X12Dialect extends Dialect {
     private String groupVersion;
 
     X12Dialect() {
-        super(new String[2]);
+        super(State.DialectCode.X12, new String[2]);
         segmentDelimiter = DFLT_SEGMENT_TERMINATOR;
         elementDelimiter = DFLT_DATA_ELEMENT_SEPARATOR;
         decimalMark = '.';
