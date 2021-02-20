@@ -185,7 +185,7 @@ public class Lexer {
             CharacterClass clazz = characters.getClass(input);
             previous = state;
             state = State.transition(state, dialect, clazz);
-            LOGGER.finer(() -> String.format("State %s(%s, %s) -> %s", previous, clazz, Dialect.getStandard(dialect), state));
+            LOGGER.finer(() -> String.format("%s + (%s, '%s', %s) -> %s", previous, Dialect.getStandard(dialect), (char) input, clazz, state));
 
             switch (state) {
             case INITIAL:
@@ -418,9 +418,10 @@ public class Lexer {
         } else if (dialect.isRejected()) {
             buffer.clear();
             clearQueues();
+            String rejectionMessage = dialect.getRejectionMessage();
             dialect = null;
             state = State.INITIAL;
-            throw error(EDIException.INVALID_STATE, "Invalid header segment");
+            throw error(EDIException.INVALID_STATE, rejectionMessage);
         }
 
         return false;

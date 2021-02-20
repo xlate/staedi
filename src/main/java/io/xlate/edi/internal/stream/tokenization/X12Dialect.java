@@ -80,6 +80,7 @@ public class X12Dialect extends Dialect {
 
         for (int i = 0, m = X12_ISA_LENGTH; i < m; i++) {
             if (ELEMENT == header[i] && X12_ISA_TOKENS[e++] != i) {
+                rejectionMessage = String.format("Unexpected element delimiter value '%s' in X12 header position %d", ELEMENT, i + 1);
                 return false;
             }
         }
@@ -150,7 +151,7 @@ public class X12Dialect extends Dialect {
         boolean proceed = true;
 
         if (index == X12_SEGMENT_OFFSET) {
-            rejected = !initialize(characters);
+            initialize(characters);
             proceed = isConfirmed();
         }
 

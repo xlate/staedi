@@ -100,6 +100,7 @@ public class EDIFACTDialect extends Dialect {
             characters.setClass(segmentDelimiter, CharacterClass.SEGMENT_DELIMITER);
             initialized = true;
         } else {
+            rejectionMessage = "Unable to obtain version from EDIFACT header segment";
             initialized = false;
         }
 
@@ -189,7 +190,7 @@ public class EDIFACTDialect extends Dialect {
              */
             characters.setClass(elementDelimiter, CharacterClass.ELEMENT_DELIMITER);
         } else if (segmentDelimiter == value) {
-            rejected = !initialize(characters);
+            initialize(characters);
             return isConfirmed();
         }
 
@@ -232,7 +233,7 @@ public class EDIFACTDialect extends Dialect {
                 header.deleteCharAt(index--);
             } else if (isIndexBeyondUNBFirstElement()) {
                 if (value == elementDelimiter || value == segmentDelimiter) {
-                    rejected = !initialize(characters);
+                    initialize(characters);
                     proceed = isConfirmed();
                 }
             } else if (value == 'B') {

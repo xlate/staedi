@@ -31,7 +31,7 @@ public abstract class Dialect {
     protected char elementRepeater;
 
     protected boolean initialized;
-    protected boolean rejected;
+    protected String rejectionMessage;
 
     protected String transactionType;
     protected String transactionVersionString;
@@ -90,7 +90,11 @@ public abstract class Dialect {
     }
 
     public boolean isRejected() {
-        return rejected;
+        return rejectionMessage != null;
+    }
+
+    public String getRejectionMessage() {
+        return rejectionMessage;
     }
 
     /**
