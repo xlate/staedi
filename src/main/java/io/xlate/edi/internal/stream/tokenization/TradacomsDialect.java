@@ -24,6 +24,7 @@ public class TradacomsDialect extends Dialect {
     public static final String MHD = "MHD";
 
     private static final String[] EMPTY = new String[0];
+    private static final int TRADACOMS_ELEMENT_OFFSET = 3;
 
     static final char DFLT_SEGMENT_TERMINATOR = '\'';
     static final char DFLT_DATA_ELEMENT_SEPARATOR = '+';
@@ -37,7 +38,7 @@ public class TradacomsDialect extends Dialect {
     private static final int TX_VERSION = 0;
 
     TradacomsDialect() {
-        super(new String[1]);
+        super(State.DialectCode.TRADACOMS, new String[1]);
         componentDelimiter = DFLT_COMPONENT_ELEMENT_SEPARATOR;
         elementDelimiter = DFLT_DATA_ELEMENT_SEPARATOR;
         decimalMark = 0;
@@ -62,6 +63,7 @@ public class TradacomsDialect extends Dialect {
             initialized = true;
             characters.setClass(segmentDelimiter, CharacterClass.SEGMENT_DELIMITER);
         } else {
+            rejectionMessage = "Unable to obtain version from TRADACOMS header segment";
             initialized = false;
         }
 
@@ -97,7 +99,11 @@ public class TradacomsDialect extends Dialect {
         case 0:
             header = new StringBuilder();
             break;
-        case 3:
+        case TRADACOMS_ELEMENT_OFFSET:
+            if (value != segmentTagTerminator) {
+                rejectionMessage = String.format("Expected TRADACOMS segment tag delimiter '%s', but found '%s'", segmentTagTerminator, value);
+                return false;
+            }
             /*
              * TRADACOMS delimiters are fixed. Do not set the element delimiter
              * until after the segment tag has been passed to prevent triggering
@@ -124,7 +130,7 @@ public class TradacomsDialect extends Dialect {
 
     boolean processInterchangeHeader(CharacterSet characters, char value) {
         if (segmentDelimiter == value) {
-            rejected = !initialize(characters);
+            initialize(characters);
             return isConfirmed();
         }
 

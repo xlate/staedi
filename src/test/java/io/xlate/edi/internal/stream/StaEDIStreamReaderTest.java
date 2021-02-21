@@ -1939,4 +1939,47 @@ class StaEDIStreamReaderTest implements ConstantsTest {
 
         assertEquals(new BigDecimal("2554.38"), tds01);
     }
+
+    /**
+     * Original issue: https://github.com/xlate/staedi/issues/174
+     *
+     * @throws Exception
+     */
+    @Test
+    void testOtherDialectTerminalSegmentsIgnored_Issue174() throws Exception {
+        EDIInputFactory factory = EDIInputFactory.newFactory();
+        factory.setProperty(EDIInputFactory.EDI_VALIDATE_CONTROL_STRUCTURE, true);
+        factory.setProperty(EDIInputFactory.EDI_VALIDATE_CONTROL_CODE_VALUES, false);
+        EDIStreamReader reader = factory.createEDIStreamReader(getClass().getResourceAsStream("/EDIFACT/issue174/other_dialect_term_segments.edi"));
+        List<Object> unexpected = new ArrayList<>();
+
+        try {
+            while (reader.hasNext()) {
+                switch (reader.next()) {
+                case SEGMENT_ERROR:
+                case ELEMENT_OCCURRENCE_ERROR:
+                case ELEMENT_DATA_ERROR:
+                    unexpected.add(reader.getErrorType());
+                    break;
+                default:
+                    break;
+                }
+            }
+        } catch (Exception e) {
+            unexpected.add(e);
+        } finally {
+            reader.close();
+        }
+
+        assertEquals(0, unexpected.size());
+    }
+
+    @Test
+    void testTRADACOMS_IncorrectSegmentTagDelimiterIsInvalid() throws Exception {
+        EDIInputFactory factory = EDIInputFactory.newFactory();
+        EDIStreamReader reader = factory.createEDIStreamReader(getClass().getResourceAsStream("/TRADACOMS/order-wrong-segment-tag-delimiter.edi"));
+        List<Object> unexpected = new ArrayList<>();
+        EDIStreamException thrown = assertThrows(EDIStreamException.class, () -> reader.next());
+        assertTrue(thrown.getMessage().contains("Expected TRADACOMS segment tag delimiter"));
+    }
 }

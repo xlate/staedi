@@ -315,7 +315,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
             throw new EDIStreamException(String.format("Invalid character: 0x%04X", output), location);
         }
 
-        state = state.transition(clazz);
+        state = State.transition(state, dialect, clazz);
 
         switch (state) {
         case HEADER_X12_I: // I(SA)

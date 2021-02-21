@@ -46,7 +46,7 @@ public class EDIFACTDialect extends Dialect {
     private static final int TX_ASSIGNED_CODE = 3;
 
     EDIFACTDialect(String headerTag) {
-        super(new String[4]);
+        super(State.DialectCode.EDIFACT, new String[4]);
         componentDelimiter = DFLT_COMPONENT_ELEMENT_SEPARATOR;
         elementDelimiter = DFLT_DATA_ELEMENT_SEPARATOR;
         decimalMark = DFLT_DECIMAL_MARK;
@@ -100,6 +100,7 @@ public class EDIFACTDialect extends Dialect {
             characters.setClass(segmentDelimiter, CharacterClass.SEGMENT_DELIMITER);
             initialized = true;
         } else {
+            rejectionMessage = "Unable to obtain version from EDIFACT header segment";
             initialized = false;
         }
 
@@ -136,6 +137,14 @@ public class EDIFACTDialect extends Dialect {
     @Override
     public boolean isServiceAdviceSegment(CharSequence tag) {
         return UNA.contentEquals(tag);
+    }
+
+    @Override
+    public State getTagSearchState() {
+        if (isServiceAdviceSegment(this.headerTag)) {
+            return State.HEADER_EDIFACT_UNB_SEARCH;
+        }
+        return State.TAG_SEARCH;
     }
 
     @Override
@@ -181,7 +190,7 @@ public class EDIFACTDialect extends Dialect {
              */
             characters.setClass(elementDelimiter, CharacterClass.ELEMENT_DELIMITER);
         } else if (segmentDelimiter == value) {
-            rejected = !initialize(characters);
+            initialize(characters);
             return isConfirmed();
         }
 
@@ -224,7 +233,7 @@ public class EDIFACTDialect extends Dialect {
                 header.deleteCharAt(index--);
             } else if (isIndexBeyondUNBFirstElement()) {
                 if (value == elementDelimiter || value == segmentDelimiter) {
-                    rejected = !initialize(characters);
+                    initialize(characters);
                     proceed = isConfirmed();
                 }
             } else if (value == 'B') {

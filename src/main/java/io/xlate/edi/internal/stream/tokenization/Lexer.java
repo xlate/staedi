@@ -184,13 +184,13 @@ public class Lexer {
 
             CharacterClass clazz = characters.getClass(input);
             previous = state;
-            state = state.transition(clazz);
-            LOGGER.finer(() -> "State " + previous + "(" + clazz + ") -> " + state);
+            state = State.transition(state, dialect, clazz);
+            LOGGER.finer(() -> String.format("%s + (%s, '%s', %s) -> %s", previous, Dialect.getStandard(dialect), (char) input, clazz, state));
 
             switch (state) {
             case INITIAL:
             case TAG_SEARCH:
-            case HEADER_TAG_SEARCH:
+            case HEADER_EDIFACT_UNB_SEARCH:
                 break;
             case HEADER_X12_I:
             case HEADER_X12_S:
@@ -219,11 +219,12 @@ public class Lexer {
                     buffer.put((char) input);
                 }
                 break;
-            case HEADER_TAG_1: // U - When UNA is present
-            case HEADER_TAG_2: // N - When UNA is present
-            case HEADER_TAG_3: // B - When UNA is present
+            case HEADER_EDIFACT_UNB_1: // U - When UNA is present
+            case HEADER_EDIFACT_UNB_2: // N - When UNA is present
+            case HEADER_EDIFACT_UNB_3: // B - When UNA is present
                 handleStateHeaderTag(input);
                 break;
+            case HEADER_RELEASE:
             case DATA_RELEASE:
                 // Skip this character - next character will be literal value
                 break;
@@ -384,7 +385,7 @@ public class Lexer {
         switch (characters.getClass(input)) {
         case SEGMENT_DELIMITER:
             closeSegment();
-            state = State.HEADER_TAG_SEARCH;
+            state = dialect.getTagSearchState();
             break;
         case SEGMENT_TAG_DELIMITER:
         case ELEMENT_DELIMITER:
@@ -400,6 +401,15 @@ public class Lexer {
         }
     }
 
+    /**
+     * Determine if the input text has been confirmed by the dialect as being
+     * initially accepted. If so, transition to the state given by the
+     * <code>confirmed</code> parameter.
+     *
+     * @param confirmed the state to transition to if the dialect is confirmed.
+     * @return true if the dialect is confirmed, otherwise false.
+     * @throws EDIException when the input text has been rejected by the dialect.
+     */
     private boolean dialectConfirmed(State confirmed) throws EDIException {
         if (dialect.isConfirmed()) {
             state = confirmed;
@@ -408,9 +418,10 @@ public class Lexer {
         } else if (dialect.isRejected()) {
             buffer.clear();
             clearQueues();
+            String rejectionMessage = dialect.getRejectionMessage();
             dialect = null;
             state = State.INITIAL;
-            throw error(EDIException.INVALID_STATE, "Invalid header segment");
+            throw error(EDIException.INVALID_STATE, rejectionMessage);
         }
 
         return false;
