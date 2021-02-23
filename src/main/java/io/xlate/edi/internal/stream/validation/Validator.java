@@ -144,7 +144,7 @@ public class Validator {
         final UsageNode standard;
         final UsageNode impl;
         final CharBuffer data;
-        final Location location;
+        final StaEDIStreamLocation location;
 
         public RevalidationNode(UsageNode standard, UsageNode impl, CharSequence data, StaEDIStreamLocation location) {
             super();
@@ -786,14 +786,21 @@ public class Validator {
         implNode = implSeg;
         implSegmentSelected = true;
 
-        // TODO: Implementation nodes must be incremented and validated (#88)
+        /*
+         * NOTE: Validation of prior implementation elements will occur only occur
+         * for prior simple elements and composites (not prior components in the same
+         * composite when the discriminator is a component element and the position
+         * within the composite is > 1).
+         */
         if (this.isComposite()) {
             this.implComposite = implSeg.getChild(this.composite.getIndex());
             this.implElement = this.implComposite.getChild(this.element.getIndex());
+            checkPreviousSiblings(implSeg, handler);
         } else if (this.element != null) {
             // Set implementation when standard element is already set (e.g. via discriminator)
             this.implComposite = null;
             this.implElement = implSeg.getChild(this.element.getIndex());
+            checkPreviousSiblings(implSeg, handler);
         }
 
         if (candidate.isNodeType(Type.LOOP)) {
@@ -819,6 +826,34 @@ public class Validator {
             sibling = sibling.getNextSibling();
         }
         handleMissingMandatory(handler);
+    }
+
+    /**
+     * Validate any implementation elements previously skipped while searching
+     * for the loop discriminator element. Validation of enumerated values specified
+     * by the implementation schema are currently not supported for elements occurring
+     * prior to the discriminator element.
+     *
+     * @param implSeg selected implementation segment
+     * @param handler validation handler
+     */
+    void checkPreviousSiblings(UsageNode implSeg, ValidationEventHandler handler) {
+        for (RevalidationNode entry : this.revalidationQueue) {
+            UsageNode std = entry.standard;
+            UsageNode impl = implSeg.getChild(std.getIndex());
+
+            validateImplRepetitions(null, impl);
+
+            if (std.isUsed()) {
+                validateImplUnusedElementBlank(std, impl, true);
+            } else {
+                validateDataElementRequirement(null, std, impl, entry.data, entry.location);
+            }
+
+            handleRevalidatedElementErrors(entry, elementErrors, handler);
+        }
+
+        revalidationQueue.clear();
     }
 
     static boolean isMatch(PolymorphicImplementation implType, StreamEvent currentEvent) {
@@ -865,7 +900,6 @@ public class Validator {
             case START_COMPOSITE:
             case END_COMPOSITE:
             case ELEMENT_DATA:
-                // TODO: Implementation nodes must be incremented and validated (#88)
                 updateReference(events[i], (SegmentImplementation) implSeg);
                 break;
             default:
@@ -893,7 +927,10 @@ public class Validator {
             element = composite.getSequence().get(componentIndex);
         }
 
-        event.setTypeReference(element);
+        if (element != null) {
+            // Set the impl element if present, otherwise leave the standard in place
+            event.setTypeReference(element);
+        }
     }
 
     /* ********************************************************************** */
@@ -914,8 +951,8 @@ public class Validator {
         return implSegmentSelected && this.implElement != null;
     }
 
-    boolean isImplUnusedElementPresent(boolean valueReceived) {
-        return valueReceived && implSegmentSelected && this.implElement == null;
+    boolean isImplUnusedElementPresent(UsageNode implElementUsed, boolean valueReceived) {
+        return valueReceived && implSegmentSelected && implElementUsed == null;
     }
 
     public boolean validCompositeOccurrences(Dialect dialect, Location position) {
@@ -964,7 +1001,7 @@ public class Validator {
             return false;
         }
 
-        if (!validateImplUnusedElementBlank(this.composite, true)) {
+        if (!validateImplUnusedElementBlank(this.composite, this.implElement, true)) {
             return false;
         }
 
@@ -1030,7 +1067,7 @@ public class Validator {
             validateComponentElement(dialect, componentIndex, valueReceived);
         } else {
             // Validated in validCompositeOccurrences for received composites
-            validateImplUnusedElementBlank(this.element, valueReceived);
+            validateImplUnusedElementBlank(this.element, this.implElement, valueReceived);
         }
 
         if (!elementErrors.isEmpty()) {
@@ -1040,7 +1077,7 @@ public class Validator {
         if (valueReceived) {
             validateElementValue(dialect, position, value, formattedValue);
         } else {
-            validateDataElementRequirement(version);
+            validateDataElementRequirement(version, this.element, this.implElement, value, position);
         }
 
         return elementErrors.isEmpty();
@@ -1066,7 +1103,7 @@ public class Validator {
 
                     if (isImplElementSelected()) {
                         this.implElement = this.implElement.getChild(version, componentIndex);
-                        validateImplUnusedElementBlank(this.element, valueReceived);
+                        validateImplUnusedElementBlank(this.element, this.implElement, valueReceived);
                     }
                 }
             } else {
@@ -1090,7 +1127,7 @@ public class Validator {
             }
         }
 
-        if (version.isEmpty() && this.element.hasVersions()) {
+        if ((version.isEmpty() && this.element.hasVersions()) || isPendingDiscrimination()) {
             // This element value can not be validated until the version is determined
             revalidationQueue.add(new RevalidationNode(this.element, this.implElement, value, position));
             return;
@@ -1102,21 +1139,24 @@ public class Validator {
     public void validateVersionConstraints(Dialect dialect, ValidationEventHandler validationHandler, StringBuilder formattedValue) {
         for (RevalidationNode entry : revalidationQueue) {
             validateElementValue(dialect, entry.standard, entry.impl, entry.data, formattedValue);
-
-            for (UsageError error : elementErrors) {
-                validationHandler.elementError(error.getError().getCategory(),
-                                               error.getError(),
-                                               error.getTypeReference(),
-                                               entry.data,
-                                               entry.location.getElementPosition(),
-                                               entry.location.getComponentPosition(),
-                                               entry.location.getElementOccurrence());
-            }
-
-            elementErrors.clear();
+            handleRevalidatedElementErrors(entry, elementErrors, validationHandler);
         }
 
         revalidationQueue.clear();
+    }
+
+    void handleRevalidatedElementErrors(RevalidationNode entry, List<UsageError> errors, ValidationEventHandler validationHandler) {
+        for (UsageError error : errors) {
+            validationHandler.elementError(error.getError().getCategory(),
+                                           error.getError(),
+                                           error.getTypeReference(),
+                                           entry.data,
+                                           entry.location.getElementPosition(),
+                                           entry.location.getComponentPosition(),
+                                           entry.location.getElementOccurrence());
+        }
+
+        errors.clear();
     }
 
     void validateElementValue(Dialect dialect, UsageNode element, UsageNode implElement, CharSequence value, StringBuilder formattedValue) {
@@ -1202,18 +1242,31 @@ public class Validator {
         }
     }
 
+    /**
+     * Validate that the implementation element prior to the element identified
+     * by elemenetPosition and componentPosition met its required number of
+     * repetitions. Validation will only occur for simple elements or at the
+     * start of a composite element.
+     *
+     * @param version version to use for validation
+     * @param elementPosition position of the current element
+     * @param componentPosition position of the current component
+     */
     void validateImplRepetitions(String version, int elementPosition, int componentPosition) {
         if (elementPosition > 0 && componentPosition < 0) {
             UsageNode previousImpl = getImplElement(version, elementPosition - 1);
-
-            if (tooFewRepetitions(version, previousImpl)) {
-                elementErrors.add(new UsageError(previousImpl, IMPLEMENTATION_TOO_FEW_REPETITIONS));
-            }
+            validateImplRepetitions(version, previousImpl);
         }
     }
 
-    boolean validateImplUnusedElementBlank(UsageNode node, boolean valueReceived) {
-        if (isImplUnusedElementPresent(valueReceived)) {
+    void validateImplRepetitions(String version, UsageNode implElement) {
+        if (tooFewRepetitions(version, implElement)) {
+            elementErrors.add(new UsageError(implElement, IMPLEMENTATION_TOO_FEW_REPETITIONS));
+        }
+    }
+
+    boolean validateImplUnusedElementBlank(UsageNode node, UsageNode implNode, boolean valueReceived) {
+        if (isImplUnusedElementPresent(implNode, valueReceived)) {
             // Validated in validCompositeOccurrences for received composites
             elementErrors.add(new UsageError(node, IMPLEMENTATION_UNUSED_DATA_ELEMENT_PRESENT));
             return false;
@@ -1221,14 +1274,21 @@ public class Validator {
         return true;
     }
 
-    void validateDataElementRequirement(String version) {
+    void validateDataElementRequirement(String version, UsageNode element, UsageNode implElement, CharSequence value, StaEDIStreamLocation position) {
         if (!UsageNode.hasMinimumUsage(version, element) || !UsageNode.hasMinimumUsage(version, implElement)) {
-            elementErrors.add(new UsageError(this.element, REQUIRED_DATA_ELEMENT_MISSING));
+            elementErrors.add(new UsageError(element, REQUIRED_DATA_ELEMENT_MISSING));
+        } else if (isPendingDiscrimination()) {
+            // This element requirement can not be validated until the correct implementation is determined
+            revalidationQueue.add(new RevalidationNode(this.element, this.implElement, value, position));
         }
     }
 
     boolean tooFewRepetitions(String version, UsageNode node) {
         if (!UsageNode.hasMinimumUsage(version, node)) {
+            /*
+             * Compare to `1` for repetitions. Elements not meeting requirement
+             * of `> 0` are instead signaled as missing requirement elements.
+             */
             return node.getLink().getMinOccurs(version) > 1;
         }
 

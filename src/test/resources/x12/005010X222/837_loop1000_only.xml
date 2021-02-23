@@ -65,6 +65,49 @@
           </segment>
         </sequence>
       </loop>
+
+      <loop code="2000B" type="L0002" discriminator="3" title="Subscriber Level (2000B)" minOccurs="0">
+        <sequence>
+          <segment type="HL" title="Subscriber Level (HL)">
+            <sequence>
+              <element position="1" title="Hierarchical ID Number (22)" />
+              <element position="2" title="Hierarchical Parent ID Number (22)" minOccurs="1" />
+              <element position="3" title="Hierarchical Level Code (22)">
+                <enumeration>
+                  <value title="Subscriber">22</value>
+                </enumeration>
+              </element>
+              <element position="4" minOccurs="1" title="Hierarchical Child Code (22)">
+                <enumeration>
+                  <value>0</value>
+                  <value>1</value>
+                </enumeration>
+              </element>
+            </sequence>
+          </segment>
+        </sequence>
+      </loop>
+
+      <loop code="2000C" type="L0002" discriminator="3" title="Patient Level (2000C)" minOccurs="0">
+        <sequence>
+          <segment type="HL" title="Patient Level (HL)">
+            <sequence>
+              <element position="1" title="Hierarchical ID Number (23)" />
+              <element position="2" title="Hierarchical Parent ID Number (23)" minOccurs="1" />
+              <element position="3" title="Hierarchical Level Code (23)">
+                <enumeration>
+                  <value title="Patient">23</value>
+                </enumeration>
+              </element>
+              <element position="4" minOccurs="1" title="Hierarchical Child Code (23)">
+                <enumeration>
+                  <value>0</value>
+                </enumeration>
+              </element>
+            </sequence>
+          </segment>
+        </sequence>
+      </loop>
     </sequence>
   </implementation>
 </schema>
