@@ -20,9 +20,11 @@ import io.xlate.edi.schema.EDISimpleType;
 import io.xlate.edi.schema.EDIType;
 import io.xlate.edi.schema.SchemaFactory;
 import io.xlate.edi.stream.EDIInputFactory;
+import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamException;
 import io.xlate.edi.stream.EDIStreamReader;
 import io.xlate.edi.stream.EDIStreamValidationError;
+import io.xlate.edi.test.StaEDITestUtil;
 
 class ElementImplTest {
 
@@ -205,6 +207,7 @@ class ElementImplTest {
                 + "PER*IC*EDI DEPT*EM*FEEDBACK@example.com*TE*3305551212~"
                 + "NM1*40*2*PPO BLUE*****46*54771~"
                 + "HL*1**20*1~"
+                + "HL*2*1*22*0~"
                 + "SE*6*0001~"
                 + "GE*1*1~"
                 + "IEA*1*000000001~").getBytes());
@@ -357,5 +360,41 @@ class ElementImplTest {
         assertEquals("Hierarchical Parent ID Number", hlReferences.get(1).getReferencedType().getTitle());
         assertEquals("Hierarchical Level Code", hlReferences.get(2).getReferencedType().getTitle());
         assertEquals("Hierarchical Child Code", hlReferences.get(3).getReferencedType().getTitle());
+    }
+
+    @Test
+    void testImplElementsPriorToDiscriminatorAreValidated() throws EDIStreamException, EDISchemaException {
+        EDIInputFactory factory = EDIInputFactory.newFactory();
+        ByteArrayInputStream stream = new ByteArrayInputStream((""
+                + "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *200711*0100*^*00501*000000001*0*T*:~"
+                + "GS*HC*99999999999*888888888888*20111219*1340*1*X*005010X222~"
+                + "ST*837*0001*005010X222~"
+                + "BHT*0019*00*565743*20110523*154959*CH~"
+                + "NM1*41*2*SAMPLE INC*****46*496103~"
+                + "PER*IC*EDI DEPT*EM*FEEDBACK@example.com*TE*3305551212~"
+                + "NM1*40*2*PPO BLUE*****46*54771~"
+                + "HL*1*BAD*20*1~"
+                + "HL*2**22*0~"
+                + "SE*6*0001~"
+                + "GE*1*1~"
+                + "IEA*1*000000001~").getBytes());
+
+        EDIStreamReader reader = StaEDITestUtil.filterEvents(factory,
+                                                             factory.createEDIStreamReader(stream),
+                                                             EDIStreamEvent.START_TRANSACTION,
+                                                             EDIStreamEvent.SEGMENT_ERROR,
+                                                             EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR,
+                                                             EDIStreamEvent.ELEMENT_DATA_ERROR);
+
+        assertEquals(EDIStreamEvent.START_TRANSACTION, reader.next());
+        reader.setTransactionSchema(SchemaFactory.newFactory()
+                                    .createSchema(getClass().getResource("/x12/005010X222/837_loop1000_only.xml")));
+
+        assertEquals(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR, reader.next());
+        assertEquals(EDIStreamValidationError.IMPLEMENTATION_UNUSED_DATA_ELEMENT_PRESENT, reader.getErrorType());
+        assertEquals("BAD", reader.getText());
+
+        assertEquals(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR, reader.next());
+        assertEquals(EDIStreamValidationError.REQUIRED_DATA_ELEMENT_MISSING, reader.getErrorType());
     }
 }
