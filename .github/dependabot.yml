@@ -1,0 +1,15 @@
+version: 2
+updates:
+- package-ecosystem: maven
+  directory: "/"
+  schedule:
+    interval: daily
+    time: "10:00"
+  open-pull-requests-limit: 10
+  ignore:
+  - dependency-name: jakarta.xml.bind:jakarta.xml.bind-api
+    versions:
+    - ">= 3.a, < 4"
+  - dependency-name: org.glassfish.jaxb:jaxb-runtime
+    versions:
+    - ">= 3.a, < 4"
