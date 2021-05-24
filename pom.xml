@@ -107,7 +107,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-javadoc-plugin</artifactId>
-          <version>3.2.0</version>
+          <version>3.3.0</version>
           <configuration>
             <additionalOptions>-html5</additionalOptions>
             <sourcepath>src/main/java:src/main/java9</sourcepath>
