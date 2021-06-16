@@ -760,7 +760,7 @@ abstract class SchemaReaderBase implements SchemaReader {
     void setReferences(Map<String, EDIType> types) {
         types.values()
              .stream()
-             .filter(type -> type instanceof StructureType)
+             .filter(StructureType.class::isInstance)
              .forEach(struct -> setReferences((StructureType) struct, types));
 
         logUnusedTypes(types, Level.INFO);
@@ -795,7 +795,7 @@ abstract class SchemaReaderBase implements SchemaReader {
 
             types.values()
                  .stream()
-                 .filter(type -> type instanceof StructureType)
+                 .filter(StructureType.class::isInstance)
                  .map(StructureType.class::cast)
                  .flatMap(struct -> struct.getReferences().stream())
                  .forEach(ref -> unused.remove(ref.getReferencedType().getId()));
