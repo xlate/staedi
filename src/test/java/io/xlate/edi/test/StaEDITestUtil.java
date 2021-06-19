@@ -50,4 +50,9 @@ public class StaEDITestUtil {
         };
         return factory.createFilteredReader(reader, filter);
     }
+
+    public static String[] getJavaVersion() {
+        String versionString = System.getProperty("java.version");
+        return versionString.split("[\\._]");
+    }
 }

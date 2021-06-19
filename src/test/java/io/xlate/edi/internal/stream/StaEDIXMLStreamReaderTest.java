@@ -43,6 +43,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Logger;
 
 import javax.xml.namespace.NamespaceContext;
+import javax.xml.stream.StreamFilter;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
@@ -76,6 +77,7 @@ import io.xlate.edi.stream.EDIStreamReader;
 import io.xlate.edi.stream.EDIStreamValidationError;
 import io.xlate.edi.stream.EDIStreamWriter;
 import io.xlate.edi.stream.Location;
+import io.xlate.edi.test.StaEDITestUtil;
 
 @SuppressWarnings("resource")
 class StaEDIXMLStreamReaderTest {
@@ -903,11 +905,18 @@ class StaEDIXMLStreamReaderTest {
         InputStream stream = new ByteArrayInputStream("{}".getBytes());
         ediReader = factory.createEDIStreamReader(stream);
         XMLStreamReader xmlReader = factory.createXMLStreamReader(ediReader);
-        XMLStreamReader filtered = XMLInputFactory.newFactory().createFilteredReader(xmlReader,
-                                                                                     reader -> reader.getEventType() == XMLStreamConstants.START_ELEMENT &&
-                                                                                               reader.getLocalName().equals("TRANSACTION"));
+        StreamFilter xmlFilter = reader -> reader.getEventType() == XMLStreamConstants.START_ELEMENT &&
+                reader.getLocalName().equals("TRANSACTION");
+        XMLStreamException thrown;
 
-        XMLStreamException thrown = assertThrows(XMLStreamException.class, () -> filtered.hasNext());
+        if (Integer.parseInt(StaEDITestUtil.getJavaVersion()[0]) >= 16) {
+            // See fix for JDK-8255918: https://github.com/openjdk/jdk/pull/1209
+            thrown = assertThrows(XMLStreamException.class, () -> XMLInputFactory.newFactory().createFilteredReader(xmlReader, xmlFilter));
+        } else {
+            XMLStreamReader filtered = XMLInputFactory.newFactory().createFilteredReader(xmlReader, xmlFilter);
+            thrown = assertThrows(XMLStreamException.class, () -> filtered.hasNext());
+        }
+
         assertTrue(thrown.getCause() instanceof EDIStreamException);
         String message = thrown.getCause().getMessage();
         assertTrue(message.contains("EDIE003"));
