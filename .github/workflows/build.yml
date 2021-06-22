@@ -84,7 +84,7 @@ jobs:
         run: mvn -B verify javadoc:javadoc --file pom.xml
 
   quality:
-    if: github.repository == 'xlate/staedi'
+    if: ${{ github.repository == 'xlate/staedi' && github.actor != 'dependabot[bot]' }}
     runs-on: ubuntu-latest
     name: Verify Quality
 
