@@ -1,5 +1,7 @@
 package io.xlate.edi.test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -9,13 +11,15 @@ import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamException;
 import io.xlate.edi.stream.EDIStreamFilter;
 import io.xlate.edi.stream.EDIStreamReader;
+import io.xlate.edi.stream.EDIStreamValidationError;
 import io.xlate.edi.stream.EDIStreamWriter;
 
 public class StaEDITestUtil {
 
     /**
-     * Write a full segment to the output writer. Elements in the elements parameter
-     * are written as simple elements or composite elements when they are an array.
+     * Write a full segment to the output writer. Elements in the elements
+     * parameter are written as simple elements or composite elements when they
+     * are an array.
      *
      * @param writer
      * @param segmentTag
@@ -49,6 +53,34 @@ public class StaEDITestUtil {
             }
         };
         return factory.createFilteredReader(reader, filter);
+    }
+
+    public static void assertEvent(EDIStreamReader reader, EDIStreamEvent event) throws EDIStreamException {
+        assertEquals(event, reader.next());
+    }
+
+    public static void assertEvent(EDIStreamReader reader, EDIStreamEvent event, String referenceCode)
+            throws EDIStreamException {
+        assertEvent(reader, event, null, referenceCode);
+    }
+
+    public static void assertEvent(EDIStreamReader reader, EDIStreamEvent event, EDIStreamValidationError error, String referenceCode)
+            throws EDIStreamException {
+        assertEquals(event, reader.next());
+        if (error != null) {
+            assertEquals(error, reader.getErrorType(), () -> "Unexpected error type for code: " + reader.getReferenceCode());
+        }
+        assertEquals(referenceCode, reader.getReferenceCode());
+    }
+
+    public static void assertEvent(EDIStreamReader reader, EDIStreamEvent event, EDIStreamValidationError error, String text, String referenceCode)
+            throws EDIStreamException {
+        assertEquals(event, reader.next());
+        if (error != null) {
+            assertEquals(error, reader.getErrorType(), () -> "Unexpected error type for code: " + reader.getReferenceCode());
+        }
+        assertEquals(text, reader.getText());
+        assertEquals(referenceCode, reader.getReferenceCode());
     }
 
     public static String[] getJavaVersion() {

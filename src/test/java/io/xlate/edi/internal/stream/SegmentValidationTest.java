@@ -15,6 +15,7 @@
  ******************************************************************************/
 package io.xlate.edi.internal.stream;
 
+import static io.xlate.edi.test.StaEDITestUtil.assertEvent;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -30,12 +31,12 @@ import io.xlate.edi.schema.EDISchemaException;
 import io.xlate.edi.schema.Schema;
 import io.xlate.edi.schema.SchemaFactory;
 import io.xlate.edi.stream.EDIInputFactory;
+import io.xlate.edi.stream.EDIStreamConstants.Standards;
 import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamException;
 import io.xlate.edi.stream.EDIStreamFilter;
 import io.xlate.edi.stream.EDIStreamReader;
 import io.xlate.edi.stream.EDIStreamValidationError;
-import io.xlate.edi.stream.EDIStreamConstants.Standards;
 
 @SuppressWarnings("resource")
 class SegmentValidationTest {
@@ -434,83 +435,45 @@ class SegmentValidationTest {
             }
         });
 
-        assertEquals(EDIStreamEvent.START_TRANSACTION, reader.next(), "Expecting start of transaction");
+        assertEvent(reader, EDIStreamEvent.START_TRANSACTION);
         reader.setTransactionSchema(schemaFactory.createSchema(getClass().getResource("/x12/EDISchemaSegmentValidationImpl.xml")));
 
         // Loop A
-        assertEquals(EDIStreamEvent.START_LOOP, reader.next());
-        assertEquals("0000A", reader.getReferenceCode());
+        assertEvent(reader, EDIStreamEvent.START_LOOP, "0000A");
+        assertEvent(reader, EDIStreamEvent.SEGMENT_ERROR, EDIStreamValidationError.IMPLEMENTATION_UNUSED_SEGMENT_PRESENT, "S12");
+        assertEvent(reader, EDIStreamEvent.SEGMENT_ERROR, EDIStreamValidationError.IMPLEMENTATION_SEGMENT_BELOW_MINIMUM_USE, "S13");
+        assertEvent(reader, EDIStreamEvent.END_LOOP, "0000A");
 
-        assertEquals(EDIStreamEvent.SEGMENT_ERROR, reader.next());
-        assertEquals(EDIStreamValidationError.IMPLEMENTATION_UNUSED_SEGMENT_PRESENT, reader.getErrorType());
-        assertEquals("S12", reader.getReferenceCode());
-
-        assertEquals(EDIStreamEvent.SEGMENT_ERROR, reader.next());
-        assertEquals(EDIStreamValidationError.IMPLEMENTATION_SEGMENT_BELOW_MINIMUM_USE, reader.getErrorType(), () -> {
-            return "Unexpected event for code: " + reader.getReferenceCode();
-        });
-        assertEquals("S13", reader.getReferenceCode());
-
-        assertEquals(EDIStreamEvent.END_LOOP, reader.next());
-        assertEquals("0000A", reader.getReferenceCode());
 
         // Loop B - Occurrence 1
-        assertEquals(EDIStreamEvent.START_LOOP, reader.next());
-        assertEquals("0000B", reader.getReferenceCode());
-
-        assertEquals(EDIStreamEvent.SEGMENT_ERROR, reader.next());
-        assertEquals(EDIStreamValidationError.SEGMENT_EXCEEDS_MAXIMUM_USE, reader.getErrorType(), () -> {
-            return "Unexpected event for code: " + reader.getReferenceCode();
-        });
-        assertEquals("S12", reader.getReferenceCode());
-
-        assertEquals(EDIStreamEvent.END_LOOP, reader.next());
-        assertEquals("0000B", reader.getReferenceCode());
+        assertEvent(reader, EDIStreamEvent.START_LOOP, "0000B");
+        assertEvent(reader, EDIStreamEvent.SEGMENT_ERROR, EDIStreamValidationError.SEGMENT_EXCEEDS_MAXIMUM_USE, "S12");
+        assertEvent(reader, EDIStreamEvent.END_LOOP, "0000B");
 
         // Loop B - Occurrence 2
-        assertEquals(EDIStreamEvent.START_LOOP, reader.next());
-        assertEquals("0000B", reader.getReferenceCode());
-        assertEquals(EDIStreamEvent.END_LOOP, reader.next());
-        assertEquals("0000B", reader.getReferenceCode());
+        assertEvent(reader, EDIStreamEvent.START_LOOP, "0000B");
+        assertEvent(reader, EDIStreamEvent.END_LOOP, "0000B");
 
         // Loop B - Occurrence 3
-        assertEquals(EDIStreamEvent.START_LOOP, reader.next());
-        assertEquals("0000B", reader.getReferenceCode());
-
-        assertEquals(EDIStreamEvent.SEGMENT_ERROR, reader.next());
-        assertEquals(EDIStreamValidationError.LOOP_OCCURS_OVER_MAXIMUM_TIMES, reader.getErrorType());
-        assertEquals("S11", reader.getReferenceCode());
-
-        assertEquals(EDIStreamEvent.END_LOOP, reader.next());
-        assertEquals("0000B", reader.getReferenceCode());
+        assertEvent(reader, EDIStreamEvent.START_LOOP, "0000B");
+        assertEvent(reader, EDIStreamEvent.SEGMENT_ERROR, EDIStreamValidationError.LOOP_OCCURS_OVER_MAXIMUM_TIMES, "S11");
+        assertEvent(reader, EDIStreamEvent.END_LOOP, "0000B");
 
         // Loop C - Occurrence 1
-        assertEquals(EDIStreamEvent.START_LOOP, reader.next());
-        assertEquals("0000C", reader.getReferenceCode());
-        assertEquals(EDIStreamEvent.END_LOOP, reader.next());
-        assertEquals("0000C", reader.getReferenceCode());
+        assertEvent(reader, EDIStreamEvent.START_LOOP, "0000C");
+        assertEvent(reader, EDIStreamEvent.END_LOOP, "0000C");
 
-        assertEquals(EDIStreamEvent.SEGMENT_ERROR, reader.next());
-        assertEquals(EDIStreamValidationError.IMPLEMENTATION_LOOP_OCCURS_UNDER_MINIMUM_TIMES, reader.getErrorType());
-        assertEquals("S11", reader.getReferenceCode());
+        assertEvent(reader, EDIStreamEvent.SEGMENT_ERROR, EDIStreamValidationError.IMPLEMENTATION_LOOP_OCCURS_UNDER_MINIMUM_TIMES, "S11");
 
         // Loop D - Occurrence 1
-        assertEquals(EDIStreamEvent.START_LOOP, reader.next());
-        assertEquals("0000D", reader.getReferenceCode());
+        assertEvent(reader, EDIStreamEvent.START_LOOP, "0000D");
 
         // Standard Loop L0000 may only occur 5 times
-        assertEquals(EDIStreamEvent.SEGMENT_ERROR, reader.next());
-        assertEquals(EDIStreamValidationError.LOOP_OCCURS_OVER_MAXIMUM_TIMES, reader.getErrorType());
-        assertEquals("S11", reader.getText());
-        assertEquals("L0000", reader.getReferenceCode());
-
-        assertEquals(EDIStreamEvent.END_LOOP, reader.next());
-        assertEquals("0000D", reader.getReferenceCode());
+        assertEvent(reader, EDIStreamEvent.SEGMENT_ERROR, EDIStreamValidationError.LOOP_OCCURS_OVER_MAXIMUM_TIMES, "S11", "L0000");
+        assertEvent(reader, EDIStreamEvent.END_LOOP, "0000D");
 
         // Loop L0001 has minOccurs=1 in standard (not used in implementation, invalid configuration)
-        assertEquals(EDIStreamEvent.SEGMENT_ERROR, reader.next());
-        assertEquals(EDIStreamValidationError.MANDATORY_SEGMENT_MISSING, reader.getErrorType());
-        assertEquals("S20", reader.getReferenceCode());
+        assertEvent(reader, EDIStreamEvent.SEGMENT_ERROR, EDIStreamValidationError.MANDATORY_SEGMENT_MISSING, "S20");
 
         assertTrue(!reader.hasNext(), "Unexpected segment errors exist");
     }
@@ -664,57 +627,32 @@ class SegmentValidationTest {
             }
         });
 
-        assertEquals(EDIStreamEvent.START_TRANSACTION, reader.next(), "Expecting start of transaction");
+        assertEvent(reader, EDIStreamEvent.START_TRANSACTION);
         SchemaFactory schemaFactory = SchemaFactory.newFactory();
         URL schemaLocation = getClass().getResource("/x12/005010X222/837.xml");
         Schema schema = schemaFactory.createSchema(schemaLocation);
         reader.setTransactionSchema(schema);
 
         // Occurrence 1
-        assertEquals(EDIStreamEvent.START_LOOP, reader.next());
-        assertEquals("L0001", reader.getReferenceCode());
-
-        assertEquals(EDIStreamEvent.SEGMENT_ERROR, reader.next());
-        assertEquals(EDIStreamValidationError.IMPLEMENTATION_UNUSED_SEGMENT_PRESENT, reader.getErrorType());
-        assertEquals("NM1", reader.getReferenceCode());
-
-        assertEquals(EDIStreamEvent.SEGMENT_ERROR, reader.next());
-        assertEquals(EDIStreamValidationError.IMPLEMENTATION_UNUSED_SEGMENT_PRESENT, reader.getErrorType());
-        assertEquals("PER", reader.getReferenceCode());
-
-        assertEquals(EDIStreamEvent.END_LOOP, reader.next());
-        assertEquals("L0001", reader.getReferenceCode());
+        assertEvent(reader, EDIStreamEvent.START_LOOP, "L0001");
+        assertEvent(reader, EDIStreamEvent.SEGMENT_ERROR, EDIStreamValidationError.IMPLEMENTATION_UNUSED_SEGMENT_PRESENT, "NM1");
+        assertEvent(reader, EDIStreamEvent.SEGMENT_ERROR, EDIStreamValidationError.IMPLEMENTATION_UNUSED_SEGMENT_PRESENT, "PER");
+        assertEvent(reader, EDIStreamEvent.END_LOOP, "L0001");
 
         // Occurrence 2
-        assertEquals(EDIStreamEvent.START_LOOP, reader.next());
-        assertEquals("L0001", reader.getReferenceCode());
-
-        assertEquals(EDIStreamEvent.SEGMENT_ERROR, reader.next());
-        assertEquals(EDIStreamValidationError.IMPLEMENTATION_UNUSED_SEGMENT_PRESENT, reader.getErrorType());
-        assertEquals("NM1", reader.getReferenceCode());
-
-        assertEquals(EDIStreamEvent.END_LOOP, reader.next());
-        assertEquals("L0001", reader.getReferenceCode());
+        assertEvent(reader, EDIStreamEvent.START_LOOP, "L0001");
+        assertEvent(reader, EDIStreamEvent.SEGMENT_ERROR, EDIStreamValidationError.IMPLEMENTATION_UNUSED_SEGMENT_PRESENT, "NM1");
+        assertEvent(reader, EDIStreamEvent.END_LOOP, "L0001");
 
         // Loop 2010A
-        assertEquals(EDIStreamEvent.START_LOOP, reader.next());
-        assertEquals("2010A", reader.getReferenceCode());
+        assertEvent(reader, EDIStreamEvent.START_LOOP, "2010A");
+        assertEvent(reader, EDIStreamEvent.SEGMENT_ERROR, EDIStreamValidationError.IMPLEMENTATION_UNUSED_SEGMENT_PRESENT, "PRV");
+        assertEvent(reader, EDIStreamEvent.END_LOOP, "2010A");
 
-        assertEquals(EDIStreamEvent.SEGMENT_ERROR, reader.next());
-        assertEquals(EDIStreamValidationError.IMPLEMENTATION_UNUSED_SEGMENT_PRESENT, reader.getErrorType());
-        assertEquals("PRV", reader.getReferenceCode());
-
-        assertEquals(EDIStreamEvent.END_LOOP, reader.next());
-        assertEquals("2010A", reader.getReferenceCode());
-
-        assertEquals(EDIStreamEvent.START_TRANSACTION, reader.next(), "Expecting start of 2nd transaction");
-
+        assertEvent(reader, EDIStreamEvent.START_TRANSACTION);
         // Loop 2010A
-        assertEquals(EDIStreamEvent.START_LOOP, reader.next());
-        assertEquals("2010A", reader.getReferenceCode());
-
-        assertEquals(EDIStreamEvent.END_LOOP, reader.next());
-        assertEquals("2010A", reader.getReferenceCode());
+        assertEvent(reader, EDIStreamEvent.START_LOOP, "2010A");
+        assertEvent(reader, EDIStreamEvent.END_LOOP, "2010A");
 
         assertTrue(!reader.hasNext(), "Unexpected events exist");
     }
