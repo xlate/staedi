@@ -99,11 +99,11 @@ public class ProxyEventHandler implements EventHandler {
     }
 
     public EDIStreamEvent getEvent() {
-        return current(StreamEvent::getType, null);
+        return current(StreamEvent::getType, false, null);
     }
 
     public CharBuffer getCharacters() {
-        return current(StreamEvent::getData);
+        return current(StreamEvent::getData, true, null);
     }
 
     public boolean nextEvent() {
@@ -116,30 +116,30 @@ public class ProxyEventHandler implements EventHandler {
     }
 
     public EDIStreamValidationError getErrorType() {
-        return current(StreamEvent::getErrorType, null);
+        return current(StreamEvent::getErrorType, false, null);
     }
 
     public String getReferenceCode() {
-        return current(StreamEvent::getReferenceCode, null);
+        return current(StreamEvent::getReferenceCode, false, null);
     }
 
     public Location getLocation() {
-        return current(event ->
-                event.location != null ? event.location : location, location);
+        return current(StreamEvent::getLocation, false, this.location);
     }
 
-    <T> T current(Function<StreamEvent, T> mapper, T defaultValue) {
-        if (!eventQueue.isEmpty()) {
-            return mapper.apply(eventQueue.getFirst());
-        }
-        return defaultValue;
-    }
+    <T> T current(Function<StreamEvent, T> mapper, boolean required, T defaultValue) {
+        final T value;
 
-    <T> T current(Function<StreamEvent, T> mapper) {
-        if (!eventQueue.isEmpty()) {
-            return mapper.apply(eventQueue.getFirst());
+        if (eventQueue.isEmpty()) {
+            if (required) {
+                throw new IllegalStateException();
+            }
+            value = defaultValue;
+        } else {
+            value = mapper.apply(eventQueue.getFirst());
         }
-        throw new IllegalStateException();
+
+        return value;
     }
 
     StreamEvent getPooledEvent() {
@@ -155,7 +155,7 @@ public class ProxyEventHandler implements EventHandler {
     }
 
     public EDIReference getSchemaTypeReference() {
-        return current(StreamEvent::getTypeReference, null);
+        return current(StreamEvent::getTypeReference, false, null);
     }
 
     @Override
