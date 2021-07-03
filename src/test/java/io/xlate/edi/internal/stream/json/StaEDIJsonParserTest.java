@@ -138,35 +138,39 @@ class StaEDIJsonParserTest {
     }
 
     @ParameterizedTest
-    @ValueSource(
-            classes = {
-                        jakarta.json.stream.JsonParser.class,
-                        javax.json.stream.JsonParser.class
-            })
-    void testNullElementsAsArray(Class<?> parserInterface) throws Throwable {
+    @CsvSource({
+        "jakarta.json.stream.JsonParser, false, /x12/sample837-original.json",
+        "jakarta.json.stream.JsonParser, true,  /x12/sample837-original-nestHL.json",
+        "javax.json.stream.JsonParser,   false, /x12/sample837-original.json",
+        "javax.json.stream.JsonParser,   true,  /x12/sample837-original-nestHL.json"
+    })
+    void testNullElementsAsArray(Class<?> parserInterface, boolean nestHL, String expectedResource) throws Throwable {
+        ediReaderConfig.put(EDIInputFactory.EDI_NEST_HIERARCHICAL_LOOPS, nestHL);
         ediReaderConfig.put(EDIInputFactory.JSON_NULL_EMPTY_ELEMENTS, true);
         setupReader(factory, "/x12/sample837-original.edi", "/x12/005010/837.xml");
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
         Object jsonParser = factory.createJsonParser(ediReader, parserInterface);
         copyParserToGenerator(ediReader, jsonParser, buffer);
-        List<String> expected = Files.readAllLines(Paths.get(getClass().getResource("/x12/sample837-original.json").toURI()));
+        List<String> expected = Files.readAllLines(Paths.get(getClass().getResource(expectedResource).toURI()));
         System.out.println(buffer.toString());
         JSONAssert.assertEquals(String.join("", expected), buffer.toString(), true);
     }
 
     @ParameterizedTest
-    @ValueSource(
-            classes = {
-                        jakarta.json.stream.JsonParser.class,
-                        javax.json.stream.JsonParser.class
-            })
-    void testElementsAsObjects(Class<?> parserInterface) throws Throwable {
+    @CsvSource({
+        "jakarta.json.stream.JsonParser, false, /x12/sample837-original-object-elements.json",
+        "jakarta.json.stream.JsonParser, true,  /x12/sample837-original-object-elements-nestHL.json",
+        "javax.json.stream.JsonParser,   false, /x12/sample837-original-object-elements.json",
+        "javax.json.stream.JsonParser,   true,  /x12/sample837-original-object-elements-nestHL.json"
+    })
+    void testElementsAsObjects(Class<?> parserInterface, boolean nestHL, String expectedResource) throws Throwable {
+        ediReaderConfig.put(EDIInputFactory.EDI_NEST_HIERARCHICAL_LOOPS, nestHL);
         ediReaderConfig.put(EDIInputFactory.JSON_OBJECT_ELEMENTS, true);
         setupReader(factory, "/x12/sample837-original.edi", "/x12/005010/837.xml");
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
         Object jsonParser = JsonParserFactory.createJsonParser(ediReader, parserInterface, ediReaderConfig);
         copyParserToGenerator(ediReader, jsonParser, buffer);
-        List<String> expected = Files.readAllLines(Paths.get(getClass().getResource("/x12/sample837-original-object-elements.json").toURI()));
+        List<String> expected = Files.readAllLines(Paths.get(getClass().getResource(expectedResource).toURI()));
         System.out.println(buffer.toString());
         JSONAssert.assertEquals(String.join("", expected), buffer.toString(), true);
     }

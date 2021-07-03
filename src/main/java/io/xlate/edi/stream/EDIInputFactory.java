@@ -63,6 +63,16 @@ public abstract class EDIInputFactory extends PropertySupport {
     public static final String EDI_IGNORE_EXTRANEOUS_CHARACTERS = "io.xlate.edi.stream.EDI_IGNORE_EXTRANEOUS_CHARACTERS";
 
     /**
+     * When set to true, hierarchical loops will be nested in the EDI input
+     * stream. The nesting structure is determined by the linkage specified by
+     * the EDI data itself. For example, the hierarchical information given by
+     * the X12 HL segment.
+     *
+     * @since 1.17
+     */
+    public static final String EDI_NEST_HIERARCHICAL_LOOPS = "io.xlate.edi.stream.EDI_NEST_HIERARCHICAL_LOOPS";
+
+    /**
      * When set to true, simple data elements not containing data will be
      * represented via the JSON parsers as a <i>null</i> value.
      *

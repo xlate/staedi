@@ -39,6 +39,7 @@ import io.xlate.edi.stream.Location;
 public class ProxyEventHandler implements EventHandler {
 
     private final StaEDIStreamLocation location;
+    private final boolean nestHierarchicalLoops;
 
     private Schema controlSchema;
     private Validator controlValidator;
@@ -57,10 +58,29 @@ public class ProxyEventHandler implements EventHandler {
     private final Deque<StreamEvent> eventQueue;
     private final List<StreamEvent> eventList;
 
+    private final Deque<HierarchicalLevel> openLevels = new LinkedList<>();
+
+    static class HierarchicalLevel {
+        final String id;
+        final StreamEvent event;
+
+        HierarchicalLevel(String id, StreamEvent event) {
+            this.id = id;
+            this.event = event;
+        }
+    }
+
+    private boolean levelCheckPending;
+    private StreamEvent currentSegmentBegin;
+    private StreamEvent startedLevel;
+    private String startedLevelId;
+    private String startedLevelParentId;
+
     private Dialect dialect;
 
-    public ProxyEventHandler(StaEDIStreamLocation location, Schema controlSchema) {
+    public ProxyEventHandler(StaEDIStreamLocation location, Schema controlSchema, boolean nestHierarchicalLoops) {
         this.location = location;
+        this.nestHierarchicalLoops = nestHierarchicalLoops;
 
         LinkedList<StreamEvent> events = new LinkedList<>();
         this.eventQueue = events;
@@ -190,6 +210,11 @@ public class ProxyEventHandler implements EventHandler {
             enqueueEvent(EDIStreamEvent.START_GROUP, EDIStreamValidationError.NONE, loopCode, typeReference, location);
         } else {
             enqueueEvent(EDIStreamEvent.START_LOOP, EDIStreamValidationError.NONE, loopCode, typeReference, location);
+
+            if (nestHierarchicalLoops && dialect.isHierarchicalLoop(typeReference.getReferencedType())) {
+                startedLevel = eventQueue.getLast();
+                levelCheckPending = true;
+            }
         }
     }
 
@@ -207,6 +232,8 @@ public class ProxyEventHandler implements EventHandler {
         } else if (EDIType.Type.GROUP.toString().equals(loopCode)) {
             dialect.groupEnd();
             enqueueEvent(EDIStreamEvent.END_GROUP, EDIStreamValidationError.NONE, loopCode, typeReference, location);
+        } else if (nestHierarchicalLoops && dialect.isHierarchicalLoop(typeReference.getReferencedType())) {
+            levelCheckPending = true;
         } else {
             enqueueEvent(EDIStreamEvent.END_LOOP, EDIStreamValidationError.NONE, loopCode, typeReference, location);
         }
@@ -224,6 +251,7 @@ public class ProxyEventHandler implements EventHandler {
         Validator validator = validator();
         boolean eventsReady = true;
         EDIReference typeReference = null;
+        clearLevelCheck();
 
         if (validator != null && !dialect.isServiceAdviceSegment(segmentTag)) {
             validator.validateSegment(this, segmentTag);
@@ -246,7 +274,8 @@ public class ProxyEventHandler implements EventHandler {
         }
 
         enqueueEvent(EDIStreamEvent.START_SEGMENT, EDIStreamValidationError.NONE, segmentTag, typeReference, location);
-        return eventsReady;
+        currentSegmentBegin = eventQueue.getLast();
+        return !levelCheckPending && eventsReady;
     }
 
     boolean exitTransaction(CharSequence tag) {
@@ -265,9 +294,63 @@ public class ProxyEventHandler implements EventHandler {
             typeReference = validator.getSegmentReference();
         }
 
+        if (levelCheckPending) {
+            performLevelCheck();
+        }
+
         location.clearSegmentLocations();
         enqueueEvent(EDIStreamEvent.END_SEGMENT, EDIStreamValidationError.NONE, segmentTag, typeReference, location);
         return true;
+    }
+
+    void clearLevelCheck() {
+        levelCheckPending = false;
+        startedLevel = null;
+        startedLevelId = null;
+        startedLevelParentId = null;
+    }
+
+    void setLevelIdentifiers() {
+        if (dialect.isHierarchicalId(location)) {
+            startedLevelId = elementHolder.toString();
+        }
+
+        if (dialect.isHierarchicalParentId(location)) {
+            startedLevelParentId = elementHolder.toString();
+        }
+    }
+
+    void performLevelCheck() {
+        if (startedLevel != null) {
+            StreamEvent bookmark = getPooledEvent();
+            bookmark.type = EDIStreamEvent.END_LOOP;
+            bookmark.errorType = startedLevel.errorType;
+            bookmark.setData(startedLevel.data);
+            bookmark.setTypeReference(startedLevel.typeReference);
+            bookmark.setLocation(startedLevel.location);
+
+            HierarchicalLevel started = new HierarchicalLevel(startedLevelId, bookmark);
+
+            while (!openLevels.isEmpty() && !openLevels.getLast().id.equals(startedLevelParentId)) {
+                HierarchicalLevel completed = openLevels.removeLast();
+                completed.event.location.set(location);
+                completed.event.location.clearSegmentLocations();
+                int position = eventList.indexOf(startedLevel);
+                eventList.add(position, completed.event);
+            }
+
+            openLevels.addLast(started);
+        } else {
+            while (!openLevels.isEmpty()) {
+                HierarchicalLevel completed = openLevels.removeLast();
+                completed.event.location.set(location);
+                completed.event.location.clearSegmentLocations();
+                int position = this.eventList.indexOf(this.currentSegmentBegin);
+                eventList.add(position, completed.event);
+            }
+        }
+
+        clearLevelCheck();
     }
 
     @Override
@@ -292,7 +375,7 @@ public class ProxyEventHandler implements EventHandler {
         }
 
         enqueueEvent(EDIStreamEvent.START_COMPOSITE, EDIStreamValidationError.NONE, "", typeReference, location);
-        return eventsReady;
+        return !levelCheckPending && eventsReady;
     }
 
     @Override
@@ -306,7 +389,7 @@ public class ProxyEventHandler implements EventHandler {
 
         location.clearComponentPosition();
         enqueueEvent(EDIStreamEvent.END_COMPOSITE, EDIStreamValidationError.NONE, "", null, location);
-        return eventsReady;
+        return !levelCheckPending && eventsReady;
     }
 
     @Override
@@ -320,6 +403,10 @@ public class ProxyEventHandler implements EventHandler {
         dialect.elementData(elementHolder, location);
         Validator validator = validator();
         boolean valid;
+
+        if (levelCheckPending) {
+            setLevelIdentifiers();
+        }
 
         if (validator != null) {
             valid = validator.validateElement(dialect, location, elementHolder, null);
@@ -356,7 +443,7 @@ public class ProxyEventHandler implements EventHandler {
             location.clearComponentPosition();
         }
 
-        return eventsReady;
+        return !levelCheckPending && eventsReady;
     }
 
     void enqueueElementOccurrenceErrors(Validator validator, boolean valid) {

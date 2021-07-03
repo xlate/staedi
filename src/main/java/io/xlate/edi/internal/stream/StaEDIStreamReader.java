@@ -68,7 +68,7 @@ public class StaEDIStreamReader implements EDIStreamReader, Configurable {
         this.controlSchema = schema;
         this.properties = new HashMap<>(properties);
         this.reporter = reporter;
-        this.proxy = new ProxyEventHandler(location, this.controlSchema);
+        this.proxy = new ProxyEventHandler(location, this.controlSchema, nestHierarchicalLoops());
         this.lexer = new Lexer(stream, charset, proxy, location, ignoreExtraneousCharacters());
     }
 
@@ -486,5 +486,9 @@ public class StaEDIStreamReader implements EDIStreamReader, Configurable {
 
     boolean ignoreExtraneousCharacters() {
         return getProperty(EDIInputFactory.EDI_IGNORE_EXTRANEOUS_CHARACTERS, Boolean::parseBoolean, false);
+    }
+
+    boolean nestHierarchicalLoops() {
+        return getProperty(EDIInputFactory.EDI_NEST_HIERARCHICAL_LOOPS, Boolean::parseBoolean, false);
     }
 }

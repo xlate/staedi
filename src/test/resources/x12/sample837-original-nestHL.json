@@ -1,0 +1,579 @@
+{
+  "name": "INTERCHANGE",
+  "type": "loop",
+  "data": [
+    {
+      "name": "ISA",
+      "type": "segment",
+      "data": [
+        "01",
+        "0000000000",
+        "01",
+        "0000000000",
+        "ZZ",
+        "ABCDEFGHIJKLMNO",
+        "ZZ",
+        "123456789012345",
+        "101127",
+        "1719",
+        "`",
+        "00402",
+        3438,
+        "0",
+        "P",
+        ">"
+      ]
+    },
+    {
+      "name": "GROUP",
+      "type": "loop",
+      "data": [
+        {
+          "name": "GS",
+          "type": "segment",
+          "data": [
+            "HC",
+            "99999999999",
+            "888888888888",
+            "20111219",
+            "1340",
+            1377,
+            "X",
+            "005010X222"
+          ]
+        },
+        {
+          "name": "TRANSACTION",
+          "type": "loop",
+          "data": [
+            {
+              "name": "ST",
+              "type": "segment",
+              "data": [
+                "837",
+                "0001",
+                "005010X222"
+              ]
+            },
+            {
+              "name": "BHT",
+              "type": "segment",
+              "data": [
+                "0019",
+                "00",
+                "565743",
+                "20110523",
+                "154959",
+                "CH"
+              ]
+            },
+            {
+              "name": "L0001",
+              "type": "loop",
+              "data": [
+                {
+                  "name": "NM1",
+                  "type": "segment",
+                  "data": [
+                    "41",
+                    "2",
+                    "SAMPLE INC",
+                    null,
+                    null,
+                    null,
+                    null,
+                    "46",
+                    "496103"
+                  ]
+                },
+                {
+                  "name": "PER",
+                  "type": "segment",
+                  "data": [
+                    "IC",
+                    "EDI DEPT",
+                    "EM",
+                    "FEEDBACK@example.com",
+                    "TE",
+                    "3305551212"
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "L0001",
+              "type": "loop",
+              "data": [
+                {
+                  "name": "NM1",
+                  "type": "segment",
+                  "data": [
+                    "40",
+                    "2",
+                    "PPO BLUE",
+                    null,
+                    null,
+                    null,
+                    null,
+                    "46",
+                    "54771"
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "L0002",
+              "type": "loop",
+              "data": [
+                {
+                  "name": "HL",
+                  "type": "segment",
+                  "data": [
+                    "1",
+                    null,
+                    "20",
+                    "1"
+                  ]
+                },
+                {
+                  "name": "PRV",
+                  "type": "segment",
+                  "data": [
+                    "BI",
+                    "PXC",
+                    "333600000X"
+                  ]
+                },
+                {
+                  "name": "L0003",
+                  "type": "loop",
+                  "data": [
+                    {
+                      "name": "NM1",
+                      "type": "segment",
+                      "data": [
+                        "85",
+                        "2",
+                        "EDI SPECIALTY SAMPLE",
+                        null,
+                        null,
+                        null,
+                        null,
+                        "XX",
+                        "123456789"
+                      ]
+                    },
+                    {
+                      "name": "N3",
+                      "type": "segment",
+                      "data": [
+                        "1212 DEPOT DRIVE"
+                      ]
+                    },
+                    {
+                      "name": "N4",
+                      "type": "segment",
+                      "data": [
+                        "CHICAGO",
+                        "IL",
+                        "606930159"
+                      ]
+                    },
+                    {
+                      "name": "REF",
+                      "type": "segment",
+                      "data": [
+                        "EI",
+                        "300123456"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "name": "L0002",
+                  "type": "loop",
+                  "data": [
+                    {
+                      "name": "HL",
+                      "type": "segment",
+                      "data": [
+                        "2",
+                        "1",
+                        "22",
+                        "1"
+                      ]
+                    },
+                    {
+                      "name": "SBR",
+                      "type": "segment",
+                      "data": [
+                        "P",
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        "BL"
+                      ]
+                    },
+                    {
+                      "name": "L0003",
+                      "type": "loop",
+                      "data": [
+                        {
+                          "name": "NM1",
+                          "type": "segment",
+                          "data": [
+                            "IL",
+                            "1",
+                            "CUSTOMER",
+                            "KAREN",
+                            null,
+                            null,
+                            null,
+                            "MI",
+                            "YYX123456789"
+                          ]
+                        },
+                        {
+                          "name": "N3",
+                          "type": "segment",
+                          "data": [
+                            "228 PINEAPPLE CIRCLE"
+                          ]
+                        },
+                        {
+                          "name": "N4",
+                          "type": "segment",
+                          "data": [
+                            "CORA",
+                            "PA",
+                            "15108"
+                          ]
+                        },
+                        {
+                          "name": "DMG",
+                          "type": "segment",
+                          "data": [
+                            "D8",
+                            "19630625",
+                            "M"
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "name": "L0003",
+                      "type": "loop",
+                      "data": [
+                        {
+                          "name": "NM1",
+                          "type": "segment",
+                          "data": [
+                            "PR",
+                            "2",
+                            "PPO BLUE",
+                            null,
+                            null,
+                            null,
+                            null,
+                            "PI",
+                            "54771"
+                          ]
+                        },
+                        {
+                          "name": "N3",
+                          "type": "segment",
+                          "data": [
+                            "PO BOX 12345"
+                          ]
+                        },
+                        {
+                          "name": "N4",
+                          "type": "segment",
+                          "data": [
+                            "CAMP HILL",
+                            "PA",
+                            "17089"
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "name": "L0002",
+                      "type": "loop",
+                      "data": [
+                        {
+                          "name": "HL",
+                          "type": "segment",
+                          "data": [
+                            "3",
+                            "2",
+                            "23",
+                            "0"
+                          ]
+                        },
+                        {
+                          "name": "PAT",
+                          "type": "segment",
+                          "data": [
+                            "19"
+                          ]
+                        },
+                        {
+                          "name": "L0003",
+                          "type": "loop",
+                          "data": [
+                            {
+                              "name": "NM1",
+                              "type": "segment",
+                              "data": [
+                                "QC",
+                                "1",
+                                "CUSTOMER",
+                                "COLE"
+                              ]
+                            },
+                            {
+                              "name": "N3",
+                              "type": "segment",
+                              "data": [
+                                "228 PINEAPPLE CIRCLE"
+                              ]
+                            },
+                            {
+                              "name": "N4",
+                              "type": "segment",
+                              "data": [
+                                "CORA",
+                                "PA",
+                                "15108"
+                              ]
+                            },
+                            {
+                              "name": "DMG",
+                              "type": "segment",
+                              "data": [
+                                "D8",
+                                "19940921",
+                                "M"
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "name": "L0004",
+                          "type": "loop",
+                          "data": [
+                            {
+                              "name": "CLM",
+                              "type": "segment",
+                              "data": [
+                                "945405",
+                                5332.54,
+                                null,
+                                null,
+                                {
+                                  "name": "CLM05",
+                                  "type": "composite",
+                                  "data": [
+                                    "12",
+                                    "B",
+                                    "1"
+                                  ]
+                                },
+                                "Y",
+                                "A",
+                                "Y",
+                                "Y",
+                                "P"
+                              ]
+                            },
+                            {
+                              "name": "HI",
+                              "type": "segment",
+                              "data": [
+                                {
+                                  "name": "HI01",
+                                  "type": "composite",
+                                  "data": [
+                                    "BK",
+                                    "2533"
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "name": "L0009",
+                              "type": "loop",
+                              "data": [
+                                {
+                                  "name": "LX",
+                                  "type": "segment",
+                                  "data": [
+                                    1
+                                  ]
+                                },
+                                {
+                                  "name": "SV1",
+                                  "type": "segment",
+                                  "data": [
+                                    {
+                                      "name": "SV101",
+                                      "type": "composite",
+                                      "data": [
+                                        "HC",
+                                        "J2941"
+                                      ]
+                                    },
+                                    5332.54,
+                                    "UN",
+                                    84,
+                                    null,
+                                    null,
+                                    {
+                                      "name": "SV107",
+                                      "type": "composite",
+                                      "data": [
+                                        1
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "name": "DTP",
+                                  "type": "segment",
+                                  "data": [
+                                    "472",
+                                    "RD8",
+                                    "20110511-20110511"
+                                  ]
+                                },
+                                {
+                                  "name": "REF",
+                                  "type": "segment",
+                                  "data": [
+                                    "6R",
+                                    "1099999731"
+                                  ]
+                                },
+                                {
+                                  "name": "NTE",
+                                  "type": "segment",
+                                  "data": [
+                                    "ADD",
+                                    "GENERIC 12MG CARTRIDGE"
+                                  ]
+                                },
+                                {
+                                  "name": "L0010",
+                                  "type": "loop",
+                                  "data": [
+                                    {
+                                      "name": "LIN",
+                                      "type": "segment",
+                                      "data": [
+                                        null,
+                                        "N4",
+                                        "00013264681"
+                                      ]
+                                    },
+                                    {
+                                      "name": "CTP",
+                                      "type": "segment",
+                                      "data": [
+                                        null,
+                                        null,
+                                        null,
+                                        7,
+                                        {
+                                          "name": "CTP05",
+                                          "type": "composite",
+                                          "data": [
+                                            "UN"
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "name": "L0011",
+                                  "type": "loop",
+                                  "data": [
+                                    {
+                                      "name": "NM1",
+                                      "type": "segment",
+                                      "data": [
+                                        "DK",
+                                        "1",
+                                        "PATIENT",
+                                        "DEBORAH",
+                                        null,
+                                        null,
+                                        null,
+                                        "XX",
+                                        "12345679030"
+                                      ]
+                                    },
+                                    {
+                                      "name": "N3",
+                                      "type": "segment",
+                                      "data": [
+                                        "123 MAIN ST",
+                                        "APT B"
+                                      ]
+                                    },
+                                    {
+                                      "name": "N4",
+                                      "type": "segment",
+                                      "data": [
+                                        "PITTSBURGH",
+                                        "PA",
+                                        "152181871"
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "SE",
+              "type": "segment",
+              "data": [
+                39,
+                "0001"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "GE",
+          "type": "segment",
+          "data": [
+            1,
+            1377
+          ]
+        }
+      ]
+    },
+    {
+      "name": "IEA",
+      "type": "segment",
+      "data": [
+        1,
+        3438
+      ]
+    }
+  ]
+}
