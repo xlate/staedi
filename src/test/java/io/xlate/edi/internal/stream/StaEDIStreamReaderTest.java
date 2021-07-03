@@ -356,6 +356,58 @@ class StaEDIStreamReaderTest implements ConstantsTest {
     }
 
     @Test
+    void testGetDelimitersX12_WithISX_00501_Invalid_Repitition() throws EDIStreamException {
+        EDIInputFactory factory = EDIInputFactory.newFactory();
+        ByteArrayInputStream stream = new ByteArrayInputStream((""
+                + "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *200711*0100*V*00501*000000001*0*T*:~"
+                + "ISX*\\~"
+                + "GS*FA*ReceiverDept*SenderDept*20200711*010015*1*X*005010~"
+                + "ST*997*0001*005010X230~"
+                + "SE*2*0001~"
+                + "GE*1*1~"
+                + "IEA*1*000000001~").getBytes());
+
+        EDIStreamReader reader = factory.createEDIStreamReader(stream);
+        Map<String, Character> expected = new HashMap<>(5);
+        expected.put(Delimiters.SEGMENT, '~');
+        expected.put(Delimiters.DATA_ELEMENT, '*');
+        expected.put(Delimiters.COMPONENT_ELEMENT, ':');
+        expected.put(Delimiters.REPETITION, '^');
+        //expected.put(Delimiters.RELEASE, '\\');
+        expected.put(Delimiters.DECIMAL, '.');
+
+        Map<String, Character> delimiters = null;
+        int delimiterExceptions = 0;
+        List<EDIStreamValidationError> errors = new ArrayList<>();
+
+        while (reader.hasNext()) {
+            try {
+                reader.getDelimiters();
+            } catch (IllegalStateException e) {
+                delimiterExceptions++;
+            }
+
+            switch (reader.next()) {
+            case START_GROUP:
+                delimiters = reader.getDelimiters();
+                break;
+            case SEGMENT_ERROR:
+            case ELEMENT_OCCURRENCE_ERROR:
+            case ELEMENT_DATA_ERROR:
+                errors.add(reader.getErrorType());
+                break;
+            default:
+                break;
+            }
+        }
+
+        assertEquals(expected, delimiters, "Unexpected delimiters");
+        assertArrayEquals(new EDIStreamValidationError[] { EDIStreamValidationError.UNEXPECTED_SEGMENT },
+                          errors.toArray(new EDIStreamValidationError[errors.size()]));
+        assertEquals(1, delimiterExceptions, "Unexpected exceptions");
+    }
+
+    @Test
     void testGetDelimitersX12_WithISX_00704() throws EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         ByteArrayInputStream stream = new ByteArrayInputStream((""
