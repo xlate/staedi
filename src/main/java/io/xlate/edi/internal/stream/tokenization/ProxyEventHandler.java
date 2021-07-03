@@ -115,11 +115,11 @@ public class ProxyEventHandler implements EventHandler {
     }
 
     public EDIStreamEvent getEvent() {
-        return current(StreamEvent::getType, false, null);
+        return current(StreamEvent::getType, null);
     }
 
     public CharBuffer getCharacters() {
-        return current(StreamEvent::getData, true, null);
+        return current(StreamEvent::getData, null);
     }
 
     public boolean nextEvent() {
@@ -132,24 +132,21 @@ public class ProxyEventHandler implements EventHandler {
     }
 
     public EDIStreamValidationError getErrorType() {
-        return current(StreamEvent::getErrorType, false, null);
+        return current(StreamEvent::getErrorType, null);
     }
 
     public String getReferenceCode() {
-        return current(StreamEvent::getReferenceCode, false, null);
+        return current(StreamEvent::getReferenceCode, null);
     }
 
     public Location getLocation() {
-        return current(StreamEvent::getLocation, false, this.location);
+        return current(StreamEvent::getLocation, this.location);
     }
 
-    <T> T current(Function<StreamEvent, T> mapper, boolean required, T defaultValue) {
+    <T> T current(Function<StreamEvent, T> mapper, T defaultValue) {
         final T value;
 
         if (eventQueue.isEmpty()) {
-            if (required) {
-                throw new IllegalStateException();
-            }
             value = defaultValue;
         } else {
             value = mapper.apply(eventQueue.getFirst());
@@ -171,7 +168,7 @@ public class ProxyEventHandler implements EventHandler {
     }
 
     public EDIReference getSchemaTypeReference() {
-        return current(StreamEvent::getTypeReference, false, null);
+        return current(StreamEvent::getTypeReference, null);
     }
 
     @Override

@@ -103,6 +103,7 @@ public class StaEDIStreamReader implements EDIStreamReader, Configurable {
     }
 
     private CharBuffer getBuffer() {
+        checkTextState();
         return proxy.getCharacters();
     }
 
@@ -365,19 +366,13 @@ public class StaEDIStreamReader implements EDIStreamReader, Configurable {
 
     @Override
     public String getText() {
-        ensureOpen();
-        checkTextState();
         final CharBuffer buffer = getBuffer();
-
         return buffer.toString();
     }
 
     @Override
     public char[] getTextCharacters() {
-        ensureOpen();
-        checkTextState();
         final CharBuffer buffer = getBuffer();
-
         return Arrays.copyOf(buffer.array(), buffer.length());
     }
 
@@ -386,9 +381,6 @@ public class StaEDIStreamReader implements EDIStreamReader, Configurable {
                                  char[] target,
                                  int targetStart,
                                  int length) {
-
-        ensureOpen();
-        checkTextState();
 
         if (target == null) {
             throw new NullPointerException("Null target array");
@@ -426,19 +418,13 @@ public class StaEDIStreamReader implements EDIStreamReader, Configurable {
 
     @Override
     public int getTextStart() {
-        ensureOpen();
-        checkTextState();
         final CharBuffer buffer = getBuffer();
-
         return buffer.position();
     }
 
     @Override
     public int getTextLength() {
-        ensureOpen();
-        checkTextState();
         final CharBuffer buffer = getBuffer();
-
         return buffer.limit();
     }
 
