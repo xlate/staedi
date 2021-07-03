@@ -1,0 +1,70 @@
+ISA
+GROUP
+  GS
+  TRANSACTION
+    ST
+    BHT
+    L0001
+      NM1
+    L0001
+      NM1
+    L0002
+      HL: id: 1; no parent
+      L0002
+        HL: id: 2; parent: 1
+        L0002
+          HL: id: 3; parent: 2
+        L0002
+          HL: id: 4; parent: 2
+        L0002
+          HL: id: 5; parent: 2
+      L0002
+        HL: id: 6; parent: 1
+      L0002
+        HL: id: 7; parent: 1
+        L0002
+          HL: id: 8; parent: 7
+        L0002
+          HL: id: 9; parent: 7
+    L0002
+      HL: id: 10; no parent
+    L0002
+      HL: id: 11; no parent
+    L0002
+      HL: id: 12; no parent
+      L0002
+        HL: id: 13; parent: 12
+      L0002
+        HL: id: 14; parent: 12
+        L0002
+          HL: id: 15; parent: 14
+        L0002
+          HL: id: 16; parent: 14
+    SE
+  TRANSACTION
+    ST
+    BHT
+    L0002
+      HL: id: 1; no parent
+    L0002
+      HL: id: 2; no parent
+    L0002
+      HL: id: 3; no parent
+    L0002
+      HL: id: 4; no parent
+      L0002
+        HL: id: 5; parent: 4
+      L0002
+        HL: id: 6; parent: 4
+        L0002
+          HL: id: 7; parent: 6
+        L0002
+          HL: id: 8; parent: 6
+    L0002
+      HL: id: 9; no parent
+      L0002
+        HL: id: 10; parent: 9
+    SE
+  GE
+IEA
+

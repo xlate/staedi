@@ -135,7 +135,7 @@ public abstract class Dialect {
      * @param type a schema type
      * @return true when type is a hierarchical loop, otherwise false
      */
-    public boolean isHierarchicalLoop(EDIType type) {
+    boolean isHierarchicalLoop(EDIType type) {
         return false; // HL not enabled by default
     }
 
@@ -145,7 +145,7 @@ public abstract class Dialect {
      * @param location the current processing location
      * @return true when type is a hierarchical identifier, otherwise false
      */
-    public boolean isHierarchicalId(Location location) {
+    boolean isHierarchicalId(Location location) {
         return false;
     }
 
@@ -155,7 +155,7 @@ public abstract class Dialect {
      * @param location the current processing location
      * @return true when type is a hierarchical parent identifier, otherwise false
      */
-    public boolean isHierarchicalParentId(Location location) {
+    boolean isHierarchicalParentId(Location location) {
         return false;
     }
 

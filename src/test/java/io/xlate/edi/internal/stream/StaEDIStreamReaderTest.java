@@ -24,11 +24,14 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -38,6 +41,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -2031,5 +2035,89 @@ class StaEDIStreamReaderTest implements ConstantsTest {
         List<Object> unexpected = new ArrayList<>();
         EDIStreamException thrown = assertThrows(EDIStreamException.class, () -> reader.next());
         assertTrue(thrown.getMessage().contains("Expected TRADACOMS segment tag delimiter"));
+    }
+
+    @Test
+    void testHierarchicalLoopsNested() throws IOException {
+        EDIInputFactory factory = EDIInputFactory.newFactory();
+        factory.setProperty(EDIInputFactory.EDI_NEST_HIERARCHICAL_LOOPS, true);
+        EDIStreamReader reader = factory.createEDIStreamReader(getClass().getResourceAsStream("/x12/sample837-HL-nested.edi"));
+        StringBuilder actual = new StringBuilder();
+        List<Object> unexpected = new ArrayList<>();
+        int depth = 0;
+
+        try {
+            while (reader.hasNext()) {
+                switch (reader.next()) {
+                case SEGMENT_ERROR:
+                case ELEMENT_OCCURRENCE_ERROR:
+                case ELEMENT_DATA_ERROR:
+                    unexpected.add(reader.getErrorType());
+                    break;
+                case START_TRANSACTION:
+                    SchemaFactory schemaFactory = SchemaFactory.newFactory();
+                    URL schemaLocation = getClass().getResource("/x12/005010/837.xml");
+                    Schema schema = schemaFactory.createSchema(schemaLocation);
+                    reader.setTransactionSchema(schema);
+                    // Fall through...
+                case START_GROUP:
+                case START_LOOP:
+                    actual.append(new String(new char[depth]).replace("\0", "  "));
+                    actual.append(reader.getText());
+                    actual.append('\n');
+                    depth++;
+                    break;
+                case END_LOOP:
+                case END_TRANSACTION:
+                case END_GROUP:
+                    depth--;
+                    break;
+                case START_SEGMENT:
+                    actual.append(new String(new char[depth]).replace("\0", "  "));
+                    actual.append(reader.getText());
+                    if ("HL".equals(reader.getLocation().getSegmentTag())) {
+                        actual.append(":");
+                    }
+                    break;
+                case END_SEGMENT:
+                    actual.append('\n');
+                    break;
+                case ELEMENT_DATA:
+                    Location loc = reader.getLocation();
+                    if ("HL".equals(loc.getSegmentTag())) {
+                        if (loc.getElementPosition() == 1) {
+                            actual.append(" id: ");
+                            actual.append(reader.getText());
+                        } else if (loc.getElementPosition() == 2) {
+                            if (reader.getText().isEmpty()) {
+                                actual.append("; no parent");
+                            } else {
+                                actual.append("; parent: ");
+                                actual.append(reader.getText());
+                            }
+                        }
+                    }
+                    break;
+                default:
+                    break;
+                }
+            }
+        } catch (Exception e) {
+            unexpected.add(e);
+        } finally {
+            reader.close();
+        }
+
+        System.out.println(actual.toString());
+
+        assertEquals(0, unexpected.size(), () -> unexpected.toString());
+
+        String expected;
+
+        try (InputStream stream = getClass().getResourceAsStream("/x12/sample837-HL-nested-expected.txt")) {
+            expected = new BufferedReader(new InputStreamReader(stream)).lines().collect(Collectors.joining("\n"));
+        }
+
+        assertEquals(expected, actual.toString());
     }
 }

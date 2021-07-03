@@ -219,23 +219,19 @@ public class X12Dialect extends Dialect {
     }
 
     @Override
-    public boolean isHierarchicalLoop(EDIType type) {
-        if (type.isType(EDIType.Type.LOOP)) {
-            List<EDIReference> segments = ((EDIComplexType) type).getReferences();
-            EDIType segmentType = segments.get(0).getReferencedType();
-            return HL.equals(segmentType.getId());
-        }
-
-        return false;
+    boolean isHierarchicalLoop(EDIType type) {
+        List<EDIReference> segments = ((EDIComplexType) type).getReferences();
+        EDIType segmentType = segments.get(0).getReferencedType();
+        return HL.equals(segmentType.getId());
     }
 
     @Override
-    public boolean isHierarchicalId(Location location) {
+    boolean isHierarchicalId(Location location) {
         return HL.equals(location.getSegmentTag()) && location.getElementPosition() == 1;
     }
 
     @Override
-    public boolean isHierarchicalParentId(Location location) {
+    boolean isHierarchicalParentId(Location location) {
         return HL.equals(location.getSegmentTag()) && location.getElementPosition() == 2;
     }
 
