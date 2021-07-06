@@ -94,7 +94,7 @@ public class X12Dialect extends Dialect {
 
         version = new String[] { new String(header, 84, 5) };
 
-        if (numericVersion() >= RELEASE_ELEMENT_I65 && !Character.isAlphabetic(elementRepeater)) {
+        if (numericVersion() >= RELEASE_ELEMENT_I65 && characters.isValidDelimiter(elementRepeater)) {
             characters.setClass(elementRepeater, CharacterClass.ELEMENT_REPEATER);
         } else {
             /*

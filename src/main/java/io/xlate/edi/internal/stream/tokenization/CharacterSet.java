@@ -236,6 +236,18 @@ public class CharacterSet {
         return getClass(character).equals(clazz);
     }
 
+    public boolean isValidDelimiter(int character) {
+        switch (getClass(character)) {
+        case CONTROL:
+            return !extraneousIgnored;
+        case WHITESPACE:
+        case OTHER:
+            return true;
+        default:
+            return false;
+        }
+    }
+
     public static boolean isValid(int character) {
         if (character >= prototype.length) {
             return true;
