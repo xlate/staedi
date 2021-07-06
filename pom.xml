@@ -3,7 +3,7 @@
 
   <groupId>io.xlate</groupId>
   <artifactId>staedi</artifactId>
-  <version>1.16.5-SNAPSHOT</version>
+  <version>1.17.0-SNAPSHOT</version>
 
   <name>StAEDI : Streaming API for EDI for Java</name>
   <description>Streaming API for EDI for Java</description>
