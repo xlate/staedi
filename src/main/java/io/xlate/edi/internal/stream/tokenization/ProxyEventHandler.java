@@ -375,7 +375,14 @@ public class ProxyEventHandler implements EventHandler {
             typeReference = null;
         }
 
-        if (derivedComposite && elementHolder.getText() != null/* Not an empty composite */) {
+        /*
+         * The first component of a composite was the only element received
+         * for the composite. It was found to be a composite via the schema
+         * and the composite begin/end events must be generated.
+         **/
+        final boolean componentReceivedAsSimple = derivedComposite && text != null;
+
+        if (componentReceivedAsSimple) {
             this.compositeBegin(elementHolder.length() == 0);
             location.incrementComponentPosition();
         }
@@ -394,7 +401,7 @@ public class ProxyEventHandler implements EventHandler {
             }
         }
 
-        if (derivedComposite && text != null /* Not an empty composite */) {
+        if (componentReceivedAsSimple) {
             this.compositeEnd(length == 0);
             location.clearComponentPosition();
         }

@@ -9,8 +9,8 @@ import io.xlate.edi.schema.implementation.Discriminator;
 public class DiscriminatorImpl implements Discriminator {
 
     private static final String TOSTRING_FORMAT = "position: %s, values: %s";
-    private final EDIElementPosition position;
-    private final Set<String> valueSet;
+    final EDIElementPosition position;
+    final Set<String> valueSet;
 
     public DiscriminatorImpl(EDIElementPosition position, Set<String> valueSet) {
         this.position = position;
@@ -28,7 +28,7 @@ public class DiscriminatorImpl implements Discriminator {
         }
 
         DiscriminatorImpl other = (DiscriminatorImpl) o;
-        return Objects.equals(position, other.position) && 
+        return Objects.equals(position, other.position) &&
                 Objects.equals(valueSet, other.valueSet);
     }
 

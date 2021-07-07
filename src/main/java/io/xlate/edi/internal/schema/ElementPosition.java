@@ -7,13 +7,14 @@ import io.xlate.edi.schema.EDIElementPosition;
 public class ElementPosition implements EDIElementPosition {
 
     private static final String TOSTRING_FORMAT = "%d.%d";
-    private final int elementPosition;
-    private final int componentPosition;
+
+    final int elementIndex;
+    final int componentIndex;
 
     public ElementPosition(int elementPosition, int componentPosition) {
         super();
-        this.elementPosition = elementPosition;
-        this.componentPosition = componentPosition;
+        this.elementIndex = elementPosition;
+        this.componentIndex = componentPosition;
     }
 
     @Override
@@ -28,28 +29,28 @@ public class ElementPosition implements EDIElementPosition {
 
         ElementPosition other = (ElementPosition) o;
 
-        return Objects.equals(elementPosition, other.elementPosition) &&
-                Objects.equals(componentPosition, other.componentPosition);
+        return Objects.equals(elementIndex, other.elementIndex) &&
+                Objects.equals(componentIndex, other.componentIndex);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(elementPosition, componentPosition);
+        return Objects.hash(elementIndex, componentIndex);
     }
 
     @Override
     public String toString() {
-        return String.format(TOSTRING_FORMAT, elementPosition, componentPosition);
+        return String.format(TOSTRING_FORMAT, elementIndex, componentIndex);
     }
 
     @Override
     public int getElementPosition() {
-        return elementPosition;
+        return elementIndex;
     }
 
     @Override
     public int getComponentPosition() {
-        return componentPosition > 0 ? componentPosition : -1;
+        return componentIndex > 0 ? componentIndex : -1;
     }
 
 }
