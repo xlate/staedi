@@ -475,6 +475,6 @@ public class StaEDIStreamReader implements EDIStreamReader, Configurable {
     }
 
     boolean nestHierarchicalLoops() {
-        return getProperty(EDIInputFactory.EDI_NEST_HIERARCHICAL_LOOPS, Boolean::parseBoolean, false);
+        return getProperty(EDIInputFactory.EDI_NEST_HIERARCHICAL_LOOPS, Boolean::parseBoolean, true);
     }
 }

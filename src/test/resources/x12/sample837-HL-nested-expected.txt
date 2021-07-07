@@ -9,6 +9,10 @@ GROUP
     L0001
       NM1
     L0002
+      HL:
+    L0002
+      HL:
+    L0002
       HL: id: 1; no parent
       L0002
         HL: id: 2; parent: 1

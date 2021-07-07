@@ -2040,7 +2040,6 @@ class StaEDIStreamReaderTest implements ConstantsTest {
     @Test
     void testHierarchicalLoopsNested() throws IOException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
-        factory.setProperty(EDIInputFactory.EDI_NEST_HIERARCHICAL_LOOPS, true);
         EDIStreamReader reader = factory.createEDIStreamReader(getClass().getResourceAsStream("/x12/sample837-HL-nested.edi"));
         StringBuilder actual = new StringBuilder();
         List<Object> unexpected = new ArrayList<>();
@@ -2056,7 +2055,7 @@ class StaEDIStreamReaderTest implements ConstantsTest {
                     break;
                 case START_TRANSACTION:
                     SchemaFactory schemaFactory = SchemaFactory.newFactory();
-                    URL schemaLocation = getClass().getResource("/x12/005010/837.xml");
+                    URL schemaLocation = getClass().getResource("/x12/005010/837-hierarchical-level-enabled.xml");
                     Schema schema = schemaFactory.createSchema(schemaLocation);
                     reader.setTransactionSchema(schema);
                     // Fall through...
@@ -2110,7 +2109,10 @@ class StaEDIStreamReaderTest implements ConstantsTest {
 
         System.out.println(actual.toString());
 
-        assertEquals(0, unexpected.size(), () -> unexpected.toString());
+        // Expected 4 required elements missing from 2 empty HL segments
+        assertEquals(4, unexpected.size(), () -> unexpected.toString());
+        EDIStreamValidationError expectedErr = EDIStreamValidationError.REQUIRED_DATA_ELEMENT_MISSING;
+        assertEquals(Arrays.asList(expectedErr, expectedErr, expectedErr, expectedErr), unexpected);
 
         String expected;
 

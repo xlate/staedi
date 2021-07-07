@@ -864,17 +864,8 @@ public class Validator {
             return true;
         }
 
-        if (discr.getValueSet().contains(currentEvent.getData().toString())) {
-            int eleLoc = discr.getElementPosition();
-            int comLoc = discr.getComponentPosition() == 0 ? -1 : discr.getComponentPosition();
-            Location location = currentEvent.getLocation();
-
-            if (eleLoc == location.getElementPosition() && comLoc == location.getComponentPosition()) {
-                return true;
-            }
-        }
-
-        return false;
+        return discr.matchesLocation(currentEvent.getLocation())
+                && discr.getValueSet().contains(currentEvent.getData().toString());
     }
 
     /**

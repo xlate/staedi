@@ -5,6 +5,7 @@ import static io.xlate.edi.internal.schema.StaEDISchemaFactory.unexpectedElement
 import static io.xlate.edi.internal.schema.StaEDISchemaFactory.unexpectedEvent;
 import static java.util.stream.Collectors.toList;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -25,6 +26,7 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
 import io.xlate.edi.schema.EDIComplexType;
+import io.xlate.edi.schema.EDIElementPosition;
 import io.xlate.edi.schema.EDIReference;
 import io.xlate.edi.schema.EDISchemaException;
 import io.xlate.edi.schema.EDISimpleType;
@@ -45,6 +47,8 @@ abstract class SchemaReaderBase implements SchemaReader {
     static final String ATTR_MIN_OCCURS = "minOccurs";
     static final String ATTR_MAX_OCCURS = "maxOccurs";
     static final String ATTR_TITLE = "title";
+    static final String ATTR_LEVEL_ID_POSITION = "levelIdPosition";
+    static final String ATTR_PARENT_ID_POSITION = "parentIdPosition";
 
     static final EDIReference ANY_ELEMENT_REF_OPT = new Reference(StaEDISchema.ANY_ELEMENT_ID, LOCALNAME_ELEMENT, 0, 1, null, null);
     static final EDIReference ANY_COMPOSITE_REF_OPT = new Reference(StaEDISchema.ANY_COMPOSITE_ID, LOCALNAME_COMPOSITE, 0, 99, null, null);
@@ -388,11 +392,15 @@ abstract class SchemaReaderBase implements SchemaReader {
         final EDIType.Type type = complex.get(complexType);
         final String id;
         String code = parseAttribute(reader, "code", String::valueOf, null);
+        EDIElementPosition levelIdPosition = null;
+        EDIElementPosition parentIdPosition = null;
 
         if (qnTransaction.equals(complexType)) {
             id = StaEDISchema.TRANSACTION_ID;
         } else if (qnLoop.equals(complexType)) {
             id = code;
+            levelIdPosition = parseElementPosition(reader, ATTR_LEVEL_ID_POSITION);
+            parentIdPosition = parseElementPosition(reader, ATTR_PARENT_ID_POSITION);
         } else {
             id = parseAttribute(reader, "name", String::valueOf);
 
@@ -423,7 +431,15 @@ abstract class SchemaReaderBase implements SchemaReader {
         event = reader.getEventType();
 
         if (event == XMLStreamConstants.END_ELEMENT) {
-            return new StructureType(id, type, code, refs, rules, title, descr);
+            StructureType structure;
+
+            if (qnLoop.equals(complexType)) {
+                structure = new LoopType(code, refs, rules, levelIdPosition, parentIdPosition, title, descr);
+            } else {
+                structure = new StructureType(id, type, code, refs, rules, title, descr);
+            }
+
+            return structure;
         } else {
             throw unexpectedEvent(reader);
         }
@@ -804,6 +820,21 @@ abstract class SchemaReaderBase implements SchemaReader {
                 LOGGER.log(level, String.format("Unused %s '%s'", types.get(u).getType(), u));
             }
         }
+    }
+
+    EDIElementPosition parseElementPosition(XMLStreamReader reader, String attrName) {
+        BigDecimal positionAttr = parseAttribute(reader, attrName, BigDecimal::new, null);
+
+        if (positionAttr == null) {
+            return null;
+        }
+
+        int elementPosition = positionAttr.intValue();
+        int componentPosition = positionAttr.remainder(BigDecimal.ONE)
+                                                 .movePointRight(positionAttr.scale())
+                                                 .intValue();
+
+        return new ElementPosition(elementPosition, componentPosition);
     }
 
     protected abstract String readReferencedId(XMLStreamReader reader);

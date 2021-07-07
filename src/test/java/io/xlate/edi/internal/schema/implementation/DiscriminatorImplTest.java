@@ -9,6 +9,8 @@ import java.util.Collections;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import io.xlate.edi.internal.schema.ElementPosition;
+import io.xlate.edi.schema.EDIElementPosition;
 import io.xlate.edi.schema.implementation.Discriminator;
 
 class DiscriminatorImplTest {
@@ -17,12 +19,16 @@ class DiscriminatorImplTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        target = new DiscriminatorImpl(1, 2, Collections.singleton("50"));
+        target = new DiscriminatorImpl(position(1, 2), Collections.singleton("50"));
+    }
+
+    EDIElementPosition position(int e, int c) {
+        return new ElementPosition(e, c);
     }
 
     @Test
     void testHashCode() {
-        int expected = new DiscriminatorImpl(1, 2, Collections.singleton("50")).hashCode();
+        int expected = new DiscriminatorImpl(position(1, 2), Collections.singleton("50")).hashCode();
         assertEquals(expected, target.hashCode());
     }
 
@@ -33,7 +39,7 @@ class DiscriminatorImplTest {
 
     @Test
     void testEquals_Identical() {
-        Discriminator identical = new DiscriminatorImpl(1, 2, Collections.singleton("50"));
+        Discriminator identical = new DiscriminatorImpl(position(1, 2), Collections.singleton("50"));
         assertEquals(target, identical);
     }
 
@@ -46,14 +52,14 @@ class DiscriminatorImplTest {
 
     @Test
     void testEquals_Different() {
-        assertNotEquals(new DiscriminatorImpl(1, 2, Collections.singleton("60")), target);
-        assertNotEquals(new DiscriminatorImpl(2, 2, Collections.singleton("50")), target);
-        assertNotEquals(new DiscriminatorImpl(1, 3, Collections.singleton("50")), target);
+        assertNotEquals(new DiscriminatorImpl(position(1, 2), Collections.singleton("60")), target);
+        assertNotEquals(new DiscriminatorImpl(position(2, 2), Collections.singleton("50")), target);
+        assertNotEquals(new DiscriminatorImpl(position(1, 3), Collections.singleton("50")), target);
     }
 
     @Test
     void testToString() {
-        String expected = new DiscriminatorImpl(1, 2, Collections.singleton("50")).toString();
+        String expected = new DiscriminatorImpl(position(1, 2), Collections.singleton("50")).toString();
         assertEquals(expected, target.toString());
     }
 

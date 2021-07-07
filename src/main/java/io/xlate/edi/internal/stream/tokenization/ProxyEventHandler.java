@@ -29,6 +29,8 @@ import io.xlate.edi.internal.stream.CharArraySequence;
 import io.xlate.edi.internal.stream.StaEDIStreamLocation;
 import io.xlate.edi.internal.stream.validation.UsageError;
 import io.xlate.edi.internal.stream.validation.Validator;
+import io.xlate.edi.schema.EDIElementPosition;
+import io.xlate.edi.schema.EDILoopType;
 import io.xlate.edi.schema.EDIReference;
 import io.xlate.edi.schema.EDIType;
 import io.xlate.edi.schema.Schema;
@@ -68,12 +70,18 @@ public class ProxyEventHandler implements EventHandler {
             this.id = id;
             this.event = event;
         }
+
+        boolean isParentOf(String parentId) {
+            return !parentId.isEmpty() && parentId.equals(id);
+        }
     }
 
     private boolean levelCheckPending;
     private StreamEvent currentSegmentBegin;
     private StreamEvent startedLevel;
+    private EDIElementPosition levelIdPosition;
     private String startedLevelId;
+    private EDIElementPosition parentIdPosition;
     private String startedLevelParentId;
 
     private Dialect dialect;
@@ -204,8 +212,11 @@ public class ProxyEventHandler implements EventHandler {
         } else {
             enqueueEvent(EDIStreamEvent.START_LOOP, EDIStreamValidationError.NONE, loopCode, typeReference, location);
 
-            if (nestHierarchicalLoops && dialect.isHierarchicalLoop(typeReference.getReferencedType())) {
+            if (nestHierarchicalLoops && isHierarchicalLoop(typeReference.getReferencedType())) {
+                EDILoopType loop = (EDILoopType) typeReference.getReferencedType();
                 startedLevel = eventQueue.getLast();
+                levelIdPosition = loop.getLevelIdPosition();
+                parentIdPosition = loop.getParentIdPosition();
                 levelCheckPending = true;
             }
         }
@@ -225,7 +236,7 @@ public class ProxyEventHandler implements EventHandler {
         } else if (EDIType.Type.GROUP.toString().equals(loopCode)) {
             dialect.groupEnd();
             enqueueEvent(EDIStreamEvent.END_GROUP, EDIStreamValidationError.NONE, loopCode, typeReference, location);
-        } else if (nestHierarchicalLoops && dialect.isHierarchicalLoop(typeReference.getReferencedType())) {
+        } else if (nestHierarchicalLoops && isHierarchicalLoop(typeReference.getReferencedType())) {
             levelCheckPending = true;
         } else {
             enqueueEvent(EDIStreamEvent.END_LOOP, EDIStreamValidationError.NONE, loopCode, typeReference, location);
@@ -349,7 +360,7 @@ public class ProxyEventHandler implements EventHandler {
         Validator validator = validator();
         boolean valid;
 
-        if (levelCheckPending) {
+        if (levelCheckPending && startedLevel != null) {
             setLevelIdentifiers();
         }
 
@@ -393,17 +404,29 @@ public class ProxyEventHandler implements EventHandler {
 
     void clearLevelCheck() {
         levelCheckPending = false;
+        currentSegmentBegin = null;
         startedLevel = null;
-        startedLevelId = null;
-        startedLevelParentId = null;
+
+        levelIdPosition = null;
+        startedLevelId = "";
+
+        parentIdPosition = null;
+        startedLevelParentId = "";
+    }
+
+    boolean isHierarchicalLoop(EDIType type) {
+        EDILoopType loop = (EDILoopType) type;
+
+        return loop.getLevelIdPosition() != null &&
+                loop.getParentIdPosition() != null;
     }
 
     void setLevelIdentifiers() {
-        if (dialect.isHierarchicalId(location)) {
+        if (levelIdPosition.matchesLocation(location)) {
             startedLevelId = elementHolder.toString();
         }
 
-        if (dialect.isHierarchicalParentId(location)) {
+        if (parentIdPosition.matchesLocation(location)) {
             startedLevelParentId = elementHolder.toString();
         }
     }
@@ -419,16 +442,21 @@ public class ProxyEventHandler implements EventHandler {
             openLevel.setTypeReference(startedLevel.typeReference);
             openLevel.setLocation(startedLevel.location);
 
+            /*
+             * startedLevelId will not be null due to Validator#validateSyntax.
+             * Although the client never sees the generated element event, here
+             * it will be an empty string.
+             */
             openLevels.addLast(new HierarchicalLevel(startedLevelId, openLevel));
         } else {
-            completeLevel(currentSegmentBegin, null);
+            completeLevel(currentSegmentBegin, "");
         }
 
         clearLevelCheck();
     }
 
     void completeLevel(StreamEvent successor, String parentId) {
-        while (!openLevels.isEmpty() && !openLevels.getLast().id.equals(parentId)) {
+        while (!openLevels.isEmpty() && !openLevels.getLast().isParentOf(parentId)) {
             HierarchicalLevel completed = openLevels.removeLast();
             completed.event.location.set(location);
             completed.event.location.clearSegmentLocations();

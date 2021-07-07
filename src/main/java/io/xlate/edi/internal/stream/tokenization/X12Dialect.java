@@ -15,11 +15,6 @@
  ******************************************************************************/
 package io.xlate.edi.internal.stream.tokenization;
 
-import java.util.List;
-
-import io.xlate.edi.schema.EDIComplexType;
-import io.xlate.edi.schema.EDIReference;
-import io.xlate.edi.schema.EDIType;
 import io.xlate.edi.stream.EDIStreamConstants.Standards;
 import io.xlate.edi.stream.Location;
 
@@ -29,7 +24,6 @@ public class X12Dialect extends Dialect {
     private static final String ISX = "ISX";
     private static final String GS = "GS";
     private static final String ST = "ST";
-    private static final String HL = "HL";
 
     private static final int RELEASE_ISX_SEGMENT = 704; // 007040 (Version 7, release 4)
     private static final int RELEASE_ELEMENT_I65 = 402; // 004020 (Version 4, release 2)
@@ -216,23 +210,6 @@ public class X12Dialect extends Dialect {
                 break;
             }
         }
-    }
-
-    @Override
-    boolean isHierarchicalLoop(EDIType type) {
-        List<EDIReference> segments = ((EDIComplexType) type).getReferences();
-        EDIType segmentType = segments.get(0).getReferencedType();
-        return HL.equals(segmentType.getId());
-    }
-
-    @Override
-    boolean isHierarchicalId(Location location) {
-        return HL.equals(location.getSegmentTag()) && location.getElementPosition() == 1;
-    }
-
-    @Override
-    boolean isHierarchicalParentId(Location location) {
-        return HL.equals(location.getSegmentTag()) && location.getElementPosition() == 2;
     }
 
     @Override

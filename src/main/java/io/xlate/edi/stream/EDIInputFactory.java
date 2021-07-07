@@ -65,10 +65,13 @@ public abstract class EDIInputFactory extends PropertySupport {
     /**
      * When set to true, hierarchical loops will be nested in the EDI input
      * stream. The nesting structure is determined by the linkage specified by
-     * the EDI data itself. For example, the hierarchical information given by
-     * the X12 HL segment.
+     * the EDI data itself using pointers given in the EDI schema for a loop.
+     * 
+     * For example, the hierarchical information given by the X12 HL segment.
+     * 
+     * Default value: true
      *
-     * @since 1.17
+     * @since 1.18
      */
     public static final String EDI_NEST_HIERARCHICAL_LOOPS = "io.xlate.edi.stream.EDI_NEST_HIERARCHICAL_LOOPS";
 

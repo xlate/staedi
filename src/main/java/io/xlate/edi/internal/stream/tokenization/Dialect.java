@@ -15,7 +15,6 @@
  ******************************************************************************/
 package io.xlate.edi.internal.stream.tokenization;
 
-import io.xlate.edi.schema.EDIType;
 import io.xlate.edi.stream.Location;
 
 public abstract class Dialect {
@@ -128,36 +127,6 @@ public abstract class Dialect {
      *            the location of the element
      */
     public abstract void elementData(CharSequence data, Location location);
-
-    /**
-     * Determine if the given type represents a hierarchical loop schema node.
-     *
-     * @param type a schema type
-     * @return true when type is a hierarchical loop, otherwise false
-     */
-    boolean isHierarchicalLoop(EDIType type) {
-        return false; // HL not enabled by default
-    }
-
-    /**
-     * Determine if the location is a hierarchical identifier.
-     *
-     * @param location the current processing location
-     * @return true when type is a hierarchical identifier, otherwise false
-     */
-    boolean isHierarchicalId(Location location) {
-        return false;
-    }
-
-    /**
-     * Determine if the location is a hierarchical parent identifier.
-     *
-     * @param location the current processing location
-     * @return true when type is a hierarchical parent identifier, otherwise false
-     */
-    boolean isHierarchicalParentId(Location location) {
-        return false;
-    }
 
     protected abstract void clearTransactionVersion();
 
