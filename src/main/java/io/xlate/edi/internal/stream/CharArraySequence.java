@@ -45,10 +45,6 @@ public class CharArraySequence implements CharSequence, Comparable<CharSequence>
         return length;
     }
 
-    public char[] getText() {
-        return text;
-    }
-
     @Override
     public char charAt(int index) {
         if (index < 0 || index >= length) {
