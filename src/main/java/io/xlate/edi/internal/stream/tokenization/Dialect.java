@@ -176,4 +176,5 @@ public abstract class Dialect {
     public String getTransactionVersionString() {
         return transactionVersionString;
     }
+
 }

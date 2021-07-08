@@ -2,11 +2,9 @@ package io.xlate.edi.schema.implementation;
 
 import java.util.Set;
 
-public interface Discriminator {
+import io.xlate.edi.schema.EDIElementPosition;
 
-    int getElementPosition();
-
-    int getComponentPosition();
+public interface Discriminator extends EDIElementPosition {
 
     Set<String> getValueSet();
 

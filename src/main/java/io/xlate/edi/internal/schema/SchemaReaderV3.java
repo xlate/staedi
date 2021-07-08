@@ -3,7 +3,6 @@ package io.xlate.edi.internal.schema;
 import static io.xlate.edi.internal.schema.StaEDISchemaFactory.schemaException;
 import static io.xlate.edi.internal.schema.StaEDISchemaFactory.unexpectedElement;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Deque;
@@ -34,6 +33,7 @@ import io.xlate.edi.internal.schema.implementation.Positioned;
 import io.xlate.edi.internal.schema.implementation.SegmentImpl;
 import io.xlate.edi.internal.schema.implementation.TransactionImpl;
 import io.xlate.edi.schema.EDIComplexType;
+import io.xlate.edi.schema.EDIElementPosition;
 import io.xlate.edi.schema.EDIReference;
 import io.xlate.edi.schema.EDISchemaException;
 import io.xlate.edi.schema.EDIType;
@@ -215,7 +215,7 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
         String typeId;
         int minOccurs = 0;
         int maxOccurs = 0;
-        BigDecimal discriminatorAttr = null;
+        EDIElementPosition discriminatorPos = null;
         String title = null;
 
         if (transactionLoop) {
@@ -226,7 +226,7 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
             typeId = parseAttribute(reader, "type", String::valueOf);
             minOccurs = parseAttribute(reader, ATTR_MIN_OCCURS, Integer::parseInt, -1);
             maxOccurs = parseAttribute(reader, ATTR_MAX_OCCURS, Integer::parseInt, -1);
-            discriminatorAttr = parseAttribute(reader, ATTR_DISCRIMINATOR, BigDecimal::new, null);
+            discriminatorPos =  parseElementPosition(reader, ATTR_DISCRIMINATOR);
             title = parseAttribute(reader, ATTR_TITLE, String::valueOf, null);
         }
 
@@ -237,9 +237,9 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
 
         Discriminator disc = null;
 
-        if (discriminatorAttr != null) {
+        if (discriminatorPos != null) {
             SegmentImpl segImpl = (SegmentImpl) sequence.get(0);
-            disc = buildDiscriminator(discriminatorAttr, segImpl.getSequence());
+            disc = buildDiscriminator(discriminatorPos, segImpl.getSequence());
         }
 
         return new LoopImpl(minOccurs, maxOccurs, id, typeId, disc, sequence, title, descr);
@@ -266,13 +266,13 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
         String code = parseAttribute(reader, "code", String::valueOf, typeId);
         int minOccurs = parseAttribute(reader, ATTR_MIN_OCCURS, Integer::parseInt, -1);
         int maxOccurs = parseAttribute(reader, ATTR_MAX_OCCURS, Integer::parseInt, -1);
-        BigDecimal discriminatorAttr = parseAttribute(reader, ATTR_DISCRIMINATOR, BigDecimal::new, null);
+        EDIElementPosition discriminatorPos = parseElementPosition(reader, ATTR_DISCRIMINATOR);
         String title = parseAttribute(reader, ATTR_TITLE, String::valueOf, null);
 
         return readTypeImplementation(reader,
                                       () -> readSequence(reader, e -> readPositionedSequenceEntry(e, sequence, true)),
                                       descr -> whenExpected(reader, qnSegment, () -> {
-                                          Discriminator disc = buildDiscriminator(discriminatorAttr, sequence);
+                                          Discriminator disc = buildDiscriminator(discriminatorPos, sequence);
                                           SegmentImpl segment = new SegmentImpl(minOccurs,
                                                                                 maxOccurs,
                                                                                 typeId,
@@ -312,20 +312,19 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
         }
     }
 
-    Discriminator buildDiscriminator(BigDecimal discriminatorAttr,
+    Discriminator buildDiscriminator(EDIElementPosition discriminatorPos,
                                      List<EDITypeImplementation> sequence) {
         Discriminator disc = null;
 
-        if (discriminatorAttr != null) {
-            int elementPosition = discriminatorAttr.intValue();
-            int componentPosition = discriminatorAttr.remainder(BigDecimal.ONE)
-                                                     .movePointRight(discriminatorAttr.scale()).intValue();
+        if (discriminatorPos != null) {
+            final int elementPosition = discriminatorPos.getElementPosition();
+            final int componentPosition = discriminatorPos.getComponentPosition();
 
-            EDITypeImplementation eleImpl = getDiscriminatorElement(discriminatorAttr, elementPosition, sequence, "element");
+            EDITypeImplementation eleImpl = getDiscriminatorElement(discriminatorPos, elementPosition, sequence, "element");
 
             if (eleImpl instanceof CompositeImpl) {
                 sequence = ((CompositeImpl) eleImpl).getSequence();
-                eleImpl = getDiscriminatorElement(discriminatorAttr, componentPosition, sequence, "component");
+                eleImpl = getDiscriminatorElement(discriminatorPos, componentPosition, sequence, "component");
             }
 
             Set<String> discValues;
@@ -333,24 +332,24 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
             if (eleImpl != null) {
                 discValues = ((ElementImpl) eleImpl).getValueSet();
             } else {
-                throw schemaException("Discriminator position is unused (not specified): " + discriminatorAttr, reader);
+                throw schemaException("Discriminator position is unused (not specified): " + discriminatorPos, reader);
             }
 
             if (!discValues.isEmpty()) {
-                disc = new DiscriminatorImpl(elementPosition, componentPosition, discValues);
+                disc = new DiscriminatorImpl(discriminatorPos, discValues);
             } else {
-                throw schemaException("Discriminator element does not specify value enumeration: " + discriminatorAttr, reader);
+                throw schemaException("Discriminator element does not specify value enumeration: " + discriminatorPos, reader);
             }
         }
 
         return disc;
     }
 
-    EDITypeImplementation getDiscriminatorElement(BigDecimal attr, int position, List<EDITypeImplementation> sequence, String type) {
+    EDITypeImplementation getDiscriminatorElement(EDIElementPosition discriminatorPos, int position, List<EDITypeImplementation> sequence, String type) {
         if (position > 0 && position <= sequence.size()) {
             return sequence.get(position - 1);
         } else {
-            throw schemaException("Discriminator " + type + " position invalid: " + attr, reader);
+            throw schemaException("Discriminator " + type + " position invalid: " + discriminatorPos, reader);
         }
     }
 

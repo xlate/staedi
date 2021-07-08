@@ -84,12 +84,16 @@
     </restriction>
   </simpleType>
 
-  <simpleType name="discriminatorType">
+  <simpleType name="elementPositionType">
     <restriction base="decimal">
       <minInclusive value="1"/>
       <maxInclusive value="99.99"/>
       <pattern value="[0-9]+(\.[0-9]{1,2}){0,1}"></pattern>
     </restriction>
+  </simpleType>
+
+  <simpleType name="discriminatorType">
+    <restriction base="tns:elementPositionType" />
   </simpleType>
 
   <simpleType name="positionType">
@@ -436,6 +440,26 @@
           <annotation>
             <documentation>
               Code used to uniquely identify a loop within the transaction/message.
+            </documentation>
+          </annotation>
+        </attribute>
+
+        <attribute name="levelIdPosition" type="tns:elementPositionType">
+          <annotation>
+            <documentation>
+              The element position in the loop's first segment used to identify a
+              hierarchical level in the context of hierarchical nested loops.
+              When used, attribute parentId must also be specified.
+            </documentation>
+          </annotation>
+        </attribute>
+
+        <attribute name="parentIdPosition" type="tns:elementPositionType">
+          <annotation>
+            <documentation>
+              The element position in the loop's first segment used to identify a
+              hierarchical parent level in the context of hierarchical nested loops.
+              When used, attribute levelId must also be specified.
             </documentation>
           </annotation>
         </attribute>

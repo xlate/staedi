@@ -17,14 +17,20 @@ package io.xlate.edi.internal.stream.tokenization;
 
 import java.io.InputStream;
 import java.nio.CharBuffer;
+import java.util.Deque;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Queue;
+import java.util.function.Function;
 
 import io.xlate.edi.internal.stream.CharArraySequence;
 import io.xlate.edi.internal.stream.StaEDIStreamLocation;
 import io.xlate.edi.internal.stream.validation.UsageError;
 import io.xlate.edi.internal.stream.validation.Validator;
+import io.xlate.edi.schema.EDIElementPosition;
+import io.xlate.edi.schema.EDILoopType;
 import io.xlate.edi.schema.EDIReference;
 import io.xlate.edi.schema.EDIType;
 import io.xlate.edi.schema.Schema;
@@ -35,6 +41,7 @@ import io.xlate.edi.stream.Location;
 public class ProxyEventHandler implements EventHandler {
 
     private final StaEDIStreamLocation location;
+    private final boolean nestHierarchicalLoops;
 
     private Schema controlSchema;
     private Validator controlValidator;
@@ -49,17 +56,41 @@ public class ProxyEventHandler implements EventHandler {
     private String segmentTag;
     private CharArraySequence elementHolder = new CharArraySequence();
 
-    private StreamEvent[] events = new StreamEvent[99];
-    private int eventCount = 0;
-    private int eventIndex = 0;
+    private final Queue<StreamEvent> eventPool = new LinkedList<>();
+    // Use implementation to access as both Deque & List
+    private final LinkedList<StreamEvent> eventQueue = new LinkedList<>();
+
+    private final Deque<HierarchicalLevel> openLevels = new LinkedList<>();
+
+    static class HierarchicalLevel {
+        final String id;
+        final StreamEvent event;
+
+        HierarchicalLevel(String id, StreamEvent event) {
+            this.id = id;
+            this.event = event;
+        }
+
+        boolean isParentOf(String parentId) {
+            return !parentId.isEmpty() && parentId.equals(id);
+        }
+    }
+
+    private boolean levelCheckPending;
+    private StreamEvent currentSegmentBegin;
+    private StreamEvent startedLevel;
+    private EDIElementPosition levelIdPosition;
+    private String startedLevelId;
+    private EDIElementPosition parentIdPosition;
+    private String startedLevelParentId;
+
     private Dialect dialect;
 
-    public ProxyEventHandler(StaEDIStreamLocation location, Schema controlSchema) {
+    public ProxyEventHandler(StaEDIStreamLocation location, Schema controlSchema, boolean nestHierarchicalLoops) {
         this.location = location;
+        this.nestHierarchicalLoops = nestHierarchicalLoops;
+
         setControlSchema(controlSchema, true);
-        for (int i = 0; i < 99; i++) {
-            events[i] = new StreamEvent();
-        }
     }
 
     public void setControlSchema(Schema controlSchema, boolean validateCodeValues) {
@@ -87,48 +118,53 @@ public class ProxyEventHandler implements EventHandler {
     }
 
     public void resetEvents() {
-        eventCount = 0;
-        eventIndex = 0;
+        eventPool.addAll(eventQueue);
+        eventQueue.clear();
     }
 
     public EDIStreamEvent getEvent() {
-        if (hasEvents()) {
-            return events[eventIndex].type;
-        }
-        return null;
+        return current(StreamEvent::getType, null);
     }
 
     public CharBuffer getCharacters() {
-        if (hasEvents()) {
-            return events[eventIndex].getData();
-        }
-        throw new IllegalStateException();
-    }
-
-    public boolean hasEvents() {
-        return eventIndex < eventCount;
+        return current(StreamEvent::getData, null);
     }
 
     public boolean nextEvent() {
-        if (eventCount < 1) {
+        if (eventQueue.isEmpty()) {
             return false;
         }
-        return ++eventIndex < eventCount;
+
+        eventPool.add(eventQueue.removeFirst());
+        return !eventQueue.isEmpty();
     }
 
     public EDIStreamValidationError getErrorType() {
-        return events[eventIndex].errorType;
+        return current(StreamEvent::getErrorType, null);
     }
 
     public String getReferenceCode() {
-        return hasEvents() ? events[eventIndex].getReferenceCode() : null;
+        return current(StreamEvent::getReferenceCode, null);
     }
 
     public Location getLocation() {
-        if (hasEvents() && events[eventIndex].location != null) {
-            return events[eventIndex].location;
+        return current(StreamEvent::getLocation, this.location);
+    }
+
+    <T> T current(Function<StreamEvent, T> mapper, T defaultValue) {
+        final T value;
+
+        if (eventQueue.isEmpty()) {
+            value = defaultValue;
+        } else {
+            value = mapper.apply(eventQueue.getFirst());
         }
-        return location;
+
+        return value;
+    }
+
+    StreamEvent getPooledEvent() {
+        return eventPool.isEmpty() ? new StreamEvent() : eventPool.remove();
     }
 
     public InputStream getBinary() {
@@ -140,7 +176,7 @@ public class ProxyEventHandler implements EventHandler {
     }
 
     public EDIReference getSchemaTypeReference() {
-        return hasEvents() ? events[eventIndex].getTypeReference() : null;
+        return current(StreamEvent::getTypeReference, null);
     }
 
     @Override
@@ -175,6 +211,14 @@ public class ProxyEventHandler implements EventHandler {
             enqueueEvent(EDIStreamEvent.START_GROUP, EDIStreamValidationError.NONE, loopCode, typeReference, location);
         } else {
             enqueueEvent(EDIStreamEvent.START_LOOP, EDIStreamValidationError.NONE, loopCode, typeReference, location);
+
+            if (nestHierarchicalLoops && isHierarchicalLoop(typeReference.getReferencedType())) {
+                EDILoopType loop = (EDILoopType) typeReference.getReferencedType();
+                startedLevel = eventQueue.getLast();
+                levelIdPosition = loop.getLevelIdPosition();
+                parentIdPosition = loop.getParentIdPosition();
+                levelCheckPending = true;
+            }
         }
     }
 
@@ -192,6 +236,8 @@ public class ProxyEventHandler implements EventHandler {
         } else if (EDIType.Type.GROUP.toString().equals(loopCode)) {
             dialect.groupEnd();
             enqueueEvent(EDIStreamEvent.END_GROUP, EDIStreamValidationError.NONE, loopCode, typeReference, location);
+        } else if (nestHierarchicalLoops && isHierarchicalLoop(typeReference.getReferencedType())) {
+            levelCheckPending = true;
         } else {
             enqueueEvent(EDIStreamEvent.END_LOOP, EDIStreamValidationError.NONE, loopCode, typeReference, location);
         }
@@ -209,6 +255,7 @@ public class ProxyEventHandler implements EventHandler {
         Validator validator = validator();
         boolean eventsReady = true;
         EDIReference typeReference = null;
+        clearLevelCheck();
 
         if (validator != null && !dialect.isServiceAdviceSegment(segmentTag)) {
             validator.validateSegment(this, segmentTag);
@@ -231,11 +278,14 @@ public class ProxyEventHandler implements EventHandler {
         }
 
         enqueueEvent(EDIStreamEvent.START_SEGMENT, EDIStreamValidationError.NONE, segmentTag, typeReference, location);
-        return eventsReady;
+        currentSegmentBegin = eventQueue.getLast();
+        return !levelCheckPending && eventsReady;
     }
 
     boolean exitTransaction(CharSequence tag) {
-        return transaction && !transactionSchemaAllowed && controlSchema != null
+        return transaction
+                && !transactionSchemaAllowed
+                && controlSchema != null
                 && controlSchema.containsSegment(tag.toString());
     }
 
@@ -248,6 +298,10 @@ public class ProxyEventHandler implements EventHandler {
             validator.validateSyntax(dialect, this, this, location, false);
             validator.validateVersionConstraints(dialect, this, null);
             typeReference = validator.getSegmentReference();
+        }
+
+        if (levelCheckPending) {
+            performLevelCheck();
         }
 
         location.clearSegmentLocations();
@@ -277,7 +331,7 @@ public class ProxyEventHandler implements EventHandler {
         }
 
         enqueueEvent(EDIStreamEvent.START_COMPOSITE, EDIStreamValidationError.NONE, "", typeReference, location);
-        return eventsReady;
+        return !levelCheckPending && eventsReady;
     }
 
     @Override
@@ -291,7 +345,7 @@ public class ProxyEventHandler implements EventHandler {
 
         location.clearComponentPosition();
         enqueueEvent(EDIStreamEvent.END_COMPOSITE, EDIStreamValidationError.NONE, "", null, location);
-        return eventsReady;
+        return !levelCheckPending && eventsReady;
     }
 
     @Override
@@ -306,6 +360,10 @@ public class ProxyEventHandler implements EventHandler {
         Validator validator = validator();
         boolean valid;
 
+        if (levelCheckPending && startedLevel != null) {
+            setLevelIdentifiers();
+        }
+
         if (validator != null) {
             valid = validator.validateElement(dialect, location, elementHolder, null);
             derivedComposite = !compositeFromStream && validator.isComposite();
@@ -317,7 +375,14 @@ public class ProxyEventHandler implements EventHandler {
             typeReference = null;
         }
 
-        if (derivedComposite && elementHolder.getText() != null/* Not an empty composite */) {
+        /*
+         * The first component of a composite was the only element received
+         * for the composite. It was found to be a composite via the schema
+         * and the composite begin/end events must be generated.
+         **/
+        final boolean componentReceivedAsSimple = derivedComposite && text != null;
+
+        if (componentReceivedAsSimple) {
             this.compositeBegin(elementHolder.length() == 0);
             location.incrementComponentPosition();
         }
@@ -332,16 +397,79 @@ public class ProxyEventHandler implements EventHandler {
                          location);
 
             if (validator != null && validator.isPendingDiscrimination()) {
-                eventsReady = validator.selectImplementation(events, eventIndex, eventCount, this);
+                eventsReady = validator.selectImplementation(eventQueue, this);
             }
         }
 
-        if (derivedComposite && text != null /* Not an empty composite */) {
+        if (componentReceivedAsSimple) {
             this.compositeEnd(length == 0);
             location.clearComponentPosition();
         }
 
-        return eventsReady;
+        return !levelCheckPending && eventsReady;
+    }
+
+    void clearLevelCheck() {
+        levelCheckPending = false;
+        currentSegmentBegin = null;
+        startedLevel = null;
+
+        levelIdPosition = null;
+        startedLevelId = "";
+
+        parentIdPosition = null;
+        startedLevelParentId = "";
+    }
+
+    boolean isHierarchicalLoop(EDIType type) {
+        EDILoopType loop = (EDILoopType) type;
+
+        return loop.getLevelIdPosition() != null &&
+                loop.getParentIdPosition() != null;
+    }
+
+    void setLevelIdentifiers() {
+        if (levelIdPosition.matchesLocation(location)) {
+            startedLevelId = elementHolder.toString();
+        }
+
+        if (parentIdPosition.matchesLocation(location)) {
+            startedLevelParentId = elementHolder.toString();
+        }
+    }
+
+    void performLevelCheck() {
+        if (startedLevel != null) {
+            completeLevel(startedLevel, startedLevelParentId);
+
+            StreamEvent openLevel = getPooledEvent();
+            openLevel.type = EDIStreamEvent.END_LOOP;
+            openLevel.errorType = startedLevel.errorType;
+            openLevel.setData(startedLevel.data);
+            openLevel.setTypeReference(startedLevel.typeReference);
+            openLevel.setLocation(startedLevel.location);
+
+            /*
+             * startedLevelId will not be null due to Validator#validateSyntax.
+             * Although the client never sees the generated element event, here
+             * it will be an empty string.
+             */
+            openLevels.addLast(new HierarchicalLevel(startedLevelId, openLevel));
+        } else {
+            completeLevel(currentSegmentBegin, "");
+        }
+
+        clearLevelCheck();
+    }
+
+    void completeLevel(StreamEvent successor, String parentId) {
+        while (!openLevels.isEmpty() && !openLevels.getLast().isParentOf(parentId)) {
+            HierarchicalLevel completed = openLevels.removeLast();
+            completed.event.location.set(location);
+            completed.event.location.clearSegmentLocations();
+
+            eventQueue.add(eventQueue.indexOf(successor), completed.event);
+        }
     }
 
     void enqueueElementOccurrenceErrors(Validator validator, boolean valid) {
@@ -435,28 +563,35 @@ public class ProxyEventHandler implements EventHandler {
                               EDIReference typeReference,
                               Location location) {
 
-        final int index = eventCount;
-        StreamEvent target = events[index];
-        EDIStreamEvent associatedEvent = (index > 0) ? getAssociatedEvent(error) : null;
+        StreamEvent target = getPooledEvent();
+        EDIStreamEvent associatedEvent = eventQueue.isEmpty() ? null : getAssociatedEvent(error);
 
-        if (eventExists(associatedEvent, index)) {
+        if (eventExists(associatedEvent)) {
             /*
              * Ensure segment errors occur before other event types
              * when the array has other events already present.
              */
-            int offset = index;
+            int offset = eventQueue.size();
             boolean complete = false;
 
             while (!complete) {
-                if (events[offset - 1].type == associatedEvent) {
+                StreamEvent enqueuedEvent = eventQueue.get(offset - 1);
+
+                if (enqueuedEvent.type == associatedEvent) {
                     complete = true;
                 } else {
-                    events[offset] = events[offset - 1];
+                    if (eventQueue.size() == offset) {
+                        eventQueue.add(offset, enqueuedEvent);
+                    } else {
+                        eventQueue.set(offset, enqueuedEvent);
+                    }
                     offset--;
                 }
             }
 
-            events[offset] = target;
+            eventQueue.set(offset, target);
+        } else {
+            eventQueue.add(target);
         }
 
         target.type = event;
@@ -464,15 +599,13 @@ public class ProxyEventHandler implements EventHandler {
         target.setData(data);
         target.setTypeReference(typeReference);
         target.setLocation(location);
-
-        eventCount++;
     }
 
-    private boolean eventExists(EDIStreamEvent associatedEvent, int index) {
-        int offset = index;
+    private boolean eventExists(EDIStreamEvent associatedEvent) {
+        int offset = eventQueue.size();
 
         while (associatedEvent != null && offset > 0) {
-            if (events[offset - 1].type == associatedEvent) {
+            if (eventQueue.get(offset - 1).type == associatedEvent) {
                 return true;
             }
             offset--;

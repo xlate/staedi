@@ -17,7 +17,7 @@
           <segment type="PER" maxOccurs="2"/>
         </sequence>
       </loop>
-      <loop code="L0002" minOccurs="1" maxOccurs="99999">
+      <loop code="L0002" minOccurs="1" maxOccurs="99999" levelIdPosition="1" parentIdPosition="2">
         <sequence>
           <segment type="HL"/>
           <segment type="PRV"/>

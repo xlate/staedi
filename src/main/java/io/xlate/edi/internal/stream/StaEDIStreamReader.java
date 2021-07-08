@@ -68,7 +68,7 @@ public class StaEDIStreamReader implements EDIStreamReader, Configurable {
         this.controlSchema = schema;
         this.properties = new HashMap<>(properties);
         this.reporter = reporter;
-        this.proxy = new ProxyEventHandler(location, this.controlSchema);
+        this.proxy = new ProxyEventHandler(location, this.controlSchema, nestHierarchicalLoops());
         this.lexer = new Lexer(stream, charset, proxy, location, ignoreExtraneousCharacters());
     }
 
@@ -103,6 +103,7 @@ public class StaEDIStreamReader implements EDIStreamReader, Configurable {
     }
 
     private CharBuffer getBuffer() {
+        checkTextState();
         return proxy.getCharacters();
     }
 
@@ -365,19 +366,13 @@ public class StaEDIStreamReader implements EDIStreamReader, Configurable {
 
     @Override
     public String getText() {
-        ensureOpen();
-        checkTextState();
         final CharBuffer buffer = getBuffer();
-
         return buffer.toString();
     }
 
     @Override
     public char[] getTextCharacters() {
-        ensureOpen();
-        checkTextState();
         final CharBuffer buffer = getBuffer();
-
         return Arrays.copyOf(buffer.array(), buffer.length());
     }
 
@@ -386,9 +381,6 @@ public class StaEDIStreamReader implements EDIStreamReader, Configurable {
                                  char[] target,
                                  int targetStart,
                                  int length) {
-
-        ensureOpen();
-        checkTextState();
 
         if (target == null) {
             throw new NullPointerException("Null target array");
@@ -426,19 +418,13 @@ public class StaEDIStreamReader implements EDIStreamReader, Configurable {
 
     @Override
     public int getTextStart() {
-        ensureOpen();
-        checkTextState();
         final CharBuffer buffer = getBuffer();
-
         return buffer.position();
     }
 
     @Override
     public int getTextLength() {
-        ensureOpen();
-        checkTextState();
         final CharBuffer buffer = getBuffer();
-
         return buffer.limit();
     }
 
@@ -486,5 +472,9 @@ public class StaEDIStreamReader implements EDIStreamReader, Configurable {
 
     boolean ignoreExtraneousCharacters() {
         return getProperty(EDIInputFactory.EDI_IGNORE_EXTRANEOUS_CHARACTERS, Boolean::parseBoolean, false);
+    }
+
+    boolean nestHierarchicalLoops() {
+        return getProperty(EDIInputFactory.EDI_NEST_HIERARCHICAL_LOOPS, Boolean::parseBoolean, true);
     }
 }

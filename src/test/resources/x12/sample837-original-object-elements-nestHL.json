@@ -1,0 +1,1164 @@
+{
+  "name": "INTERCHANGE",
+  "type": "loop",
+  "data": [
+    {
+      "name": "ISA",
+      "type": "segment",
+      "data": [
+        {
+          "type": "element",
+          "data": "01"
+        },
+        {
+          "type": "element",
+          "data": "0000000000"
+        },
+        {
+          "type": "element",
+          "data": "01"
+        },
+        {
+          "type": "element",
+          "data": "0000000000"
+        },
+        {
+          "type": "element",
+          "data": "ZZ"
+        },
+        {
+          "type": "element",
+          "data": "ABCDEFGHIJKLMNO"
+        },
+        {
+          "type": "element",
+          "data": "ZZ"
+        },
+        {
+          "type": "element",
+          "data": "123456789012345"
+        },
+        {
+          "type": "element",
+          "data": "101127"
+        },
+        {
+          "type": "element",
+          "data": "1719"
+        },
+        {
+          "type": "element",
+          "data": "`"
+        },
+        {
+          "type": "element",
+          "data": "00402"
+        },
+        {
+          "type": "element",
+          "data": 3438
+        },
+        {
+          "type": "element",
+          "data": "0"
+        },
+        {
+          "type": "element",
+          "data": "P"
+        },
+        {
+          "type": "element",
+          "data": ">"
+        }
+      ]
+    },
+    {
+      "name": "GROUP",
+      "type": "loop",
+      "data": [
+        {
+          "name": "GS",
+          "type": "segment",
+          "data": [
+            {
+              "type": "element",
+              "data": "HC"
+            },
+            {
+              "type": "element",
+              "data": "99999999999"
+            },
+            {
+              "type": "element",
+              "data": "888888888888"
+            },
+            {
+              "type": "element",
+              "data": "20111219"
+            },
+            {
+              "type": "element",
+              "data": "1340"
+            },
+            {
+              "type": "element",
+              "data": 1377
+            },
+            {
+              "type": "element",
+              "data": "X"
+            },
+            {
+              "type": "element",
+              "data": "005010X222"
+            }
+          ]
+        },
+        {
+          "name": "TRANSACTION",
+          "type": "loop",
+          "data": [
+            {
+              "name": "ST",
+              "type": "segment",
+              "data": [
+                {
+                  "type": "element",
+                  "data": "837"
+                },
+                {
+                  "type": "element",
+                  "data": "0001"
+                },
+                {
+                  "type": "element",
+                  "data": "005010X222"
+                }
+              ]
+            },
+            {
+              "name": "BHT",
+              "type": "segment",
+              "data": [
+                {
+                  "type": "element",
+                  "data": "0019"
+                },
+                {
+                  "type": "element",
+                  "data": "00"
+                },
+                {
+                  "type": "element",
+                  "data": "565743"
+                },
+                {
+                  "type": "element",
+                  "data": "20110523"
+                },
+                {
+                  "type": "element",
+                  "data": "154959"
+                },
+                {
+                  "type": "element",
+                  "data": "CH"
+                }
+              ]
+            },
+            {
+              "name": "L0001",
+              "type": "loop",
+              "data": [
+                {
+                  "name": "NM1",
+                  "type": "segment",
+                  "data": [
+                    {
+                      "type": "element",
+                      "data": "41"
+                    },
+                    {
+                      "type": "element",
+                      "data": "2"
+                    },
+                    {
+                      "type": "element",
+                      "data": "SAMPLE INC"
+                    },
+                    {
+                      "type": "element",
+                      "data": ""
+                    },
+                    {
+                      "type": "element",
+                      "data": ""
+                    },
+                    {
+                      "type": "element",
+                      "data": ""
+                    },
+                    {
+                      "type": "element",
+                      "data": ""
+                    },
+                    {
+                      "type": "element",
+                      "data": "46"
+                    },
+                    {
+                      "type": "element",
+                      "data": "496103"
+                    }
+                  ]
+                },
+                {
+                  "name": "PER",
+                  "type": "segment",
+                  "data": [
+                    {
+                      "type": "element",
+                      "data": "IC"
+                    },
+                    {
+                      "type": "element",
+                      "data": "EDI DEPT"
+                    },
+                    {
+                      "type": "element",
+                      "data": "EM"
+                    },
+                    {
+                      "type": "element",
+                      "data": "FEEDBACK@example.com"
+                    },
+                    {
+                      "type": "element",
+                      "data": "TE"
+                    },
+                    {
+                      "type": "element",
+                      "data": "3305551212"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "L0001",
+              "type": "loop",
+              "data": [
+                {
+                  "name": "NM1",
+                  "type": "segment",
+                  "data": [
+                    {
+                      "type": "element",
+                      "data": "40"
+                    },
+                    {
+                      "type": "element",
+                      "data": "2"
+                    },
+                    {
+                      "type": "element",
+                      "data": "PPO BLUE"
+                    },
+                    {
+                      "type": "element",
+                      "data": ""
+                    },
+                    {
+                      "type": "element",
+                      "data": ""
+                    },
+                    {
+                      "type": "element",
+                      "data": ""
+                    },
+                    {
+                      "type": "element",
+                      "data": ""
+                    },
+                    {
+                      "type": "element",
+                      "data": "46"
+                    },
+                    {
+                      "type": "element",
+                      "data": "54771"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "L0002",
+              "type": "loop",
+              "data": [
+                {
+                  "name": "HL",
+                  "type": "segment",
+                  "data": [
+                    {
+                      "type": "element",
+                      "data": "1"
+                    },
+                    {
+                      "type": "element",
+                      "data": ""
+                    },
+                    {
+                      "type": "element",
+                      "data": "20"
+                    },
+                    {
+                      "type": "element",
+                      "data": "1"
+                    }
+                  ]
+                },
+                {
+                  "name": "PRV",
+                  "type": "segment",
+                  "data": [
+                    {
+                      "type": "element",
+                      "data": "BI"
+                    },
+                    {
+                      "type": "element",
+                      "data": "PXC"
+                    },
+                    {
+                      "type": "element",
+                      "data": "333600000X"
+                    }
+                  ]
+                },
+                {
+                  "name": "L0003",
+                  "type": "loop",
+                  "data": [
+                    {
+                      "name": "NM1",
+                      "type": "segment",
+                      "data": [
+                        {
+                          "type": "element",
+                          "data": "85"
+                        },
+                        {
+                          "type": "element",
+                          "data": "2"
+                        },
+                        {
+                          "type": "element",
+                          "data": "EDI SPECIALTY SAMPLE"
+                        },
+                        {
+                          "type": "element",
+                          "data": ""
+                        },
+                        {
+                          "type": "element",
+                          "data": ""
+                        },
+                        {
+                          "type": "element",
+                          "data": ""
+                        },
+                        {
+                          "type": "element",
+                          "data": ""
+                        },
+                        {
+                          "type": "element",
+                          "data": "XX"
+                        },
+                        {
+                          "type": "element",
+                          "data": "123456789"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "N3",
+                      "type": "segment",
+                      "data": [
+                        {
+                          "type": "element",
+                          "data": "1212 DEPOT DRIVE"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "N4",
+                      "type": "segment",
+                      "data": [
+                        {
+                          "type": "element",
+                          "data": "CHICAGO"
+                        },
+                        {
+                          "type": "element",
+                          "data": "IL"
+                        },
+                        {
+                          "type": "element",
+                          "data": "606930159"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "REF",
+                      "type": "segment",
+                      "data": [
+                        {
+                          "type": "element",
+                          "data": "EI"
+                        },
+                        {
+                          "type": "element",
+                          "data": "300123456"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "name": "L0002",
+                  "type": "loop",
+                  "data": [
+                    {
+                      "name": "HL",
+                      "type": "segment",
+                      "data": [
+                        {
+                          "type": "element",
+                          "data": "2"
+                        },
+                        {
+                          "type": "element",
+                          "data": "1"
+                        },
+                        {
+                          "type": "element",
+                          "data": "22"
+                        },
+                        {
+                          "type": "element",
+                          "data": "1"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "SBR",
+                      "type": "segment",
+                      "data": [
+                        {
+                          "type": "element",
+                          "data": "P"
+                        },
+                        {
+                          "type": "element",
+                          "data": ""
+                        },
+                        {
+                          "type": "element",
+                          "data": ""
+                        },
+                        {
+                          "type": "element",
+                          "data": ""
+                        },
+                        {
+                          "type": "element",
+                          "data": ""
+                        },
+                        {
+                          "type": "element",
+                          "data": ""
+                        },
+                        {
+                          "type": "element",
+                          "data": ""
+                        },
+                        {
+                          "type": "element",
+                          "data": ""
+                        },
+                        {
+                          "type": "element",
+                          "data": "BL"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "L0003",
+                      "type": "loop",
+                      "data": [
+                        {
+                          "name": "NM1",
+                          "type": "segment",
+                          "data": [
+                            {
+                              "type": "element",
+                              "data": "IL"
+                            },
+                            {
+                              "type": "element",
+                              "data": "1"
+                            },
+                            {
+                              "type": "element",
+                              "data": "CUSTOMER"
+                            },
+                            {
+                              "type": "element",
+                              "data": "KAREN"
+                            },
+                            {
+                              "type": "element",
+                              "data": ""
+                            },
+                            {
+                              "type": "element",
+                              "data": ""
+                            },
+                            {
+                              "type": "element",
+                              "data": ""
+                            },
+                            {
+                              "type": "element",
+                              "data": "MI"
+                            },
+                            {
+                              "type": "element",
+                              "data": "YYX123456789"
+                            }
+                          ]
+                        },
+                        {
+                          "name": "N3",
+                          "type": "segment",
+                          "data": [
+                            {
+                              "type": "element",
+                              "data": "228 PINEAPPLE CIRCLE"
+                            }
+                          ]
+                        },
+                        {
+                          "name": "N4",
+                          "type": "segment",
+                          "data": [
+                            {
+                              "type": "element",
+                              "data": "CORA"
+                            },
+                            {
+                              "type": "element",
+                              "data": "PA"
+                            },
+                            {
+                              "type": "element",
+                              "data": "15108"
+                            }
+                          ]
+                        },
+                        {
+                          "name": "DMG",
+                          "type": "segment",
+                          "data": [
+                            {
+                              "type": "element",
+                              "data": "D8"
+                            },
+                            {
+                              "type": "element",
+                              "data": "19630625"
+                            },
+                            {
+                              "type": "element",
+                              "data": "M"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "name": "L0003",
+                      "type": "loop",
+                      "data": [
+                        {
+                          "name": "NM1",
+                          "type": "segment",
+                          "data": [
+                            {
+                              "type": "element",
+                              "data": "PR"
+                            },
+                            {
+                              "type": "element",
+                              "data": "2"
+                            },
+                            {
+                              "type": "element",
+                              "data": "PPO BLUE"
+                            },
+                            {
+                              "type": "element",
+                              "data": ""
+                            },
+                            {
+                              "type": "element",
+                              "data": ""
+                            },
+                            {
+                              "type": "element",
+                              "data": ""
+                            },
+                            {
+                              "type": "element",
+                              "data": ""
+                            },
+                            {
+                              "type": "element",
+                              "data": "PI"
+                            },
+                            {
+                              "type": "element",
+                              "data": "54771"
+                            }
+                          ]
+                        },
+                        {
+                          "name": "N3",
+                          "type": "segment",
+                          "data": [
+                            {
+                              "type": "element",
+                              "data": "PO BOX 12345"
+                            }
+                          ]
+                        },
+                        {
+                          "name": "N4",
+                          "type": "segment",
+                          "data": [
+                            {
+                              "type": "element",
+                              "data": "CAMP HILL"
+                            },
+                            {
+                              "type": "element",
+                              "data": "PA"
+                            },
+                            {
+                              "type": "element",
+                              "data": "17089"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "name": "L0002",
+                      "type": "loop",
+                      "data": [
+                        {
+                          "name": "HL",
+                          "type": "segment",
+                          "data": [
+                            {
+                              "type": "element",
+                              "data": "3"
+                            },
+                            {
+                              "type": "element",
+                              "data": "2"
+                            },
+                            {
+                              "type": "element",
+                              "data": "23"
+                            },
+                            {
+                              "type": "element",
+                              "data": "0"
+                            }
+                          ]
+                        },
+                        {
+                          "name": "PAT",
+                          "type": "segment",
+                          "data": [
+                            {
+                              "type": "element",
+                              "data": "19"
+                            }
+                          ]
+                        },
+                        {
+                          "name": "L0003",
+                          "type": "loop",
+                          "data": [
+                            {
+                              "name": "NM1",
+                              "type": "segment",
+                              "data": [
+                                {
+                                  "type": "element",
+                                  "data": "QC"
+                                },
+                                {
+                                  "type": "element",
+                                  "data": "1"
+                                },
+                                {
+                                  "type": "element",
+                                  "data": "CUSTOMER"
+                                },
+                                {
+                                  "type": "element",
+                                  "data": "COLE"
+                                }
+                              ]
+                            },
+                            {
+                              "name": "N3",
+                              "type": "segment",
+                              "data": [
+                                {
+                                  "type": "element",
+                                  "data": "228 PINEAPPLE CIRCLE"
+                                }
+                              ]
+                            },
+                            {
+                              "name": "N4",
+                              "type": "segment",
+                              "data": [
+                                {
+                                  "type": "element",
+                                  "data": "CORA"
+                                },
+                                {
+                                  "type": "element",
+                                  "data": "PA"
+                                },
+                                {
+                                  "type": "element",
+                                  "data": "15108"
+                                }
+                              ]
+                            },
+                            {
+                              "name": "DMG",
+                              "type": "segment",
+                              "data": [
+                                {
+                                  "type": "element",
+                                  "data": "D8"
+                                },
+                                {
+                                  "type": "element",
+                                  "data": "19940921"
+                                },
+                                {
+                                  "type": "element",
+                                  "data": "M"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "name": "L0004",
+                          "type": "loop",
+                          "data": [
+                            {
+                              "name": "CLM",
+                              "type": "segment",
+                              "data": [
+                                {
+                                  "type": "element",
+                                  "data": "945405"
+                                },
+                                {
+                                  "type": "element",
+                                  "data": 5332.54
+                                },
+                                {
+                                  "type": "element",
+                                  "data": ""
+                                },
+                                {
+                                  "type": "element",
+                                  "data": ""
+                                },
+                                {
+                                  "name": "CLM05",
+                                  "type": "composite",
+                                  "data": [
+                                    {
+                                      "type": "element",
+                                      "data": "12"
+                                    },
+                                    {
+                                      "type": "element",
+                                      "data": "B"
+                                    },
+                                    {
+                                      "type": "element",
+                                      "data": "1"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "element",
+                                  "data": "Y"
+                                },
+                                {
+                                  "type": "element",
+                                  "data": "A"
+                                },
+                                {
+                                  "type": "element",
+                                  "data": "Y"
+                                },
+                                {
+                                  "type": "element",
+                                  "data": "Y"
+                                },
+                                {
+                                  "type": "element",
+                                  "data": "P"
+                                }
+                              ]
+                            },
+                            {
+                              "name": "HI",
+                              "type": "segment",
+                              "data": [
+                                {
+                                  "name": "HI01",
+                                  "type": "composite",
+                                  "data": [
+                                    {
+                                      "type": "element",
+                                      "data": "BK"
+                                    },
+                                    {
+                                      "type": "element",
+                                      "data": "2533"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "name": "L0009",
+                              "type": "loop",
+                              "data": [
+                                {
+                                  "name": "LX",
+                                  "type": "segment",
+                                  "data": [
+                                    {
+                                      "type": "element",
+                                      "data": 1
+                                    }
+                                  ]
+                                },
+                                {
+                                  "name": "SV1",
+                                  "type": "segment",
+                                  "data": [
+                                    {
+                                      "name": "SV101",
+                                      "type": "composite",
+                                      "data": [
+                                        {
+                                          "type": "element",
+                                          "data": "HC"
+                                        },
+                                        {
+                                          "type": "element",
+                                          "data": "J2941"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "element",
+                                      "data": 5332.54
+                                    },
+                                    {
+                                      "type": "element",
+                                      "data": "UN"
+                                    },
+                                    {
+                                      "type": "element",
+                                      "data": 84
+                                    },
+                                    {
+                                      "type": "element",
+                                      "data": ""
+                                    },
+                                    {
+                                      "type": "element",
+                                      "data": ""
+                                    },
+                                    {
+                                      "name": "SV107",
+                                      "type": "composite",
+                                      "data": [
+                                        {
+                                          "type": "element",
+                                          "data": 1
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "name": "DTP",
+                                  "type": "segment",
+                                  "data": [
+                                    {
+                                      "type": "element",
+                                      "data": "472"
+                                    },
+                                    {
+                                      "type": "element",
+                                      "data": "RD8"
+                                    },
+                                    {
+                                      "type": "element",
+                                      "data": "20110511-20110511"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "name": "REF",
+                                  "type": "segment",
+                                  "data": [
+                                    {
+                                      "type": "element",
+                                      "data": "6R"
+                                    },
+                                    {
+                                      "type": "element",
+                                      "data": "1099999731"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "name": "NTE",
+                                  "type": "segment",
+                                  "data": [
+                                    {
+                                      "type": "element",
+                                      "data": "ADD"
+                                    },
+                                    {
+                                      "type": "element",
+                                      "data": "GENERIC 12MG CARTRIDGE"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "name": "L0010",
+                                  "type": "loop",
+                                  "data": [
+                                    {
+                                      "name": "LIN",
+                                      "type": "segment",
+                                      "data": [
+                                        {
+                                          "type": "element",
+                                          "data": ""
+                                        },
+                                        {
+                                          "type": "element",
+                                          "data": "N4"
+                                        },
+                                        {
+                                          "type": "element",
+                                          "data": "00013264681"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "name": "CTP",
+                                      "type": "segment",
+                                      "data": [
+                                        {
+                                          "type": "element",
+                                          "data": ""
+                                        },
+                                        {
+                                          "type": "element",
+                                          "data": ""
+                                        },
+                                        {
+                                          "type": "element",
+                                          "data": ""
+                                        },
+                                        {
+                                          "type": "element",
+                                          "data": 7
+                                        },
+                                        {
+                                          "name": "CTP05",
+                                          "type": "composite",
+                                          "data": [
+                                            {
+                                              "type": "element",
+                                              "data": "UN"
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "name": "L0011",
+                                  "type": "loop",
+                                  "data": [
+                                    {
+                                      "name": "NM1",
+                                      "type": "segment",
+                                      "data": [
+                                        {
+                                          "type": "element",
+                                          "data": "DK"
+                                        },
+                                        {
+                                          "type": "element",
+                                          "data": "1"
+                                        },
+                                        {
+                                          "type": "element",
+                                          "data": "PATIENT"
+                                        },
+                                        {
+                                          "type": "element",
+                                          "data": "DEBORAH"
+                                        },
+                                        {
+                                          "type": "element",
+                                          "data": ""
+                                        },
+                                        {
+                                          "type": "element",
+                                          "data": ""
+                                        },
+                                        {
+                                          "type": "element",
+                                          "data": ""
+                                        },
+                                        {
+                                          "type": "element",
+                                          "data": "XX"
+                                        },
+                                        {
+                                          "type": "element",
+                                          "data": "12345679030"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "name": "N3",
+                                      "type": "segment",
+                                      "data": [
+                                        {
+                                          "type": "element",
+                                          "data": "123 MAIN ST"
+                                        },
+                                        {
+                                          "type": "element",
+                                          "data": "APT B"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "name": "N4",
+                                      "type": "segment",
+                                      "data": [
+                                        {
+                                          "type": "element",
+                                          "data": "PITTSBURGH"
+                                        },
+                                        {
+                                          "type": "element",
+                                          "data": "PA"
+                                        },
+                                        {
+                                          "type": "element",
+                                          "data": "152181871"
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "SE",
+              "type": "segment",
+              "data": [
+                {
+                  "type": "element",
+                  "data": 39
+                },
+                {
+                  "type": "element",
+                  "data": "0001"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "GE",
+          "type": "segment",
+          "data": [
+            {
+              "type": "element",
+              "data": 1
+            },
+            {
+              "type": "element",
+              "data": 1377
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "IEA",
+      "type": "segment",
+      "data": [
+        {
+          "type": "element",
+          "data": 1
+        },
+        {
+          "type": "element",
+          "data": 3438
+        }
+      ]
+    }
+  ]
+}
