@@ -29,7 +29,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        java: [8, 11, 16]
+        java: [ 8, 11, 17 ]
     name: Build with JDK ${{matrix.java}}
 
     steps:
@@ -52,11 +52,11 @@ jobs:
         run: mvn -B verify package --file pom.xml
 
       - name: Generate Coveralls File
-        if: matrix.java == '11'
+        if: matrix.java == '17'
         run: mvn -B coveralls:report -Pcoverage -DdryRun=true
 
       - name: Coveralls Analysis
-        if: matrix.java == '11'
+        if: matrix.java == '17'
         uses: MikeEdgar/github-action@raw_coverage_file
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -71,7 +71,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-java@v1
         with:
-          java-version: 11
+          java-version: 17
 
       - name: Cache Maven packages
         uses: actions/cache@v1
@@ -95,7 +95,7 @@ jobs:
 
       - uses: actions/setup-java@v1
         with:
-          java-version: 11
+          java-version: 17
 
       - name: Cache SonarCloud packages
         uses: actions/cache@v1
