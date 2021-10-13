@@ -570,7 +570,7 @@ abstract class SchemaReaderBase implements SchemaReader {
         EDISyntaxRule.Type typeInt = null;
 
         try {
-            typeInt = EDISyntaxRule.Type.valueOf(type.toUpperCase());
+            typeInt = EDISyntaxRule.Type.fromString(type);
         } catch (IllegalArgumentException e) {
             throw schemaException("Invalid syntax 'type': [" + type + ']', reader, e);
         }
@@ -607,7 +607,7 @@ abstract class SchemaReaderBase implements SchemaReader {
     ElementType readSimpleType(XMLStreamReader reader) {
         String name = parseAttribute(reader, "name", String::valueOf);
         String code = parseAttribute(reader, "code", String::valueOf, name);
-        Base base = parseAttribute(reader, "base", val -> Base.valueOf(val.toUpperCase()), Base.STRING);
+        Base base = parseAttribute(reader, "base", val -> Base.fromString(val), Base.STRING);
         int scale = (Base.NUMERIC == base) ? parseAttribute(reader, "scale", Integer::parseInt, 0) : -1;
         int number = parseAttribute(reader, "number", Integer::parseInt, -1);
         long minLength = parseAttribute(reader, "minLength", Long::parseLong, 1L);
@@ -793,7 +793,7 @@ abstract class SchemaReaderBase implements SchemaReader {
 
             final EDIType.Type refType = target.getType();
 
-            if (refType != EDIType.Type.valueOf(impl.getRefTag().toUpperCase())) {
+            if (refType != EDIType.Type.fromString(impl.getRefTag())) {
                 throw schemaException(String.format(REFERR_ILLEGAL, impl.getRefId(), impl.getRefTag(), struct.getId()));
             }
 
