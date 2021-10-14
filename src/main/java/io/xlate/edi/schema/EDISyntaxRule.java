@@ -55,6 +55,15 @@ public interface EDISyntaxRule {
          * EDIFACT: (D7) If first, then none of the others
          */
         FIRSTONLY;
+
+        public static Type fromString(String value) {
+            for (Type entry : values()) {
+                if (entry.name().equalsIgnoreCase(value)) {
+                    return entry;
+                }
+            }
+            throw new IllegalArgumentException("No enum constant for " + Type.class.getName() + "." + value);
+        }
     }
 
     Type getType();

@@ -30,6 +30,15 @@ public interface EDISimpleType extends EDIType {
         TIME,
         BINARY,
         IDENTIFIER;
+
+        public static Base fromString(String value) {
+            for (Base entry : values()) {
+                if (entry.name().equalsIgnoreCase(value)) {
+                    return entry;
+                }
+            }
+            throw new IllegalArgumentException("No enum constant for " + Base.class.getName() + "." + value);
+        }
     }
 
     Base getBase();

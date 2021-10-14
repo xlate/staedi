@@ -635,4 +635,20 @@ class StaEDISchemaFactoryTest {
         // GS06 = N0
         assertEquals(Integer.valueOf(0), ((EDISimpleType) ((EDIComplexType) schema.getType("GS")).getReferences().get(5).getReferencedType()).getScale());
     }
+
+    @Test
+    void testInvalidElementTypeBase() throws EDISchemaException {
+        SchemaFactory factory = SchemaFactory.newFactory();
+        InputStream stream = new ByteArrayInputStream((""
+                + "<schema xmlns='" + StaEDISchemaFactory.XMLNS_V4 + "'>"
+                + "  <include schemaLocation='file:./src/test/resources/x12/EDISchema997.xml' />"
+                + "  <elementType name=\"DUMMY\" base=\"datetime\" maxLength=\"20\" />"
+                + "</schema>").getBytes());
+
+        EDISchemaException thrown = assertThrows(EDISchemaException.class, () -> factory.createSchema(stream));
+        assertEquals("Invalid base", thrown.getOriginalMessage());
+        assertTrue(thrown.getCause() instanceof StaEDISchemaReadException);
+        assertTrue(thrown.getCause().getCause() instanceof IllegalArgumentException);
+    }
+
 }
