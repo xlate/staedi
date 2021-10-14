@@ -29,7 +29,7 @@ class Reference implements EDIReference {
     private static final String TOSTRING_FORMAT = "refId: %s, minOccurs: %d, maxOccurs: %d, type: { %s }";
 
     private String refId;
-    private String refTag;
+    private EDIType.Type refTag;
     private EDIType referencedType;
 
     final int minOccurs;
@@ -58,7 +58,7 @@ class Reference implements EDIReference {
         }
     }
 
-    Reference(String refId, String refTag, int minOccurs, int maxOccurs, List<Version> versions, String title, String description) {
+    Reference(String refId, EDIType.Type refTag, int minOccurs, int maxOccurs, List<Version> versions, String title, String description) {
         this.refId = refId;
         this.refTag = refTag;
         this.minOccurs = minOccurs;
@@ -68,7 +68,7 @@ class Reference implements EDIReference {
         this.description = description;
     }
 
-    Reference(String refId, String refTag, int minOccurs, int maxOccurs, String title, String description) {
+    Reference(String refId, EDIType.Type refTag, int minOccurs, int maxOccurs, String title, String description) {
         this(refId, refTag, minOccurs, maxOccurs, Collections.emptyList(), title, description);
     }
 
@@ -100,7 +100,7 @@ class Reference implements EDIReference {
         return refId;
     }
 
-    String getRefTag() {
+    EDIType.Type getRefTag() {
         return refTag;
     }
 

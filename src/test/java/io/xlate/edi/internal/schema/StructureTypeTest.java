@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 
 import io.xlate.edi.schema.EDIReference;
 import io.xlate.edi.schema.EDISyntaxRule;
+import io.xlate.edi.schema.EDIType;
 import io.xlate.edi.schema.EDIType.Type;
 import io.xlate.edi.stream.EDIInputFactory;
 import io.xlate.edi.stream.EDIStreamException;
@@ -24,7 +25,7 @@ class StructureTypeTest {
 
     @Test
     void testStructureConstruction() {
-        EDIReference ref = new Reference("E1", "element", 1, 1, null, null);
+        EDIReference ref = new Reference("E1", EDIType.Type.ELEMENT, 1, 1, null, null);
         EDISyntaxRule rule = new SyntaxRestriction(EDISyntaxRule.Type.EXCLUSION, Arrays.asList(1, 8));
         StructureType s = new StructureType("SEG", Type.SEGMENT, "SEG", Arrays.asList(ref), Arrays.asList(rule), null, null);
         assertEquals("id: SEG, type: SEGMENT, code: SEG, references: [{refId: E1, minOccurs: 1, maxOccurs: 1, type: { null }}], syntaxRestrictions: [{type: EXCLUSION, positions: [1, 8]}]",

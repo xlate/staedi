@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -50,11 +51,11 @@ abstract class SchemaReaderBase implements SchemaReader {
     static final String ATTR_LEVEL_ID_POSITION = "levelIdPosition";
     static final String ATTR_PARENT_ID_POSITION = "parentIdPosition";
 
-    static final EDIReference ANY_ELEMENT_REF_OPT = new Reference(StaEDISchema.ANY_ELEMENT_ID, LOCALNAME_ELEMENT, 0, 1, null, null);
-    static final EDIReference ANY_COMPOSITE_REF_OPT = new Reference(StaEDISchema.ANY_COMPOSITE_ID, LOCALNAME_COMPOSITE, 0, 99, null, null);
+    static final EDIReference ANY_ELEMENT_REF_OPT = new Reference(StaEDISchema.ANY_ELEMENT_ID, EDIType.Type.ELEMENT, 0, 1, null, null);
+    static final EDIReference ANY_COMPOSITE_REF_OPT = new Reference(StaEDISchema.ANY_COMPOSITE_ID, EDIType.Type.COMPOSITE, 0, 99, null, null);
 
-    static final EDIReference ANY_ELEMENT_REF_REQ = new Reference(StaEDISchema.ANY_ELEMENT_ID, LOCALNAME_ELEMENT, 1, 1, null, null);
-    static final EDIReference ANY_COMPOSITE_REF_REQ = new Reference(StaEDISchema.ANY_COMPOSITE_ID, LOCALNAME_COMPOSITE, 1, 99, null, null);
+    static final EDIReference ANY_ELEMENT_REF_REQ = new Reference(StaEDISchema.ANY_ELEMENT_ID, EDIType.Type.ELEMENT, 1, 1, null, null);
+    static final EDIReference ANY_COMPOSITE_REF_REQ = new Reference(StaEDISchema.ANY_COMPOSITE_ID, EDIType.Type.COMPOSITE, 1, 99, null, null);
 
     static final EDISimpleType ANY_ELEMENT = new ElementType(StaEDISchema.ANY_ELEMENT_ID,
                                                              Base.STRING,
@@ -104,7 +105,7 @@ abstract class SchemaReaderBase implements SchemaReader {
 
     final Map<QName, EDIType.Type> complex;
     final Map<QName, EDIType.Type> typeDefinitions;
-    final Set<QName> references;
+    final Map<QName, EDIType.Type> references;
 
     protected XMLStreamReader reader;
     protected Map<String, Object> properties;
@@ -147,10 +148,10 @@ abstract class SchemaReaderBase implements SchemaReader {
         typeDefinitions.put(qnCompositeType, EDIType.Type.COMPOSITE);
         typeDefinitions.put(qnElementType, EDIType.Type.ELEMENT);
 
-        references = new HashSet<>(4);
-        references.add(qnSegment);
-        references.add(qnComposite);
-        references.add(qnElement);
+        references = new HashMap<>(4);
+        references.put(qnSegment, EDIType.Type.SEGMENT);
+        references.put(qnComposite, EDIType.Type.COMPOSITE);
+        references.put(qnElement, EDIType.Type.ELEMENT);
 
         this.reader = reader;
         this.properties = properties;
@@ -327,7 +328,7 @@ abstract class SchemaReaderBase implements SchemaReader {
 
         types.put(struct.getId(), struct);
 
-        Reference structRef = new Reference(struct.getId(), element.getLocalPart(), minOccurs, maxOccurs, title, descr);
+        Reference structRef = new Reference(struct.getId(), elementType, minOccurs, maxOccurs, title, descr);
         structRef.setReferencedType(struct);
 
         return structRef;
@@ -335,7 +336,7 @@ abstract class SchemaReaderBase implements SchemaReader {
 
     Reference createControlReference(XMLStreamReader reader, String attributeName) {
         final String refId = parseAttribute(reader, attributeName, String::valueOf);
-        return new Reference(refId, "segment", 1, 1, null, null);
+        return new Reference(refId, EDIType.Type.SEGMENT, 1, 1, null, null);
     }
 
     void readTransaction(XMLStreamReader reader, Map<String, EDIType> types) {
@@ -497,19 +498,22 @@ abstract class SchemaReaderBase implements SchemaReader {
     Reference readReference(XMLStreamReader reader, Map<String, EDIType> types) {
         QName element = reader.getName();
         String refId = null;
+        EDIType.Type refTag;
 
         if (qnAny.equals(element)) {
             refId = "ANY";
-        } else if (references.contains(element)) {
+            refTag = null;
+        } else if (references.containsKey(element)) {
             refId = readReferencedId(reader);
+            refTag = references.get(element);
             Objects.requireNonNull(refId);
         } else if (qnLoop.equals(element)) {
             refId = parseAttribute(reader, "code", String::valueOf);
+            refTag = EDIType.Type.LOOP;
         } else {
             throw unexpectedElement(element, reader);
         }
 
-        String refTag = element.getLocalPart();
         int minOccurs = parseAttribute(reader, ATTR_MIN_OCCURS, Integer::parseInt, 0);
         int maxOccurs = parseAttribute(reader, ATTR_MAX_OCCURS, Integer::parseInt, 1);
         String title = parseAttribute(reader, ATTR_TITLE, String::valueOf, null);
@@ -607,7 +611,7 @@ abstract class SchemaReaderBase implements SchemaReader {
     ElementType readSimpleType(XMLStreamReader reader) {
         String name = parseAttribute(reader, "name", String::valueOf);
         String code = parseAttribute(reader, "code", String::valueOf, name);
-        Base base = parseAttribute(reader, "base", val -> Base.fromString(val), Base.STRING);
+        Base base = parseAttribute(reader, "base", Base::fromString, Base.STRING);
         int scale = (Base.NUMERIC == base) ? parseAttribute(reader, "scale", Integer::parseInt, 0) : -1;
         int number = parseAttribute(reader, "number", Integer::parseInt, -1);
         long minLength = parseAttribute(reader, "minLength", Long::parseLong, 1L);
@@ -788,13 +792,13 @@ abstract class SchemaReaderBase implements SchemaReader {
             EDIType target = types.get(impl.getRefId());
 
             if (target == null) {
-                throw schemaException(String.format(REFERR_UNDECLARED, struct.getId(), impl.getRefTag(), impl.getRefId()));
+                throw schemaException(String.format(REFERR_UNDECLARED, struct.getId(), impl.getRefTag().name().toLowerCase(Locale.ROOT), impl.getRefId()));
             }
 
             final EDIType.Type refType = target.getType();
 
-            if (refType != EDIType.Type.fromString(impl.getRefTag())) {
-                throw schemaException(String.format(REFERR_ILLEGAL, impl.getRefId(), impl.getRefTag(), struct.getId()));
+            if (refType != impl.getRefTag()) {
+                throw schemaException(String.format(REFERR_ILLEGAL, impl.getRefId(), impl.getRefTag().name().toLowerCase(Locale.ROOT), struct.getId()));
             }
 
             impl.setReferencedType(target);

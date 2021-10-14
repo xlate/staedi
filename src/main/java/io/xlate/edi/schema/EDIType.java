@@ -25,15 +25,6 @@ public interface EDIType {
         SEGMENT,
         COMPOSITE,
         ELEMENT;
-
-        public static Type fromString(String value) {
-            for (Type entry : values()) {
-                if (entry.name().equalsIgnoreCase(value)) {
-                    return entry;
-                }
-            }
-            throw new IllegalArgumentException("No enum constant for " + Type.class.getName() + "." + value);
-        }
     }
 
     String getId();
