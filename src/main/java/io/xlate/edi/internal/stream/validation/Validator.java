@@ -120,10 +120,10 @@ public class Validator {
         }
 
         void nagivateUp(int limit) {
-            standard = UsageNode.getParent(standard);
+            standard = standard.getParent();
 
             if (impl != null && impl.getDepth() > limit) {
-                impl = UsageNode.getParent(impl);
+                impl = impl.getParent().getFirstSiblingSameType();
             }
         }
 
@@ -439,7 +439,7 @@ public class Validator {
                  */
                 checkMinimumUsage(cursor.standard);
 
-                UsageNode nextImpl = checkMinimumImplUsage(cursor.impl, cursor.standard);
+                UsageNode nextImpl = getNextImplementationNode(cursor.impl, cursor.standard.getReferencedType());
 
                 if (cursor.hasNextSibling()) {
                     // Advance to the next segment in the loop
@@ -459,16 +459,6 @@ public class Validator {
         }
 
         handleMissingMandatory(handler);
-    }
-
-    UsageNode checkMinimumImplUsage(UsageNode nextImpl, UsageNode current) {
-        while (nextImpl != null && nextImpl.getReferencedType().equals(current.getReferencedType())) {
-            // Advance past multiple implementations of the 'current' standard node
-            checkMinimumUsage(nextImpl);
-            nextImpl = nextImpl.getNextSibling();
-        }
-
-        return nextImpl;
     }
 
     boolean handleNode(CharSequence tag, UsageNode current, UsageNode currentImpl, int startDepth, ValidationEventHandler handler) {
@@ -587,6 +577,17 @@ public class Validator {
                 useErrors.add(new UsageError(segmentNode.getLink(), IMPLEMENTATION_LOOP_OCCURS_UNDER_MINIMUM_TIMES, node.getDepth()));
             }
         }
+    }
+
+    UsageNode getNextImplementationNode(UsageNode implNode, EDIType type) {
+        while (implNode != null && implNode.getReferencedType().equals(type)) {
+            // Advance past multiple implementations of the 'current' standard node
+            checkMinimumUsage(implNode);
+            implNode = implNode.getNextSibling();
+        }
+
+        // `implNode` will be an implementation of the type following `type`
+        return implNode;
     }
 
     boolean handleLoop(CharSequence tag, UsageNode current, UsageNode currentImpl, int startDepth, ValidationEventHandler handler) {
@@ -781,7 +782,6 @@ public class Validator {
     }
 
     void handleImplementationSelected(UsageNode candidate, UsageNode implSeg, ValidationEventHandler handler) {
-        checkMinimumImplUsage(implNode, candidate, handler);
         implSegmentCandidates.clear();
         implNode = implSeg;
         implSegmentSelected = true;
@@ -818,14 +818,6 @@ public class Validator {
                 handler.segmentError(implSeg.getId(), implSeg.getLink(), SEGMENT_EXCEEDS_MAXIMUM_USE);
             }
         }
-    }
-
-    void checkMinimumImplUsage(UsageNode sibling, UsageNode selected, ValidationEventHandler handler) {
-        while (sibling != null && sibling != selected) {
-            checkMinimumUsage(sibling);
-            sibling = sibling.getNextSibling();
-        }
-        handleMissingMandatory(handler);
     }
 
     /**
