@@ -87,4 +87,30 @@ public class StaEDITestUtil {
         String versionString = System.getProperty("java.version");
         return versionString.split("[\\._]");
     }
+
+    public static String toString(EDIStreamReader reader) {
+        StringBuilder buffer = new StringBuilder(reader.getClass().getName());
+        buffer.append('(');
+
+        EDIStreamEvent event = reader.getEventType();
+        buffer.append("event=").append(event);
+
+        switch (event) {
+        case SEGMENT_ERROR:
+        case ELEMENT_DATA_ERROR:
+        case ELEMENT_OCCURRENCE_ERROR:
+            buffer.append(", ").append("error=").append(reader.getErrorType());
+            buffer.append(", ").append("referenceCode=").append(reader.getReferenceCode());
+            break;
+        case ELEMENT_DATA:
+            buffer.append(", ").append("text=").append(reader.getText());
+            break;
+        default:
+            break;
+        }
+
+        buffer.append(", ").append("location=").append(reader.getLocation());
+
+        return buffer.append(')').toString();
+    }
 }

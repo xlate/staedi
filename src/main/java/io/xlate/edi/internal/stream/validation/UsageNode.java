@@ -18,6 +18,7 @@ package io.xlate.edi.internal.stream.validation;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import io.xlate.edi.internal.stream.tokenization.Dialect;
@@ -43,10 +44,7 @@ class UsageNode {
     private int usageCount;
 
     UsageNode(UsageNode parent, int depth, EDIReference link, int siblingIndex) {
-        if (link == null) {
-            throw new NullPointerException();
-        }
-
+        Objects.requireNonNull(link, "link");
         this.parent = parent;
         this.depth = depth;
         this.link = link;
@@ -67,12 +65,19 @@ class UsageNode {
         return node == null || node.hasMinimumUsage(version);
     }
 
-    public static UsageNode getParent(UsageNode node) {
-        return node != null ? node.getParent() : null;
-    }
-
     public static UsageNode getFirstChild(UsageNode node) {
         return node != null ? node.getFirstChild() : null;
+    }
+
+    public UsageNode getFirstSiblingSameType() {
+        EDIType type = getReferencedType();
+        UsageNode sibling = getFirstSibling();
+
+        while (!type.equals(sibling.getReferencedType())) {
+            sibling = sibling.getNextSibling();
+        }
+
+        return sibling;
     }
 
     public static void resetChildren(UsageNode... nodes) {
@@ -228,14 +233,17 @@ class UsageNode {
         return getChild(0);
     }
 
-    UsageNode getChildById(CharSequence id) {
-        return children.stream()
-                       .filter(c -> c != null && c.getId().contentEquals(id))
-                       .findFirst()
-                       .orElse(null);
+    private UsageNode getChildById(CharSequence id) {
+        for (UsageNode child : children) {
+            if (child.getId().contentEquals(id)) {
+                return child;
+            }
+        }
+        return null;
     }
 
     UsageNode getSiblingById(CharSequence id) {
         return parent != null ? parent.getChildById(id) : null;
     }
+
 }

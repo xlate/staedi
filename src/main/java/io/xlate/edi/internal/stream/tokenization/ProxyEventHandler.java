@@ -564,72 +564,14 @@ public class ProxyEventHandler implements EventHandler {
                               Location location) {
 
         StreamEvent target = getPooledEvent();
-        EDIStreamEvent associatedEvent = eventQueue.isEmpty() ? null : getAssociatedEvent(error);
-
-        if (eventExists(associatedEvent)) {
-            /*
-             * Ensure segment errors occur before other event types
-             * when the array has other events already present.
-             */
-            int offset = eventQueue.size();
-            boolean complete = false;
-
-            while (!complete) {
-                StreamEvent enqueuedEvent = eventQueue.get(offset - 1);
-
-                if (enqueuedEvent.type == associatedEvent) {
-                    complete = true;
-                } else {
-                    if (eventQueue.size() == offset) {
-                        eventQueue.add(offset, enqueuedEvent);
-                    } else {
-                        eventQueue.set(offset, enqueuedEvent);
-                    }
-                    offset--;
-                }
-            }
-
-            eventQueue.set(offset, target);
-        } else {
-            eventQueue.add(target);
-        }
 
         target.type = event;
         target.errorType = error;
         target.setData(data);
         target.setTypeReference(typeReference);
         target.setLocation(location);
+
+        eventQueue.add(target);
     }
 
-    private boolean eventExists(EDIStreamEvent associatedEvent) {
-        int offset = eventQueue.size();
-
-        while (associatedEvent != null && offset > 0) {
-            if (eventQueue.get(offset - 1).type == associatedEvent) {
-                return true;
-            }
-            offset--;
-        }
-
-        return false;
-    }
-
-    private static EDIStreamEvent getAssociatedEvent(EDIStreamValidationError error) {
-        final EDIStreamEvent event;
-
-        switch (error) {
-        case IMPLEMENTATION_LOOP_OCCURS_UNDER_MINIMUM_TIMES:
-            event = EDIStreamEvent.END_LOOP;
-            break;
-        case MANDATORY_SEGMENT_MISSING:
-        case IMPLEMENTATION_SEGMENT_BELOW_MINIMUM_USE:
-            event = null;
-            break;
-        default:
-            event = null;
-            break;
-        }
-
-        return event;
-    }
 }
