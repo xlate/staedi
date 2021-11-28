@@ -47,6 +47,8 @@ import io.xlate.edi.stream.Location;
 public class StaEDIStreamReader implements EDIStreamReader, Configurable {
 
     private static final Logger LOGGER = Logger.getLogger(StaEDIStreamReader.class.getName());
+    private static final CharBuffer GROUP_TEXT = CharBuffer.wrap(ProxyEventHandler.LOOP_CODE_GROUP);
+    private static final CharBuffer TRANSACTION_TEXT = CharBuffer.wrap(ProxyEventHandler.LOOP_CODE_TRANSACTION);
 
     private Schema controlSchema;
     private final Map<String, Object> properties;
@@ -57,6 +59,7 @@ public class StaEDIStreamReader implements EDIStreamReader, Configurable {
 
     private boolean complete = false;
     private boolean closed = false;
+    private boolean deprecationLogged = false;
 
     public StaEDIStreamReader(
             InputStream stream,
@@ -102,9 +105,38 @@ public class StaEDIStreamReader implements EDIStreamReader, Configurable {
         throw new IllegalStateException(message);
     }
 
+    private void logDeprecation(EDIStreamEvent event) {
+        if (!deprecationLogged) {
+            deprecationLogged = true;
+
+            LOGGER.warning(() -> "DEPRECATION - Retrieving text for event " + event + " will not be supported in a future release. "
+                    + "Use `getReferenceCode` or `getSchemaTypeReference` to retrieve additional information for non-textual event types.");
+        }
+    }
+
     private CharBuffer getBuffer() {
         checkTextState();
-        return proxy.getCharacters();
+        EDIStreamEvent event = getEventType();
+
+        switch (event) {
+        case START_GROUP:
+        case END_GROUP:
+            logDeprecation(event);
+            return GROUP_TEXT;
+
+        case START_TRANSACTION:
+        case END_TRANSACTION:
+            logDeprecation(event);
+            return TRANSACTION_TEXT;
+
+        case START_LOOP:
+        case END_LOOP:
+            logDeprecation(event);
+            return CharBuffer.wrap(proxy.getSchemaTypeReference().getReferencedType().getCode());
+
+        default:
+            return proxy.getCharacters();
+        }
     }
 
     @Override
@@ -187,6 +219,7 @@ public class StaEDIStreamReader implements EDIStreamReader, Configurable {
             try {
                 this.setBinaryDataLength(Long.parseLong(getText()));
             } catch (NumberFormatException e) {
+                lexer.invalidate();
                 throw new EDIStreamException("Failed to parse binary element length", location, e);
             }
         }
@@ -339,28 +372,36 @@ public class StaEDIStreamReader implements EDIStreamReader, Configurable {
     }
 
     private void checkTextState() {
+        if (!hasText()) {
+            throw new IllegalStateException("not a valid text state [" + getEventType() + ']');
+        }
+    }
+
+    @Override
+    public boolean hasText() {
         EDIStreamEvent event = getEventType();
 
         if (event == null) {
-            throw new IllegalStateException("not a valid text state [" + event + ']');
+            return false;
         }
 
         switch (event) {
-        case START_GROUP:
-        case START_TRANSACTION:
-        case START_LOOP:
         case START_SEGMENT:
-        case END_GROUP:
-        case END_TRANSACTION:
-        case END_LOOP:
         case END_SEGMENT:
         case ELEMENT_DATA:
         case ELEMENT_DATA_ERROR:
         case ELEMENT_OCCURRENCE_ERROR:
         case SEGMENT_ERROR:
-            break;
+            return true;
+        case START_GROUP:
+        case START_TRANSACTION:
+        case START_LOOP:
+        case END_GROUP:
+        case END_TRANSACTION:
+        case END_LOOP:
+            return enableLoopText();
         default:
-            throw new IllegalStateException("not a valid text state [" + event + ']');
+            return false;
         }
     }
 
@@ -477,4 +518,10 @@ public class StaEDIStreamReader implements EDIStreamReader, Configurable {
     boolean nestHierarchicalLoops() {
         return getProperty(EDIInputFactory.EDI_NEST_HIERARCHICAL_LOOPS, Boolean::parseBoolean, true);
     }
+
+    @SuppressWarnings("deprecation")
+    boolean enableLoopText() {
+        return getProperty(EDIInputFactory.EDI_ENABLE_LOOP_TEXT, Boolean::parseBoolean, true);
+    }
+
 }

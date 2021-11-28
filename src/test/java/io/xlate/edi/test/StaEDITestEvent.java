@@ -41,7 +41,7 @@ public class StaEDITestEvent {
 
         return new StaEDITestEvent(reader.getEventType(),
                                    error ? reader.getErrorType() : null,
-                                   reader.getText(),
+                                   reader.hasText() ? reader.getText() : null,
                                    reader.getReferenceCode(),
                                    includeLocation ? reader.getLocation().copy() : null);
     }

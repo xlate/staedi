@@ -211,4 +211,9 @@ class StaEDIFilteredStreamReader implements EDIStreamReader {
     public EDIReference getSchemaTypeReference() {
         return delegate.getSchemaTypeReference();
     }
+
+    @Override
+    public boolean hasText() {
+        return delegate.hasText();
+    }
 }

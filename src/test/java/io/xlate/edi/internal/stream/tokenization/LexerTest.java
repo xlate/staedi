@@ -16,6 +16,7 @@
 package io.xlate.edi.internal.stream.tokenization;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -391,5 +392,22 @@ class LexerTest {
         }
         MalformedInputException thrown = assertThrows(MalformedInputException.class, lexer::parse);
         assertEquals("Input length = 1", thrown.getMessage());
+    }
+
+    @Test
+    void testPreviousStateRetainedWhenInvalidateInvoked() {
+        InputStream stream = new ByteArrayInputStream(new byte[0]);
+        TestLexerEventHandler eventHandler = new TestLexerEventHandler();
+        final StaEDIStreamLocation location = new StaEDIStreamLocation();
+        final Lexer lexer = new Lexer(stream, StandardCharsets.US_ASCII, eventHandler, location, false);
+
+        assertEquals(State.INITIAL, lexer.currentState());
+        assertNull(lexer.previousState());
+
+        for (int i = 0; i < 2; i++) {
+            lexer.invalidate();
+            assertEquals(State.INVALID, lexer.currentState());
+            assertEquals(State.INITIAL, lexer.previousState());
+        }
     }
 }

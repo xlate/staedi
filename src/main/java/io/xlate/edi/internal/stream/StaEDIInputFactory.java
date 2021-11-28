@@ -35,11 +35,13 @@ public class StaEDIInputFactory extends EDIInputFactory {
 
     private EDIInputErrorReporter reporter;
 
+    @SuppressWarnings("deprecation")
     public StaEDIInputFactory() {
         supportedProperties.add(EDI_VALIDATE_CONTROL_STRUCTURE);
         supportedProperties.add(EDI_VALIDATE_CONTROL_CODE_VALUES);
         supportedProperties.add(EDI_IGNORE_EXTRANEOUS_CHARACTERS);
         supportedProperties.add(EDI_NEST_HIERARCHICAL_LOOPS);
+        supportedProperties.add(EDI_ENABLE_LOOP_TEXT);
 
         supportedProperties.add(XML_DECLARE_TRANSACTION_XMLNS);
         supportedProperties.add(XML_WRAP_TRANSACTION_CONTENTS);
