@@ -425,20 +425,13 @@ class SegmentValidationTest {
         Schema schema = schemaFactory.createSchema(schemaLocation);
 
         EDIStreamReader unfiltered = factory.createEDIStreamReader(stream, schema);
-        EDIStreamReader reader = factory.createFilteredReader(unfiltered, new EDIStreamFilter() {
-            @Override
-            public boolean accept(EDIStreamReader reader) {
-                switch (reader.getEventType()) {
-                case START_TRANSACTION:
-                case SEGMENT_ERROR:
-                case START_LOOP:
-                case END_LOOP:
-                    return true;
-                default:
-                    return false;
-                }
-            }
-        });
+        EDIStreamReader reader = StaEDITestUtil.filterEvents(
+            factory,
+            unfiltered,
+            EDIStreamEvent.START_TRANSACTION,
+            EDIStreamEvent.SEGMENT_ERROR,
+            EDIStreamEvent.START_LOOP,
+            EDIStreamEvent.END_LOOP);
 
         assertEvent(reader, EDIStreamEvent.START_TRANSACTION);
         reader.setTransactionSchema(schemaFactory.createSchema(getClass().getResource("/x12/EDISchemaSegmentValidationImpl.xml")));
@@ -483,6 +476,70 @@ class SegmentValidationTest {
     }
 
     @Test
+    void testImplementationValidAlternateSequence() throws EDISchemaException, EDIStreamException {
+        EDIInputFactory factory = EDIInputFactory.newFactory();
+        InputStream stream = new ByteArrayInputStream((""
+                + "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~"
+                + "S01*X~"
+                + "S0A*X~"
+                + "S11*A~"
+                + "S13*X~"
+                + "S11*C~"
+                + "S11*B~"
+                + "S12*X~"
+                + "S12*X~"
+                + "S11*D~"
+                + "S11*C~"
+                + "S09*X~"
+                + "IEA*1*508121953~").getBytes());
+
+        SchemaFactory schemaFactory = SchemaFactory.newFactory();
+        URL schemaLocation = getClass().getResource("/x12/EDISchemaSegmentValidation.xml");
+        Schema schema = schemaFactory.createSchema(schemaLocation);
+
+        EDIStreamReader unfiltered = factory.createEDIStreamReader(stream, schema);
+        EDIStreamReader reader = StaEDITestUtil.filterEvents(
+            factory,
+            unfiltered,
+            EDIStreamEvent.START_TRANSACTION,
+            EDIStreamEvent.SEGMENT_ERROR,
+            EDIStreamEvent.START_LOOP,
+            EDIStreamEvent.END_LOOP);
+
+        assertEvent(reader, EDIStreamEvent.START_TRANSACTION);
+        reader.setTransactionSchema(schemaFactory.createSchema(getClass().getResource("/x12/EDISchemaSegmentValidationImpl.xml")));
+
+        List<StaEDITestEvent> expected = Arrays.asList(
+            StaEDITestEvent.forEvent(EDIStreamEvent.START_TRANSACTION, "TRANSACTION", "TRANSACTION"),
+            // Loop A
+            StaEDITestEvent.forEvent(EDIStreamEvent.START_LOOP, "L0000", "0000A"),
+            StaEDITestEvent.forEvent(EDIStreamEvent.END_LOOP, "L0000", "0000A"),
+            // Loop C - Occurrence 1
+            StaEDITestEvent.forEvent(EDIStreamEvent.START_LOOP, "L0000", "0000C"),
+            StaEDITestEvent.forEvent(EDIStreamEvent.END_LOOP, "L0000", "0000C"),
+            // Loop B
+            StaEDITestEvent.forEvent(EDIStreamEvent.START_LOOP, "L0000", "0000B"),
+            StaEDITestEvent.forEvent(EDIStreamEvent.END_LOOP, "L0000", "0000B"),
+            // Loop D
+            StaEDITestEvent.forEvent(EDIStreamEvent.START_LOOP, "L0000", "0000D"),
+            StaEDITestEvent.forEvent(EDIStreamEvent.END_LOOP, "L0000", "0000D"),
+            // Loop C - Occurrence 2
+            StaEDITestEvent.forEvent(EDIStreamEvent.START_LOOP, "L0000", "0000C"),
+            StaEDITestEvent.forEvent(EDIStreamEvent.END_LOOP, "L0000", "0000C"),
+
+            StaEDITestEvent.forError(EDIStreamValidationError.MANDATORY_SEGMENT_MISSING, "S20", "S20"));
+
+        List<StaEDITestEvent> events = new ArrayList<>();
+        events.add(StaEDITestEvent.from(reader, false));
+
+        while (reader.hasNext()) {
+            events.add(StaEDITestEvent.from(reader, false));
+        }
+
+        assertEquals(expected, events);
+    }
+
+    @Test
     void testImplementationValidSequenceAllMissing() throws EDISchemaException, EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = new ByteArrayInputStream((""
@@ -496,20 +553,13 @@ class SegmentValidationTest {
         Schema schema = schemaFactory.createSchema(schemaLocation);
 
         EDIStreamReader reader = factory.createEDIStreamReader(stream, schema);
-        reader = factory.createFilteredReader(reader, new EDIStreamFilter() {
-            @Override
-            public boolean accept(EDIStreamReader reader) {
-                switch (reader.getEventType()) {
-                case START_TRANSACTION:
-                case SEGMENT_ERROR:
-                case START_LOOP:
-                case END_LOOP:
-                    return true;
-                default:
-                    return false;
-                }
-            }
-        });
+        reader = StaEDITestUtil.filterEvents(
+            factory,
+            reader,
+            EDIStreamEvent.START_TRANSACTION,
+            EDIStreamEvent.SEGMENT_ERROR,
+            EDIStreamEvent.START_LOOP,
+            EDIStreamEvent.END_LOOP);
 
         assertEquals(EDIStreamEvent.START_TRANSACTION, reader.next(), "Expecting start of transaction");
         reader.setTransactionSchema(schemaFactory.createSchema(getClass().getResource("/x12/EDISchemaSegmentValidationImpl.xml")));
@@ -541,6 +591,7 @@ class SegmentValidationTest {
     @Test
     void testImplementationValidSequenceWithCompositeDiscr() throws EDISchemaException, EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
+        SchemaFactory schemaFactory = SchemaFactory.newFactory();
         InputStream stream = new ByteArrayInputStream((""
                 + "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~"
                 + "S01*X~"
@@ -555,64 +606,49 @@ class SegmentValidationTest {
                 + "S31*B~"
                 + "S09*X~IEA*1*508121953~").getBytes());
 
-        SchemaFactory schemaFactory = SchemaFactory.newFactory();
         URL schemaLocation = getClass().getResource("/x12/EDISchemaSegmentValidation.xml");
         Schema schema = schemaFactory.createSchema(schemaLocation);
 
         EDIStreamReader reader = factory.createEDIStreamReader(stream, schema);
-        reader = factory.createFilteredReader(reader, new EDIStreamFilter() {
-            @Override
-            public boolean accept(EDIStreamReader reader) {
-                switch (reader.getEventType()) {
-                case START_TRANSACTION:
-                case SEGMENT_ERROR:
-                case START_LOOP:
-                case END_LOOP:
-                    return true;
-                default:
-                    return false;
-                }
-            }
-        });
+        reader = StaEDITestUtil.filterEvents(
+            factory,
+            reader,
+            EDIStreamEvent.START_TRANSACTION,
+            EDIStreamEvent.SEGMENT_ERROR,
+            EDIStreamEvent.START_LOOP,
+            EDIStreamEvent.END_LOOP);
 
-        assertEquals(EDIStreamEvent.START_TRANSACTION, reader.next(), "Expecting start of transaction");
+        assertEvent(reader, EDIStreamEvent.START_TRANSACTION);
         reader.setTransactionSchema(schemaFactory.createSchema(getClass().getResource("/x12/EDISchemaSegmentValidationImpl2.xml")));
 
-        // Loop A
-        assertEquals(EDIStreamEvent.START_LOOP, reader.next());
-        assertEquals("0000A", reader.getReferenceCode());
+        List<StaEDITestEvent> expected = Arrays.asList(
+            StaEDITestEvent.forEvent(EDIStreamEvent.START_TRANSACTION, "TRANSACTION", "TRANSACTION"),
+            // Loop A
+            StaEDITestEvent.forEvent(EDIStreamEvent.START_LOOP, "L0000", "0000A"),
+            // Loop AXX
+            StaEDITestEvent.forEvent(EDIStreamEvent.START_LOOP, "L0002", "0002AXX"),
+            StaEDITestEvent.forEvent(EDIStreamEvent.END_LOOP, "L0002", "0002AXX"),
+            // Loop AYY
+            StaEDITestEvent.forEvent(EDIStreamEvent.START_LOOP, "L0002", "0002AYY"),
+            StaEDITestEvent.forError(EDIStreamValidationError.SEGMENT_EXCEEDS_MAXIMUM_USE, "S31", "S31"),
+            StaEDITestEvent.forError(EDIStreamValidationError.IMPLEMENTATION_SEGMENT_BELOW_MINIMUM_USE, "S31", "S31B"),
+            StaEDITestEvent.forEvent(EDIStreamEvent.END_LOOP, "L0002", "0002AYY"),
+            StaEDITestEvent.forEvent(EDIStreamEvent.END_LOOP, "L0000", "0000A"));
 
-        // Loop AXX
-        assertEquals(EDIStreamEvent.START_LOOP, reader.next());
-        assertEquals("0002AXX", reader.getReferenceCode());
-        assertEquals(EDIStreamEvent.END_LOOP, reader.next());
-        assertEquals("0002AXX", reader.getReferenceCode());
+        List<StaEDITestEvent> events = new ArrayList<>();
+        events.add(StaEDITestEvent.from(reader, false));
 
-        // Loop AYY
-        assertEquals(EDIStreamEvent.START_LOOP, reader.next());
-        assertEquals("0002AYY", reader.getReferenceCode());
+        while (reader.hasNext()) {
+            events.add(StaEDITestEvent.from(reader, false));
+        }
 
-        assertEquals(EDIStreamEvent.SEGMENT_ERROR, reader.next());
-        assertEquals(EDIStreamValidationError.SEGMENT_EXCEEDS_MAXIMUM_USE, reader.getErrorType());
-        assertEquals("S31", reader.getReferenceCode());
-
-        assertEquals(EDIStreamEvent.SEGMENT_ERROR, reader.next());
-        assertEquals(EDIStreamValidationError.IMPLEMENTATION_SEGMENT_BELOW_MINIMUM_USE, reader.getErrorType());
-        assertEquals("S31", reader.getText());
-        assertEquals("S31B", reader.getReferenceCode());
-
-        assertEquals(EDIStreamEvent.END_LOOP, reader.next());
-        assertEquals("0002AYY", reader.getReferenceCode());
-
-        assertEquals(EDIStreamEvent.END_LOOP, reader.next());
-        assertEquals("0000A", reader.getReferenceCode());
-
-        assertTrue(!reader.hasNext(), "Unexpected segment errors exist");
+        assertEquals(expected, events);
     }
 
     @Test
     void testImplementation_Only_BHT_HL_Valid() throws EDISchemaException, EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
+        SchemaFactory schemaFactory = SchemaFactory.newFactory();
         InputStream stream = getClass().getResourceAsStream("/x12/sample837-small.edi");
 
         EDIStreamReader reader = factory.createEDIStreamReader(stream);
@@ -625,10 +661,7 @@ class SegmentValidationTest {
             EDIStreamEvent.END_LOOP);
 
         assertEvent(reader, EDIStreamEvent.START_TRANSACTION);
-        SchemaFactory schemaFactory = SchemaFactory.newFactory();
-        URL schemaLocation = getClass().getResource("/x12/005010X222/837.xml");
-        Schema schema = schemaFactory.createSchema(schemaLocation);
-        reader.setTransactionSchema(schema);
+        reader.setTransactionSchema(schemaFactory.createSchema(getClass().getResource("/x12/005010X222/837.xml")));
 
         List<StaEDITestEvent> expected = Arrays.asList(
             StaEDITestEvent.forEvent(EDIStreamEvent.START_TRANSACTION, "TRANSACTION", "TRANSACTION"),
@@ -658,6 +691,5 @@ class SegmentValidationTest {
         }
 
         assertEquals(expected, events);
-        assertTrue(!reader.hasNext(), "Unexpected events exist");
     }
 }
