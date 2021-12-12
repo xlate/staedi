@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<schema xmlns="http://xlate.io/EDISchema/v4">
+
+  <include schemaLocation="file:./target/test-classes/x12/005010/837.xml"/>
+
+  <implementation>
+    <sequence>
+      <segment type="BHT"/>
+      <segment code="REF-AA" type="REF" discriminator="1" maxOccurs="1">
+        <sequence>
+          <element position="1">
+            <enumeration>
+              <value>AA</value>
+            </enumeration>
+          </element>
+          <element position="2"/>
+          <element position="3"/>
+          <composite position="4"/>
+        </sequence>
+      </segment>
+
+      <loop code="1000" type="L0001"/>
+      <loop code="2000" type="L0002"/>
+    </sequence>
+  </implementation>
+</schema>

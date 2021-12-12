@@ -2,10 +2,14 @@ package io.xlate.edi.test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.io.InputStream;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
+import io.xlate.edi.schema.Schema;
+import io.xlate.edi.schema.SchemaFactory;
 import io.xlate.edi.stream.EDIInputFactory;
 import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamException;
@@ -113,4 +117,145 @@ public class StaEDITestUtil {
 
         return buffer.append(')').toString();
     }
+
+    public static void printTransaction(String resourcePath, String schemaPath) throws Exception {
+        EDIInputFactory factory = EDIInputFactory.newFactory();
+
+        // Any InputStream can be used to create an `EDIStreamReader`
+        try (InputStream stream = StaEDITestUtil.class.getResourceAsStream(resourcePath);
+                EDIStreamReader reader = factory.createEDIStreamReader(stream)) {
+            EDIStreamEvent event;
+            boolean transactionBeginSegment = false;
+            String comp = null;
+            int depth = 0;
+            StringBuilder buffer = new StringBuilder();
+
+            while (reader.hasNext()) {
+                event = reader.next();
+
+                switch (event) {
+                case START_INTERCHANGE:
+                    System.out.println(repeat(' ', depth) + "<Interchange>");
+                    depth++;
+                    break;
+
+                case END_INTERCHANGE:
+                    depth--;
+                    System.out.println(repeat(' ', depth) + "</Interchange>");
+                    break;
+
+                case START_GROUP:
+                    System.out.println(repeat(' ', depth) + "<FunctionalGroup>");
+                    depth++;
+                    break;
+
+                case END_GROUP:
+                    depth--;
+                    System.out.println(repeat(' ', depth) + "</FunctionalGroup>");
+                    break;
+
+                case START_TRANSACTION:
+                    transactionBeginSegment = true;
+                    System.out.println(repeat(' ', depth) + "<TransactionSet>");
+                    depth++;
+                    break;
+
+                case END_TRANSACTION:
+                    depth--;
+                    System.out.println(repeat(' ', depth) + "</TransactionSet>");
+                    break;
+
+                case START_LOOP:
+                    System.out.println(repeat(' ', depth) + "<" + reader.getReferenceCode() + ">");
+                    depth++;
+                    break;
+                case END_LOOP:
+                    depth--;
+                    System.out.println(repeat(' ', depth) + "</" + reader.getReferenceCode() + ">");
+                    break;
+
+                case START_SEGMENT:
+                    buffer.setLength(0);
+                    buffer.append(repeat(' ', depth));
+                    buffer.append("<Segment-");
+                    buffer.append(reader.getText());
+                    if (reader.getReferenceCode() != null) {
+                        buffer.append(" code='");
+                        buffer.append(reader.getReferenceCode());
+                        buffer.append("'");
+                    }
+                    buffer.append(">");
+
+                    System.out.println(buffer.toString());
+                    depth++;
+                    break;
+
+                case END_SEGMENT:
+                    if (transactionBeginSegment) {
+                        SchemaFactory schemaFactory = SchemaFactory.newFactory();
+                        URL schemaUrl = StaEDITestUtil.class.getResource(schemaPath);
+                        //schemaFactory.setProperty(SchemaFactory.SCHEMA_LOCATION_URL_CONTEXT, schemaUrl);
+                        Schema schema = schemaFactory.createSchema(schemaUrl);
+                        reader.setTransactionSchema(schema);
+                    }
+                    transactionBeginSegment = false;
+                    depth--;
+                    System.out.println(repeat(' ', depth) + "</Segment-" + reader.getText() + ">");
+                    break;
+
+                case START_COMPOSITE:
+                    System.out.println(repeat(' ', depth) + "<" + reader.getReferenceCode() + ">");
+                    comp = reader.getReferenceCode();
+                    depth++;
+                    break;
+                case END_COMPOSITE:
+                    depth--;
+                    System.out.println(repeat(' ', depth) + "</" + comp + ">");
+                    comp = null;
+                    break;
+
+                case ELEMENT_DATA:
+                    String name = reader.getReferenceCode();
+                    if (name != null && !name.contains("Element")) {
+                        name = "Element-" + name;
+                    }
+                    if (null != reader.getText() && !"".equals(reader.getText())) {
+                        System.out.println(repeat(' ', depth) + "<" + name + ">" + reader.getText() + "</" + name + ">");
+                        if ("null".equals(reader.getReferenceCode())) {
+                            System.out.println(repeat(' ', depth) + "<" + name + ">" + reader.getText() + "</" + name + ">");
+                        }
+                    }
+
+                    break;
+
+                case SEGMENT_ERROR:
+                    // Handle a segment error
+                    EDIStreamValidationError segmentErrorType = reader.getErrorType();
+                    System.out.println(
+                        "*" + repeat(' ', depth) + "** Segment error: " + segmentErrorType.name() + " " + reader.getLocation());
+                    break;
+
+                case ELEMENT_OCCURRENCE_ERROR:
+                case ELEMENT_DATA_ERROR:
+                    // Handle a segment error
+                    EDIStreamValidationError elementErrorType = reader.getErrorType();
+                    System.out.println(
+                        "*" + repeat(' ', depth) + "** Element error:" + elementErrorType.name() + ", " + reader.getReferenceCode());
+                    break;
+
+                default:
+                    break;
+                }
+            }
+        }
+    }
+
+    static String repeat(char value, int times) {
+        StringBuilder buffer = new StringBuilder(times);
+        for (int i = 0; i < times; i++) {
+            buffer.append("    ");
+        }
+        return buffer.toString();
+    }
+
 }

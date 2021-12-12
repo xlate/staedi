@@ -692,4 +692,39 @@ class SegmentValidationTest {
 
         assertEquals(expected, events);
     }
+
+    @Test
+    void testImplUnusedSegmentErrorWhenNotMatched() throws EDISchemaException, EDIStreamException {
+        EDIInputFactory factory = EDIInputFactory.newFactory();
+        SchemaFactory schemaFactory = SchemaFactory.newFactory();
+        InputStream stream = getClass().getResourceAsStream("/x12/issue229/837-header-ref-only.edi");
+
+        EDIStreamReader reader = factory.createEDIStreamReader(stream);
+        reader = StaEDITestUtil.filterEvents(
+            factory,
+            reader,
+            EDIStreamEvent.START_TRANSACTION,
+            EDIStreamEvent.SEGMENT_ERROR,
+            EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR,
+            EDIStreamEvent.START_LOOP,
+            EDIStreamEvent.END_LOOP);
+
+        assertEvent(reader, EDIStreamEvent.START_TRANSACTION);
+        reader.setTransactionSchema(schemaFactory.createSchema(getClass().getResource("/x12/005010X222/837_REF_impls.xml")));
+
+        List<StaEDITestEvent> expected = Arrays.asList(
+            StaEDITestEvent.forEvent(EDIStreamEvent.START_TRANSACTION, "TRANSACTION", "TRANSACTION"),
+            StaEDITestEvent.forError(EDIStreamValidationError.REQUIRED_DATA_ELEMENT_MISSING, "", "REF0402"),
+            StaEDITestEvent.forError(EDIStreamValidationError.IMPLEMENTATION_UNUSED_SEGMENT_PRESENT, "REF", "REF"),
+            StaEDITestEvent.forError(EDIStreamValidationError.MANDATORY_SEGMENT_MISSING, "HL", "HL"));
+
+        List<StaEDITestEvent> events = new ArrayList<>();
+        events.add(StaEDITestEvent.from(reader, false));
+
+        while (reader.hasNext()) {
+            events.add(StaEDITestEvent.from(reader, false));
+        }
+
+        assertEquals(expected, events);
+    }
 }
