@@ -3,6 +3,7 @@ package io.xlate.edi.internal.schema.implementation;
 import java.util.List;
 import java.util.Objects;
 
+import io.xlate.edi.schema.EDIReference;
 import io.xlate.edi.schema.implementation.Discriminator;
 import io.xlate.edi.schema.implementation.EDITypeImplementation;
 import io.xlate.edi.schema.implementation.SegmentImplementation;
@@ -28,6 +29,13 @@ public class SegmentImpl extends BaseComplexImpl implements SegmentImplementatio
         super.typeId = typeId;
         this.code = code;
         this.discriminator = discriminator;
+    }
+
+    public SegmentImpl(EDIReference standardReference, List<EDITypeImplementation> sequence) {
+        super(sequence, null, null);
+        this.setStandardReference(standardReference);
+        this.code = standard.getCode();
+        this.discriminator = null;
     }
 
     @Override

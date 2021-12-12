@@ -30,7 +30,6 @@ public class CompositeImpl extends BaseComplexImpl implements CompositeImplement
     public CompositeImpl(EDIReference standardReference, int position, List<EDITypeImplementation> sequence) {
         super(sequence, null, null);
         this.setStandardReference(standardReference);
-        super.typeId = standard.getId();
         this.position = position;
     }
 
