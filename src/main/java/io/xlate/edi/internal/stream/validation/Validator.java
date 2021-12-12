@@ -147,7 +147,6 @@ public class Validator {
         final StaEDIStreamLocation location;
 
         public RevalidationNode(UsageNode standard, UsageNode impl, CharSequence data, StaEDIStreamLocation location) {
-            super();
             this.standard = standard;
             this.impl = impl;
             this.data = CharBuffer.allocate(data.length());
@@ -155,6 +154,14 @@ public class Validator {
             this.data.flip();
             this.location = location.copy();
         }
+
+        public RevalidationNode(UsageNode standard, UsageNode impl, StaEDIStreamLocation location) {
+            this.standard = standard;
+            this.impl = impl;
+            this.data = null;
+            this.location = location.copy();
+        }
+
     }
 
     public static Validator forSchema(Schema schema, Schema containerSchema, boolean validateCodeValues, boolean formatElements) {
@@ -525,7 +532,7 @@ public class Validator {
                 handler.segmentError(current.getId(), current.getLink(), IMPLEMENTATION_UNUSED_SEGMENT_PRESENT);
                 // Save the currentImpl so that the search is resumed from the correct location
                 implNode = currentImpl;
-            } else if (implSegmentCandidates.size() == 1) {
+            } else if (isSingleSegmentWithoutDescriminator(implSegmentCandidates)) {
                 currentImpl.incrementUsage();
                 currentImpl.resetChildren();
 
@@ -540,6 +547,15 @@ public class Validator {
         }
 
         return true;
+    }
+
+    boolean isSingleSegmentWithoutDescriminator(List<UsageNode> candidates) {
+        if (candidates.size() != 1) {
+            return false;
+        }
+
+        PolymorphicImplementation candidate = (PolymorphicImplementation) candidates.get(0).getLink();
+        return candidate.getDiscriminator() == null;
     }
 
     static UsageNode toSegment(UsageNode node) {
@@ -747,6 +763,13 @@ public class Validator {
         }
     }
 
+    public void clearImplementationCandidates(ValidationEventHandler handler) {
+        if (!implSegmentCandidates.isEmpty()) {
+            handler.segmentError(segment.getId(), segment.getLink(), IMPLEMENTATION_UNUSED_SEGMENT_PRESENT);
+            implSegmentCandidates.clear();
+        }
+    }
+
     public boolean selectImplementation(Deque<StreamEvent> eventQueue, ValidationEventHandler handler) {
         StreamEvent currentEvent = eventQueue.getLast();
 
@@ -839,7 +862,7 @@ public class Validator {
             if (std.isUsed()) {
                 validateImplUnusedElementBlank(std, impl, true);
             } else {
-                validateDataElementRequirement(null, std, impl, entry.data, entry.location);
+                validateDataElementRequirement(null, std, impl, entry.location);
             }
 
             handleRevalidatedElementErrors(entry, elementErrors, handler);
@@ -1060,7 +1083,7 @@ public class Validator {
         if (valueReceived) {
             validateElementValue(dialect, position, value, formattedValue);
         } else {
-            validateDataElementRequirement(version, this.element, this.implElement, value, position);
+            validateDataElementRequirement(version, this.element, this.implElement, position);
         }
 
         return elementErrors.isEmpty();
@@ -1121,7 +1144,11 @@ public class Validator {
 
     public void validateVersionConstraints(Dialect dialect, ValidationEventHandler validationHandler, StringBuilder formattedValue) {
         for (RevalidationNode entry : revalidationQueue) {
-            validateElementValue(dialect, entry.standard, entry.impl, entry.data, formattedValue);
+            if (entry.data != null) {
+                validateElementValue(dialect, entry.standard, entry.impl, entry.data, formattedValue);
+            } else {
+                validateDataElementRequirement(dialect.getTransactionVersionString(), entry.standard, entry.impl, entry.location);
+            }
             handleRevalidatedElementErrors(entry, elementErrors, validationHandler);
         }
 
@@ -1257,12 +1284,12 @@ public class Validator {
         return true;
     }
 
-    void validateDataElementRequirement(String version, UsageNode element, UsageNode implElement, CharSequence value, StaEDIStreamLocation position) {
+    void validateDataElementRequirement(String version, UsageNode element, UsageNode implElement, StaEDIStreamLocation position) {
         if (!UsageNode.hasMinimumUsage(version, element) || !UsageNode.hasMinimumUsage(version, implElement)) {
             elementErrors.add(new UsageError(element, REQUIRED_DATA_ELEMENT_MISSING));
         } else if (isPendingDiscrimination()) {
             // This element requirement can not be validated until the correct implementation is determined
-            revalidationQueue.add(new RevalidationNode(this.element, this.implElement, value, position));
+            revalidationQueue.add(new RevalidationNode(this.element, this.implElement, position));
         }
     }
 

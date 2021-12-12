@@ -295,6 +295,7 @@ public class ProxyEventHandler implements EventHandler {
         EDIReference typeReference = null;
 
         if (validator != null) {
+            validator.clearImplementationCandidates(this);
             validator.validateSyntax(dialect, this, this, location, false);
             validator.validateVersionConstraints(dialect, this, null);
             typeReference = validator.getSegmentReference();

@@ -3,6 +3,7 @@ package io.xlate.edi.internal.schema.implementation;
 import java.util.List;
 import java.util.Objects;
 
+import io.xlate.edi.schema.EDIReference;
 import io.xlate.edi.schema.implementation.Discriminator;
 import io.xlate.edi.schema.implementation.EDITypeImplementation;
 import io.xlate.edi.schema.implementation.LoopImplementation;
@@ -28,6 +29,13 @@ public class LoopImpl extends BaseComplexImpl implements LoopImplementation {
         this.code = code;
         this.typeId = typeId;
         this.discriminator = discriminator;
+    }
+
+    public LoopImpl(EDIReference standardReference, List<EDITypeImplementation> sequence) {
+        super(sequence, null, null);
+        this.setStandardReference(standardReference);
+        this.code = standard.getCode();
+        this.discriminator = null;
     }
 
     @Override

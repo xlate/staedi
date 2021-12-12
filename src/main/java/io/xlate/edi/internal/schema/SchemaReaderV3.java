@@ -119,8 +119,8 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
         super.setReferences(types);
 
         StreamSupport.stream(Spliterators.spliteratorUnknownSize(implementedTypes.descendingIterator(),
-                                                                 Spliterator.ORDERED),
-                             false)
+            Spliterator.ORDERED),
+            false)
                      .filter(type -> type.getType() != Type.ELEMENT)
                      .map(BaseComplexImpl.class::cast)
                      .forEach(type -> setReferences(type, types));
@@ -191,6 +191,10 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
             return new ElementImpl(standardReference, position);
         case COMPOSITE:
             return new CompositeImpl(standardReference, position, getDefaultSequence(((EDIComplexType) std).getReferences()));
+        case SEGMENT:
+            return new SegmentImpl(standardReference, getDefaultSequence(((EDIComplexType) std).getReferences()));
+        case LOOP:
+            return new LoopImpl(standardReference, getDefaultSequence(((EDIComplexType) std).getReferences()));
         default:
             throw schemaException("Implementation of " + std.getId() + " must not be empty");
         }
@@ -213,36 +217,37 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
         List<EDITypeImplementation> sequence = new ArrayList<>();
         String id;
         String typeId;
-        int minOccurs = 0;
-        int maxOccurs = 0;
-        EDIElementPosition discriminatorPos = null;
-        String title = null;
+        int minOccurs;
+        int maxOccurs;
+        EDIElementPosition discriminatorPos;
+        String title;
 
         if (transactionLoop) {
             id = StaEDISchema.IMPLEMENTATION_ID;
             typeId = null;
+            minOccurs = 0;
+            maxOccurs = 0;
+            discriminatorPos = null;
+            title = null;
         } else {
             id = parseAttribute(reader, "code", String::valueOf);
             typeId = parseAttribute(reader, "type", String::valueOf);
             minOccurs = parseAttribute(reader, ATTR_MIN_OCCURS, Integer::parseInt, -1);
             maxOccurs = parseAttribute(reader, ATTR_MAX_OCCURS, Integer::parseInt, -1);
-            discriminatorPos =  parseElementPosition(reader, ATTR_DISCRIMINATOR);
+            discriminatorPos = parseElementPosition(reader, ATTR_DISCRIMINATOR);
             title = parseAttribute(reader, ATTR_TITLE, String::valueOf, null);
         }
 
-        String descr = readDescription(reader);
-        readSequence(reader, e -> readLoopSequenceEntry(e, sequence));
-        nextTag(reader, "reading to end of " + complexType);
-        requireElement(complexType, reader);
-
-        Discriminator disc = null;
-
-        if (discriminatorPos != null) {
-            SegmentImpl segImpl = (SegmentImpl) sequence.get(0);
-            disc = buildDiscriminator(discriminatorPos, segImpl.getSequence());
-        }
-
-        return new LoopImpl(minOccurs, maxOccurs, id, typeId, disc, sequence, title, descr);
+        return readTypeImplementation(reader,
+            () -> readSequence(reader, e -> readLoopSequenceEntry(e, sequence)),
+            descr -> whenExpected(reader, complexType, () -> {
+                Discriminator disc = null;
+                if (discriminatorPos != null) {
+                    SegmentImpl segImpl = (SegmentImpl) sequence.get(0);
+                    disc = buildDiscriminator(discriminatorPos, segImpl.getSequence());
+                }
+                return new LoopImpl(minOccurs, maxOccurs, id, typeId, disc, sequence, title, descr);
+            }));
     }
 
     void readLoopSequenceEntry(QName entryName, List<EDITypeImplementation> sequence) {
@@ -270,20 +275,20 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
         String title = parseAttribute(reader, ATTR_TITLE, String::valueOf, null);
 
         return readTypeImplementation(reader,
-                                      () -> readSequence(reader, e -> readPositionedSequenceEntry(e, sequence, true)),
-                                      descr -> whenExpected(reader, qnSegment, () -> {
-                                          Discriminator disc = buildDiscriminator(discriminatorPos, sequence);
-                                          SegmentImpl segment = new SegmentImpl(minOccurs,
-                                                                                maxOccurs,
-                                                                                typeId,
-                                                                                code,
-                                                                                disc,
-                                                                                sequence,
-                                                                                title,
-                                                                                descr);
-                                          implementedTypes.add(segment);
-                                          return segment;
-                                      }));
+            () -> readSequence(reader, e -> readPositionedSequenceEntry(e, sequence, true)),
+            descr -> whenExpected(reader, qnSegment, () -> {
+                Discriminator disc = buildDiscriminator(discriminatorPos, sequence);
+                SegmentImpl segment = new SegmentImpl(minOccurs,
+                    maxOccurs,
+                    typeId,
+                    code,
+                    disc,
+                    sequence,
+                    title,
+                    descr);
+                implementedTypes.add(segment);
+                return segment;
+            }));
     }
 
     void readPositionedSequenceEntry(QName entryName, List<EDITypeImplementation> sequence, boolean composites) {
@@ -345,7 +350,10 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
         return disc;
     }
 
-    EDITypeImplementation getDiscriminatorElement(EDIElementPosition discriminatorPos, int position, List<EDITypeImplementation> sequence, String type) {
+    EDITypeImplementation getDiscriminatorElement(EDIElementPosition discriminatorPos,
+                                                  int position,
+                                                  List<EDITypeImplementation> sequence,
+                                                  String type) {
         if (position > 0 && position <= sequence.size()) {
             return sequence.get(position - 1);
         } else {
@@ -361,16 +369,16 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
         String title = parseAttribute(reader, ATTR_TITLE, String::valueOf, null);
 
         return readTypeImplementation(reader,
-                                      () -> readSequence(reader, e -> readPositionedSequenceEntry(e, sequence, false)),
-                                      descr -> whenExpected(reader,
-                                                            qnComposite,
-                                                            () -> new CompositeImpl(minOccurs,
-                                                                                    maxOccurs,
-                                                                                    null,
-                                                                                    position,
-                                                                                    sequence,
-                                                                                    title,
-                                                                                    descr)));
+            () -> readSequence(reader, e -> readPositionedSequenceEntry(e, sequence, false)),
+            descr -> whenExpected(reader,
+                qnComposite,
+                () -> new CompositeImpl(minOccurs,
+                    maxOccurs,
+                    null,
+                    position,
+                    sequence,
+                    title,
+                    descr)));
     }
 
     void readSequence(XMLStreamReader reader, Consumer<QName> startHandler) {
@@ -391,16 +399,16 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
         String title = parseAttribute(reader, ATTR_TITLE, String::valueOf, null);
 
         return readTypeImplementation(reader,
-                                      () -> valueSet.set(super.readEnumerationValues(reader)),
-                                      descr -> whenExpected(reader,
-                                                            qnElement,
-                                                            () -> new ElementImpl(minOccurs,
-                                                                                  maxOccurs,
-                                                                                  (String) null,
-                                                                                  position,
-                                                                                  valueSet.get(),
-                                                                                  title,
-                                                                                  descr)));
+            () -> valueSet.set(super.readEnumerationValues(reader)),
+            descr -> whenExpected(reader,
+                qnElement,
+                () -> new ElementImpl(minOccurs,
+                    maxOccurs,
+                    (String) null,
+                    position,
+                    valueSet.get(),
+                    title,
+                    descr)));
     }
 
     <T> T whenExpected(XMLStreamReader reader, QName expected, Supplier<T> supplier) {

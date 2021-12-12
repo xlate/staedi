@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -48,6 +49,7 @@ import io.xlate.edi.schema.EDISimpleType;
 import io.xlate.edi.schema.EDIType;
 import io.xlate.edi.schema.Schema;
 import io.xlate.edi.schema.SchemaFactory;
+import io.xlate.edi.schema.implementation.LoopImplementation;
 import io.xlate.edi.stream.EDIStreamConstants.Standards;
 
 @SuppressWarnings("resource")
@@ -649,6 +651,32 @@ class StaEDISchemaFactoryTest {
         assertEquals("Invalid base", thrown.getOriginalMessage());
         assertTrue(thrown.getCause() instanceof StaEDISchemaReadException);
         assertTrue(thrown.getCause().getCause() instanceof IllegalArgumentException);
+    }
+
+    @Test
+    void testEmptyLoopImplementationCopiesStandard() throws EDISchemaException {
+        SchemaFactory factory = SchemaFactory.newFactory();
+        InputStream stream = new ByteArrayInputStream((""
+                + "<schema xmlns='" + StaEDISchemaFactory.XMLNS_V4 + "'>"
+                + "  <include schemaLocation='file:./src/test/resources/x12/EDISchema997.xml' />"
+                + "  <implementation>"
+                + "    <sequence>"
+                + "      <segment type='AK1' />"
+                + "      <loop code='2000' type='2000' />"
+                + "      <segment type='AK9' />"
+                + "    </sequence>"
+                + "  </implementation>"
+                + "</schema>").getBytes());
+
+        Schema schema = factory.createSchema(stream);
+        for (String segment : Arrays.asList("AK2", "AK3", "AK4", "AK5")) {
+            assertTrue(schema.containsSegment(segment));
+        }
+        LoopImplementation impl = schema.getImplementation();
+        LoopImplementation loop2000 = (LoopImplementation) impl.getSequence().get(1);
+        assertEquals("AK2", loop2000.getSequence().get(0).getCode());
+        assertEquals("2100", loop2000.getSequence().get(1).getCode());
+        assertEquals("AK5", loop2000.getSequence().get(2).getCode());
     }
 
 }

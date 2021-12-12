@@ -329,7 +329,7 @@
     <complexContent>
       <extension base="tns:loopBase">
         <sequence>
-          <element name="sequence">
+          <element name="sequence" minOccurs="0">
             <annotation>
               <documentation>
                 The ordered list of segments and sub-loops contained in this
