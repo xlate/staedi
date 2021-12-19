@@ -679,4 +679,68 @@ class StaEDISchemaFactoryTest {
         assertEquals("AK5", loop2000.getSequence().get(2).getCode());
     }
 
+    @Test
+    void testImplementationSegmentWithoutStandardTypeThrowsException() throws EDISchemaException {
+        SchemaFactory factory = SchemaFactory.newFactory();
+        InputStream stream = new ByteArrayInputStream((""
+                + "<schema xmlns='" + StaEDISchemaFactory.XMLNS_V4 + "'>"
+                + "  <include schemaLocation='file:./src/test/resources/x12/EDISchema997.xml' />"
+                + "  <implementation>"
+                + "    <sequence>"
+                + "      <segment type='AK1' />"
+                + "      <segment type='AK8' />"
+                + "      <segment type='AK9' />"
+                + "    </sequence>"
+                + "  </implementation>"
+                + "</schema>").getBytes());
+
+        EDISchemaException thrown = assertThrows(EDISchemaException.class, () -> factory.createSchema(stream));
+        assertEquals("Reference AK8 does not correspond to an entry in type io.xlate.edi.internal.schema.TRANSACTION", thrown.getOriginalMessage());
+    }
+
+    @Test
+    void testOutOfOrderImplementationSegmentsThrowsException() throws EDISchemaException {
+        SchemaFactory factory = SchemaFactory.newFactory();
+        InputStream stream = new ByteArrayInputStream((""
+                + "<schema xmlns='" + StaEDISchemaFactory.XMLNS_V4 + "'>"
+                + "  <include schemaLocation='file:./src/test/resources/x12/EDISchema997.xml' />"
+                + "  <implementation>"
+                + "    <sequence>"
+                + "      <segment type='AK9' />"
+                + "      <segment type='AK1' />"
+                + "    </sequence>"
+                + "  </implementation>"
+                + "</schema>").getBytes());
+
+        EDISchemaException thrown = assertThrows(EDISchemaException.class, () -> factory.createSchema(stream));
+        assertEquals("SEGMENT reference AK1 is not in the correct order for the sequence of standard type io.xlate.edi.internal.schema.TRANSACTION", thrown.getOriginalMessage());
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+        "element,   '',           'Invalid position'",
+        "element,   '0',          'Invalid position'",
+        "element,   '3000000000', 'Invalid position'",
+        "composite, '',           'Invalid position'",
+        "composite, '0',          'Invalid position'",
+        "composite, '3000000000', 'Invalid position'",
+        "element,   '50',         'Position 50 does not correspond to an entry in type AK1'"
+    })
+    void testInvalidElementPositionThrowsException(String type, String position, String message) throws EDISchemaException {
+        SchemaFactory factory = SchemaFactory.newFactory();
+        InputStream stream = new ByteArrayInputStream((""
+                + "<schema xmlns='" + StaEDISchemaFactory.XMLNS_V4 + "'>"
+                + "  <include schemaLocation='file:./src/test/resources/x12/EDISchema997.xml' />"
+                + "  <implementation>"
+                + "    <sequence>"
+                + "      <segment type='AK1'>"
+                + "        <sequence><" + type + " position='" + position + "'/></sequence>"
+                + "      </segment>"
+                + "    </sequence>"
+                + "  </implementation>"
+                + "</schema>").getBytes());
+
+        EDISchemaException thrown = assertThrows(EDISchemaException.class, () -> factory.createSchema(stream));
+        assertEquals(message, thrown.getOriginalMessage());
+    }
 }

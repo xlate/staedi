@@ -6,12 +6,14 @@ import static io.xlate.edi.internal.schema.StaEDISchemaFactory.unexpectedElement
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Deque;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Spliterator;
 import java.util.Spliterators;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -140,35 +142,69 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
             return;
         }
 
-        for (EDITypeImplementation t : implSequence) {
-            if (t == null) {
-                continue;
-            }
-            EDIReference stdRef;
-            BaseImpl<?> seqImpl = (BaseImpl<?>) t;
+        AtomicBoolean verifyOrder = new AtomicBoolean(false);
 
-            if (t instanceof Positioned) {
-                Positioned p = (Positioned) t;
-                int offset = p.getPosition() - 1;
-                if (standardRefs != null && offset > -1 && offset < standardRefs.size()) {
-                    stdRef = standardRefs.get(offset);
+        implSequence.stream()
+            .filter(BaseImpl.class::isInstance)
+            .map(BaseImpl.class::cast)
+            .forEach(typeImpl -> {
+                if (typeImpl instanceof Positioned) {
+                    typeImpl.setStandardReference(getReference((Positioned) typeImpl, standard));
                 } else {
-                    throw schemaException("Position " + p.getPosition()
-                            + " does not correspond to an entry in type " + standard.getId());
+                    typeImpl.setStandardReference(getReference(typeImpl, standard));
+                    verifyOrder.set(true);
                 }
-            } else {
-                String refTypeId = seqImpl.getTypeId();
+            });
 
-                stdRef = standardRefs.stream().filter(r -> r.getReferencedType()
-                                                            .getId()
-                                                            .equals(refTypeId))
-                                     .findFirst()
-                                     .orElseThrow(() -> schemaException("Reference " + refTypeId
-                                             + " does not correspond to an entry in type "
-                                             + standard.getId()));
+        if (verifyOrder.get()) {
+            verifyOrder(standard, implSequence);
+        }
+    }
+
+    EDIReference getReference(Positioned positionedTypeImpl, EDIComplexType standard) {
+        final int position = positionedTypeImpl.getPosition();
+        final List<EDIReference> standardRefs = standard.getReferences();
+        final int offset = position - 1;
+
+        if (offset < standardRefs.size()) {
+            return standardRefs.get(offset);
+        } else {
+            throw schemaException("Position " + position + " does not correspond to an entry in type " + standard.getId());
+        }
+    }
+
+    EDIReference getReference(BaseImpl<?> typeImpl, EDIComplexType standard) {
+        final String refTypeId = typeImpl.getTypeId();
+
+        for (EDIReference stdRef : standard.getReferences()) {
+            if (stdRef.getReferencedType().getId().equals(refTypeId)) {
+                return stdRef;
             }
+        }
 
-            seqImpl.setStandardReference(stdRef);
+        throw schemaException("Reference " + refTypeId + " does not correspond to an entry in type " + standard.getId());
+    }
+
+    void verifyOrder(EDIComplexType standard, List<EDITypeImplementation> implSequence) {
+        Iterator<String> standardTypes = standard.getReferences()
+                .stream()
+                .map(EDIReference::getReferencedType)
+                .map(EDIType::getId)
+                .iterator();
+
+        String stdId = standardTypes.next();
+
+        for (EDITypeImplementation implRef : implSequence) {
+            String implId = implRef.getReferencedType().getId();
+
+            while (!implId.equals(stdId)) {
+                if (standardTypes.hasNext()) {
+                    stdId = standardTypes.next();
+                } else {
+                    String template = "%s reference %s is not in the correct order for the sequence of standard type %s";
+                    throw schemaException(String.format(template, implRef.getType(), implRef.getCode(), standard.getId()));
+                }
+            }
         }
     }
 
@@ -354,19 +390,19 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
                                                   int position,
                                                   List<EDITypeImplementation> sequence,
                                                   String type) {
-        if (position > 0 && position <= sequence.size()) {
-            return sequence.get(position - 1);
-        } else {
-            throw schemaException("Discriminator " + type + " position invalid: " + discriminatorPos, reader);
-        }
+
+        validatePosition(position, 1, sequence.size(), () -> "Discriminator " + type + " position invalid: " + discriminatorPos);
+        return sequence.get(position - 1);
     }
 
     CompositeImpl readCompositeImplementation(XMLStreamReader reader) {
         List<EDITypeImplementation> sequence = new ArrayList<>(5);
-        int position = parseAttribute(reader, ATTR_POSITION, Integer::parseInt, 0);
+        int position = parseAttribute(reader, ATTR_POSITION, Integer::parseInt, -1);
         int minOccurs = parseAttribute(reader, ATTR_MIN_OCCURS, Integer::parseInt, -1);
         int maxOccurs = parseAttribute(reader, ATTR_MAX_OCCURS, Integer::parseInt, -1);
         String title = parseAttribute(reader, ATTR_TITLE, String::valueOf, null);
+
+        validatePosition(position, 1, Integer.MAX_VALUE, () -> "Invalid position");
 
         return readTypeImplementation(reader,
             () -> readSequence(reader, e -> readPositionedSequenceEntry(e, sequence, false)),
@@ -393,10 +429,12 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
 
     ElementImpl readElementImplementation(XMLStreamReader reader) {
         this.valueSet.clear();
-        int position = parseAttribute(reader, ATTR_POSITION, Integer::parseInt, 0);
+        int position = parseAttribute(reader, ATTR_POSITION, Integer::parseInt, -1);
         int minOccurs = parseAttribute(reader, ATTR_MIN_OCCURS, Integer::parseInt, -1);
         int maxOccurs = parseAttribute(reader, ATTR_MAX_OCCURS, Integer::parseInt, -1);
         String title = parseAttribute(reader, ATTR_TITLE, String::valueOf, null);
+
+        validatePosition(position, 1, Integer.MAX_VALUE, () -> "Invalid position");
 
         return readTypeImplementation(reader,
             () -> valueSet.set(super.readEnumerationValues(reader)),
@@ -409,6 +447,12 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
                     valueSet.get(),
                     title,
                     descr)));
+    }
+
+    void validatePosition(int position, int min, int max, Supplier<String> message) {
+        if (position < min || position > max) {
+            throw schemaException(message.get(), reader);
+        }
     }
 
     <T> T whenExpected(XMLStreamReader reader, QName expected, Supplier<T> supplier) {
