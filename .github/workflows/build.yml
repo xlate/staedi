@@ -8,18 +8,12 @@ on:
       - '**'
     paths-ignore:
       - '.gitignore'
-      - '.travis.yml*'
-      - 'ci_build.sh'
-      - 'ci_coverage.sh'
       - 'LICENSE'
       - 'README*'
       - '*.png'
   pull_request:
     paths-ignore:
       - '.gitignore'
-      - '.travis.yml*'
-      - 'ci_build.sh'
-      - 'ci_coverage.sh'
       - 'LICENSE'
       - 'README*'
       - '*.png'
