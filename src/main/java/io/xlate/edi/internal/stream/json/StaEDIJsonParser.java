@@ -231,7 +231,7 @@ abstract class StaEDIJsonParser implements Configurable {
         case START_GROUP:
         case START_TRANSACTION:
         case START_LOOP:
-            enqueueStructureBegin("loop", ediReader.getText());
+            enqueueStructureBegin("loop", ediReader.getReferenceCode());
             break;
         case START_SEGMENT:
             enqueueStructureBegin("segment", ediReader.getText());

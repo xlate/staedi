@@ -40,6 +40,9 @@ import io.xlate.edi.stream.Location;
 
 public class ProxyEventHandler implements EventHandler {
 
+    public static final String LOOP_CODE_GROUP = EDIType.Type.GROUP.toString();
+    public static final String LOOP_CODE_TRANSACTION = EDIType.Type.TRANSACTION.toString();
+
     private final StaEDIStreamLocation location;
     private final boolean nestHierarchicalLoops;
 
@@ -200,17 +203,17 @@ public class ProxyEventHandler implements EventHandler {
     public void loopBegin(EDIReference typeReference) {
         final String loopCode = typeReference.getReferencedType().getCode();
 
-        if (EDIType.Type.TRANSACTION.toString().equals(loopCode)) {
+        if (LOOP_CODE_TRANSACTION.equals(loopCode)) {
             transaction = true;
             transactionSchemaAllowed = true;
-            enqueueEvent(EDIStreamEvent.START_TRANSACTION, EDIStreamValidationError.NONE, loopCode, typeReference, location);
+            enqueueEvent(EDIStreamEvent.START_TRANSACTION, EDIStreamValidationError.NONE, null, typeReference, location);
             if (transactionValidator != null) {
                 transactionValidator.reset();
             }
-        } else if (EDIType.Type.GROUP.toString().equals(loopCode)) {
-            enqueueEvent(EDIStreamEvent.START_GROUP, EDIStreamValidationError.NONE, loopCode, typeReference, location);
+        } else if (LOOP_CODE_GROUP.equals(loopCode)) {
+            enqueueEvent(EDIStreamEvent.START_GROUP, EDIStreamValidationError.NONE, null, typeReference, location);
         } else {
-            enqueueEvent(EDIStreamEvent.START_LOOP, EDIStreamValidationError.NONE, loopCode, typeReference, location);
+            enqueueEvent(EDIStreamEvent.START_LOOP, EDIStreamValidationError.NONE, null, typeReference, location);
 
             if (nestHierarchicalLoops && isHierarchicalLoop(typeReference.getReferencedType())) {
                 EDILoopType loop = (EDILoopType) typeReference.getReferencedType();
@@ -229,17 +232,17 @@ public class ProxyEventHandler implements EventHandler {
         // Validator can not be null when a loopEnd event has been signaled.
         validator().validateLoopSyntax(this);
 
-        if (EDIType.Type.TRANSACTION.toString().equals(loopCode)) {
+        if (LOOP_CODE_TRANSACTION.equals(loopCode)) {
             transaction = false;
             dialect.transactionEnd();
-            enqueueEvent(EDIStreamEvent.END_TRANSACTION, EDIStreamValidationError.NONE, loopCode, typeReference, location);
-        } else if (EDIType.Type.GROUP.toString().equals(loopCode)) {
+            enqueueEvent(EDIStreamEvent.END_TRANSACTION, EDIStreamValidationError.NONE, null, typeReference, location);
+        } else if (LOOP_CODE_GROUP.equals(loopCode)) {
             dialect.groupEnd();
-            enqueueEvent(EDIStreamEvent.END_GROUP, EDIStreamValidationError.NONE, loopCode, typeReference, location);
+            enqueueEvent(EDIStreamEvent.END_GROUP, EDIStreamValidationError.NONE, null, typeReference, location);
         } else if (nestHierarchicalLoops && isHierarchicalLoop(typeReference.getReferencedType())) {
             levelCheckPending = true;
         } else {
-            enqueueEvent(EDIStreamEvent.END_LOOP, EDIStreamValidationError.NONE, loopCode, typeReference, location);
+            enqueueEvent(EDIStreamEvent.END_LOOP, EDIStreamValidationError.NONE, null, typeReference, location);
         }
     }
 

@@ -35,6 +35,7 @@ import javax.xml.stream.Location;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
+import io.xlate.edi.internal.stream.tokenization.ProxyEventHandler;
 import io.xlate.edi.schema.EDIComplexType;
 import io.xlate.edi.schema.EDIReference;
 import io.xlate.edi.stream.EDIInputFactory;
@@ -47,7 +48,7 @@ final class StaEDIXMLStreamReader implements XMLStreamReader {
     private static final Logger LOGGER = Logger.getLogger(StaEDIXMLStreamReader.class.getName());
     private static final QName DUMMY_QNAME = new QName("DUMMY");
     private static final QName INTERCHANGE = new QName(EDINamespaces.LOOPS, "INTERCHANGE", prefixOf(EDINamespaces.LOOPS));
-    private static final QName TRANSACTION = new QName(EDINamespaces.LOOPS, "TRANSACTION", prefixOf(EDINamespaces.LOOPS));
+    private static final QName TRANSACTION = new QName(EDINamespaces.LOOPS, ProxyEventHandler.LOOP_CODE_TRANSACTION, prefixOf(EDINamespaces.LOOPS));
 
     private final EDIStreamReader ediReader;
     private final Map<String, Object> properties;
@@ -206,15 +207,14 @@ final class StaEDIXMLStreamReader implements XMLStreamReader {
 
         case START_TRANSACTION:
             withinTransaction = true;
-            readerText = ediReader.getText();
-            name = buildName(elementStack.getFirst(), EDINamespaces.LOOPS, readerText);
+            name = buildName(elementStack.getFirst(), EDINamespaces.LOOPS, ediReader.getReferenceCode());
             enqueueEvent(START_ELEMENT, name, true);
             determineTransactionSegments();
             break;
 
         case START_GROUP:
         case START_LOOP:
-            name = buildName(elementStack.getFirst(), EDINamespaces.LOOPS, ediReader.getText());
+            name = buildName(elementStack.getFirst(), EDINamespaces.LOOPS, ediReader.getReferenceCode());
             enqueueEvent(START_ELEMENT, name, true);
             break;
 

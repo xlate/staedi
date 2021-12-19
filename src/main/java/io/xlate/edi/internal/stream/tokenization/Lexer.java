@@ -145,6 +145,13 @@ public class Lexer {
         return dialect;
     }
 
+    public void invalidate() {
+        if (state != State.INVALID) {
+            previous = state;
+            state = State.INVALID;
+        }
+    }
+
     public void setBinaryLength(long binaryLength) {
         this.binaryRemain = binaryLength;
 
@@ -603,5 +610,15 @@ public class Lexer {
         if (modes.pop() != expected) {
             throw error(EDIException.INVALID_STATE);
         }
+    }
+
+    /* test */
+    State currentState() {
+        return state;
+    }
+
+    /* test */
+    State previousState() {
+        return previous;
     }
 }

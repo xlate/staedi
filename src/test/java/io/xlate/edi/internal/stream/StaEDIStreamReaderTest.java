@@ -1215,7 +1215,6 @@ class StaEDIStreamReaderTest implements ConstantsTest {
         EDIStreamReader reader = factory.createEDIStreamReader(stream);
 
         EDIStreamEvent event;
-        String tag = null;
         EDIStreamException thrown = null;
 
         try {
@@ -1226,9 +1225,7 @@ class StaEDIStreamReaderTest implements ConstantsTest {
                     break;
                 }
 
-                tag = reader.getText();
-
-                if ("BIN".equals(tag)) {
+                if (reader.getEventType() == EDIStreamEvent.START_SEGMENT && "BIN".equals(reader.getText())) {
                     reader.next();
                     long binaryDataLength = Long.parseLong(reader.getText());
                     assertEquals(1839, binaryDataLength);
@@ -1255,33 +1252,33 @@ class StaEDIStreamReaderTest implements ConstantsTest {
         Schema schema = schemaFactory.createSchema(getClass().getResource("/x12/EDISchemaBinarySegment.xml"));
 
         EDIStreamEvent event;
-        String tag = null;
-        EDIStreamException thrown = null;
+        EDIStreamException bin01ParseException = null;
+        EDIStreamException inconsistentParser = null;
 
         try {
             while (reader.hasNext()) {
                 try {
-                    reader.nextTag();
+                    event = reader.nextTag();
                 } catch (NoSuchElementException e) {
                     break;
                 }
 
-                if (reader.getEventType() == EDIStreamEvent.START_TRANSACTION) {
+                if (event == EDIStreamEvent.START_TRANSACTION) {
                     reader.setTransactionSchema(schema);
                     assertThrows(IllegalStateException.class, () -> reader.setBinaryDataLength(1L));
-                } else {
-                    tag = reader.getText();
-
-                    if ("BIN".equals(tag)) {
-                        thrown = assertThrows(EDIStreamException.class, () -> reader.nextTag());
-                        break;
-                    }
+                } else if (event == EDIStreamEvent.START_SEGMENT && "BIN".equals(reader.getText())) {
+                    // BIN01 is non-numeric
+                    bin01ParseException = assertThrows(EDIStreamException.class, () -> reader.nextTag());
+                    inconsistentParser = assertThrows(EDIStreamException.class, () -> reader.nextTag());
+                    break;
                 }
             }
         } finally {
             reader.close();
         }
-        assertNotNull(thrown);
+
+        assertNotNull(bin01ParseException);
+        assertNotNull(inconsistentParser);
     }
 
     @Test
@@ -1295,7 +1292,6 @@ class StaEDIStreamReaderTest implements ConstantsTest {
         EDIStreamReader reader = factory.createEDIStreamReader(stream);
 
         EDIStreamEvent event;
-        String tag = null;
 
         try {
             while (reader.hasNext()) {
@@ -1305,9 +1301,7 @@ class StaEDIStreamReaderTest implements ConstantsTest {
                     break;
                 }
 
-                tag = reader.getText();
-
-                if ("BIN".equals(tag)) {
+                if (reader.getEventType() == EDIStreamEvent.START_SEGMENT && "BIN".equals(reader.getText())) {
                     reader.next();
                     long binaryDataLength = Long.parseLong(reader.getText());
                     assertEquals(2768, binaryDataLength);

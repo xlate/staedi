@@ -282,23 +282,37 @@ public interface EDIStreamReader extends Closeable, EDIStreamConstants {
 
     /**
      * Returns the current value of the parse event as a string. This returns
-     * the string value of an ELEMENT_DATA event, and the string value of a
-     * segment tag in a START_SEGMENT event. During an ELEMENT_ERROR event, this
-     * contains the invalid element (when available).
      *
-     * @return the current text or null
+     * <ul>
+     * <li>the string value of an element for an
+     * {@link EDIStreamEvent#ELEMENT_DATA ELEMENT_DATA} event
+     * <li>the string value of a segment tag for a
+     * {@link EDIStreamEvent#START_SEGMENT START_SEGMENT} event
+     * <li>the string value of the current segment tag for an
+     * {@link EDIStreamEvent#END_SEGMENT END_SEGMENT} event
+     * <li>the invalid element text from an
+     * {@link EDIStreamEvent#ELEMENT_DATA_ERROR ELEMENT_DATA_ERROR} (when
+     * available)
+     * <li>the invalid element text from an
+     * {@link EDIStreamEvent#ELEMENT_OCCURRENCE_ERROR ELEMENT_OCCURRENCE_ERROR}
+     * (when available)
+     * <li>the string value of a segment tag for a
+     * {@link EDIStreamEvent#SEGMENT_ERROR SEGMENT_ERROR} event
+     * </ul>
+     *
+     * @return the current text or an empty {@link java.lang.String String}
      * @throws IllegalStateException
      *             if this state is not a valid text state
      */
     String getText();
 
     /**
-     * Returns an array which contains the characters from this event. This
-     * array should be treated as read-only and transient. I.e. the array will
-     * contain the text characters until the EDIStreamReader moves on to the
-     * next event. Attempts to hold onto the character array beyond that time or
-     * modify the contents of the array are breaches of the contract for this
-     * interface.
+     * Returns an array which contains the characters from this event (as
+     * specified by {@link #getText}). This array should be treated as read-only
+     * and transient. I.e. the array will contain the text characters until the
+     * EDIStreamReader moves on to the next event. Attempts to hold onto the
+     * character array beyond that time or modify the contents of the array are
+     * breaches of the contract for this interface.
      *
      * @return the current text or an empty array
      * @throws IllegalStateException
@@ -307,16 +321,16 @@ public interface EDIStreamReader extends Closeable, EDIStreamConstants {
     char[] getTextCharacters();
 
     /**
-     * Gets the the text associated with a ELEMENT_DATA, ELEMENT_ERROR,
-     * START_SEGMENT, or END_SEGMENT event. Text starting at "sourceStart" is
-     * copied into "target" starting at "targetStart". Up to "length" characters
-     * are copied. The number of characters actually copied is returned. The
-     * "sourceStart" argument must be greater or equal to 0 and less than or
-     * equal to the number of characters associated with the event. Usually, one
-     * requests text starting at a "sourceStart" of 0. If the number of
-     * characters actually copied is less than the "length", then there is no
-     * more text. Otherwise, subsequent calls need to be made until all text has
-     * been retrieved.
+     * Returns the the text associated with an event (as specified by
+     * {@link #getText}). Text starting at "sourceStart" is copied into "target"
+     * starting at "targetStart". Up to "length" characters are copied. The
+     * number of characters actually copied is returned. The "sourceStart"
+     * argument must be greater or equal to 0 and less than or equal to the
+     * number of characters associated with the event. Usually, one requests
+     * text starting at a "sourceStart" of 0. If the number of characters
+     * actually copied is less than the "length", then there is no more text.
+     * Otherwise, subsequent calls need to be made until all text has been
+     * retrieved.
      *
      * For example:
      *
@@ -446,4 +460,21 @@ public interface EDIStreamReader extends Closeable, EDIStreamConstants {
      * @since 1.9
      */
     EDIReference getSchemaTypeReference();
+
+    /**
+     * Return true if the current event has text, false otherwise. The following
+     * events have text:
+     * <ul>
+     * <li>START_SEGMENT
+     * <li>END_SEGMENT
+     * <li>ELEMENT_DATA
+     * <li>ELEMENT_DATA_ERROR
+     * <li>ELEMENT_OCCURRENCE_ERROR
+     * <li>SEGMENT_ERROR
+     * </ul>
+     *
+     * @return true if the current event has text, false otherwise
+     * @since 1.20
+     */
+    boolean hasText();
 }
