@@ -48,7 +48,18 @@ public class SchemaReaderV4 extends SchemaReaderV3 {
                 }
             }
 
-            URL schemaLocation = context != null ? new URL(context, location) : new URL(location);
+            URL schemaLocation;
+
+            if (location.startsWith("classpath:")) {
+                ClassLoader loader = Thread.currentThread().getContextClassLoader();
+                if (location.startsWith("classpath:/")) {
+                    location = location.substring(0, "classpath:".length()) + location.substring("classpath:/".length());
+                }
+                schemaLocation = new URL(null, location, new ClasspathURLStreamHandler(loader));
+            } else {
+                schemaLocation = new URL(context, location);
+            }
+
             types.putAll(StaEDISchemaFactory.readSchemaTypes(schemaLocation, super.properties));
             reader.nextTag(); // End of include
         } catch (Exception e) {

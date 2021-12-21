@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <schema xmlns="http://xlate.io/EDISchema/v4">
 
-  <include schemaLocation="file:./target/test-classes/x12/005010/837.xml"/>
+  <include schemaLocation="classpath:x12/005010/837.xml"/>
 
   <implementation>
     <sequence>
