@@ -357,4 +357,8 @@ public enum State {
         return TRANSITIONS[dialect][code][clazz.code];
     }
 
+    public boolean isHeaderState() {
+        return Category.HEADER == code;
+    }
+
 }

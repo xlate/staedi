@@ -219,7 +219,7 @@ class StaEDIStreamWriterTest {
         writer.startInterchange();
         writer.writeStartSegment("ISA");
         writer.writeStartElement().writeElementData("E1").endElement();
-        writer.writeEndSegment();
+        assertThrows(EDIStreamException.class, () -> writer.writeEndSegment());
         writer.flush();
         unconfirmedBufferEquals("ISA*E1~", writer);
     }
@@ -349,8 +349,8 @@ class StaEDIStreamWriterTest {
         writer.writeStartElement()
               .startComponent()
               .endComponent()
-              .startComponent()
-              .writeEndSegment();
+              .startComponent();
+        assertThrows(EDIStreamException.class, () -> writer.writeEndSegment());
         writer.flush();
         unconfirmedBufferEquals("ISA*:~", writer);
     }
@@ -369,8 +369,8 @@ class StaEDIStreamWriterTest {
               .startComponent()
               .endComponent()
               .endElement()
-              .writeEmptyElement()
-              .writeEndSegment();
+              .writeEmptyElement();
+        assertThrows(EDIStreamException.class, () -> writer.writeEndSegment());
         writer.flush();
 
         unconfirmedBufferEquals("ISA~", writer);
@@ -418,7 +418,7 @@ class StaEDIStreamWriterTest {
         writer.writeEmptyElement();
         writer.writeEmptyElement();
         writer.writeEmptyElement();
-        writer.writeEndSegment();
+        assertThrows(EDIStreamException.class, () -> writer.writeEndSegment());
         writer.flush();
         unconfirmedBufferEquals("ISA****~", writer);
     }
@@ -435,7 +435,7 @@ class StaEDIStreamWriterTest {
         writer.writeEmptyComponent();
         writer.writeEmptyComponent();
         writer.writeEmptyComponent();
-        writer.writeEndSegment();
+        assertThrows(EDIStreamException.class, () -> writer.writeEndSegment());
         writer.flush();
         unconfirmedBufferEquals("ISA*:::~", writer);
     }
@@ -454,7 +454,7 @@ class StaEDIStreamWriterTest {
         writer.writeEmptyComponent();
         writer.writeEmptyComponent();
         writer.endElement();
-        writer.writeEndSegment();
+        assertThrows(EDIStreamException.class, () -> writer.writeEndSegment());
         writer.flush();
         unconfirmedBufferEquals("ISA~", writer);
     }
@@ -513,7 +513,7 @@ class StaEDIStreamWriterTest {
         writer.endElement();
         writer.writeEmptyElement();
 
-        writer.writeEndSegment();
+        assertThrows(EDIStreamException.class, () -> writer.writeEndSegment());
         writer.flush();
 
         unconfirmedBufferEquals("ISA**:LAST*:::LAST*:SECOND::LAST***LAST~", writer);
@@ -528,7 +528,7 @@ class StaEDIStreamWriterTest {
         writer.writeStartSegment("ISA");
         writer.writeStartElement();
         writer.writeElementData("TEST-ELEMENT");
-        writer.writeEndSegment();
+        assertThrows(EDIStreamException.class, () -> writer.writeEndSegment());
         writer.flush();
         unconfirmedBufferEquals("ISA*TEST-ELEMENT~", writer);
     }
@@ -554,7 +554,7 @@ class StaEDIStreamWriterTest {
         writer.writeStartSegment("ISA");
         writer.writeStartElement();
         writer.writeElementData(new char[] { 'C', 'H', 'A', 'R', 'S' }, 0, 5);
-        writer.writeEndSegment();
+        assertThrows(EDIStreamException.class, () -> writer.writeEndSegment());
         writer.flush();
         unconfirmedBufferEquals("ISA*CHARS~", writer);
     }

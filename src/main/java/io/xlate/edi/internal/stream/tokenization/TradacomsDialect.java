@@ -15,6 +15,8 @@
  ******************************************************************************/
 package io.xlate.edi.internal.stream.tokenization;
 
+import java.util.Optional;
+
 import io.xlate.edi.stream.EDIStreamConstants.Standards;
 import io.xlate.edi.stream.Location;
 
@@ -126,6 +128,16 @@ public class TradacomsDialect extends Dialect {
         }
 
         return proceed;
+    }
+
+    @Override
+    public Optional<String> assertValidHeaderEnd() {
+        if (isRejected()) {
+            return Optional.of(getRejectionMessage());
+        } else if (!isConfirmed()) {
+            return Optional.of("TRADACOMS STX segment incomplete");
+        }
+        return Optional.empty();
     }
 
     boolean processInterchangeHeader(CharacterSet characters, char value) {

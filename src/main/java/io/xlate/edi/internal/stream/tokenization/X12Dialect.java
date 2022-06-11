@@ -15,6 +15,8 @@
  ******************************************************************************/
 package io.xlate.edi.internal.stream.tokenization;
 
+import java.util.Optional;
+
 import io.xlate.edi.stream.EDIStreamConstants.Standards;
 import io.xlate.edi.stream.Location;
 
@@ -156,6 +158,16 @@ public class X12Dialect extends Dialect {
         }
 
         return proceed;
+    }
+
+    @Override
+    public Optional<String> assertValidHeaderEnd() {
+        if (isRejected()) {
+            return Optional.of(getRejectionMessage());
+        } else if (index < X12_SEGMENT_OFFSET) {
+            return Optional.of("Invalid X12 ISA segment: too short or elements missing");
+        }
+        return Optional.empty();
     }
 
     @Override

@@ -15,6 +15,8 @@
  ******************************************************************************/
 package io.xlate.edi.internal.stream.tokenization;
 
+import java.util.Optional;
+
 import io.xlate.edi.stream.Location;
 
 public abstract class Dialect {
@@ -116,6 +118,12 @@ public abstract class Dialect {
     public abstract String getHeaderTag();
 
     public abstract boolean appendHeader(CharacterSet characters, char value);
+
+    /**
+     * Check if the current state of the dialect is at a valid end of segment position.
+     * If false, the reason will be given to the provided reasonHandler.
+     */
+    public abstract Optional<String> assertValidHeaderEnd();
 
     /**
      * Notify the dialect of element data and its location in the stream. Does

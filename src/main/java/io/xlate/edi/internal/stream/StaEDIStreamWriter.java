@@ -307,6 +307,10 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     }
 
     private void write(int output) throws EDIStreamException {
+        write(output, false);
+    }
+
+    private void write(int output, boolean isPrettyPrint) throws EDIStreamException {
         CharacterClass clazz;
 
         clazz = characters.getClass(output);
@@ -322,7 +326,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         case HEADER_EDIFACT_U: // U(NA) or U(NB)
         case HEADER_TRADACOMS_S: // S(TX)
             unconfirmedBuffer.clear();
-            writeHeader((char) output);
+            writeHeader((char) output, isPrettyPrint);
             break;
         case HEADER_X12_S:
         case HEADER_EDIFACT_N:
@@ -332,7 +336,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         case HEADER_ELEMENT_END:
         case HEADER_COMPONENT_END:
         case HEADER_SEGMENT_END:
-            writeHeader((char) output);
+            writeHeader((char) output, isPrettyPrint);
             break;
         case INVALID:
             throw new EDIException(String.format("Invalid state: %s; output 0x%04X", state, output));
@@ -342,8 +346,8 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         }
     }
 
-    void writeHeader(char output) throws EDIStreamException {
-        if (!dialect.appendHeader(characters, output)) {
+    void writeHeader(char output, boolean isPrettyPrint) throws EDIStreamException {
+        if (!isPrettyPrint && !dialect.appendHeader(characters, output)) {
             throw new EDIStreamException(String.format("Unexpected header character: 0x%04X [%s]", (int) output, output), location);
         }
 
@@ -381,6 +385,9 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
             while (unconfirmedBuffer.hasRemaining()) {
                 writeOutput(unconfirmedBuffer.get());
             }
+        } else if (dialect.isRejected()) {
+            state = State.INITIAL;
+            throw new EDIStreamException(dialect.getRejectionMessage(), location);
         }
     }
 
@@ -499,7 +506,9 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         write(this.segmentTerminator);
 
         if (prettyPrint) {
-            writeString(prettyPrintString);
+            for (int i = 0, m = prettyPrintString.length(); i < m; i++) {
+                write(prettyPrintString.charAt(i), true);
+            }
         }
     }
 
@@ -521,6 +530,22 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         }
 
         writeSegmentTerminator();
+
+        switch (state) {
+        case SEGMENT_END:
+        case HEADER_SEGMENT_END:
+        case INITIAL: // Ending final segment of the interchange
+            break;
+        default:
+            if (state.isHeaderState()) {
+                Optional<String> invalidHeaderReason = dialect.assertValidHeaderEnd();
+
+                if (invalidHeaderReason.isPresent()) {
+                    throw new EDIStreamException(invalidHeaderReason.get());
+                }
+            }
+            break;
+        }
 
         level = LEVEL_INTERCHANGE;
         location.clearSegmentLocations();
