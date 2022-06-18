@@ -228,7 +228,7 @@ public class EDIFACTDialect extends Dialect {
             break;
         }
 
-        if (index > EDIFACT_UNA_LENGTH) {
+        if (index >= EDIFACT_UNA_LENGTH) {
             if (characters.isIgnored(value)) {
                 header.deleteCharAt(index--);
             } else if (isIndexBeyondUNBFirstElement()) {
@@ -243,10 +243,12 @@ public class EDIFACTDialect extends Dialect {
                     unbStart = index - 2;
                 } else {
                     // Some other segment / element?
+                    rejectionMessage = String.format("Expected UNB segment following UNA but received %s%s", un, value);
                     proceed = false;
                 }
             } else if (isUnexpectedSegmentDetected(value)) {
                 // Some other segment / element?
+                rejectionMessage = String.format("Expected UNB segment following UNA but received %s", header.subSequence(EDIFACT_UNA_LENGTH, index));
                 proceed = false;
             }
         }
@@ -259,7 +261,7 @@ public class EDIFACTDialect extends Dialect {
     }
 
     boolean isUnexpectedSegmentDetected(int value) {
-        return unbStart < 0 && value == elementDelimiter;
+        return unbStart < 0 && (value == elementDelimiter || value == segmentDelimiter);
     }
 
     void setCharacterClass(CharacterSet characters, CharacterClass charClass, char value, boolean allowSpace) {

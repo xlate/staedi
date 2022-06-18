@@ -270,7 +270,7 @@
     </enumeration>
   </elementType>
 
-  <elementType name="I65" base="string" title="Repetition Separator"/>
+  <elementType name="I65" base="string" minLength="1" maxLength="1" title="Repetition Separator"/>
 
   <!-- Elements for ISX Segment (Interchange Syntax Extension) -->
   <elementType name="I69" base="string" minLength="1" maxLength="1" title="Release Character"/>

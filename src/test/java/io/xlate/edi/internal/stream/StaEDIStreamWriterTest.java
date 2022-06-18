@@ -197,7 +197,7 @@ class StaEDIStreamWriterTest {
         writer.writeElement("0");
         writer.writeElement("P");
         EDIStreamException thrown = assertThrows(EDIStreamException.class, () -> writer.writeElement(":"));
-        assertEquals("Unexpected header character: 0x002A [*] in segment ISA at position 1, element 16", thrown.getMessage());
+        assertEquals("Failed writing X12 header: Element delimiter '*' required in position 18 of X12 header but not found", thrown.getMessage());
     }
 
     @Test
@@ -219,7 +219,7 @@ class StaEDIStreamWriterTest {
         writer.startInterchange();
         writer.writeStartSegment("ISA");
         writer.writeStartElement().writeElementData("E1").endElement();
-        writer.writeEndSegment();
+        assertThrows(EDIStreamException.class, () -> writer.writeEndSegment());
         writer.flush();
         unconfirmedBufferEquals("ISA*E1~", writer);
     }
@@ -349,8 +349,8 @@ class StaEDIStreamWriterTest {
         writer.writeStartElement()
               .startComponent()
               .endComponent()
-              .startComponent()
-              .writeEndSegment();
+              .startComponent();
+        assertThrows(EDIStreamException.class, () -> writer.writeEndSegment());
         writer.flush();
         unconfirmedBufferEquals("ISA*:~", writer);
     }
@@ -369,8 +369,8 @@ class StaEDIStreamWriterTest {
               .startComponent()
               .endComponent()
               .endElement()
-              .writeEmptyElement()
-              .writeEndSegment();
+              .writeEmptyElement();
+        assertThrows(EDIStreamException.class, () -> writer.writeEndSegment());
         writer.flush();
 
         unconfirmedBufferEquals("ISA~", writer);
@@ -418,7 +418,7 @@ class StaEDIStreamWriterTest {
         writer.writeEmptyElement();
         writer.writeEmptyElement();
         writer.writeEmptyElement();
-        writer.writeEndSegment();
+        assertThrows(EDIStreamException.class, () -> writer.writeEndSegment());
         writer.flush();
         unconfirmedBufferEquals("ISA****~", writer);
     }
@@ -435,7 +435,7 @@ class StaEDIStreamWriterTest {
         writer.writeEmptyComponent();
         writer.writeEmptyComponent();
         writer.writeEmptyComponent();
-        writer.writeEndSegment();
+        assertThrows(EDIStreamException.class, () -> writer.writeEndSegment());
         writer.flush();
         unconfirmedBufferEquals("ISA*:::~", writer);
     }
@@ -454,7 +454,7 @@ class StaEDIStreamWriterTest {
         writer.writeEmptyComponent();
         writer.writeEmptyComponent();
         writer.endElement();
-        writer.writeEndSegment();
+        assertThrows(EDIStreamException.class, () -> writer.writeEndSegment());
         writer.flush();
         unconfirmedBufferEquals("ISA~", writer);
     }
@@ -513,7 +513,7 @@ class StaEDIStreamWriterTest {
         writer.endElement();
         writer.writeEmptyElement();
 
-        writer.writeEndSegment();
+        assertThrows(EDIStreamException.class, () -> writer.writeEndSegment());
         writer.flush();
 
         unconfirmedBufferEquals("ISA**:LAST*:::LAST*:SECOND::LAST***LAST~", writer);
@@ -528,7 +528,7 @@ class StaEDIStreamWriterTest {
         writer.writeStartSegment("ISA");
         writer.writeStartElement();
         writer.writeElementData("TEST-ELEMENT");
-        writer.writeEndSegment();
+        assertThrows(EDIStreamException.class, () -> writer.writeEndSegment());
         writer.flush();
         unconfirmedBufferEquals("ISA*TEST-ELEMENT~", writer);
     }
@@ -554,7 +554,7 @@ class StaEDIStreamWriterTest {
         writer.writeStartSegment("ISA");
         writer.writeStartElement();
         writer.writeElementData(new char[] { 'C', 'H', 'A', 'R', 'S' }, 0, 5);
-        writer.writeEndSegment();
+        assertThrows(EDIStreamException.class, () -> writer.writeEndSegment());
         writer.flush();
         unconfirmedBufferEquals("ISA*CHARS~", writer);
     }
@@ -2149,5 +2149,26 @@ class StaEDIStreamWriterTest {
             assertEquals(position, thrown.getLocation().getElementPosition());
             thrown = thrown.getNextException();
         }
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = { "UNX", "XYB" })
+    void testUnexpectedHeaderEDIFACT(String segmentTag) throws IOException, EDIStreamException, EDISchemaException {
+        final EDIOutputFactory factory = EDIOutputFactory.newFactory();
+        ByteArrayOutputStream stream = new ByteArrayOutputStream(4096);
+        EDIStreamException thrown = null;
+
+        try (EDIStreamWriter writer = factory.createEDIStreamWriter(stream)) {
+            writer.startInterchange();
+            writer.writeStartSegment("UNA")
+                .writeEndSegment();
+            thrown = assertThrows(EDIStreamException.class, () -> { // NOSONAR
+                // Exception thrown at different positions depending on the segment tag
+                writer.writeStartSegment(segmentTag);
+                writer.writeEndSegment();
+            });
+        }
+
+        assertEquals("Failed writing EDIFACT header: Expected UNB segment following UNA but received " + segmentTag, thrown.getMessage());
     }
 }

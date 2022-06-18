@@ -17,8 +17,8 @@ package io.xlate.edi.internal.stream.tokenization;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 
 import org.junit.jupiter.api.Test;
 
@@ -37,14 +37,19 @@ class X12DialectTest {
     }
 
     @Test
-    void testInitialize() {
-        try {
-            X12Dialect x12 = (X12Dialect) DialectFactory.getDialect("ISA".toCharArray(), 0, 3);
-            x12.header = "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~".toCharArray();
-            x12.initialize(new CharacterSet());
-        } catch (Exception e) {
-            fail("Unexpected exception: " + e.getMessage());
-        }
+    void testInitializeTrue() throws EDIException {
+        X12Dialect x12 = (X12Dialect) DialectFactory.getDialect("ISA".toCharArray(), 0, 3);
+        x12.header = "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~".toCharArray();
+        assertTrue(x12.initialize(new CharacterSet()));
+    }
+
+    @Test
+    void testInitializeRejected() throws EDIException {
+        X12Dialect x12 = (X12Dialect) DialectFactory.getDialect("ISA".toCharArray(), 0, 3);
+        x12.header = "ISA*00*    *     *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~".toCharArray();
+        assertFalse(x12.initialize(new CharacterSet()));
+        assertTrue(x12.isRejected());
+        assertEquals("Unexpected element delimiter value '*' in X12 header position 12", x12.getRejectionMessage());
     }
 
     @Test

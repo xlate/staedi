@@ -15,6 +15,10 @@
  ******************************************************************************/
 package io.xlate.edi.internal.stream.tokenization;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
 import io.xlate.edi.stream.EDIStreamConstants.Standards;
 import io.xlate.edi.stream.Location;
 
@@ -39,7 +43,8 @@ public class X12Dialect extends Dialect {
     private static final int X12_SEGMENT_OFFSET = 105;
     private static final int X12_REPEAT_OFFSET = 82;
 
-    private static final int[] X12_ISA_TOKENS = { 3, 6, 17, 20, 31, 34, 50, 53, 69, 76, 81, 83, 89, 99, 101, 103 };
+    private static final Integer[] X12_ISA_TOKENS = { 3, 6, 17, 20, 31, 34, 50, 53, 69, 76, 81, 83, 89, 99, 101, 103 };
+    private static final Set<Integer> elementDelimiterOffsets = new HashSet<>(Arrays.asList(X12_ISA_TOKENS));
 
     private String[] version;
     char[] header;
@@ -75,13 +80,17 @@ public class X12Dialect extends Dialect {
     }
 
     boolean initialize(CharacterSet characters) {
-        final char ELEMENT = header[X12_ELEMENT_OFFSET];
-        int e = 0;
-
         for (int i = 0, m = X12_ISA_LENGTH; i < m; i++) {
-            if (ELEMENT == header[i] && X12_ISA_TOKENS[e++] != i) {
-                rejectionMessage = String.format("Unexpected element delimiter value '%s' in X12 header position %d", ELEMENT, i + 1);
-                return false;
+            if (elementDelimiterOffsets.contains(i)) {
+                if (elementDelimiter != header[i]) {
+                    rejectionMessage = String.format("Element delimiter '%s' required in position %d of X12 header but not found", elementDelimiter, i + 1);
+                    return false;
+                }
+            } else {
+                if (elementDelimiter == header[i]) {
+                    rejectionMessage = String.format("Unexpected element delimiter value '%s' in X12 header position %d", elementDelimiter, i + 1);
+                    return false;
+                }
             }
         }
 
