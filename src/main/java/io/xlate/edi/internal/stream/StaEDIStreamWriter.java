@@ -349,10 +349,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
 
     void writeHeader(char output, boolean isPrettyPrint) throws EDIStreamException {
         if (!isPrettyPrint && !dialect.appendHeader(characters, output)) {
-            if (dialect.isRejected()) {
-                throw new EDIStreamException(dialect.getRejectionMessage());
-            }
-            throw new EDIStreamException(String.format("Unexpected header character: 0x%04X [%s]", (int) output, output), location);
+            throw new EDIStreamException(String.format("Failed writing %s header: %s", dialect.getStandard(), dialect.getRejectionMessage()));
         }
 
         unconfirmedBuffer.append(output);

@@ -197,7 +197,7 @@ class StaEDIStreamWriterTest {
         writer.writeElement("0");
         writer.writeElement("P");
         EDIStreamException thrown = assertThrows(EDIStreamException.class, () -> writer.writeElement(":"));
-        assertEquals("Element delimiter '*' required in position 18 of X12 header but not found", thrown.getMessage());
+        assertEquals("Failed writing X12 header: Element delimiter '*' required in position 18 of X12 header but not found", thrown.getMessage());
     }
 
     @Test
@@ -2149,5 +2149,26 @@ class StaEDIStreamWriterTest {
             assertEquals(position, thrown.getLocation().getElementPosition());
             thrown = thrown.getNextException();
         }
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = { "UNX", "XYB" })
+    void testUnexpectedHeaderEDIFACT(String segmentTag) throws IOException, EDIStreamException, EDISchemaException {
+        final EDIOutputFactory factory = EDIOutputFactory.newFactory();
+        ByteArrayOutputStream stream = new ByteArrayOutputStream(4096);
+        EDIStreamException thrown = null;
+
+        try (EDIStreamWriter writer = factory.createEDIStreamWriter(stream)) {
+            writer.startInterchange();
+            writer.writeStartSegment("UNA")
+                .writeEndSegment();
+            thrown = assertThrows(EDIStreamException.class, () -> { // NOSONAR
+                // Exception thrown at different positions depending on the segment tag
+                writer.writeStartSegment(segmentTag);
+                writer.writeEndSegment();
+            });
+        }
+
+        assertEquals("Failed writing EDIFACT header: Expected UNB segment following UNA but received " + segmentTag, thrown.getMessage());
     }
 }
