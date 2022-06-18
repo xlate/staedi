@@ -197,7 +197,7 @@ class StaEDIStreamWriterTest {
         writer.writeElement("0");
         writer.writeElement("P");
         EDIStreamException thrown = assertThrows(EDIStreamException.class, () -> writer.writeElement(":"));
-        assertEquals("Unexpected header character: 0x002A [*] in segment ISA at position 1, element 16", thrown.getMessage());
+        assertEquals("Element delimiter '*' required in position 18 of X12 header but not found", thrown.getMessage());
     }
 
     @Test

@@ -69,13 +69,18 @@ public interface EDIStreamWriter extends AutoCloseable {
      * group, and transaction/message envelopes.
      * <p>
      * Calls to this method are only valid before the interchange is started.
+     * <p>
+     * A built-in control schema may be obtained from
+     * {@link io.xlate.edi.schema.SchemaFactory#getControlSchema(String, String[])
+     * SchemaFactory#getControlSchema} to pass to this method.
      *
      * @param controlSchema
      *            the schema instance to use for validation of control
      *            structures
      * @throws IllegalStateException
      *             when the writer is not in its initial state
-     *
+     * @see io.xlate.edi.schema.SchemaFactory#getControlSchema(String, String[])
+     *      SchemaFactory#getControlSchema
      * @since 1.1
      */
     void setControlSchema(Schema controlSchema);

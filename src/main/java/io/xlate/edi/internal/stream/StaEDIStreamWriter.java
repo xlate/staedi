@@ -43,6 +43,7 @@ import io.xlate.edi.internal.stream.tokenization.EDIFACTDialect;
 import io.xlate.edi.internal.stream.tokenization.ElementDataHandler;
 import io.xlate.edi.internal.stream.tokenization.State;
 import io.xlate.edi.internal.stream.tokenization.ValidationEventHandler;
+import io.xlate.edi.internal.stream.tokenization.X12Dialect;
 import io.xlate.edi.internal.stream.validation.UsageError;
 import io.xlate.edi.internal.stream.validation.Validator;
 import io.xlate.edi.schema.EDIReference;
@@ -348,6 +349,9 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
 
     void writeHeader(char output, boolean isPrettyPrint) throws EDIStreamException {
         if (!isPrettyPrint && !dialect.appendHeader(characters, output)) {
+            if (dialect.isRejected()) {
+                throw new EDIStreamException(dialect.getRejectionMessage());
+            }
             throw new EDIStreamException(String.format("Unexpected header character: 0x%04X [%s]", (int) output, output), location);
         }
 
@@ -385,9 +389,6 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
             while (unconfirmedBuffer.hasRemaining()) {
                 writeOutput(unconfirmedBuffer.get());
             }
-        } else if (dialect.isRejected()) {
-            state = State.INITIAL;
-            throw new EDIStreamException(dialect.getRejectionMessage(), location);
         }
     }
 
@@ -405,6 +406,9 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         ensureLevel(LEVEL_INITIAL);
         ensureState(State.INITIAL);
         level = LEVEL_INTERCHANGE;
+        if (controlSchema == null) {
+            LOGGER.warning("Starting interchange without control structure validation. See EDIStreamWriter#setControlSchema");
+        }
         return this;
     }
 
@@ -537,12 +541,8 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         case INITIAL: // Ending final segment of the interchange
             break;
         default:
-            if (state.isHeaderState()) {
-                Optional<String> invalidHeaderReason = dialect.assertValidHeaderEnd();
-
-                if (invalidHeaderReason.isPresent()) {
-                    throw new EDIStreamException(invalidHeaderReason.get());
-                }
+            if (state.isHeaderState() && dialect instanceof X12Dialect) {
+                throw new EDIStreamException("Invalid X12 ISA segment: too short or elements missing");
             }
             break;
         }
@@ -956,31 +956,35 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     }
 
     private CharSequence validateElement(Runnable setupCommand, CharSequence data) {
-        return validator().map(validator -> {
-            CharSequence elementData;
+        return validator()
+                .map(validator -> validateElement(setupCommand, data, validator))
+                .orElse(data);
+    }
 
-            if (this.formatElements) {
-                elementData = this.formattedElement;
-                this.formattedElement.setLength(0);
-                this.formattedElement.append(data); // Validator will clear and re-format if configured
-            } else {
-                elementData = data;
-            }
+    CharSequence validateElement(Runnable setupCommand, CharSequence data, Validator validator) {
+        CharSequence elementData;
 
-            errors.clear();
-            setupCommand.run();
+        if (this.formatElements) {
+            elementData = this.formattedElement;
+            this.formattedElement.setLength(0);
+            this.formattedElement.append(data); // Validator will clear and re-format if configured
+        } else {
+            elementData = data;
+        }
 
-            if (!validator.validateElement(dialect, location, data, this.formattedElement)) {
-                reportElementErrors(validator, elementData);
-            }
+        errors.clear();
+        setupCommand.run();
 
-            if (!errors.isEmpty()) {
-                throw validationExceptionChain(errors);
-            }
+        if (!validator.validateElement(dialect, location, data, this.formattedElement)) {
+            reportElementErrors(validator, elementData);
+        }
 
-            dialect.elementData(elementData, location);
-            return elementData;
-        }).orElse(data);
+        if (!errors.isEmpty()) {
+            throw validationExceptionChain(errors);
+        }
+
+        dialect.elementData(elementData, location);
+        return elementData;
     }
 
     void reportElementErrors(Validator validator, CharSequence data) {

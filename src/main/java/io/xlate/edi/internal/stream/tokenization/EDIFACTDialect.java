@@ -15,8 +15,6 @@
  ******************************************************************************/
 package io.xlate.edi.internal.stream.tokenization;
 
-import java.util.Optional;
-
 import io.xlate.edi.stream.EDIStreamConstants.Standards;
 import io.xlate.edi.stream.Location;
 
@@ -180,26 +178,6 @@ public class EDIFACTDialect extends Dialect {
         }
 
         return proceed;
-    }
-
-    @Override
-    public Optional<String> assertValidHeaderEnd() {
-        if (isRejected()) {
-            return Optional.of(getRejectionMessage());
-        } else if (!isConfirmed()) {
-            if (UNB.equals(headerTag)) {
-                return Optional.of("EDIFACT UNB segment incomplete");
-            } else {
-                int length = header.length();
-
-                if (length < EDIFACT_UNA_LENGTH) {
-                    return Optional.of("EDIFACT UNA segment incomplete");
-                } else if (length > EDIFACT_UNA_LENGTH) {
-                    return Optional.of("EDIFACT UNB segment incomplete following UNA service advice segment");
-                }
-            }
-        }
-        return Optional.empty();
     }
 
     boolean processInterchangeHeader(CharacterSet characters, char value) {
