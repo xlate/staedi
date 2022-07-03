@@ -45,6 +45,7 @@ public class StaEDIInputFactory extends EDIInputFactory {
 
         supportedProperties.add(XML_DECLARE_TRANSACTION_XMLNS);
         supportedProperties.add(XML_WRAP_TRANSACTION_CONTENTS);
+        supportedProperties.add(XML_USE_SEGMENT_IMPLEMENTATION_CODES);
 
         supportedProperties.add(JSON_NULL_EMPTY_ELEMENTS);
         supportedProperties.add(JSON_OBJECT_ELEMENTS);

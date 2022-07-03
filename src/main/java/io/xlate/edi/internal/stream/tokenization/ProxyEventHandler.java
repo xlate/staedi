@@ -368,27 +368,30 @@ public class ProxyEventHandler implements EventHandler {
             setLevelIdentifiers();
         }
 
-        if (validator != null) {
-            valid = validator.validateElement(dialect, location, elementHolder, null);
-            derivedComposite = !compositeFromStream && validator.isComposite();
-            typeReference = validator.getElementReference();
-            enqueueElementOccurrenceErrors(validator, valid);
-        } else {
-            valid = true;
-            derivedComposite = false;
-            typeReference = null;
-        }
-
         /*
          * The first component of a composite was the only element received
          * for the composite. It was found to be a composite via the schema
          * and the composite begin/end events must be generated.
          **/
-        final boolean componentReceivedAsSimple = derivedComposite && text != null;
+        final boolean componentReceivedAsSimple;
 
-        if (componentReceivedAsSimple) {
-            this.compositeBegin(elementHolder.length() == 0);
-            location.incrementComponentPosition();
+        if (validator != null) {
+            derivedComposite = !compositeFromStream && validator.isComposite(dialect, location);
+            componentReceivedAsSimple = derivedComposite && text != null;
+
+            if (componentReceivedAsSimple) {
+                this.compositeBegin(elementHolder.length() == 0);
+                location.incrementComponentPosition();
+            }
+
+            valid = validator.validateElement(dialect, location, elementHolder, null);
+            typeReference = validator.getElementReference();
+            enqueueElementOccurrenceErrors(validator, valid);
+        } else {
+            valid = true;
+            derivedComposite = false;
+            componentReceivedAsSimple = false;
+            typeReference = null;
         }
 
         enqueueElementErrors(validator, valid);

@@ -945,4 +945,40 @@ class StaEDIXMLStreamReaderTest {
         assertTrue(!d.hasDifferences(), () -> "XML unexpectedly different:\n" + d.toString(new DefaultComparisonFormatter()));
     }
 
+    @Test
+    void testImplementationSegmentCodeUsage() throws Exception {
+        EDIInputFactory ediFactory = EDIInputFactory.newFactory();
+        ediFactory.setProperty(EDIInputFactory.XML_USE_SEGMENT_IMPLEMENTATION_CODES, Boolean.TRUE);
+        ediFactory.setErrorReporter((errorType, reader) -> {
+            // NO-OP
+        });
+        SchemaFactory schemaFactory = SchemaFactory.newFactory();
+
+        InputStream stream = getClass().getResourceAsStream("/x12/simple999.edi");
+        ediReader = ediFactory.createEDIStreamReader(stream);
+        Schema schema = schemaFactory.createSchema(getClass().getResource("/x12/IG-999-standard-included.xml"));
+
+        ediReader = ediFactory.createFilteredReader(ediReader, (reader) -> {
+            if (reader.getEventType() == EDIStreamEvent.START_TRANSACTION) {
+                reader.setTransactionSchema(schema);
+            }
+            return true;
+        });
+
+        XMLStreamReader xmlReader = ediFactory.createXMLStreamReader(ediReader);
+
+        xmlReader.next(); // Per StAXSource JavaDoc, put in START_DOCUMENT state
+        TransformerFactory factory = TransformerFactory.newInstance();
+        Transformer transformer = factory.newTransformer();
+        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+        transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
+        StringWriter result = new StringWriter();
+        transformer.transform(new StAXSource(xmlReader), new StreamResult(result));
+        String resultString = result.toString();
+        System.out.println(resultString);
+        Diff d = DiffBuilder.compare(Input.fromFile("src/test/resources/x12/impl-ack-with-segment-impl-codes.xml"))
+                .withTest(resultString).build();
+        assertTrue(!d.hasDifferences(), () -> "XML unexpectedly different:\n" + d.toString(new DefaultComparisonFormatter()));
+    }
+
 }

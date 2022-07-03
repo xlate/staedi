@@ -241,6 +241,14 @@
           </element>
         </sequence>
         <attribute name="type" type="IDREF" use="required" />
+        <attribute name="code" type="NMTOKEN" use="optional">
+          <annotation>
+            <documentation>
+              Code used to identify a segment within a loop. May be useful when occurrences of a
+              standard segment contain distinct information.
+            </documentation>
+          </annotation>
+        </attribute>
         <attributeGroup ref="tns:implementationAttributeGroup" />
         <attribute name="discriminator" type="tns:discriminatorType" use="optional">
           <annotation>

@@ -30,7 +30,7 @@
                   <element position="4" minOccurs="1" />
                 </sequence>
               </segment>
-              <segment type="CTX" discriminator="01.01" maxOccurs="9">
+              <segment type="CTX" discriminator="01.01" maxOccurs="9" code="SegmentContext">
                 <sequence>
                   <composite position="1">
                     <sequence>
@@ -52,7 +52,7 @@
                   </composite>
                 </sequence>
               </segment>
-              <segment type="CTX" maxOccurs="1">
+              <segment type="CTX" maxOccurs="1" code="BusinessUnitIdentifier">
                 <sequence>
                   <composite position="1">
                     <sequence>
@@ -68,7 +68,7 @@
                   <segment type="IK4">
                       <!-- Unchanged from standard -->
                   </segment>
-                  <segment type="CTX" maxOccurs="10">
+                  <segment type="CTX" maxOccurs="10" code="ElementContext">
                     <sequence>
                       <composite position="1">
                         <sequence>
