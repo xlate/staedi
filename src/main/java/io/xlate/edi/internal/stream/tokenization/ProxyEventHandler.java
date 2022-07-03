@@ -356,7 +356,6 @@ public class ProxyEventHandler implements EventHandler {
     public boolean elementData(char[] text, int start, int length) {
         boolean derivedComposite;
         EDIReference typeReference;
-        boolean eventsReady = true;
         final boolean compositeFromStream = location.getComponentPosition() > -1;
 
         elementHolder.set(text, start, length);
@@ -396,6 +395,8 @@ public class ProxyEventHandler implements EventHandler {
 
         enqueueElementErrors(validator, valid);
 
+        boolean eventsReady = true;
+
         if (text != null && (!derivedComposite || length > 0) /* Not an inferred element */) {
             enqueueEvent(EDIStreamEvent.ELEMENT_DATA,
                          EDIStreamValidationError.NONE,
@@ -403,9 +404,7 @@ public class ProxyEventHandler implements EventHandler {
                          typeReference,
                          location);
 
-            if (validator != null && validator.isPendingDiscrimination()) {
-                eventsReady = validator.selectImplementation(eventQueue, this);
-            }
+            eventsReady = selectImplementationIfPending(validator, eventsReady);
         }
 
         if (componentReceivedAsSimple) {
@@ -414,6 +413,14 @@ public class ProxyEventHandler implements EventHandler {
         }
 
         return !levelCheckPending && eventsReady;
+    }
+
+    boolean selectImplementationIfPending(Validator validator, boolean eventsReadyDefault) {
+        if (validator != null && validator.isPendingDiscrimination()) {
+            return validator.selectImplementation(eventQueue, this);
+        }
+
+        return eventsReadyDefault;
     }
 
     void clearLevelCheck() {
