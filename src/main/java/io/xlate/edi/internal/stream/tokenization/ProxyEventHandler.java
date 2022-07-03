@@ -356,7 +356,6 @@ public class ProxyEventHandler implements EventHandler {
     public boolean elementData(char[] text, int start, int length) {
         boolean derivedComposite;
         EDIReference typeReference;
-        boolean eventsReady = true;
         final boolean compositeFromStream = location.getComponentPosition() > -1;
 
         elementHolder.set(text, start, length);
@@ -368,30 +367,35 @@ public class ProxyEventHandler implements EventHandler {
             setLevelIdentifiers();
         }
 
-        if (validator != null) {
-            valid = validator.validateElement(dialect, location, elementHolder, null);
-            derivedComposite = !compositeFromStream && validator.isComposite();
-            typeReference = validator.getElementReference();
-            enqueueElementOccurrenceErrors(validator, valid);
-        } else {
-            valid = true;
-            derivedComposite = false;
-            typeReference = null;
-        }
-
         /*
          * The first component of a composite was the only element received
          * for the composite. It was found to be a composite via the schema
          * and the composite begin/end events must be generated.
          **/
-        final boolean componentReceivedAsSimple = derivedComposite && text != null;
+        final boolean componentReceivedAsSimple;
 
-        if (componentReceivedAsSimple) {
-            this.compositeBegin(elementHolder.length() == 0);
-            location.incrementComponentPosition();
+        if (validator != null) {
+            derivedComposite = !compositeFromStream && validator.isComposite(dialect, location);
+            componentReceivedAsSimple = derivedComposite && text != null;
+
+            if (componentReceivedAsSimple) {
+                this.compositeBegin(elementHolder.length() == 0);
+                location.incrementComponentPosition();
+            }
+
+            valid = validator.validateElement(dialect, location, elementHolder, null);
+            typeReference = validator.getElementReference();
+            enqueueElementOccurrenceErrors(validator, valid);
+        } else {
+            valid = true;
+            derivedComposite = false;
+            componentReceivedAsSimple = false;
+            typeReference = null;
         }
 
         enqueueElementErrors(validator, valid);
+
+        boolean eventsReady = true;
 
         if (text != null && (!derivedComposite || length > 0) /* Not an inferred element */) {
             enqueueEvent(EDIStreamEvent.ELEMENT_DATA,
@@ -400,9 +404,7 @@ public class ProxyEventHandler implements EventHandler {
                          typeReference,
                          location);
 
-            if (validator != null && validator.isPendingDiscrimination()) {
-                eventsReady = validator.selectImplementation(eventQueue, this);
-            }
+            eventsReady = selectImplementationIfPending(validator, eventsReady);
         }
 
         if (componentReceivedAsSimple) {
@@ -411,6 +413,14 @@ public class ProxyEventHandler implements EventHandler {
         }
 
         return !levelCheckPending && eventsReady;
+    }
+
+    boolean selectImplementationIfPending(Validator validator, boolean eventsReadyDefault) {
+        if (validator != null && validator.isPendingDiscrimination()) {
+            return validator.selectImplementation(eventQueue, this);
+        }
+
+        return eventsReadyDefault;
     }
 
     void clearLevelCheck() {

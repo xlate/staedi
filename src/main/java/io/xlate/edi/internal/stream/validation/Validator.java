@@ -1022,8 +1022,28 @@ public class Validator {
         return elementErrors.isEmpty();
     }
 
-    public boolean isComposite() {
+    boolean isComposite() {
+        return isComposite(this.composite);
+    }
+
+    static boolean isComposite(UsageNode composite) {
         return composite != null && !StaEDISchema.ANY_COMPOSITE_ID.equals(composite.getId());
+    }
+
+    public boolean isComposite(Dialect dialect, StaEDIStreamLocation position) {
+        if (!segmentExpected) {
+            return false;
+        }
+
+        final String version = dialect.getTransactionVersionString();
+        final int elementPosition = position.getElementPosition() - 1;
+
+        if (elementPosition < segment.getChildren(version).size()) {
+            UsageNode candidate = segment.getChild(version, elementPosition);
+            return candidate.isNodeType(EDIType.Type.COMPOSITE) && isComposite(candidate);
+        }
+
+        return false;
     }
 
     public boolean validateElement(Dialect dialect, StaEDIStreamLocation position, CharSequence value, StringBuilder formattedValue) {
@@ -1104,7 +1124,7 @@ public class Validator {
             String version = dialect.getTransactionVersionString();
 
             if (componentIndex < element.getChildren(version).size()) {
-                if (valueReceived || componentIndex != 0 /* Derived component*/) {
+                if (valueReceived || componentIndex != 0 /* Derived component */) {
                     this.element = this.element.getChild(version, componentIndex);
 
                     if (isImplElementSelected()) {

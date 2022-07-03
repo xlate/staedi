@@ -54,6 +54,16 @@ public abstract class EDIInputFactory extends PropertySupport {
     public static final String XML_WRAP_TRANSACTION_CONTENTS = "io.xlate.edi.stream.XML_WRAP_TRANSACTION_CONTENTS";
 
     /**
+     * When set to true, the XML elements representing segments in an EDI implementation schema
+     * will be named according to the schema-defined {@code code} attribute for the segment.
+     *
+     * Default value: false
+     *
+     * @since 1.21
+     */
+    public static final String XML_USE_SEGMENT_IMPLEMENTATION_CODES = "io.xlate.edi.stream.XML_USE_SEGMENT_IMPLEMENTATION_CODES";
+
+    /**
      * When set to true, non-graphical, control characters will be ignored in
      * the EDI input stream. This includes characters ranging from 0x00 through
      * 0x1F and 0x7F.

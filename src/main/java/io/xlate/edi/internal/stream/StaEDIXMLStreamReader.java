@@ -54,11 +54,13 @@ final class StaEDIXMLStreamReader implements XMLStreamReader {
     private final Map<String, Object> properties;
     private final boolean transactionDeclaresXmlns;
     private final boolean wrapTransactionContents;
+    private final boolean useSegmentImplementationCodes;
     private final Location location = new ProxyLocation();
 
     private final Queue<Integer> eventQueue = new ArrayDeque<>(3);
     private final Queue<QName> elementQueue = new ArrayDeque<>(3);
     private final Deque<QName> elementStack = new ArrayDeque<>(5);
+    private final Deque<QName> standardNameStack = new ArrayDeque<>(5);
 
     private boolean withinTransaction = false;
     private boolean transactionWrapperEnqueued = false;
@@ -85,6 +87,7 @@ final class StaEDIXMLStreamReader implements XMLStreamReader {
         this.properties = new HashMap<>(properties);
         transactionDeclaresXmlns = Boolean.valueOf(String.valueOf(properties.get(EDIInputFactory.XML_DECLARE_TRANSACTION_XMLNS)));
         wrapTransactionContents = Boolean.valueOf(String.valueOf(properties.get(EDIInputFactory.XML_WRAP_TRANSACTION_CONTENTS)));
+        useSegmentImplementationCodes = Boolean.valueOf(String.valueOf(properties.get(EDIInputFactory.XML_USE_SEGMENT_IMPLEMENTATION_CODES)));
 
         if (ediReader.getEventType() == EDIStreamEvent.START_INTERCHANGE) {
             enqueueEvent(EDIStreamEvent.START_INTERCHANGE);
@@ -138,13 +141,27 @@ final class StaEDIXMLStreamReader implements XMLStreamReader {
     }
 
     private void enqueueEvent(int xmlEvent, QName element, boolean remember) {
+        enqueueEvent(xmlEvent, element, element, remember);
+    }
+
+    private void enqueueEvent(int xmlEvent, QName element, QName standardName, boolean remember) {
         LOGGER.finer(() -> "Enqueue XML event: " + xmlEvent + ", element: " + element);
         eventQueue.add(xmlEvent);
         elementQueue.add(element);
 
         if (remember) {
             elementStack.addFirst(element);
+            standardNameStack.addFirst(standardName);
         }
+    }
+
+    QName parentName() {
+        return standardNameStack.getFirst();
+    }
+
+    QName popElement() {
+        standardNameStack.removeFirst();
+        return elementStack.removeFirst();
     }
 
     private void advanceEvent() {
@@ -161,7 +178,7 @@ final class StaEDIXMLStreamReader implements XMLStreamReader {
 
         switch (ediEvent) {
         case ELEMENT_DATA:
-            name = buildName(elementStack.getFirst(), EDINamespaces.ELEMENTS);
+            name = buildName(parentName(), EDINamespaces.ELEMENTS);
             enqueueEvent(START_ELEMENT, name, false);
             enqueueEvent(CHARACTERS, DUMMY_QNAME, false);
             enqueueEvent(END_ELEMENT, name, false);
@@ -172,7 +189,7 @@ final class StaEDIXMLStreamReader implements XMLStreamReader {
              * This section will read the binary data and Base64 the stream
              * into an XML CDATA section.
              * */
-            name = buildName(elementStack.getFirst(), EDINamespaces.ELEMENTS);
+            name = buildName(parentName(), EDINamespaces.ELEMENTS);
             enqueueEvent(START_ELEMENT, name, false);
             enqueueEvent(CDATA, DUMMY_QNAME, false);
 
@@ -201,31 +218,32 @@ final class StaEDIXMLStreamReader implements XMLStreamReader {
         case START_SEGMENT:
             readerText = ediReader.getText();
             performTransactionWrapping(readerText);
-            name = buildName(elementStack.getFirst(), EDINamespaces.SEGMENTS, readerText);
-            enqueueEvent(START_ELEMENT, name, true);
+            QName standardName = buildName(parentName(), EDINamespaces.SEGMENTS, readerText);
+            name = useSegmentImplementationCodes ? buildName(parentName(), EDINamespaces.SEGMENTS, ediReader.getReferenceCode()) : standardName;
+            enqueueEvent(START_ELEMENT, name, standardName, true);
             break;
 
         case START_TRANSACTION:
             withinTransaction = true;
-            name = buildName(elementStack.getFirst(), EDINamespaces.LOOPS, ediReader.getReferenceCode());
+            name = buildName(parentName(), EDINamespaces.LOOPS, ediReader.getReferenceCode());
             enqueueEvent(START_ELEMENT, name, true);
             determineTransactionSegments();
             break;
 
         case START_GROUP:
         case START_LOOP:
-            name = buildName(elementStack.getFirst(), EDINamespaces.LOOPS, ediReader.getReferenceCode());
+            name = buildName(parentName(), EDINamespaces.LOOPS, ediReader.getReferenceCode());
             enqueueEvent(START_ELEMENT, name, true);
             break;
 
         case START_COMPOSITE:
             compositeCode = ediReader.getReferenceCode();
-            name = buildName(elementStack.getFirst(), EDINamespaces.COMPOSITES);
+            name = buildName(parentName(), EDINamespaces.COMPOSITES);
             enqueueEvent(START_ELEMENT, name, true);
             break;
 
         case END_INTERCHANGE:
-            enqueueEvent(END_ELEMENT, elementStack.removeFirst(), false);
+            enqueueEvent(END_ELEMENT, popElement(), false);
             namespaceContext = null;
             enqueueEvent(END_DOCUMENT, DUMMY_QNAME, false);
             break;
@@ -233,7 +251,7 @@ final class StaEDIXMLStreamReader implements XMLStreamReader {
         case END_TRANSACTION:
             withinTransaction = false;
             compositeCode = null;
-            enqueueEvent(END_ELEMENT, elementStack.removeFirst(), false);
+            enqueueEvent(END_ELEMENT, popElement(), false);
             break;
 
         case END_GROUP:
@@ -241,7 +259,7 @@ final class StaEDIXMLStreamReader implements XMLStreamReader {
         case END_SEGMENT:
         case END_COMPOSITE:
             compositeCode = null;
-            enqueueEvent(END_ELEMENT, elementStack.removeFirst(), false);
+            enqueueEvent(END_ELEMENT, popElement(), false);
             break;
 
         case SEGMENT_ERROR:
@@ -278,7 +296,7 @@ final class StaEDIXMLStreamReader implements XMLStreamReader {
         if (withinTransaction && wrapTransactionContents) {
             if (transactionWrapperEnqueued) {
                 if (readerText.equals(this.transactionEndSegment)) {
-                    enqueueEvent(END_ELEMENT, elementStack.removeFirst(), false);
+                    enqueueEvent(END_ELEMENT, popElement(), false);
                     transactionWrapperEnqueued = false;
                 }
             } else {
@@ -402,6 +420,7 @@ final class StaEDIXMLStreamReader implements XMLStreamReader {
             eventQueue.clear();
             elementQueue.clear();
             elementStack.clear();
+            standardNameStack.clear();
             ediReader.close();
         } catch (IOException e) {
             throw new XMLStreamException(e);
