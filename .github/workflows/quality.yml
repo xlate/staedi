@@ -9,7 +9,10 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "$GITHUB_CONTEXT"
+      - name: Display Github Event Context
+        run: echo "$GITHUB_CONTEXT"
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
 
 #  quality:
 #    if: ${{ github.repository == 'xlate/staedi' && github.actor != 'dependabot[bot]' }}
