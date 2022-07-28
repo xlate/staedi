@@ -54,14 +54,14 @@ jobs:
 
       ## Load the context from the build job - runs for any trigger to allow templates with `steps.build_context.outputs.content` 
       ## to be accepted by GitHub Actions.
-      - name: Read Build Context (PR)
+      - name: Read Build Context
         id: build_context
         uses: juliangruber/read-file-action@v1
         with:
           path: ./target/build-context.json
 
       ## (PRs Only) Check out the base branch (target of the PR)
-      - name: Checkout Base Branch (PR)
+      - name: Checkout Base Branch (PR Only)
         if: github.event.workflow_run.event == 'pull_request'
         env:
           BASE_BRANCH: ${{ fromJson(steps.build_context.outputs.content).base_ref }}
@@ -94,7 +94,7 @@ jobs:
           restore-keys: ${{ runner.os }}-m2
 
       ## (PRs Only) Run Sonar analysis against the results of the build job, providing PR information
-      - name: SonarCloud Analysis (PR)
+      - name: SonarCloud Analysis (PR Only)
         if: github.event.workflow_run.event == 'pull_request'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -107,7 +107,7 @@ jobs:
             -Dsonar.pullrequest.base=${{ fromJson(steps.build_context.outputs.content).base_ref }}
 
       ## (Push Only) Run Sonar analysis against the results of the build job
-      - name: SonarCloud Analysis
+      - name: SonarCloud Analysis (Push Only)
         if: github.event.workflow_run.event == 'push'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
