@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - master
-      - fork-coverage
     tags:
       - '**'
     paths-ignore:
@@ -28,10 +27,10 @@ jobs:
     name: Build with JDK ${{matrix.java}}
 
     steps:
-      - name: Display Github Event Context
-        run: echo "$GITHUB_CONTEXT"
-        env:
-          GITHUB_CONTEXT: ${{ toJson(github) }}
+      ## - name: Display Github Event Context
+      ##   run: echo "$GITHUB_CONTEXT"
+      ##   env:
+      ##     GITHUB_CONTEXT: ${{ toJson(github) }}
 
       - name: Checkout
         uses: actions/checkout@v2
@@ -51,12 +50,14 @@ jobs:
       - name: Maven Build
         run: mvn -B verify
 
+      ## Save the context information for use in Sonar analysis
       - name: Save Build Context
         if: matrix.java == '17'
         run: echo "$GITHUB_CONTEXT" > target/build-context.json
         env:
           GITHUB_CONTEXT: ${{ toJson(github) }}
 
+      ## Attach the target directory for use in Sonar analysis
       - name: Attach Build Output
         if: matrix.java == '17'
         uses: actions/upload-artifact@v2

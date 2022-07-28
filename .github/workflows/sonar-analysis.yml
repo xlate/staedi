@@ -1,20 +1,23 @@
-name: Quality Analysis
+name: "SonarCloud"
 
 on:
   workflow_run:
-    workflows: [ Build, "StAEDI Build" ]
+    workflows: [ Build ]
     types: [ completed ]
 
 jobs:
-  quality:
+  analyze:
+    if: ${{ github.repository == 'xlate/staedi' && github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
-    if: github.event.workflow_run.conclusion == 'success'
+    name: Analyze
     steps:
       - name: Display Github Event Context
         run: echo "$GITHUB_CONTEXT"
         env:
           GITHUB_CONTEXT: ${{ toJson(github) }}
 
+      ## Checkout the source of the event that triggered this workflow, 
+      ## PR commit (pull_request event) or commit (push event).
       - name: Checkout
         uses: actions/checkout@v3
         with:
@@ -22,6 +25,7 @@ jobs:
           ref: ${{ github.event.workflow_run.head_sha }}
           fetch-depth: 0
 
+      ## Retrieve the `target` directory from the build job
       - name: Fetch Build Result
         uses: actions/github-script@v3.1.0
         with:
@@ -42,16 +46,22 @@ jobs:
             });
             var fs = require('fs');
             fs.writeFileSync('${{github.workspace}}/target.zip', Buffer.from(download.data));
-      - run: |
+
+      ## Extract the `target` directory from the build job
+      - name: Extract Build Result
+        run: |
           mkdir target && unzip target.zip -d target
 
-      - name: Read Build Context
+      ## (PRs Only) Load the context from the build job
+      - name: Read Build Context (PR)
+        if: github.event.workflow_run.event == 'pull_request'
         id: build_context
         uses: juliangruber/read-file-action@v1
         with:
           path: ./target/build-context.json
 
-      - name: Checkout Base Branch
+      ## (PRs Only) Check out the base branch (target of the PR)
+      - name: Checkout Base Branch (PR)
         if: github.event.workflow_run.event == 'pull_request'
         env:
           BASE_BRANCH: ${{ fromJson(steps.build_context.outputs.content).base_ref }}
@@ -83,6 +93,7 @@ jobs:
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
 
+      ## (PRs Only) Run Sonar analysis against the results of the build job, providing PR information
       - name: SonarCloud Analysis (PR)
         if: github.event.workflow_run.event == 'pull_request'
         env:
@@ -95,6 +106,7 @@ jobs:
             -Dsonar.pullrequest.branch=${{ fromJson(steps.build_context.outputs.content).head_ref }} \
             -Dsonar.pullrequest.base=${{ fromJson(steps.build_context.outputs.content).base_ref }}
 
+      ## (Push Only) Run Sonar analysis against the results of the build job
       - name: SonarCloud Analysis
         if: github.event.workflow_run.event == 'push'
         env:
@@ -104,37 +116,3 @@ jobs:
           mvn -B org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
             -Dsonar.scm.revision=${{ github.event.workflow_run.head_sha }} \
             -Dsonar.branch.name=${{ github.event.workflow_run.head_branch }}
-
-#  quality:
-#    if: ${{ github.repository == 'xlate/staedi' && github.actor != 'dependabot[bot]' }}
-#    runs-on: ubuntu-latest
-#    name: Verify Quality
-#
-#    steps:
-#      - uses: actions/checkout@v2
-#      - run: |
-#          git fetch --prune --unshallow --tags --force
-#
-#      - uses: actions/setup-java@v1
-#        with:
-#          java-version: 17
-#
-#      - name: Cache SonarCloud packages
-#        uses: actions/cache@v1
-#        with:
-#          path: ~/.sonar/cache
-#          key: ${{ runner.os }}-sonar
-#          restore-keys: ${{ runner.os }}-sonar
-#
-#      - name: Cache Maven packages
-#        uses: actions/cache@v1
-#        with:
-#          path: ~/.m2
-#          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-#          restore-keys: ${{ runner.os }}-m2
-#
-#      - name: SonarCloud Analysis
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-#        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar
