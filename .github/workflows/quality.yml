@@ -42,7 +42,8 @@ jobs:
             });
             var fs = require('fs');
             fs.writeFileSync('${{github.workspace}}/target.zip', Buffer.from(download.data));
-      - run: unzip target.zip
+      - run: |
+          mkdir target && unzip target.zip -d target
 
       - name: Read Build Context
         id: build_context
