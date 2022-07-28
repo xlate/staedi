@@ -23,14 +23,26 @@ jobs:
           fetch-depth: 0
 
       - name: Fetch Build Result
-        uses: actions/cache@v3
-        env:
-          cache-key: ${{ github.event.workflow_run.event }}-${{ github.event.workflow_run.id }}
+        uses: actions/github-script@v3.1.0
         with:
-          path: |
-            target
-          key: ${{ env.cache-key }}-target-
-          restore-keys: ${{ env.cache-key }}-target-
+          script: |
+            var artifacts = await github.actions.listWorkflowRunArtifacts({
+               owner: context.repo.owner,
+               repo: context.repo.repo,
+               run_id: ${{ github.event.workflow_run.id }},
+            });
+            var matchArtifact = artifacts.data.artifacts.filter((artifact) => {
+              return artifact.name == "target"
+            })[0];
+            var download = await github.actions.downloadArtifact({
+               owner: context.repo.owner,
+               repo: context.repo.repo,
+               artifact_id: matchArtifact.id,
+               archive_format: 'zip',
+            });
+            var fs = require('fs');
+            fs.writeFileSync('${{github.workspace}}/target.zip', Buffer.from(download.data));
+      - run: unzip target.zip
 
       - name: Read Build Context
         id: build_context
@@ -71,7 +83,7 @@ jobs:
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
 
-      - name: SonarCloud PR Analysis
+      - name: SonarCloud Analysis (PR)
         if: github.event.workflow_run.event == 'pull_request'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
