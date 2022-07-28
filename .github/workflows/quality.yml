@@ -30,7 +30,6 @@ jobs:
           key: ${{ github.workflow_run.event }}-${{ github.workflow_run.id }}-target-
 
       - name: Read Build Context
-        if: github.event.workflow_run.event == 'pull_request'
         id: build_context
         uses: juliangruber/read-file-action@v1
         with:
