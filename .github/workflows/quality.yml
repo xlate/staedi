@@ -57,7 +57,7 @@ jobs:
           BASE_BRANCH: ${{ fromJson(steps.build_context.outputs.content).base_ref }}
         run: |
           git remote add upstream ${{ github.event.repository.clone_url }}
-          git fetch upstream --prune --unshallow --tags --force
+          git fetch upstream --prune --tags --force
           git checkout -B $BASE_BRANCH upstream/$BASE_BRANCH
 
           git checkout ${{ github.event.workflow_run.head_sha }}
