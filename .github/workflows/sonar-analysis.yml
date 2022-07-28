@@ -52,9 +52,9 @@ jobs:
         run: |
           mkdir target && unzip target.zip -d target
 
-      ## (PRs Only) Load the context from the build job
+      ## Load the context from the build job - runs for any trigger to allow templates with `steps.build_context.outputs.content` 
+      ## to be accepted by GitHub Actions.
       - name: Read Build Context (PR)
-        if: github.event.workflow_run.event == 'pull_request'
         id: build_context
         uses: juliangruber/read-file-action@v1
         with:
