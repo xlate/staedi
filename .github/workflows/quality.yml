@@ -6,13 +6,83 @@ on:
     types: [ completed ]
 
 jobs:
-  check:
+  quality:
     runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success'
     steps:
       - name: Display Github Event Context
         run: echo "$GITHUB_CONTEXT"
         env:
           GITHUB_CONTEXT: ${{ toJson(github) }}
+
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          repository: ${{ github.event.workflow_run.head_repository.full_name }}
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 0
+
+      - name: Fetch Build Result
+        uses: actions/cache@v1
+        with:
+          path: |
+            target
+          key: ${{ github.workflow_run.event }}-${{ github.workflow_run.id }}-target-
+
+      - name: Read Build Context
+        if: github.event.workflow_run.event == 'pull_request'
+        id: build_context
+        uses: juliangruber/read-file-action@v1
+        with:
+          path: ./target/build-context.json
+
+      - name: Checkout Base Branch
+        if: github.event.workflow_run.event == 'pull_request'
+        env:
+          BASE_BRANCH: ${{ fromJson(steps.build_context.outputs.data).base_ref }}
+        run: |
+          git remote add upstream ${{ github.event.repository.clone_url }}
+          git fetch upstream --prune --unshallow --tags --force
+          git checkout -B $BASE_BRANCH upstream/$BASE_BRANCH
+
+          git checkout ${{ github.event.workflow_run.head_sha }}
+          git fetch --prune --unshallow --tags --force
+
+          git clean -ffdx && git reset --hard HEAD
+
+      - name: Setup JDK
+        uses: actions/setup-java@v1
+        with:
+          java-version: 17
+
+      - name: Cache Maven packages
+        uses: actions/cache@v1
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+
+      - name: SonarCloud PR Analysis
+        if: github.event.workflow_run.event == 'pull_request'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          mvn -B org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+            -Dsonar.scm.revision=${{ github.event.workflow_run.head_sha }} \
+            -Dsonar.pullrequest.key=${{ fromJson(steps.build_context.outputs.data).event.number }} \
+            -Dsonar.pullrequest.branch=${{ fromJson(steps.build_context.outputs.data).head_ref }} \
+            -Dsonar.pullrequest.base=${{ fromJson(steps.build_context.outputs.data).base_ref }}
+
+      - name: SonarCloud Analysis
+        if: github.event.workflow_run.event == 'push'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          mvn -B org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+            -Dsonar.scm.revision=${{ github.event.workflow_run.head_sha }} \
+            -Dsonar.branch.name=${{ github.event.workflow_run.head_branch }}
 
 #  quality:
 #    if: ${{ github.repository == 'xlate/staedi' && github.actor != 'dependabot[bot]' }}
