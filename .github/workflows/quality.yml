@@ -25,7 +25,7 @@ jobs:
       - name: Fetch Build Result
         uses: actions/cache@v3
         env:
-          cache-key: ${{ github.workflow_run.event }}-${{ github.workflow_run.id }}
+          cache-key: ${{ github.event.workflow_run.event }}-${{ github.event.workflow_run.id }}
         with:
           path: |
             target
