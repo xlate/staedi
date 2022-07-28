@@ -62,7 +62,7 @@ jobs:
 
           git checkout ${{ github.event.workflow_run.head_sha }}
 
-          git clean -ffdx && git reset --hard HEAD
+          git clean -ffdx --exclude=target/ && git reset --hard HEAD
 
       - name: Setup JDK
         uses: actions/setup-java@v1
