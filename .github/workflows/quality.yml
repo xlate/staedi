@@ -24,11 +24,13 @@ jobs:
 
       - name: Fetch Build Result
         uses: actions/cache@v3
+        env:
+          cache-key: ${{ github.workflow_run.event }}-${{ github.workflow_run.id }}
         with:
           path: |
             target
-          key: ${{ github.workflow_run.event }}-${{ github.workflow_run.id }}-target-
-          restore-keys: ${{ github.workflow_run.event }}-${{ github.workflow_run.id }}-target-
+          key: ${{ env.cache-key }}-target-
+          restore-keys: ${{ env.cache-key }}-target-
 
       - name: Read Build Context
         id: build_context
