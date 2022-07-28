@@ -9,8 +9,7 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - run: |
-          echo "${{ github.event }}"
+      - run: echo "$GITHUB_CONTEXT"
 
 #  quality:
 #    if: ${{ github.repository == 'xlate/staedi' && github.actor != 'dependabot[bot]' }}
