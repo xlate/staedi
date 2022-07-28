@@ -61,7 +61,6 @@ jobs:
           git checkout -B $BASE_BRANCH upstream/$BASE_BRANCH
 
           git checkout ${{ github.event.workflow_run.head_sha }}
-          git fetch --prune --unshallow --tags --force
 
           git clean -ffdx && git reset --hard HEAD
 
