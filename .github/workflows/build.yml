@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - fork-coverage
     tags:
       - '**'
     paths-ignore:
@@ -27,6 +28,11 @@ jobs:
     name: Build with JDK ${{matrix.java}}
 
     steps:
+      - name: Display Github Event Context
+        run: echo "$GITHUB_CONTEXT"
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+
       - name: Checkout
         uses: actions/checkout@v2
 
@@ -42,15 +48,21 @@ jobs:
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
 
-#      - name: Cache Build Result
-#        uses: actions/cache@v1
-#        with:
-#          path: ~/.m2
-#          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-#          restore-keys: ${{ runner.os }}-m2
+      - name: Cache Build Result
+        if: matrix.java == '17'
+        uses: actions/cache@v1
+        with:
+          path: |
+            target
+          key: ${{ github.event_name }}-${{ github.run_id }}-target-
 
       - name: Maven Build
         run: mvn -B clean verify
+
+      - name: Save Build Context
+        run: echo "$GITHUB_CONTEXT" > target/build-context.json
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
 
   javadoc:
     runs-on: ubuntu-latest
