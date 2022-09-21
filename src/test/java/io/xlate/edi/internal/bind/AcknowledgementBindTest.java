@@ -16,8 +16,6 @@ import jakarta.xml.bind.annotation.XmlRootElement;
 import jakarta.xml.bind.annotation.XmlType;
 
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledForJreRange;
-import org.junit.jupiter.api.condition.JRE;
 
 import io.xlate.edi.stream.EDIInputFactory;
 import io.xlate.edi.stream.EDINamespaces;
@@ -26,7 +24,6 @@ import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamReader;
 import io.xlate.edi.stream.EDIStreamWriter;
 
-@EnabledForJreRange(min = JRE.JAVA_11)
 class AcknowledgementBindTest {
 
     @Test
