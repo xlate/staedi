@@ -56,7 +56,7 @@
     <sonar.host.url>https://sonarcloud.io</sonar.host.url>
     <sonar.organization>xlate</sonar.organization>
 
-    <version.jakarta.xml.bind.api>2.3.3</version.jakarta.xml.bind.api>
+    <version.jakarta.xml.bind.api>4.0.0</version.jakarta.xml.bind.api>
     <version.jakarta.json.api>2.0.1</version.jakarta.json.api>
     <version.javax.json.api>1.1.4</version.javax.json.api>
     <version.jackson>2.13.4</version.jackson>
@@ -185,11 +185,6 @@
   <dependencyManagement>
     <dependencies>
       <dependency>
-        <groupId>jakarta.xml.bind</groupId>
-        <artifactId>jakarta.xml.bind-api</artifactId>
-        <version>${version.jakarta.xml.bind.api}</version>
-      </dependency>
-      <dependency>
         <groupId>jakarta.json</groupId>
         <artifactId>jakarta.json-api</artifactId>
         <version>${version.jakarta.json.api}</version>
@@ -217,9 +212,14 @@
         <version>4.8.0</version>
       </dependency>
       <dependency>
+        <groupId>jakarta.xml.bind</groupId>
+        <artifactId>jakarta.xml.bind-api</artifactId>
+        <version>${version.jakarta.xml.bind.api}</version>
+      </dependency>
+      <dependency>
         <groupId>org.glassfish.jaxb</groupId>
         <artifactId>jaxb-runtime</artifactId>
-        <version>2.3.6</version>
+        <version>4.0.1</version>
       </dependency>
       <dependency>
         <groupId>org.glassfish</groupId>
@@ -245,11 +245,6 @@
   </dependencyManagement>
 
   <dependencies>
-    <dependency>
-      <groupId>jakarta.xml.bind</groupId>
-      <artifactId>jakarta.xml.bind-api</artifactId>
-      <optional>true</optional>
-    </dependency>
     <dependency>
       <groupId>jakarta.json</groupId>
       <artifactId>jakarta.json-api</artifactId>
@@ -297,9 +292,39 @@
       <artifactId>javax.json</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>jakarta.xml.bind</groupId>
+      <artifactId>jakarta.xml.bind-api</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.glassfish.jaxb</groupId>
+      <artifactId>jaxb-runtime</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <profiles>
+    <profile>
+      <id>legacy</id>
+      <activation>
+        <jdk>(,11)</jdk>
+      </activation>
+      <dependencyManagement>
+        <dependencies>
+          <dependency>
+            <groupId>jakarta.xml.bind</groupId>
+            <artifactId>jakarta.xml.bind-api</artifactId>
+            <version>3.0.1</version>
+          </dependency>
+          <dependency>
+            <groupId>org.glassfish.jaxb</groupId>
+            <artifactId>jaxb-runtime</artifactId>
+            <version>3.0.2</version>
+          </dependency>
+        </dependencies>
+      </dependencyManagement>
+    </profile>
     <profile>
       <id>multirelease</id>
       <activation>
@@ -341,13 +366,6 @@
           </plugins>
         </pluginManagement>
       </build>
-      <dependencies>
-        <dependency>
-          <groupId>org.glassfish.jaxb</groupId>
-          <artifactId>jaxb-runtime</artifactId>
-          <scope>test</scope>
-        </dependency>
-      </dependencies>
     </profile>
     <profile>
       <id>coverage</id>
