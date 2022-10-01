@@ -396,19 +396,46 @@ abstract class SchemaReaderBase implements SchemaReader {
         EDIElementPosition levelIdPosition = null;
         EDIElementPosition parentIdPosition = null;
 
-        if (qnTransaction.equals(complexType)) {
+        switch (type) {
+        case INTERCHANGE:
+        case GROUP:
+            id = parseAttribute(reader, "name", String::valueOf);
+            // read control attributes
+            break;
+        case TRANSACTION:
             id = StaEDISchema.TRANSACTION_ID;
-        } else if (qnLoop.equals(complexType)) {
+            // read control attributes
+            break;
+        case LOOP:
             id = code;
             levelIdPosition = parseElementPosition(reader, ATTR_LEVEL_ID_POSITION);
             parentIdPosition = parseElementPosition(reader, ATTR_PARENT_ID_POSITION);
-        } else {
+            break;
+        case SEGMENT:
             id = parseAttribute(reader, "name", String::valueOf);
-
-            if (type == EDIType.Type.SEGMENT && !id.matches("^[A-Z][A-Z0-9]{1,2}$")) {
+            if (!id.matches("^[A-Z][A-Z0-9]{1,2}$")) {
                 throw schemaException("Invalid segment name [" + id + ']', reader);
             }
+            break;
+        case COMPOSITE:
+        default: /* Only COMPOSITE remains */
+            id = parseAttribute(reader, "name", String::valueOf);
+            break;
         }
+
+//        if (qnTransaction.equals(complexType)) {
+//            id = StaEDISchema.TRANSACTION_ID;
+//        } else if (qnLoop.equals(complexType)) {
+//            id = code;
+//            levelIdPosition = parseElementPosition(reader, ATTR_LEVEL_ID_POSITION);
+//            parentIdPosition = parseElementPosition(reader, ATTR_PARENT_ID_POSITION);
+//        } else {
+//            id = parseAttribute(reader, "name", String::valueOf);
+//
+//            if (type == EDIType.Type.SEGMENT && !id.matches("^[A-Z][A-Z0-9]{1,2}$")) {
+//                throw schemaException("Invalid segment name [" + id + ']', reader);
+//            }
+//        }
 
         if (code == null) {
             code = id;
@@ -434,10 +461,20 @@ abstract class SchemaReaderBase implements SchemaReader {
         if (event == XMLStreamConstants.END_ELEMENT) {
             StructureType structure;
 
-            if (qnLoop.equals(complexType)) {
+            switch (type) {
+            case INTERCHANGE:
+            case GROUP:
+            case TRANSACTION:
+                structure = new ControlType(id, type, code, refs, rules, null, null, null, null, title, descr);
+                break;
+            case LOOP:
                 structure = new LoopType(code, refs, rules, levelIdPosition, parentIdPosition, title, descr);
-            } else {
+                break;
+            case SEGMENT:
+            case COMPOSITE:
+            default:
                 structure = new StructureType(id, type, code, refs, rules, title, descr);
+                break;
             }
 
             return structure;
