@@ -10,6 +10,11 @@ public interface EDIControlType extends EDIComplexType {
 
     public enum Type {
         /**
+         * Nothing will be counted or validated
+         */
+        NONE,
+
+        /**
          * Indicates that the element identified by {@link EDIControlType#getTrailerCountPosition()} will
          * contain a count of the control structures internal to the {@link EDIControlType}.
          */
@@ -39,7 +44,7 @@ public interface EDIControlType extends EDIComplexType {
      * @return the position of the element holding the structure's header
      *         control reference
      */
-    EDIElementPosition getHeaderReferencePosition();
+    EDIElementPosition getHeaderRefPosition();
 
     /**
      * Get the position of the element within the trailer segment that is used as
@@ -48,7 +53,7 @@ public interface EDIControlType extends EDIComplexType {
      * @return the position of the element holding the structure's trailer
      *         control reference
      */
-    EDIElementPosition getTrailerReferencePosition();
+    EDIElementPosition getTrailerRefPosition();
 
     /**
      * Get the position of the element within the trailer segment that is used as

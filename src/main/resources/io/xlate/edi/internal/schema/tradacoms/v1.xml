@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <schema xmlns="http://xlate.io/EDISchema/v4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://xlate.io/EDISchema/v4 https://www.xlate.io/EDISchema/EDISchema-v4.xsd">
-  <interchange header="STX" trailer="END">
+  <interchange header="STX" trailer="END" trailerCountPosition="1" countType="controls">
     <sequence>
-      <group header="BAT" trailer="EOB">
-        <transaction header="MHD" trailer="MTR"/>
+      <group header="BAT" trailer="EOB" trailerCountPosition="1" countType="controls">
+        <transaction header="MHD" trailer="MTR" trailerCountPosition="1" countType="segments"/>
       </group>
-      <transaction header="MHD" trailer="MTR"/>
+      <transaction header="MHD" trailer="MTR" trailerCountPosition="1" countType="segments"/>
     </sequence>
     <syntax type="single">
       <position>2</position>

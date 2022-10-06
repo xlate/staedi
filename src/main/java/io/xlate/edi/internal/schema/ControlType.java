@@ -37,12 +37,12 @@ class ControlType extends StructureType implements EDIControlType {
     }
 
     @Override
-    public EDIElementPosition getHeaderReferencePosition() {
+    public EDIElementPosition getHeaderRefPosition() {
         return headerRefPosition;
     }
 
     @Override
-    public EDIElementPosition getTrailerReferencePosition() {
+    public EDIElementPosition getTrailerRefPosition() {
         return trailerRefPosition;
     }
 

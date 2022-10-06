@@ -27,6 +27,7 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
 import io.xlate.edi.schema.EDIComplexType;
+import io.xlate.edi.schema.EDIControlType;
 import io.xlate.edi.schema.EDIElementPosition;
 import io.xlate.edi.schema.EDIReference;
 import io.xlate.edi.schema.EDISchemaException;
@@ -48,6 +49,10 @@ abstract class SchemaReaderBase implements SchemaReader {
     static final String ATTR_MIN_OCCURS = "minOccurs";
     static final String ATTR_MAX_OCCURS = "maxOccurs";
     static final String ATTR_TITLE = "title";
+    static final String ATTR_HEADER_REF_POSITION = "headerRefPosition";
+    static final String ATTR_TRAILER_REF_POSITION = "trailerRefPosition";
+    static final String ATTR_TRAILER_COUNT_POSITION = "trailerCountPosition";
+    static final String ATTR_COUNT_TYPE = "countType";
     static final String ATTR_LEVEL_ID_POSITION = "levelIdPosition";
     static final String ATTR_PARENT_ID_POSITION = "parentIdPosition";
 
@@ -216,8 +221,13 @@ abstract class SchemaReaderBase implements SchemaReader {
     void readInterchange(XMLStreamReader reader, Map<String, EDIType> types) {
         QName element;
 
-        Reference headerRef = createControlReference(reader, "header");
-        Reference trailerRef = createControlReference(reader, "trailer");
+        Reference header = createControlReference(reader, "header");
+        Reference trailer = createControlReference(reader, "trailer");
+        EDIElementPosition headerRefPos = parseElementPosition(reader, ATTR_HEADER_REF_POSITION);
+        EDIElementPosition trailerRefPos = parseElementPosition(reader, ATTR_TRAILER_REF_POSITION);
+        EDIElementPosition trailerCountPos = parseElementPosition(reader, ATTR_TRAILER_COUNT_POSITION);
+        EDIControlType.Type countType = parseAttribute(reader, ATTR_COUNT_TYPE, EDIControlType.Type::fromString, EDIControlType.Type.NONE);
+
         String title = parseAttribute(reader, ATTR_TITLE, String::valueOf, null);
         String descr = readDescription(reader);
 
@@ -231,7 +241,7 @@ abstract class SchemaReaderBase implements SchemaReader {
         element = reader.getName();
 
         List<EDIReference> refs = new ArrayList<>(3);
-        refs.add(headerRef);
+        refs.add(header);
 
         while (qnSegment.equals(element)) {
             addReferences(reader, EDIType.Type.SEGMENT, refs, readReference(reader, types));
@@ -254,7 +264,7 @@ abstract class SchemaReaderBase implements SchemaReader {
             element = reader.getName();
         }
 
-        refs.add(trailerRef);
+        refs.add(trailer);
 
         final List<EDISyntaxRule> rules;
 
@@ -265,13 +275,17 @@ abstract class SchemaReaderBase implements SchemaReader {
             rules = Collections.emptyList();
         }
 
-        StructureType interchange = new StructureType(StaEDISchema.INTERCHANGE_ID,
-                                                      EDIType.Type.INTERCHANGE,
-                                                      "INTERCHANGE",
-                                                      refs,
-                                                      rules,
-                                                      title,
-                                                      descr);
+        StructureType interchange = new ControlType(StaEDISchema.INTERCHANGE_ID,
+                                                    EDIType.Type.INTERCHANGE,
+                                                    "INTERCHANGE",
+                                                    refs,
+                                                    rules,
+                                                    headerRefPos,
+                                                    trailerRefPos,
+                                                    trailerCountPos,
+                                                    countType,
+                                                    title,
+                                                    descr);
 
         types.put(interchange.getId(), interchange);
         nextTag(reader, "advancing after interchange");
@@ -299,8 +313,12 @@ abstract class SchemaReaderBase implements SchemaReader {
             throw schemaException("Invalid value for 'use': " + use, reader);
         }
 
-        Reference headerRef = createControlReference(reader, "header");
-        Reference trailerRef = createControlReference(reader, "trailer");
+        Reference header = createControlReference(reader, "header");
+        Reference trailer = createControlReference(reader, "trailer");
+        EDIElementPosition headerRefPos = parseElementPosition(reader, ATTR_HEADER_REF_POSITION);
+        EDIElementPosition trailerRefPos = parseElementPosition(reader, ATTR_TRAILER_REF_POSITION);
+        EDIElementPosition trailerCountPos = parseElementPosition(reader, ATTR_TRAILER_COUNT_POSITION);
+        EDIControlType.Type countType = parseAttribute(reader, ATTR_COUNT_TYPE, EDIControlType.Type::fromString, EDIControlType.Type.NONE);
         String title = parseAttribute(reader, ATTR_TITLE, String::valueOf, null);
         String descr = readDescription(reader);
 
@@ -309,22 +327,26 @@ abstract class SchemaReaderBase implements SchemaReader {
         }
 
         List<EDIReference> refs = new ArrayList<>(3);
-        refs.add(headerRef);
+        refs.add(header);
         if (subelement != null) {
             refs.add(readControlStructure(reader, subelement, null, types));
         }
-        refs.add(trailerRef);
+        refs.add(trailer);
 
         Type elementType = complex.get(element);
         String elementId = StaEDISchema.ID_PREFIX + elementType.name();
 
-        StructureType struct = new StructureType(elementId,
-                                                 elementType,
-                                                 elementType.toString(),
-                                                 refs,
-                                                 Collections.emptyList(),
-                                                 title,
-                                                 descr);
+        StructureType struct = new ControlType(elementId,
+                                               elementType,
+                                               elementType.toString(),
+                                               refs,
+                                               Collections.emptyList(),
+                                               headerRefPos,
+                                               trailerRefPos,
+                                               trailerCountPos,
+                                               countType,
+                                               title,
+                                               descr);
 
         types.put(struct.getId(), struct);
 
@@ -393,18 +415,22 @@ abstract class SchemaReaderBase implements SchemaReader {
         final EDIType.Type type = complex.get(complexType);
         final String id;
         String code = parseAttribute(reader, "code", String::valueOf, null);
+        // Transaction attributes
+        EDIElementPosition headerRef = null;
+        EDIElementPosition trailerRef = null;
+        EDIElementPosition trailerCount = null;
+        EDIControlType.Type countType = null;
+        // Loop attributes
         EDIElementPosition levelIdPosition = null;
         EDIElementPosition parentIdPosition = null;
 
         switch (type) {
-        case INTERCHANGE:
-        case GROUP:
-            id = parseAttribute(reader, "name", String::valueOf);
-            // read control attributes
-            break;
         case TRANSACTION:
             id = StaEDISchema.TRANSACTION_ID;
-            // read control attributes
+            headerRef = parseElementPosition(reader, ATTR_HEADER_REF_POSITION);
+            trailerRef = parseElementPosition(reader, ATTR_TRAILER_REF_POSITION);
+            trailerCount = parseElementPosition(reader, ATTR_TRAILER_COUNT_POSITION);
+            countType = parseAttribute(reader, ATTR_COUNT_TYPE, EDIControlType.Type::fromString, EDIControlType.Type.NONE);
             break;
         case LOOP:
             id = code;
@@ -422,20 +448,6 @@ abstract class SchemaReaderBase implements SchemaReader {
             id = parseAttribute(reader, "name", String::valueOf);
             break;
         }
-
-//        if (qnTransaction.equals(complexType)) {
-//            id = StaEDISchema.TRANSACTION_ID;
-//        } else if (qnLoop.equals(complexType)) {
-//            id = code;
-//            levelIdPosition = parseElementPosition(reader, ATTR_LEVEL_ID_POSITION);
-//            parentIdPosition = parseElementPosition(reader, ATTR_PARENT_ID_POSITION);
-//        } else {
-//            id = parseAttribute(reader, "name", String::valueOf);
-//
-//            if (type == EDIType.Type.SEGMENT && !id.matches("^[A-Z][A-Z0-9]{1,2}$")) {
-//                throw schemaException("Invalid segment name [" + id + ']', reader);
-//            }
-//        }
 
         if (code == null) {
             code = id;
@@ -462,10 +474,8 @@ abstract class SchemaReaderBase implements SchemaReader {
             StructureType structure;
 
             switch (type) {
-            case INTERCHANGE:
-            case GROUP:
             case TRANSACTION:
-                structure = new ControlType(id, type, code, refs, rules, null, null, null, null, title, descr);
+                structure = new ControlType(id, type, code, refs, rules, headerRef, trailerRef, trailerCount, countType, title, descr);
                 break;
             case LOOP:
                 structure = new LoopType(code, refs, rules, levelIdPosition, parentIdPosition, title, descr);
