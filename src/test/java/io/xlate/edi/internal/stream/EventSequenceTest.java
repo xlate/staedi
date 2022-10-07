@@ -270,7 +270,7 @@ class EventSequenceTest {
                 + "UNB+UNOA:3+005435656:1+006415160:1+060515:1434+00000000000778'"
                 + "UNH+00000000000117+INVOIC:D:97B:UN'"
                 + "BLA+UNVALIDATED'"
-                + "UNT+2+00000000000117'"
+                + "UNT+3+00000000000117'"
                 + "UNZ+1+00000000000778'").getBytes());
 
         @SuppressWarnings("resource")
@@ -345,7 +345,7 @@ class EventSequenceTest {
         assertEquals(EDIStreamEvent.START_SEGMENT, reader.next());
         assertEquals("UNT", reader.getText());
         assertEquals(EDIStreamEvent.ELEMENT_DATA, reader.next());
-        assertEquals("2", reader.getText());
+        assertEquals("3", reader.getText());
         assertEquals(EDIStreamEvent.ELEMENT_DATA, reader.next());
         assertEquals("00000000000117", reader.getText());
         assertEquals(EDIStreamEvent.END_SEGMENT, reader.next());

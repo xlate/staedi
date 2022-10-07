@@ -56,7 +56,7 @@ class AcknowledgementBindTest {
         header.ISA16 = ":";
 
         IEA trailer = new IEA();
-        trailer.IEA01 = "1";
+        trailer.IEA01 = "0";
         trailer.IEA02 = "000000001";
 
         Interchange interchange = new Interchange();

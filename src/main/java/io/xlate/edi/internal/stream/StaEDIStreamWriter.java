@@ -420,7 +420,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     @Override
     public EDIStreamWriter writeStartSegment(String name) throws EDIStreamException {
         ensureLevel(LEVEL_INTERCHANGE);
-        location.incrementSegmentPosition(name);
+        countSegment(name);
 
         if (state == State.INITIAL) {
             dialect = DialectFactory.getDialect(name);
@@ -460,6 +460,14 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         terminateSegmentTag();
 
         return this;
+    }
+
+    void countSegment(String name) {
+        location.incrementSegmentPosition(name);
+
+        if (controlValidator != null) {
+            controlValidator.countSegment(name);
+        }
     }
 
     void segmentValidation(String name) {

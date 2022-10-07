@@ -475,6 +475,39 @@ public class Validator {
         handleMissingMandatory(handler);
     }
 
+    public void countSegment(CharSequence tag) {
+        if (this.loopStack.isEmpty()) {
+            int count;
+            if ((count = count(root, EDIControlType.Type.SEGMENTS)) > 0) {
+                LOGGER.finer(() -> "Counted tag " + tag + " @ " + count + " towards " + root);
+            }
+        } else {
+            for (UsageNode loop : this.loopStack) {
+                int count;
+                if ((count = count(loop, EDIControlType.Type.SEGMENTS)) > 0) {
+                    LOGGER.finer(() -> "Counted tag " + tag + " @ " + count + " towards " + loop);
+                }
+            }
+        }
+    }
+
+    void countControl() {
+        if (containerSchema == null) {
+            if (loopStack.isEmpty()) {
+                count(root, EDIControlType.Type.CONTROLS);
+            } else {
+                count(loopStack.peekLast(), EDIControlType.Type.CONTROLS);
+            }
+        }
+    }
+
+    int count(UsageNode node, EDIControlType.Type type) {
+        if (node instanceof ControlUsageNode) {
+            return ((ControlUsageNode) node).incrementCount(type);
+        }
+        return 0;
+    }
+
     boolean handleNode(CharSequence tag, UsageNode current, UsageNode currentImpl, int startDepth, ValidationEventHandler handler) {
         final boolean handled;
 
@@ -642,6 +675,9 @@ public class Validator {
             loopStack.push(currentImpl);
             handler.loopBegin(currentImpl.getLink());
         } else {
+            if (current instanceof ControlUsageNode) {
+                countControl();
+            }
             loopStack.push(current);
             handler.loopBegin(current.getLink());
         }
@@ -1204,7 +1240,7 @@ public class Validator {
             value = formattedValue;
         } else {
             element.validate(dialect, value, errors);
-            segment.getParent().validateReference(position, value, errors);
+            validateControlValue(segment.getParent(), position, value, errors);
         }
 
         for (EDIStreamValidationError error : errors) {
@@ -1222,6 +1258,13 @@ public class Validator {
                 }
                 elementErrors.add(new UsageError(element, error));
             }
+        }
+    }
+
+    void validateControlValue(UsageNode loop, StaEDIStreamLocation position, CharSequence value, List<EDIStreamValidationError> errors) {
+        if (loop instanceof ControlUsageNode) {
+            ((ControlUsageNode) loop).validateReference(position, value, errors);
+            ((ControlUsageNode) loop).validateCount(position, value, errors);
         }
     }
 

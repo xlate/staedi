@@ -280,6 +280,10 @@ public class ProxyEventHandler implements EventHandler {
             typeReference = validator().getSegmentReference();
         }
 
+        if (controlValidator != null) {
+            controlValidator.countSegment(segmentTag);
+        }
+
         enqueueEvent(EDIStreamEvent.START_SEGMENT, EDIStreamValidationError.NONE, segmentTag, typeReference, location);
         currentSegmentBegin = eventQueue.getLast();
         return !levelCheckPending && eventsReady;

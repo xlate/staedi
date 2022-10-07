@@ -29,7 +29,6 @@ import io.xlate.edi.schema.EDISyntaxRule;
 import io.xlate.edi.schema.EDIType;
 import io.xlate.edi.schema.implementation.EDITypeImplementation;
 import io.xlate.edi.stream.EDIStreamValidationError;
-import io.xlate.edi.stream.Location;
 
 class UsageNode {
 
@@ -245,9 +244,5 @@ class UsageNode {
 
     UsageNode getSiblingById(CharSequence id) {
         return parent != null ? parent.getChildById(id) : null;
-    }
-
-    void validateReference(Location location, CharSequence value, List<EDIStreamValidationError> errors) {
-        // No-op for regular UsageNode - see ControlUsageNode
     }
 }
