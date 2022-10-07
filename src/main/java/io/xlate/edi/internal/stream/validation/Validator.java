@@ -52,6 +52,7 @@ import io.xlate.edi.internal.stream.tokenization.ElementDataHandler;
 import io.xlate.edi.internal.stream.tokenization.StreamEvent;
 import io.xlate.edi.internal.stream.tokenization.ValidationEventHandler;
 import io.xlate.edi.schema.EDIComplexType;
+import io.xlate.edi.schema.EDIControlType;
 import io.xlate.edi.schema.EDIReference;
 import io.xlate.edi.schema.EDISimpleType;
 import io.xlate.edi.schema.EDISyntaxRule;
@@ -330,10 +331,16 @@ public class Validator {
         int depth = parentDepth + 1;
         EDIType referencedNode = link.getReferencedType();
 
-        UsageNode node = new UsageNode(parent, depth, link, index);
+        if (referencedNode instanceof EDISimpleType) {
+            return new UsageNode(parent, depth, link, index);
+        }
 
-        if (!(referencedNode instanceof EDIComplexType)) {
-            return node;
+        final UsageNode node;
+
+        if (referencedNode instanceof EDIControlType) {
+            node = new ControlUsageNode(parent, depth, link, index);
+        } else {
+            node = new UsageNode(parent, depth, link, index);
         }
 
         EDIComplexType structure = (EDIComplexType) referencedNode;
@@ -1159,13 +1166,13 @@ public class Validator {
             return;
         }
 
-        validateElementValue(dialect, this.element, this.implElement, value, formattedValue);
+        validateElementValue(dialect, position, this.element, this.implElement, value, formattedValue);
     }
 
     public void validateVersionConstraints(Dialect dialect, ValidationEventHandler validationHandler, StringBuilder formattedValue) {
         for (RevalidationNode entry : revalidationQueue) {
             if (entry.data != null) {
-                validateElementValue(dialect, entry.standard, entry.impl, entry.data, formattedValue);
+                validateElementValue(dialect, entry.location, entry.standard, entry.impl, entry.data, formattedValue);
             } else {
                 validateDataElementRequirement(dialect.getTransactionVersionString(), entry.standard, entry.impl, entry.location);
             }
@@ -1189,7 +1196,7 @@ public class Validator {
         errors.clear();
     }
 
-    void validateElementValue(Dialect dialect, UsageNode element, UsageNode implElement, CharSequence value, StringBuilder formattedValue) {
+    void validateElementValue(Dialect dialect, StaEDIStreamLocation position, UsageNode element, UsageNode implElement, CharSequence value, StringBuilder formattedValue) {
         List<EDIStreamValidationError> errors = new ArrayList<>();
         if (this.formatElements) {
             formattedValue.setLength(0);
@@ -1197,6 +1204,7 @@ public class Validator {
             value = formattedValue;
         } else {
             element.validate(dialect, value, errors);
+            segment.getParent().validateReference(position, value, errors);
         }
 
         for (EDIStreamValidationError error : errors) {

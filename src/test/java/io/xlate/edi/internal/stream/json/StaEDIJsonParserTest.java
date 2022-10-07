@@ -295,8 +295,14 @@ class StaEDIJsonParserTest {
         }
 
         invoke(jsonParser, "close", Void.class);
-        assertEquals(4, errors.size());
-        // Invalid GS time, invalid GS date, GE02 too long, GE02 invalid chars
+        assertEquals(5, errors.size());
+        /*
+         * 1 Invalid GS time
+         * 2 invalid GS date
+         * 3 GE02 too long
+         * 4 GE02 invalid chars
+         * 5 GE02 does not match GS06
+         */
         // GS date reported after time due to version of GS date element selected
         EDIValidationException cause = (EDIValidationException) errors.get(3).getCause();
         assertEquals("GE", cause.getLocation().getSegmentTag());

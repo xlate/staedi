@@ -2171,4 +2171,31 @@ class StaEDIStreamWriterTest {
 
         assertEquals("Failed writing EDIFACT header: Expected UNB segment following UNA but received " + segmentTag, thrown.getMessage());
     }
+
+    @Test
+    void testMismatchedTrailerControlReferenceThrowsError() throws EDIStreamException, EDISchemaException {
+        EDIOutputFactory factory = EDIOutputFactory.newFactory();
+        factory.setProperty(Delimiters.SEGMENT, '\n');
+        factory.setProperty(EDIOutputFactory.PRETTY_PRINT, true);
+
+        ByteArrayOutputStream stream = new ByteArrayOutputStream(4096);
+        EDIValidationException thrown = null;
+
+        try (EDIStreamWriter writer = factory.createEDIStreamWriter(stream)) {
+            Schema schema = SchemaFactory.newFactory().getControlSchema(Standards.X12, new String[] { "00501" });
+            writer.setControlSchema(schema);
+            writer.startInterchange();
+            writeHeader(writer);
+            writer.writeStartSegment("IEA").writeElement("0");
+
+            thrown = assertThrows(EDIValidationException.class, () -> writer.writeElement("123456789"));
+        }
+
+        assertEquals(EDIStreamEvent.ELEMENT_DATA_ERROR, thrown.getEvent());
+        assertEquals(EDIStreamValidationError.CONTROL_REFERENCE_MISMATCH, thrown.getError());
+        assertEquals("IEA", thrown.getLocation().getSegmentTag());
+        assertEquals(2, thrown.getLocation().getSegmentPosition());
+        assertEquals(2, thrown.getLocation().getElementPosition());
+    }
+
 }
