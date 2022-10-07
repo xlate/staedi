@@ -360,7 +360,7 @@ class ErrorEventsTest {
                 + "UXA+1'"
                 + "UXC+1'"
                 + "UNT+4+00000000000117'"
-                + "UNZ+0+00000000000001'").getBytes());
+                + "UNZ+1+00000000000001'").getBytes());
 
         EDIStreamReader reader = factory.createEDIStreamReader(stream);
         reader = factory.createFilteredReader(reader, (rdr) -> {
@@ -403,7 +403,7 @@ class ErrorEventsTest {
                 + "S12*X~"
                 + "S19*X~"
                 + "S09*X~"
-                + "IEA*1*508121953~").getBytes());
+                + "IEA*0*508121953~").getBytes());
 
         SchemaFactory schemaFactory = SchemaFactory.newFactory();
         URL schemaLocation = getClass().getResource("/x12/EDISchemaSegmentValidation.xml");

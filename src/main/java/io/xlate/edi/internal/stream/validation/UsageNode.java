@@ -245,5 +245,4 @@ class UsageNode {
     UsageNode getSiblingById(CharSequence id) {
         return parent != null ? parent.getChildById(id) : null;
     }
-
 }

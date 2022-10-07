@@ -84,6 +84,14 @@
     </restriction>
   </simpleType>
 
+  <simpleType name="controlCountType">
+    <restriction base="string">
+      <enumeration value="none"/>
+      <enumeration value="controls"/>
+      <enumeration value="segments"/>
+    </restriction>
+  </simpleType>
+
   <simpleType name="elementPositionType">
     <restriction base="decimal">
       <minInclusive value="1"/>
@@ -130,8 +138,57 @@
   <complexType name="controlType" abstract="true">
     <complexContent>
       <extension base="tns:baseType">
-        <attribute name="header" type="NCName" use="required"/>
-        <attribute name="trailer" type="NCName" use="required"/>
+        <attribute name="header" type="NCName" use="required">
+          <annotation>
+            <documentation>The name of the header segment for the control structure type</documentation>
+          </annotation>
+        </attribute>
+        <attribute name="trailer" type="NCName" use="required">
+          <annotation>
+            <documentation>The name of the trailer segment for the control structure type</documentation>
+          </annotation>
+        </attribute>
+        <attribute name="headerRefPosition" type="tns:elementPositionType">
+          <annotation>
+            <documentation>
+              The element position in the header segment used as a control
+              reference/number for the interchange, group, or transaction.
+              Used together with attribute trailerRefPosition to ensure matching
+              values.
+            </documentation>
+          </annotation>
+        </attribute>
+        <attribute name="trailerRefPosition" type="tns:elementPositionType">
+          <annotation>
+            <documentation>
+              The element position in the trailer segment used as a control
+              reference/number for the interchange, group, or transaction. The value
+              received in the position identified by this attribute will be validated
+              to match the value identified by the headerRefPosition in the preceding
+              header segment.
+              Used together with attribute headerRefPosition to ensure matching
+              values.
+            </documentation>
+          </annotation>
+        </attribute>
+        <attribute name="trailerCountPosition" type="tns:elementPositionType">
+          <annotation>
+            <documentation>
+              The element position in the trailer segment used as a control
+              count for the interchange, group, or transaction.
+              When used, attribute countType must also be specified.
+            </documentation>
+          </annotation>
+        </attribute>
+        <attribute name="countType" type="tns:controlCountType" default="none">
+          <annotation>
+            <documentation>
+              The type of items being counted by the element identified by the
+              trailerCountPosition element.
+              When used, attribute trailerCountPosition must also be specified.
+            </documentation>
+          </annotation>
+        </attribute>
       </extension>
     </complexContent>
   </complexType>

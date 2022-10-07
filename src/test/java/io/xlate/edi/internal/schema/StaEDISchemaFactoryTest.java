@@ -459,6 +459,23 @@ class StaEDISchemaFactoryTest {
     }
 
     @Test
+    void testInvalidCountType() {
+        SchemaFactory factory = SchemaFactory.newFactory();
+        InputStream stream = new ByteArrayInputStream((""
+                + "<schema xmlns='" + StaEDISchemaFactory.XMLNS_V3 + "'>"
+                + "<interchange header='SG1' trailer='SG2' trailerCountPosition='1' countType='invalid'>"
+                + "<sequence>"
+                + "</sequence>"
+                + "</interchange>"
+                + "<elementType name=\"E1\" base=\"numeric\" maxLength=\"5\" />"
+                + "<segmentType name=\"SG1\"><sequence><element type='E1'/></sequence></segmentType>"
+                + "<segmentType name=\"SG2\"><sequence><element type='E1'/></sequence></segmentType>"
+                + "</schema>").getBytes());
+        EDISchemaException thrown = assertThrows(EDISchemaException.class, () -> factory.createSchema(stream));
+        assertEquals("Invalid countType", thrown.getOriginalMessage());
+    }
+
+    @Test
     void testAnyCompositeType() throws EDISchemaException {
         SchemaFactory factory = SchemaFactory.newFactory();
         InputStream stream = new ByteArrayInputStream((""

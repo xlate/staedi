@@ -29,7 +29,9 @@ public interface Schema extends Iterable<EDIType> {
      */
     @SuppressWarnings({ "java:S1123", "java:S1133" })
     @Deprecated /*(forRemoval = true, since = "1.2")*/
-    public abstract EDIComplexType getMainLoop();
+    default EDIComplexType getMainLoop() {
+        return getStandard();
+    }
 
     /**
      * Retrieve the {@link EDIComplexType} that is the entry point of the
@@ -38,7 +40,7 @@ public interface Schema extends Iterable<EDIType> {
      * @return the standard schema root type
      *
      */
-    public abstract EDIComplexType getStandard();
+    EDIComplexType getStandard();
 
     /**
      * Retrieve the {@link LoopImplementation} that is the entry point of the
@@ -47,9 +49,15 @@ public interface Schema extends Iterable<EDIType> {
      * @return the implementation schema root type
      *
      */
-    public abstract LoopImplementation getImplementation();
+    LoopImplementation getImplementation();
 
-    public abstract EDIType getType(String name);
+    /**
+     * Retrieve an {@link EDIType} by name.
+     *
+     * @param name name of the type (e.g. segment tag or an element's unique identifier)
+     * @return the type having the name requested, null if not present in this schema.
+     */
+    EDIType getType(String name);
 
     /**
      * Determine if the named segment is present in this schema.
@@ -57,6 +65,6 @@ public interface Schema extends Iterable<EDIType> {
      * @param name segment tag
      * @return true if a segment with the given name is present, otherwise false
      */
-    public abstract boolean containsSegment(String name);
+    boolean containsSegment(String name);
 
 }

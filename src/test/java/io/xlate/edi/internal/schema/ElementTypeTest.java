@@ -26,7 +26,7 @@ class ElementTypeTest {
     static final byte[] INTERCHANGE_RESPONSE = (""
             + "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *200711*0100*^*00501*000000001*0*T*:~"
             + "TA1*000000050*200229*1200*A*000~"
-            + "IEA*1*000000001~").getBytes();
+            + "IEA*0*000000001~").getBytes();
 
     @Test
     void testElementContructorNoValues() {

@@ -18,14 +18,14 @@
 
   <include schemaLocation="common.xml"/>
 
-  <interchange header="ISA" trailer="IEA" title="X12 Interchange (minimum version 00200)">
+  <interchange header="ISA" trailer="IEA" title="X12 Interchange (minimum version 00200)" headerRefPosition="13" trailerRefPosition="2" trailerCountPosition="1" countType="controls">
     <sequence>
       <segment type="ISB" title="Grade of Service Request"/>
       <segment type="ISE" title="Deferred Delivery Request"/>
       <segment type="TA1" title="Interchange Acknowledgment" maxOccurs="99999"/>
 
-      <group header="GS" trailer="GE">
-        <transaction header="ST" trailer="SE"/>
+      <group header="GS" trailer="GE" headerRefPosition="6" trailerRefPosition="2" trailerCountPosition="1" countType="controls">
+        <transaction header="ST" trailer="SE" headerRefPosition="2" trailerRefPosition="2" trailerCountPosition="1" countType="segments"/>
       </group>
 
       <transaction header="ST" trailer="SE" use="prohibited"/>

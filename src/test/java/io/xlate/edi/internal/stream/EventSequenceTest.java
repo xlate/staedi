@@ -270,7 +270,7 @@ class EventSequenceTest {
                 + "UNB+UNOA:3+005435656:1+006415160:1+060515:1434+00000000000778'"
                 + "UNH+00000000000117+INVOIC:D:97B:UN'"
                 + "BLA+UNVALIDATED'"
-                + "UNT+2+00000000000117'"
+                + "UNT+3+00000000000117'"
                 + "UNZ+1+00000000000778'").getBytes());
 
         @SuppressWarnings("resource")
@@ -345,7 +345,7 @@ class EventSequenceTest {
         assertEquals(EDIStreamEvent.START_SEGMENT, reader.next());
         assertEquals("UNT", reader.getText());
         assertEquals(EDIStreamEvent.ELEMENT_DATA, reader.next());
-        assertEquals("2", reader.getText());
+        assertEquals("3", reader.getText());
         assertEquals(EDIStreamEvent.ELEMENT_DATA, reader.next());
         assertEquals("00000000000117", reader.getText());
         assertEquals(EDIStreamEvent.END_SEGMENT, reader.next());
@@ -454,6 +454,8 @@ class EventSequenceTest {
         assertEquals(EDIStreamEvent.ELEMENT_DATA_ERROR, reader.next());
         assertEquals(EDIStreamValidationError.INVALID_CHARACTER_DATA, reader.getErrorType());
         assertEquals("<TOO_LONG_AND_NOT_NUMERIC>", reader.getText());
+        assertEquals(EDIStreamEvent.ELEMENT_DATA_ERROR, reader.next()); // GE02
+        assertEquals(EDIStreamValidationError.CONTROL_REFERENCE_MISMATCH, reader.getErrorType());
         assertEquals(EDIStreamEvent.ELEMENT_DATA, reader.next()); // GE02
         assertEquals("28", reader.getReferenceCode());
 
@@ -461,6 +463,11 @@ class EventSequenceTest {
         assertEquals(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR, reader.next());
         assertEquals(EDIStreamValidationError.TOO_MANY_REPETITIONS, reader.getErrorType());
         assertEquals("0001", reader.getText());
+
+        assertEquals(EDIStreamEvent.ELEMENT_DATA_ERROR, reader.next());
+        assertEquals(EDIStreamValidationError.CONTROL_REFERENCE_MISMATCH, reader.getErrorType());
+        assertEquals("0001", reader.getText());
+
         assertEquals(EDIStreamEvent.ELEMENT_DATA, reader.next());
         assertEquals("0001", reader.getText());
 
@@ -472,6 +479,11 @@ class EventSequenceTest {
         assertEquals(EDIStreamEvent.ELEMENT_DATA_ERROR, reader.next());
         assertEquals(EDIStreamValidationError.INVALID_CHARACTER_DATA, reader.getErrorType());
         assertEquals("AGAIN!", reader.getText()); // data association with error
+
+        assertEquals(EDIStreamEvent.ELEMENT_DATA_ERROR, reader.next());
+        assertEquals(EDIStreamValidationError.CONTROL_REFERENCE_MISMATCH, reader.getErrorType());
+        assertEquals("AGAIN!", reader.getText()); // data association with error
+
         assertEquals(EDIStreamEvent.ELEMENT_DATA, reader.next());
         assertEquals("AGAIN!", reader.getText()); // here comes the element data
                                                   // event

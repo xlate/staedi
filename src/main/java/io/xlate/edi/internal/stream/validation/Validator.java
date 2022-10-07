@@ -52,6 +52,7 @@ import io.xlate.edi.internal.stream.tokenization.ElementDataHandler;
 import io.xlate.edi.internal.stream.tokenization.StreamEvent;
 import io.xlate.edi.internal.stream.tokenization.ValidationEventHandler;
 import io.xlate.edi.schema.EDIComplexType;
+import io.xlate.edi.schema.EDIControlType;
 import io.xlate.edi.schema.EDIReference;
 import io.xlate.edi.schema.EDISimpleType;
 import io.xlate.edi.schema.EDISyntaxRule;
@@ -330,10 +331,16 @@ public class Validator {
         int depth = parentDepth + 1;
         EDIType referencedNode = link.getReferencedType();
 
-        UsageNode node = new UsageNode(parent, depth, link, index);
+        if (referencedNode instanceof EDISimpleType) {
+            return new UsageNode(parent, depth, link, index);
+        }
 
-        if (!(referencedNode instanceof EDIComplexType)) {
-            return node;
+        final UsageNode node;
+
+        if (referencedNode instanceof EDIControlType) {
+            node = new ControlUsageNode(parent, depth, link, index);
+        } else {
+            node = new UsageNode(parent, depth, link, index);
         }
 
         EDIComplexType structure = (EDIComplexType) referencedNode;
@@ -466,6 +473,41 @@ public class Validator {
         }
 
         handleMissingMandatory(handler);
+    }
+
+    public void countSegment(CharSequence tag) {
+        if (loopStack.isEmpty()) {
+            countSegment(root, tag);
+        } else {
+            for (UsageNode loop : loopStack) {
+                countSegment(loop, tag);
+            }
+        }
+    }
+
+    void countSegment(UsageNode node, CharSequence tag) {
+        int count;
+
+        if ((count = count(node, EDIControlType.Type.SEGMENTS)) > 0) {
+            LOGGER.finer(() -> "Counted tag " + tag + " @ " + count + " towards " + node);
+        }
+    }
+
+    void countControl() {
+        if (containerSchema == null) {
+            if (loopStack.isEmpty()) {
+                count(root, EDIControlType.Type.CONTROLS);
+            } else {
+                count(loopStack.peekLast(), EDIControlType.Type.CONTROLS);
+            }
+        }
+    }
+
+    int count(UsageNode node, EDIControlType.Type type) {
+        if (node instanceof ControlUsageNode) {
+            return ((ControlUsageNode) node).incrementCount(type);
+        }
+        return 0;
     }
 
     boolean handleNode(CharSequence tag, UsageNode current, UsageNode currentImpl, int startDepth, ValidationEventHandler handler) {
@@ -635,6 +677,9 @@ public class Validator {
             loopStack.push(currentImpl);
             handler.loopBegin(currentImpl.getLink());
         } else {
+            if (current instanceof ControlUsageNode) {
+                countControl();
+            }
             loopStack.push(current);
             handler.loopBegin(current.getLink());
         }
@@ -1159,13 +1204,13 @@ public class Validator {
             return;
         }
 
-        validateElementValue(dialect, this.element, this.implElement, value, formattedValue);
+        validateElementValue(dialect, position, this.element, this.implElement, value, formattedValue);
     }
 
     public void validateVersionConstraints(Dialect dialect, ValidationEventHandler validationHandler, StringBuilder formattedValue) {
         for (RevalidationNode entry : revalidationQueue) {
             if (entry.data != null) {
-                validateElementValue(dialect, entry.standard, entry.impl, entry.data, formattedValue);
+                validateElementValue(dialect, entry.location, entry.standard, entry.impl, entry.data, formattedValue);
             } else {
                 validateDataElementRequirement(dialect.getTransactionVersionString(), entry.standard, entry.impl, entry.location);
             }
@@ -1189,7 +1234,7 @@ public class Validator {
         errors.clear();
     }
 
-    void validateElementValue(Dialect dialect, UsageNode element, UsageNode implElement, CharSequence value, StringBuilder formattedValue) {
+    void validateElementValue(Dialect dialect, StaEDIStreamLocation position, UsageNode element, UsageNode implElement, CharSequence value, StringBuilder formattedValue) {
         List<EDIStreamValidationError> errors = new ArrayList<>();
         if (this.formatElements) {
             formattedValue.setLength(0);
@@ -1197,6 +1242,7 @@ public class Validator {
             value = formattedValue;
         } else {
             element.validate(dialect, value, errors);
+            validateControlValue(segment.getParent(), position, value, errors);
         }
 
         for (EDIStreamValidationError error : errors) {
@@ -1214,6 +1260,13 @@ public class Validator {
                 }
                 elementErrors.add(new UsageError(element, error));
             }
+        }
+    }
+
+    void validateControlValue(UsageNode loop, StaEDIStreamLocation position, CharSequence value, List<EDIStreamValidationError> errors) {
+        if (loop instanceof ControlUsageNode) {
+            ((ControlUsageNode) loop).validateReference(position, value, errors);
+            ((ControlUsageNode) loop).validateCount(position, value, errors);
         }
     }
 

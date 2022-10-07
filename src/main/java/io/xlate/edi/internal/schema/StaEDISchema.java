@@ -90,11 +90,6 @@ public class StaEDISchema implements Schema {
     }
 
     @Override
-    public EDIComplexType getMainLoop() {
-        return getStandard();
-    }
-
-    @Override
     public EDIComplexType getStandard() {
         return standardLoop;
     }
