@@ -476,18 +476,20 @@ public class Validator {
     }
 
     public void countSegment(CharSequence tag) {
-        if (this.loopStack.isEmpty()) {
-            int count;
-            if ((count = count(root, EDIControlType.Type.SEGMENTS)) > 0) {
-                LOGGER.finer(() -> "Counted tag " + tag + " @ " + count + " towards " + root);
-            }
+        if (loopStack.isEmpty()) {
+            countSegment(root, tag);
         } else {
-            for (UsageNode loop : this.loopStack) {
-                int count;
-                if ((count = count(loop, EDIControlType.Type.SEGMENTS)) > 0) {
-                    LOGGER.finer(() -> "Counted tag " + tag + " @ " + count + " towards " + loop);
-                }
+            for (UsageNode loop : loopStack) {
+                countSegment(loop, tag);
             }
+        }
+    }
+
+    void countSegment(UsageNode node, CharSequence tag) {
+        int count;
+
+        if ((count = count(node, EDIControlType.Type.SEGMENTS)) > 0) {
+            LOGGER.finer(() -> "Counted tag " + tag + " @ " + count + " towards " + node);
         }
     }
 
