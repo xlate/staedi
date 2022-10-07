@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -69,7 +69,7 @@ abstract class SchemaReaderBase implements SchemaReader {
                                                              0,
                                                              0,
                                                              99_999,
-                                                             Collections.emptySet(),
+                                                             Collections.emptyMap(),
                                                              Collections.emptyList(),
                                                              null,
                                                              null);
@@ -666,19 +666,19 @@ abstract class SchemaReaderBase implements SchemaReader {
         String title = parseAttribute(reader, ATTR_TITLE, String::valueOf, null);
         String descr = readDescription(reader);
 
-        final Set<String> values;
+        final Map<String, String> values;
         final List<ElementType.Version> versions;
 
         // Reader was advanced by `readDescription`, check the current state to proceed.
         if (reader.getEventType() == XMLStreamConstants.END_ELEMENT) {
-            values = Collections.emptySet();
+            values = Collections.emptyMap();
             versions = Collections.emptyList();
         } else {
             if (qnEnumeration.equals(reader.getName())) {
                 values = readEnumerationValues(reader);
                 nextTag(reader, "reading after elementType enumeration");
             } else {
-                values = Collections.emptySet();
+                values = Collections.emptyMap();
             }
 
             if (qnVersion.equals(reader.getName())) {
@@ -702,7 +702,7 @@ abstract class SchemaReaderBase implements SchemaReader {
         Long minLength = parseAttribute(reader, "minLength", Long::valueOf, null);
         Long maxLength = parseAttribute(reader, "maxLength", Long::valueOf, null);
 
-        Set<String> values;
+        Map<String, String> values;
 
         if (nextTag(reader, "reading elementType version contents") == XMLStreamConstants.END_ELEMENT) {
             // Set to null instead of empty to indicate that no enumeration is present in this version
@@ -717,8 +717,8 @@ abstract class SchemaReaderBase implements SchemaReader {
         return new ElementType.Version(minVersion, maxVersion, minLength, maxLength, values);
     }
 
-    Set<String> readEnumerationValues(XMLStreamReader reader) {
-        Set<String> values = null;
+    Map<String, String> readEnumerationValues(XMLStreamReader reader) {
+        Map<String, String> values = null;
         boolean endOfEnumeration = false;
 
         while (!endOfEnumeration) {
@@ -736,15 +736,16 @@ abstract class SchemaReaderBase implements SchemaReader {
             }
         }
 
-        return values != null ? values : Collections.emptySet();
+        return values != null ? values : Collections.emptyMap();
     }
 
-    Set<String> readEnumerationValue(XMLStreamReader reader, Set<String> values) {
+    Map<String, String> readEnumerationValue(XMLStreamReader reader, Map<String, String> values) {
         if (values == null) {
-            values = new LinkedHashSet<>();
+            values = new LinkedHashMap<>();
         }
 
-        values.add(getElementText(reader, "enumeration value"));
+        String title = parseAttribute(reader, ATTR_TITLE, String::valueOf, null);
+        values.put(getElementText(reader, "enumeration value"), title);
 
         return values;
     }

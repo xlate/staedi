@@ -4,13 +4,17 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
 import io.xlate.edi.schema.EDIReference;
 import io.xlate.edi.schema.EDISchemaException;
 import io.xlate.edi.schema.SchemaFactory;
+import io.xlate.edi.schema.implementation.ElementImplementation;
+import io.xlate.edi.schema.implementation.SegmentImplementation;
 import io.xlate.edi.stream.EDIInputFactory;
 import io.xlate.edi.stream.EDIStreamException;
 import io.xlate.edi.stream.EDIStreamReader;
@@ -64,11 +68,18 @@ class SegmentImplTest {
         assertEquals(2, nm1references.size());
         // Values set in 837_loop1000_only.xml
         assertEquals("Submitter Name", nm1references.get(0).getTitle());
+        assertEquals(Collections.singletonMap("41", "Submitter"), getElementValues(nm1references.get(0), 0));
         assertEquals("Receiver Name", nm1references.get(1).getTitle());
+        assertEquals(Collections.singletonMap("40", "Receiver"), getElementValues(nm1references.get(1), 0));
 
         // Values of NM1 standard set in 837.xml
         assertEquals("Individual or Organizational Name", nm1references.get(0).getReferencedType().getTitle());
         assertEquals("Individual or Organizational Name", nm1references.get(1).getReferencedType().getTitle());
     }
 
+    Map<String, String> getElementValues(EDIReference segRef, int position) {
+        SegmentImplementation impl = (SegmentImplementation) segRef;
+        ElementImplementation ele = (ElementImplementation) impl.getSequence().get(position);
+        return ele.getValues();
+    }
 }

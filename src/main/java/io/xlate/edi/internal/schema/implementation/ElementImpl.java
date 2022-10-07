@@ -1,7 +1,9 @@
 package io.xlate.edi.internal.schema.implementation;
 
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 
 import io.xlate.edi.schema.EDIReference;
 import io.xlate.edi.schema.EDISimpleType;
@@ -11,13 +13,13 @@ public class ElementImpl extends BaseImpl<EDISimpleType> implements ElementImple
 
     private static final String TOSTRING_FORMAT = "typeId: %s, minOccurs: %d, maxOccurs: %d, position: %d, values: %s, standard: { %s }";
     private final int position;
-    private final Set<String> values;
+    private final Map<String, String> values;
 
     public ElementImpl(int minOccurs,
             int maxOccurs,
             String typeId,
             int position,
-            Set<String> values,
+            Map<String, String> values,
             String title,
             String description) {
         super(title, description);
@@ -25,7 +27,7 @@ public class ElementImpl extends BaseImpl<EDISimpleType> implements ElementImple
         super.maxOccurs = maxOccurs;
         super.typeId = typeId;
         this.position = position;
-        this.values = values;
+        this.values = Collections.unmodifiableMap(new LinkedHashMap<>(values));
     }
 
     public ElementImpl(EDIReference standardReference, int position) {
@@ -33,7 +35,7 @@ public class ElementImpl extends BaseImpl<EDISimpleType> implements ElementImple
         this.setStandardReference(standardReference);
         this.typeId = standard.getId();
         this.position = position;
-        this.values = standard.getValueSet();
+        this.values = standard.getValues();
     }
 
     @Override
@@ -54,7 +56,7 @@ public class ElementImpl extends BaseImpl<EDISimpleType> implements ElementImple
     }
 
     @Override
-    public Set<String> getValueSet() {
+    public Map<String, String> getValues() {
         return values;
     }
 

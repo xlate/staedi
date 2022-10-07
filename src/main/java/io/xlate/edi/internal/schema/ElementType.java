@@ -17,9 +17,9 @@ package io.xlate.edi.internal.schema;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedHashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
 
@@ -38,15 +38,15 @@ class ElementType extends BasicType implements EDISimpleType {
     final int number;
     final long minLength;
     final long maxLength;
-    final Set<String> values;
+    final Map<String, String> values;
     final List<Version> versions;
 
     static class Version extends VersionedProperty {
         final Long minLength;
         final Long maxLength;
-        final Set<String> values;
+        final Map<String, String> values;
 
-        Version(String minVersion, String maxVersion, Long minLength, Long maxLength, Set<String> values) {
+        Version(String minVersion, String maxVersion, Long minLength, Long maxLength, Map<String, String> values) {
             super(minVersion, maxVersion);
             this.minLength = minLength;
             this.maxLength = maxLength;
@@ -61,12 +61,12 @@ class ElementType extends BasicType implements EDISimpleType {
             return maxLength != null ? maxLength.longValue() : defaultElement.getMaxLength();
         }
 
-        public Set<String> getValueSet(ElementType defaultElement) {
-            return values != null ? values : defaultElement.getValueSet();
+        public Map<String, String> getValues(ElementType defaultElement) {
+            return values != null ? values : defaultElement.getValues();
         }
     }
 
-    ElementType(String id, Base base, int scale, String code, int number, long minLength, long maxLength, Set<String> values, List<Version> versions, String title, String description) {
+    ElementType(String id, Base base, int scale, String code, int number, long minLength, long maxLength, Map<String, String> values, List<Version> versions, String title, String description) {
         super(id, Type.ELEMENT, title, description);
         this.base = base;
         this.scale = scale;
@@ -74,7 +74,7 @@ class ElementType extends BasicType implements EDISimpleType {
         this.number = number;
         this.minLength = minLength;
         this.maxLength = maxLength;
-        this.values = Collections.unmodifiableSet(new LinkedHashSet<>(values));
+        this.values = Collections.unmodifiableMap(new LinkedHashMap<>(values));
         this.versions = Collections.unmodifiableList(new ArrayList<>(versions));
     }
 
@@ -150,12 +150,12 @@ class ElementType extends BasicType implements EDISimpleType {
     }
 
     @Override
-    public Set<String> getValueSet() {
+    public Map<String, String> getValues() {
         return values;
     }
 
     @Override
-    public Set<String> getValueSet(String version) {
-        return getVersionAttribute(version, Version::getValueSet, this::getValueSet);
+    public Map<String, String> getValues(String version) {
+        return getVersionAttribute(version, Version::getValues, this::getValues);
     }
 }

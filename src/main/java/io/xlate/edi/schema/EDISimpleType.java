@@ -15,6 +15,7 @@
  ******************************************************************************/
 package io.xlate.edi.schema;
 
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -135,7 +136,9 @@ public interface EDISimpleType extends EDIType {
      *
      * @return the set of enumerated values allowed for this element
      */
-    Set<String> getValueSet();
+    default Set<String> getValueSet() {
+        return getValues().keySet();
+    }
 
     /**
      * Retrieve the set of enumerated values allowed for this element for a
@@ -146,12 +149,40 @@ public interface EDISimpleType extends EDIType {
      *
      * @param version
      *            the version to select
-     * @return the set of enumerated values allowed for this element for version
+     * @return the set of enumerated values allowed for this element for the
+     *         given version
      *
      * @since 1.8
      */
     default Set<String> getValueSet(String version) {
-        return getValueSet();
+        return getValues(version).keySet();
     }
 
+    /**
+     * Retrieve the mapping of enumerated values allowed for this element with
+     * the associated title values.
+     *
+     * @return the map of enumerated values and titles allowed for this element
+     *
+     * @since 1.22
+     */
+    Map<String, String> getValues();
+
+    /**
+     * Retrieve the mapping of enumerated values allowed for this element with
+     * the associated title values for a particular version of the element.
+     *
+     * The default implementation returns the default (un-versioned) values for
+     * the element.
+     *
+     * @param version
+     *            the version to select
+     * @return the map of enumerated values and titles allowed for this element
+     *         for the given version
+     *
+     * @since 1.22
+     */
+    default Map<String, String> getValues(String version) {
+        return getValues();
+    }
 }
