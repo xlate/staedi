@@ -27,7 +27,7 @@ jobs:
 
       ## Retrieve the `target` directory from the build job
       - name: Fetch Build Result
-        uses: actions/github-script@v3.1.0
+        uses: actions/github-script@v6
         with:
           script: |
             var artifacts = await github.actions.listWorkflowRunArtifacts({
@@ -75,8 +75,9 @@ jobs:
           git clean -ffdx --exclude=target/ && git reset --hard HEAD
 
       - name: Setup JDK
-        uses: actions/setup-java@v1
+        uses: actions/setup-java@v3
         with:
+          distribution: 'temurin'
           java-version: 17
 
       - name: Cache SonarCloud packages
@@ -86,12 +87,11 @@ jobs:
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
 
-      - name: Cache Maven packages
+      - name: Setup Maven Cache
         uses: actions/cache@v3
         with:
-          path: ~/.m2
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-m2
+          path: ~/.m2/repository
+          key: m2-repository-${{ hashFiles('**/pom.xml') }}
 
       ## (PRs Only) Run Sonar analysis against the results of the build job, providing PR information
       - name: SonarCloud Analysis (PR Only)
