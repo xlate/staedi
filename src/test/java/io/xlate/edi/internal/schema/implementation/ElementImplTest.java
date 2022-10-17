@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.junit.jupiter.api.Test;
@@ -32,7 +33,7 @@ class ElementImplTest {
     final int DFLT_MAX_OCCURS = 9;
     final String DFLT_ID = "E0001";
     final int DFLT_POSITION = 1;
-    final Set<String> DFLT_VALUES = Collections.emptySet();
+    final Map<String, String> DFLT_VALUES = Collections.emptyMap();
     final String DFLT_TITLE = "Test Element";
     final String DFLT_DESCR = "Just for testing";
 
@@ -78,8 +79,8 @@ class ElementImplTest {
 
     @Test
     void testEquals_DifferentValueSet() {
-        Set<String> v1 = Collections.singleton("A");
-        Set<String> v2 = Collections.singleton("B");
+        Map<String, String> v1 = Collections.singletonMap("A", "Title A");
+        Map<String, String> v2 = Collections.singletonMap("B", "Title B");
         ElementImpl e1 = new ElementImpl(DFLT_MIN_OCCURS, DFLT_MAX_OCCURS, DFLT_ID, DFLT_POSITION, v1, DFLT_TITLE, DFLT_DESCR);
         ElementImpl e2 = new ElementImpl(DFLT_MIN_OCCURS, DFLT_MAX_OCCURS, DFLT_ID, DFLT_POSITION, v2, DFLT_TITLE, DFLT_DESCR);
         assertNotEquals(e1, e2);
@@ -142,6 +143,11 @@ class ElementImplTest {
             @Override
             public Set<String> getValueSet() {
                 return Collections.emptySet();
+            }
+
+            @Override
+            public Map<String, String> getValues() {
+                return Collections.emptyMap();
             }
 
             @Override

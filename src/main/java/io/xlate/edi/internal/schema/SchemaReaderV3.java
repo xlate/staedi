@@ -54,14 +54,14 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
     final Deque<EDITypeImplementation> implementedTypes = new LinkedList<>();
 
     static class ValueSet {
-        Set<String> value;
+        Map<String, String> value;
 
-        void set(Set<String> value) {
+        void set(Map<String, String> value) {
             this.value = value;
         }
 
-        Set<String> get() {
-            return this.value != null ? this.value : Collections.emptySet();
+        Map<String, String> get() {
+            return requireNonNullElseGet(value, Collections::emptyMap);
         }
 
         void clear() {

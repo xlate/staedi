@@ -6,10 +6,10 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
@@ -30,14 +30,17 @@ class ElementTypeTest {
 
     @Test
     void testElementContructorNoValues() {
-        ElementType e = new ElementType("E1", Base.STRING, -1, "1", 1, 0L, 5L, Collections.emptySet(), Collections.emptyList(), null, null);
-        assertEquals("id: E1, type: ELEMENT, base: STRING, code: 1, minLength: 0, maxLength: 5, values: []", e.toString());
+        ElementType e = new ElementType("E1", Base.STRING, -1, "1", 1, 0L, 5L, Collections.emptyMap(), Collections.emptyList(), null, null);
+        assertEquals("id: E1, type: ELEMENT, base: STRING, code: 1, minLength: 0, maxLength: 5, values: {}", e.toString());
     }
 
     @Test
     void testElementContructorWithValues() {
-        ElementType e = new ElementType("E1", Base.STRING, -1, "1", 1, 0L, 5L, new HashSet<>(Arrays.asList("ABCDE", "FGHIJ")), Collections.emptyList(), null, null);
-        assertEquals("id: E1, type: ELEMENT, base: STRING, code: 1, minLength: 0, maxLength: 5, values: [ABCDE, FGHIJ]", e.toString());
+        Map<String, String> values = new HashMap<>();
+        values.put("ABCDE", "Title 1");
+        values.put("FGHIJ", "Title 2");
+        ElementType e = new ElementType("E1", Base.STRING, -1, "1", 1, 0L, 5L, values, Collections.emptyList(), null, null);
+        assertEquals("id: E1, type: ELEMENT, base: STRING, code: 1, minLength: 0, maxLength: 5, values: {ABCDE=Title 1, FGHIJ=Title 2}", e.toString());
     }
 
     @SuppressWarnings("deprecation")

@@ -69,10 +69,11 @@ class AlphaNumericValidatorTest implements ValueSetTester {
         when(element.getMinLength(anyString())).thenCallRealMethod();
         when(element.getMaxLength(anyString())).thenCallRealMethod();
         when(element.getValueSet(anyString())).thenCallRealMethod();
+        when(element.getValues(anyString())).thenCallRealMethod();
 
         when(element.getMinLength()).thenReturn(4L);
         when(element.getMaxLength()).thenReturn(5L);
-        when(element.getValueSet()).thenReturn(setOf("VAL1", "VAL2"));
+        when(element.getValues()).thenReturn(mapOf("VAL1", "Title1", "VAL2", "Title2"));
         ElementValidator v = AlphaNumericValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
         v.validate(dialect, element, "TEST", errors);
@@ -118,10 +119,11 @@ class AlphaNumericValidatorTest implements ValueSetTester {
         when(element.getMinLength(anyString())).thenCallRealMethod();
         when(element.getMaxLength(anyString())).thenCallRealMethod();
         when(element.getValueSet(anyString())).thenCallRealMethod();
+        when(element.getValues(anyString())).thenCallRealMethod();
 
         when(element.getMinLength()).thenReturn(4L);
         when(element.getMaxLength()).thenReturn(8L);
-        when(element.getValueSet()).thenReturn(setOf("VAL1", "VAL2"));
+        when(element.getValues()).thenReturn(mapOf("VAL1", "Title1", "VAL2", "Title2"));
         ElementValidator v = AlphaNumericValidator.getInstance();
         StringBuilder output = new StringBuilder();
         v.format(dialect, element, "TESTTEST", output);
