@@ -3,6 +3,7 @@ package io.xlate.edi.internal.schema;
 import static io.xlate.edi.internal.schema.StaEDISchemaFactory.schemaException;
 import static io.xlate.edi.internal.schema.StaEDISchemaFactory.unexpectedElement;
 import static io.xlate.edi.internal.schema.StaEDISchemaFactory.unexpectedEvent;
+import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 
 import java.math.BigDecimal;
@@ -17,6 +18,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.IntStream;
@@ -736,7 +738,7 @@ abstract class SchemaReaderBase implements SchemaReader {
             }
         }
 
-        return values != null ? values : Collections.emptyMap();
+        return requireNonNullElseGet(values, Collections::emptyMap);
     }
 
     Map<String, String> readEnumerationValue(XMLStreamReader reader, Map<String, String> values) {
@@ -887,6 +889,14 @@ abstract class SchemaReaderBase implements SchemaReader {
                                                  .intValue();
 
         return new ElementPosition(elementPosition, componentPosition);
+    }
+
+    /**
+     * Replace with Objects#requireNonNullElseGet when migrating to Java 11.
+     */
+    static <T> T requireNonNullElseGet(T obj, Supplier<? extends T> supplier) {
+        return (obj != null) ? obj
+                : requireNonNull(requireNonNull(supplier, "supplier").get(), "supplier.get()");
     }
 
     protected abstract String readReferencedId(XMLStreamReader reader);

@@ -61,7 +61,7 @@ class SchemaReaderV3 extends SchemaReaderBase implements SchemaReader {
         }
 
         Map<String, String> get() {
-            return this.value != null ? this.value : Collections.emptyMap();
+            return requireNonNullElseGet(value, Collections::emptyMap);
         }
 
         void clear() {
