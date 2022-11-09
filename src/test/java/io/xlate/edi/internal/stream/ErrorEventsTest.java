@@ -630,7 +630,7 @@ class ErrorEventsTest {
                 + "AK4*8:::ANYCOMPONENT*66*7*MI~"
                 + "AK5*R*5~"
                 + "AK9*R*1*1*0~"
-                + "SE*4*0001~"
+                + "SE*8*0001~"
                 + "GE*1*000005~"
                 + "IEA*1*508121953~").getBytes());
 
@@ -670,7 +670,7 @@ class ErrorEventsTest {
                 + "AK4*8:::*66*7*MI~"
                 + "AK5*R*5~"
                 + "AK9*R*1*1*0~"
-                + "SE*4*0001~"
+                + "SE*8*0001~"
                 + "GE*1*000005~"
                 + "IEA*1*508121953~").getBytes());
 
@@ -724,7 +724,7 @@ class ErrorEventsTest {
                 + "S0A*3333~" // Too long
                 + "S0A*222~" // Good
                 + "S0A*333~" // Invalid code
-                + "SE*6*0001~"
+                + "SE*7*0001~"
                 + "GE*1*000002~"
                 + "GS*FA*ReceiverDept*SenderDept*20200615*133025*000003*X*005010~"
                 + "ST*000*0001~"
@@ -734,7 +734,7 @@ class ErrorEventsTest {
                 + "S0A*222~" // Good
                 + "S0A*333~" // Good
                 + "S0A*444~" // Invalid code
-                + "SE*3*0001~"
+                + "SE*8*0001~"
                 + "GE*1*000003~"
                 + "IEA*3*508121953~").getBytes());
 
