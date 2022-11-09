@@ -350,7 +350,14 @@ abstract class SchemaReaderBase implements SchemaReader {
                                                title,
                                                descr);
 
-        types.put(struct.getId(), struct);
+        /*
+         * Built-in X12 control schemas include a prohibited transaction element in the
+         * schema to indicate that a transaction may not be used directly within an interchange
+         * envelope. The use of `putIfAbsent` prevents this transaction from overlaying the
+         * actual transaction type nested within the group envelope. EDIFACT and TRADACOMS
+         * transactions may appear in either location, the `putIfAbsent` has no effect.
+         */
+        types.putIfAbsent(struct.getId(), struct);
 
         Reference structRef = new Reference(struct.getId(), elementType, minOccurs, maxOccurs, title, descr);
         structRef.setReferencedType(struct);
@@ -417,22 +424,14 @@ abstract class SchemaReaderBase implements SchemaReader {
         final EDIType.Type type = complex.get(complexType);
         final String id;
         String code = parseAttribute(reader, "code", String::valueOf, null);
-        // Transaction attributes
-        EDIElementPosition headerRef = null;
-        EDIElementPosition trailerRef = null;
-        EDIElementPosition trailerCount = null;
-        EDIControlType.Type countType = null;
         // Loop attributes
         EDIElementPosition levelIdPosition = null;
         EDIElementPosition parentIdPosition = null;
 
         switch (type) {
         case TRANSACTION:
+            // "Standard" transaction structure, not the control type from control schema
             id = StaEDISchema.TRANSACTION_ID;
-            headerRef = parseElementPosition(reader, ATTR_HEADER_REF_POSITION);
-            trailerRef = parseElementPosition(reader, ATTR_TRAILER_REF_POSITION);
-            trailerCount = parseElementPosition(reader, ATTR_TRAILER_COUNT_POSITION);
-            countType = parseAttribute(reader, ATTR_COUNT_TYPE, EDIControlType.Type::fromString, EDIControlType.Type.NONE);
             break;
         case LOOP:
             id = code;
@@ -475,18 +474,10 @@ abstract class SchemaReaderBase implements SchemaReader {
         if (event == XMLStreamConstants.END_ELEMENT) {
             StructureType structure;
 
-            switch (type) {
-            case TRANSACTION:
-                structure = new ControlType(id, type, code, refs, rules, headerRef, trailerRef, trailerCount, countType, title, descr);
-                break;
-            case LOOP:
+            if (type == Type.LOOP) {
                 structure = new LoopType(code, refs, rules, levelIdPosition, parentIdPosition, title, descr);
-                break;
-            case SEGMENT:
-            case COMPOSITE:
-            default:
+            } else {
                 structure = new StructureType(id, type, code, refs, rules, title, descr);
-                break;
             }
 
             return structure;

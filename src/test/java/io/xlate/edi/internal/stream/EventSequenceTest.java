@@ -188,7 +188,7 @@ class EventSequenceTest {
                 + "GS*FA*ReceiverDept*SenderDept*20050812*195335*000005*X*005010X230~"
                 + "ST*997*0001*005010X230~"
                 + "AK1*HC*000001~"
-                + "SE*8*0001~"
+                + "SE*3*0001~"
                 + "GE*1*000005~"
                 + "IEA*1*508121953~").getBytes());
 
