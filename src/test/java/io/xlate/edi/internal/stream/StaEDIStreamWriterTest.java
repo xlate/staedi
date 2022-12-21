@@ -65,6 +65,7 @@ import io.xlate.edi.stream.EDIStreamValidationError;
 import io.xlate.edi.stream.EDIStreamWriter;
 import io.xlate.edi.stream.EDIValidationException;
 import io.xlate.edi.stream.Location;
+import io.xlate.edi.test.StaEDITestUtil;
 
 @SuppressWarnings("resource")
 class StaEDIStreamWriterTest {
@@ -714,6 +715,7 @@ class StaEDIStreamWriterTest {
         ByteArrayOutputStream result = new ByteArrayOutputStream(16384);
         writeFromReader(reader, blocked, result);
         final String expected = Stream.of(readBuffer.toString("UTF-8"))
+        	.map(StaEDITestUtil::normalizeLines)
             .map(exp -> blocked ? exp.replace("\n", "") : exp)
             .map(String::trim)
             .findFirst()
@@ -920,7 +922,7 @@ class StaEDIStreamWriterTest {
             reader.close();
         }
 
-        assertEquals(expected.toString().trim(), normalizeLines(result.toString().trim()));
+        assertEquals(normalizeLines(expected.toString().trim()), normalizeLines(result.toString().trim()));
     }
 
     @Test
@@ -1032,7 +1034,7 @@ class StaEDIStreamWriterTest {
             reader.close();
         }
 
-        assertEquals(expected.toString().trim(), normalizeLines(result.toString().trim()));
+        assertEquals(normalizeLines(expected.toString().trim()), normalizeLines(result.toString().trim()));
     }
 
     @Test
@@ -1135,7 +1137,7 @@ class StaEDIStreamWriterTest {
         }
 
         System.out.println(expected.toString());
-        assertEquals(expected.toString().trim(), normalizeLines(result.toString().trim()));
+        assertEquals(normalizeLines(expected.toString().trim()), normalizeLines(result.toString().trim()));
     }
 
     @Test
