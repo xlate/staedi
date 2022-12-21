@@ -1,0 +1,2 @@
+# Prevent changes to line endings that may break binary data in test EDI files
+*.edi text eol=lf
