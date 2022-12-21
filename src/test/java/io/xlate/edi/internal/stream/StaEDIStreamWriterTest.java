@@ -15,6 +15,7 @@
  ******************************************************************************/
 package io.xlate.edi.internal.stream;
 
+import static io.xlate.edi.test.StaEDITestUtil.normalizeLines;
 import static io.xlate.edi.test.StaEDITestUtil.write;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -717,7 +718,7 @@ class StaEDIStreamWriterTest {
             .map(String::trim)
             .findFirst()
             .get();
-        assertEquals(expected, result.toString("UTF-8").trim());
+        assertEquals(expected, normalizeLines(result.toString("UTF-8").trim()));
     }
 
     void writeFromReader(EDIStreamReader reader, boolean blocked, OutputStream result) throws Exception {
@@ -919,7 +920,7 @@ class StaEDIStreamWriterTest {
             reader.close();
         }
 
-        assertEquals(expected.toString().trim(), result.toString().trim());
+        assertEquals(expected.toString().trim(), normalizeLines(result.toString().trim()));
     }
 
     @Test
@@ -1031,7 +1032,7 @@ class StaEDIStreamWriterTest {
             reader.close();
         }
 
-        assertEquals(expected.toString().trim(), result.toString().trim());
+        assertEquals(expected.toString().trim(), normalizeLines(result.toString().trim()));
     }
 
     @Test
@@ -1134,7 +1135,7 @@ class StaEDIStreamWriterTest {
         }
 
         System.out.println(expected.toString());
-        assertEquals(expected.toString().trim(), result.toString().trim());
+        assertEquals(expected.toString().trim(), normalizeLines(result.toString().trim()));
     }
 
     @Test
@@ -1412,7 +1413,7 @@ class StaEDIStreamWriterTest {
             reader.close();
         }
 
-        assertEquals(expected.toString().trim(), result.toString().trim());
+        assertEquals(expected.toString().trim(), normalizeLines(result.toString().trim()));
     }
 
     @Test
@@ -1598,7 +1599,7 @@ class StaEDIStreamWriterTest {
             reader.close();
         }
 
-        assertEquals(expected.toString().trim(), result.toString().trim());
+        assertEquals(expected.toString().trim(), normalizeLines(result.toString().trim()));
     }
 
     @Test
