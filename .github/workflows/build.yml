@@ -20,11 +20,12 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
     strategy:
       matrix:
         java: [ 8, 11, 17 ]
-    name: Build with JDK ${{matrix.java}}
+        os: [ ubuntu-latest, windows-latest ]
+    name: "Build with JDK ${{matrix.java}} on ${{ matrix.os }}"
+    runs-on: ${{ matrix.os }}
 
     steps:
       ## - name: Display Github Event Context
@@ -52,14 +53,14 @@ jobs:
 
       ## Save the context information for use in Sonar analysis
       - name: Save Build Context
-        if: matrix.java == '17'
+        if: ${{ matrix.java == '17' && matrix.os == 'ubuntu-latest' }}
         run: echo "$GITHUB_CONTEXT" > target/build-context.json
         env:
           GITHUB_CONTEXT: ${{ toJson(github) }}
 
       ## Attach the target directory for use in Sonar analysis
       - name: Attach Build Output
-        if: matrix.java == '17'
+        if: ${{ matrix.java == '17' && matrix.os == 'ubuntu-latest' }}
         uses: actions/upload-artifact@v3
         with:
           name: target

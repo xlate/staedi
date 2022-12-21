@@ -383,7 +383,7 @@ class LexerTest {
 
     @Test
     void testUnmappabledCharacter() throws EDIException, IOException {
-        InputStream stream = new ByteArrayInputStream("ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~😀".getBytes());
+        InputStream stream = new ByteArrayInputStream("ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~😀".getBytes(StandardCharsets.UTF_8));
         TestLexerEventHandler eventHandler = new TestLexerEventHandler();
         final StaEDIStreamLocation location = new StaEDIStreamLocation();
         final Lexer lexer = new Lexer(stream, StandardCharsets.US_ASCII, eventHandler, location, false);

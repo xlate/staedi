@@ -154,7 +154,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         String lineSeparator = System.getProperty("line.separator");
 
         if (prettyPrint && lineSeparator.indexOf(segmentTerminator) < 0) {
-            // Do not add the line separator after the segment terminator if they conflict. I.e., the separater contains the terminator
+            // Do not add the line separator after the segment terminator if they conflict. I.e., the separator contains the terminator
             prettyPrintString = lineSeparator;
         } else {
             prettyPrintString = "";

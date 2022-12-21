@@ -15,6 +15,7 @@
  ******************************************************************************/
 package io.xlate.edi.internal.stream;
 
+import static io.xlate.edi.test.StaEDITestUtil.normalizeLines;
 import static io.xlate.edi.test.StaEDITestUtil.write;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -38,6 +39,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -711,8 +713,12 @@ class StaEDIStreamWriterTest {
         EDIStreamReader reader = inputFactory.createFilteredReader(rawReader, r -> true); // Accept all events
         ByteArrayOutputStream result = new ByteArrayOutputStream(16384);
         writeFromReader(reader, blocked, result);
-        final String expected = blocked ? readBuffer.toString().replace("\n", "") : readBuffer.toString();
-        assertEquals(expected.trim(), result.toString().trim());
+        final String expected = Stream.of(readBuffer.toString("UTF-8"))
+            .map(exp -> blocked ? exp.replace("\n", "") : exp)
+            .map(String::trim)
+            .findFirst()
+            .get();
+        assertEquals(expected, normalizeLines(result.toString("UTF-8").trim()));
     }
 
     void writeFromReader(EDIStreamReader reader, boolean blocked, OutputStream result) throws Exception {
@@ -914,7 +920,7 @@ class StaEDIStreamWriterTest {
             reader.close();
         }
 
-        assertEquals(expected.toString().trim(), result.toString().trim());
+        assertEquals(expected.toString().trim(), normalizeLines(result.toString().trim()));
     }
 
     @Test
@@ -1026,7 +1032,7 @@ class StaEDIStreamWriterTest {
             reader.close();
         }
 
-        assertEquals(expected.toString().trim(), result.toString().trim());
+        assertEquals(expected.toString().trim(), normalizeLines(result.toString().trim()));
     }
 
     @Test
@@ -1129,7 +1135,7 @@ class StaEDIStreamWriterTest {
         }
 
         System.out.println(expected.toString());
-        assertEquals(expected.toString().trim(), result.toString().trim());
+        assertEquals(expected.toString().trim(), normalizeLines(result.toString().trim()));
     }
 
     @Test
@@ -1407,7 +1413,7 @@ class StaEDIStreamWriterTest {
             reader.close();
         }
 
-        assertEquals(expected.toString().trim(), result.toString().trim());
+        assertEquals(expected.toString().trim(), normalizeLines(result.toString().trim()));
     }
 
     @Test
@@ -1593,7 +1599,7 @@ class StaEDIStreamWriterTest {
             reader.close();
         }
 
-        assertEquals(expected.toString().trim(), result.toString().trim());
+        assertEquals(expected.toString().trim(), normalizeLines(result.toString().trim()));
     }
 
     @Test
@@ -1616,7 +1622,7 @@ class StaEDIStreamWriterTest {
     }
 
     @Test
-    void testWriteAlternateEncodedElement() throws EDIStreamException {
+    void testWriteAlternateEncodedElement() throws Exception {
         EDIOutputFactory factory = EDIOutputFactory.newFactory();
         ByteArrayOutputStream stream = new ByteArrayOutputStream(4096);
         EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
@@ -1630,7 +1636,7 @@ class StaEDIStreamWriterTest {
         writer.writeElement("BÜTTNER")
               .writeEndSegment();
         writer.flush();
-        assertEquals("SEG*BÜTTNER~", stream.toString());
+        assertEquals("SEG*BÜTTNER~", stream.toString("UTF-8"));
     }
 
     @Test
