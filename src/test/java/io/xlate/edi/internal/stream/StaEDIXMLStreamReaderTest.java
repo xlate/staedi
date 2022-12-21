@@ -15,6 +15,7 @@
  ******************************************************************************/
 package io.xlate.edi.internal.stream;
 
+import static io.xlate.edi.test.StaEDITestUtil.assertEqualsNormalizeLineSeparators;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -427,7 +428,7 @@ class StaEDIXMLStreamReaderTest {
         XMLStreamWriter xmlWriter = new StaEDIXMLStreamWriter(ediWriter);
         transformer.transform(new StreamSource(new StringReader(resultString)), new StAXResult(xmlWriter));
         String expectedEDI = String.join("\n", Files.readAllLines(Paths.get("src/test/resources/x12/extraDelimiter997.edi")));
-        assertEquals(expectedEDI, new String(resultEDI.toByteArray()).trim());
+        assertEqualsNormalizeLineSeparators(expectedEDI, new String(resultEDI.toByteArray()).trim());
     }
 
     @Test

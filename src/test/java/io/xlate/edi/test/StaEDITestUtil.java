@@ -258,4 +258,11 @@ public class StaEDITestUtil {
         return buffer.toString();
     }
 
+    public static void assertEqualsNormalizeLineSeparators(String expected, String actual) {
+        assertEquals(normalizeLines(expected), normalizeLines(actual));
+    }
+
+    public static String normalizeLines(String input) {
+        return input != null ? input.replaceAll("(?:\\r\\n|\\r)", "\n") : null;
+    }
 }

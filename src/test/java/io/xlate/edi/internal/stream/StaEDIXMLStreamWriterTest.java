@@ -1,5 +1,6 @@
 package io.xlate.edi.internal.stream;
 
+import static io.xlate.edi.test.StaEDITestUtil.assertEqualsNormalizeLineSeparators;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -416,7 +417,7 @@ class StaEDIXMLStreamWriterTest {
         StAXResult result = new StAXResult(it);
         TransformerFactory.newInstance().newTransformer().transform(source, result);
         it.close();
-        assertEquals("" +
+        assertEqualsNormalizeLineSeparators("" +
                 "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*000000001*0*P*:~\n" +
                 "GS**Receiver*Sender*20050812*195335*1*X*005010X230~\n" +
                 "GE*1*1~\n" +
@@ -449,7 +450,7 @@ class StaEDIXMLStreamWriterTest {
         StAXResult result = new StAXResult(it);
         TransformerFactory.newInstance().newTransformer().transform(source, result);
         it.close();
-        assertEquals("" +
+        assertEqualsNormalizeLineSeparators("" +
                 "UNB+UNOA:3+++200914:1945+1'\n" +
                 "UNZ+0+1'\n", new String(stream.toByteArray()));
     }
@@ -478,7 +479,7 @@ class StaEDIXMLStreamWriterTest {
         StAXResult result = new StAXResult(it);
         TransformerFactory.newInstance().newTransformer().transform(source, result);
         it.close();
-        assertEquals("" +
+        assertEqualsNormalizeLineSeparators("" +
                 "UNB+UNOA:3+++:1945+1'\n" +
                 "UNZ+0+1'\n", new String(stream.toByteArray()));
     }
