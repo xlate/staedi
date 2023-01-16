@@ -64,6 +64,7 @@
     <version.junit-jupiter>5.9.2</version.junit-jupiter>
     <version.xmlunit>2.9.1</version.xmlunit>
     <version.jsonassert>1.5.1</version.jsonassert>
+    <version.parsson>1.1.1</version.parsson>
   </properties>
 
   <build>
@@ -224,6 +225,7 @@
       <dependency>
         <groupId>org.glassfish</groupId>
         <artifactId>javax.json</artifactId>
+        <classifier>module</classifier>
         <version>${version.javax.json.api}</version>
       </dependency>
       <dependency>
@@ -240,6 +242,11 @@
         <groupId>org.skyscreamer</groupId>
         <artifactId>jsonassert</artifactId>
         <version>${version.jsonassert}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.eclipse.parsson</groupId>
+        <artifactId>parsson</artifactId>
+        <version>${version.parsson}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
@@ -290,6 +297,12 @@
     <dependency>
       <groupId>org.glassfish</groupId>
       <artifactId>javax.json</artifactId>
+      <classifier>module</classifier>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.parsson</groupId>
+      <artifactId>parsson</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -316,6 +329,11 @@
             <groupId>jakarta.json</groupId>
             <artifactId>jakarta.json-api</artifactId>
             <version>2.0.1</version>
+          </dependency>
+          <dependency>
+            <groupId>org.eclipse.parsson</groupId>
+            <artifactId>parsson</artifactId>
+            <version>1.0.2</version>
           </dependency>
           <dependency>
             <groupId>jakarta.xml.bind</groupId>

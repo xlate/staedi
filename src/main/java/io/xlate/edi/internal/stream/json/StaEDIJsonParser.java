@@ -16,13 +16,17 @@
 package io.xlate.edi.internal.stream.json;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.text.ParsePosition;
 import java.util.ArrayDeque;
 import java.util.Map;
 import java.util.Queue;
+import java.util.function.Function;
+import java.util.function.ToIntFunction;
 import java.util.logging.Logger;
+import java.util.stream.Stream;
 
 import io.xlate.edi.internal.stream.Configurable;
 import io.xlate.edi.schema.EDIReference;
@@ -115,6 +119,16 @@ abstract class StaEDIJsonParser implements Configurable {
         this.properties = properties;
         this.emptyElementsNull = getProperty(EDIInputFactory.JSON_NULL_EMPTY_ELEMENTS, Boolean::parseBoolean, false);
         this.elementsAsObject = getProperty(EDIInputFactory.JSON_OBJECT_ELEMENTS, Boolean::parseBoolean, false);
+    }
+
+    @SuppressWarnings("unchecked")
+    static <E extends Enum<E>> E[] mapEvents(Class<E> eventType) {
+        ToIntFunction<E> ordinal = e -> Event.valueOf(e.name()).ordinal();
+
+        return Stream.of(eventType.getEnumConstants())
+                .sorted((c1, c2) -> Integer.compare(ordinal.applyAsInt(c1), ordinal.applyAsInt(c2)))
+                .map(eventType::cast)
+                .toArray(size -> (E[]) Array.newInstance(eventType, size));
     }
 
     protected abstract RuntimeException newJsonException(String message, Throwable cause);
@@ -301,12 +315,22 @@ abstract class StaEDIJsonParser implements Configurable {
         }
     }
 
-    void assertEventValueNumber() {
+    void assertEventSet(String message) {
+        if (this.currentEvent == null) {
+            throw new IllegalStateException(message);
+        }
+    }
+
+    void assertEvent(Event required, Function<Event, String> message) {
         final Event current = this.currentEvent;
 
-        if (current != Event.VALUE_NUMBER) {
-            throw new IllegalStateException("Unable to get number value for event [" + current + ']');
+        if (current != required) {
+            throw new IllegalStateException(message.apply(current));
         }
+    }
+
+    void assertEventValueNumber() {
+        assertEvent(Event.VALUE_NUMBER, current -> "Unable to get number value for event [" + current + ']');
     }
 
     void assertEventValueString() {

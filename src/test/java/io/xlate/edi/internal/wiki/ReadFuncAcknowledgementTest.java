@@ -1,10 +1,12 @@
 package io.xlate.edi.internal.wiki;
 
-// import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.ArrayDeque;
 import java.util.Collections;
 import java.util.Deque;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 import javax.json.Json;
 import javax.json.JsonArrayBuilder;
@@ -30,14 +32,22 @@ class ReadFuncAcknowledgementTest {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         JsonObject result = null;
 
-        //InputStream stream = new FileInputStream("simple997.edi");
+        // Any InputStream can be used to create an `EDIStreamReader`
         try (InputStream stream = getClass().getResource("/x12/simple997.edi").openStream();
-                EDIStreamReader reader = factory.createEDIStreamReader(stream)) {
+             EDIStreamReader reader = factory.createEDIStreamReader(stream)) {
 
             EDIStreamEvent event;
             boolean transactionBeginSegment = false;
             Deque<JsonObjectBuilder> buildStack = new ArrayDeque<>();
             JsonObjectBuilder builder = null;
+            JsonArrayBuilder transactions = null;
+
+            Deque<Set<String>> activeLoops = new ArrayDeque<>();
+            Set<String> peerLoops;
+
+            Map<String, JsonArrayBuilder> loopBuilders = new HashMap<>();
+            JsonArrayBuilder currentLoop;
+
             JsonArrayBuilder segmentBuilder = null;
             JsonArrayBuilder compositeBuilder = null;
 
@@ -46,39 +56,57 @@ class ReadFuncAcknowledgementTest {
 
                 switch (event) {
                 case START_INTERCHANGE:
+                    // Called at the beginning of the EDI stream once the X12 dialect is confirmed
                     builder = Json.createObjectBuilder();
                     buildStack.offer(builder);
                     break;
                 case END_INTERCHANGE:
+                    // Called following the IEA segment
                     result = builder.build();
                     break;
 
                 case START_GROUP:
+                    // Called prior to the start of the GS segment
                     builder = Json.createObjectBuilder();
                     buildStack.offer(builder);
+                    transactions = Json.createArrayBuilder();
                     break;
                 case END_GROUP:
+                    // Called following the GE segment
                     JsonObjectBuilder groupBuilder = buildStack.removeLast();
+                    groupBuilder.add("TRANSACTIONS", transactions);
                     builder = buildStack.peekLast();
                     builder.add(reader.getReferenceCode(), groupBuilder);
                     break;
 
                 case START_TRANSACTION:
+                    // Called prior to the start of the ST segment
                     builder = Json.createObjectBuilder();
                     buildStack.offer(builder);
+                    // Set a boolean so that when the ST segment is complete, our code
+                    // can set a transaction schema to use with the reader. This boolean
+                    // allows the END_SEGMENT code to know the current context of the
+                    // segment.
                     transactionBeginSegment = true;
                     break;
                 case END_TRANSACTION:
+                    // Called following the SE segment
                     JsonObjectBuilder transactionBuilder = buildStack.removeLast();
+                    transactions.add(transactionBuilder);
                     builder = buildStack.peekLast();
-                    builder.add(reader.getReferenceCode(), transactionBuilder);
                     break;
 
                 case START_LOOP:
+                    // Called before the start of the segment that begins a loop.
+                    // The loop's `code` from the schema can be obtained by a call
+                    // to `reader.getReferenceCode()`
                     builder = Json.createObjectBuilder();
                     buildStack.offer(builder);
                     break;
                 case END_LOOP:
+                    // Called following the end of the segment that ends a loop.
+                    // The loop's `code` from the schema can be obtained by a call
+                    // to `reader.getReferenceCode()`
                     JsonObjectBuilder loopBuilder = buildStack.removeLast();
                     builder = buildStack.peekLast();
                     builder.add(reader.getReferenceCode(), loopBuilder);
@@ -90,7 +118,12 @@ class ReadFuncAcknowledgementTest {
 
                 case END_SEGMENT:
                     if (transactionBeginSegment) {
+                        /*
+                         * At the end of the ST segment, load the schema for use to validate
+                         * the transaction.
+                         */
                         SchemaFactory schemaFactory = SchemaFactory.newFactory();
+                        // Any InputStream or URL can be used to create a `Schema`
                         Schema schema = schemaFactory.createSchema(getClass().getResource("/x12/EDISchema997.xml"));
                         reader.setTransactionSchema(schema);
                     }
