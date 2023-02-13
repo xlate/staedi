@@ -682,12 +682,13 @@ class StaEDIStreamWriterTest {
 
     @ParameterizedTest
     @CsvSource({
-                 "X12 with BIN Segment, /x12/sample275_with_HL7_valid_BIN01.edi, false",
-                 "X12 with Non-ASCII Segment Terminator, /x12/issue109/ts214_ellipses_segterm.edi, false",
-                 "Basic TRADACOMS, /TRADACOMS/order.edi, false",
-                 "Basic TRADACOMS 40 Blocked, /TRADACOMS/order-blocked.edi, true",
+                 "X12 837, /x12/sample837-original.edi, false, true",
+                 "X12 with BIN Segment, /x12/sample275_with_HL7_valid_BIN01.edi, false, false",
+                 "X12 with Non-ASCII Segment Terminator, /x12/issue109/ts214_ellipses_segterm.edi, false, false",
+                 "Basic TRADACOMS, /TRADACOMS/order.edi, false, false",
+                 "Basic TRADACOMS 40 Blocked, /TRADACOMS/order-blocked.edi, true, false",
     })
-    void testInputEquivalence(String title, String resourceName, boolean blocked) throws Exception {
+    void testInputEquivalence(String title, String resourceName, boolean blocked, boolean indented) throws Exception {
         EDIInputFactory inputFactory = EDIInputFactory.newFactory();
         if (blocked) {
             inputFactory.setProperty(EDIInputFactory.EDI_IGNORE_EXTRANEOUS_CHARACTERS, "true");
@@ -715,7 +716,8 @@ class StaEDIStreamWriterTest {
         ByteArrayOutputStream result = new ByteArrayOutputStream(16384);
         writeFromReader(reader, blocked, result);
         final String expected = Stream.of(readBuffer.toString("UTF-8"))
-        	.map(StaEDITestUtil::normalizeLines)
+            .map(StaEDITestUtil::normalizeLines)
+            .map(exp -> indented ? exp.replaceAll("(?m)^\\s+", "") : exp) // Remove leading spaces in indented examples
             .map(exp -> blocked ? exp.replace("\n", "") : exp)
             .map(String::trim)
             .findFirst()
