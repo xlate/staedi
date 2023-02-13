@@ -682,6 +682,7 @@ class StaEDIStreamWriterTest {
 
     @ParameterizedTest
     @CsvSource({
+                 "X12 837, /x12/sample837-original.edi, false",
                  "X12 with BIN Segment, /x12/sample275_with_HL7_valid_BIN01.edi, false",
                  "X12 with Non-ASCII Segment Terminator, /x12/issue109/ts214_ellipses_segterm.edi, false",
                  "Basic TRADACOMS, /TRADACOMS/order.edi, false",
