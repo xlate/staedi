@@ -358,7 +358,7 @@ public enum State {
     }
 
     public boolean isHeaderState() {
-        return Category.HEADER == code;
+        return Category.HEADER == code && DialectCode.UNKNOWN != table;
     }
 
 }
