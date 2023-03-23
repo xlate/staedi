@@ -22,6 +22,9 @@ import io.xlate.edi.stream.EDIStreamReader;
 final class StaEDIJavaxJsonParser extends StaEDIJsonParser
         implements javax.json.stream.JsonParser, javax.json.stream.JsonLocation {
 
+    static final javax.json.stream.JsonParser.Event[] eventMap = mapEvents(javax.json.stream.JsonParser.Event.class);
+    static final javax.json.spi.JsonProvider jsonProvider = javax.json.spi.JsonProvider.provider();
+
     StaEDIJavaxJsonParser(EDIStreamReader ediReader, Map<String, Object> properties) {
         super(ediReader, properties);
     }
@@ -43,29 +46,62 @@ final class StaEDIJavaxJsonParser extends StaEDIJsonParser
 
     @Override
     public javax.json.stream.JsonParser.Event next() {
-        final StaEDIJsonParser.Event next = nextEvent();
+        return eventMap[nextEvent().ordinal()];
+    }
 
-        switch (next) {
-        case END_ARRAY:
-            return javax.json.stream.JsonParser.Event.END_ARRAY;
-        case END_OBJECT:
-            return javax.json.stream.JsonParser.Event.END_OBJECT;
-        case KEY_NAME:
-            return javax.json.stream.JsonParser.Event.KEY_NAME;
-        case START_ARRAY:
-            return javax.json.stream.JsonParser.Event.START_ARRAY;
+    @Override
+    public javax.json.JsonValue getValue() {
+        assertEventSet("getValue illegal when data stream has not yet been read");
+
+        switch (currentEvent) {
         case START_OBJECT:
-            return javax.json.stream.JsonParser.Event.START_OBJECT;
+            return getObject();
+        case START_ARRAY:
+            return getArray();
         case VALUE_NULL:
-            return javax.json.stream.JsonParser.Event.VALUE_NULL;
+            return javax.json.JsonValue.NULL;
         case VALUE_NUMBER:
-            return javax.json.stream.JsonParser.Event.VALUE_NUMBER;
+            return isIntegralNumber() ?
+                    jsonProvider.createValue(getLong()) :
+                    jsonProvider.createValue(getBigDecimal());
         case VALUE_STRING:
-            return javax.json.stream.JsonParser.Event.VALUE_STRING;
+        case KEY_NAME:
+            return jsonProvider.createValue(getString());
         default:
-            // JSON 'true' and 'false' are not expected in the EDI stream
-            throw new javax.json.stream.JsonParsingException(MSG_UNEXPECTED + next, this);
+            throw new IllegalStateException("getValue illegal when at current position");
         }
     }
 
+    @Override
+    public javax.json.JsonArray getArray() {
+        assertEvent(StaEDIJsonParser.Event.START_ARRAY, current -> "getArray illegal when not at start of array");
+
+        javax.json.JsonArrayBuilder builder = jsonProvider.createArrayBuilder();
+
+        while (nextEvent() != StaEDIJsonParser.Event.END_ARRAY) {
+            builder.add(getValue());
+        }
+
+        return builder.build();
+    }
+
+    @Override
+    public javax.json.JsonObject getObject() {
+        assertEvent(StaEDIJsonParser.Event.START_OBJECT, current -> "getObject illegal when not at start of object");
+
+        javax.json.JsonObjectBuilder builder = jsonProvider.createObjectBuilder();
+
+        StaEDIJsonParser.Event next;
+        String key = null;
+
+        while ((next = nextEvent()) != StaEDIJsonParser.Event.END_OBJECT) {
+            if (next == StaEDIJsonParser.Event.KEY_NAME) {
+                key = getString();
+            } else {
+                builder.add(key, getValue());
+            }
+        }
+
+        return builder.build();
+    }
 }

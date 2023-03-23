@@ -20,8 +20,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.json.Json;
-import javax.json.stream.JsonGenerator;
+import jakarta.json.Json;
+import jakarta.json.stream.JsonGenerator;
+import jakarta.json.stream.JsonParser;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -181,6 +182,59 @@ class StaEDIJsonParserTest {
         List<String> expected = Files.readAllLines(Paths.get(getClass().getResource(expectedResource).toURI()));
         System.out.println(buffer.toString());
         JSONAssert.assertEquals(String.join("", expected), buffer.toString(), true);
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+        "jakarta.json.stream.JsonParser, jakarta.json.JsonObject, /x12/005010/837.xml,                            false, true,  /x12/sample837-original-object-elements.json",
+        "jakarta.json.stream.JsonParser, jakarta.json.JsonObject, /x12/005010/837.xml,                            true,  true,  /x12/sample837-original-object-elements.json",
+        "jakarta.json.stream.JsonParser, jakarta.json.JsonObject, /x12/005010/837-hierarchical-level-enabled.xml, true,  true,  /x12/sample837-original-object-elements-nestHL.json",
+        "jakarta.json.stream.JsonParser, jakarta.json.JsonObject, /x12/005010/837-hierarchical-level-enabled.xml, false, true,  /x12/sample837-original-object-elements.json",
+        "jakarta.json.stream.JsonParser, jakarta.json.JsonObject, /x12/005010/837-hierarchical-level-enabled.xml, true,  false, /x12/sample837-original-nestHL.json",
+        "jakarta.json.stream.JsonParser, jakarta.json.JsonObject, /x12/005010/837-hierarchical-level-enabled.xml, false, false, /x12/sample837-original.json",
+
+        "javax.json.stream.JsonParser,   javax.json.JsonObject,   /x12/005010/837.xml,                            false, true,  /x12/sample837-original-object-elements.json",
+        "javax.json.stream.JsonParser,   javax.json.JsonObject,   /x12/005010/837.xml,                            true,  true,  /x12/sample837-original-object-elements.json",
+        "javax.json.stream.JsonParser,   javax.json.JsonObject,   /x12/005010/837-hierarchical-level-enabled.xml, true,  true,  /x12/sample837-original-object-elements-nestHL.json",
+        "javax.json.stream.JsonParser,   javax.json.JsonObject,   /x12/005010/837-hierarchical-level-enabled.xml, false, true,  /x12/sample837-original-object-elements.json",
+        "javax.json.stream.JsonParser,   javax.json.JsonObject,   /x12/005010/837-hierarchical-level-enabled.xml, true,  false, /x12/sample837-original-nestHL.json",
+        "javax.json.stream.JsonParser,   javax.json.JsonObject,   /x12/005010/837-hierarchical-level-enabled.xml, false, false, /x12/sample837-original.json"
+    })
+    <P, O> void testInputAsJsonObject(Class<P> parserInterface, Class<O> resultInterface, String schemaPath, boolean nestHL, boolean objectElements, String expectedResource) throws Throwable {
+        ediReaderConfig.put(EDIInputFactory.EDI_NEST_HIERARCHICAL_LOOPS, nestHL);
+        ediReaderConfig.put(EDIInputFactory.JSON_OBJECT_ELEMENTS, objectElements);
+        ediReaderConfig.put(EDIInputFactory.JSON_NULL_EMPTY_ELEMENTS, !objectElements);
+
+        setupReader(factory, "/x12/sample837-original.edi", schemaPath);
+        P jsonParser = JsonParserFactory.createJsonParser(ediReader, parserInterface, ediReaderConfig);
+
+        String eventName = invoke(jsonParser, "next", Object.class).toString();
+        assertEquals("START_OBJECT", eventName);
+
+        O result = invoke(jsonParser, "getObject", resultInterface);
+
+        JsonParser parser = Json.createParser(getClass().getResourceAsStream(expectedResource));
+        parser.next();
+
+        assertEquals(parser.getObject().toString(), result.toString());
+        IllegalStateException thrown = assertThrows(IllegalStateException.class, () -> invoke(jsonParser, "getValue", resultInterface));
+        assertEquals("getValue illegal when at current position", thrown.getMessage());
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+        "jakarta.json.stream.JsonParser, getArray,  getArray illegal when not at start of array",
+        "jakarta.json.stream.JsonParser, getObject, getObject illegal when not at start of object",
+        "jakarta.json.stream.JsonParser, getValue,  getValue illegal when data stream has not yet been read",
+        "javax.json.stream.JsonParser,   getArray,  getArray illegal when not at start of array",
+        "javax.json.stream.JsonParser,   getObject, getObject illegal when not at start of object",
+        "javax.json.stream.JsonParser,   getValue,  getValue illegal when data stream has not yet been read"
+    })
+    void testGetStructureIllegalAtStart(Class<?> parserInterface, String structureMethod, String message) throws Throwable {
+        setupReader(factory, "/x12/simple810.edi", "/x12/EDISchema810.xml");
+        Object jsonParser = JsonParserFactory.createJsonParser(ediReader, parserInterface, ediReaderConfig);
+        IllegalStateException thrown = assertThrows(IllegalStateException.class, () -> invoke(jsonParser, structureMethod, Object.class));
+        assertEquals(message, thrown.getMessage());
     }
 
     @ParameterizedTest
