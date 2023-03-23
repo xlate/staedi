@@ -63,8 +63,10 @@
 
     <version.junit-jupiter>5.9.2</version.junit-jupiter>
     <version.xmlunit>2.9.1</version.xmlunit>
+    <version.mockito-core>5.2.0</version.mockito-core>
     <version.jsonassert>1.5.1</version.jsonassert>
     <version.parsson>1.1.1</version.parsson>
+    <version.jaxb-runtime>4.0.2</version.jaxb-runtime>
   </properties>
 
   <build>
@@ -210,7 +212,7 @@
       <dependency>
         <groupId>org.mockito</groupId>
         <artifactId>mockito-core</artifactId>
-        <version>4.11.0</version>
+        <version>${version.mockito-core}</version>
       </dependency>
       <dependency>
         <groupId>jakarta.xml.bind</groupId>
@@ -220,7 +222,7 @@
       <dependency>
         <groupId>org.glassfish.jaxb</groupId>
         <artifactId>jaxb-runtime</artifactId>
-        <version>4.0.1</version>
+        <version>${version.jaxb-runtime}</version>
       </dependency>
       <dependency>
         <groupId>org.glassfish</groupId>
@@ -323,30 +325,13 @@
       <activation>
         <jdk>(,11)</jdk>
       </activation>
-      <dependencyManagement>
-        <dependencies>
-          <dependency>
-            <groupId>jakarta.json</groupId>
-            <artifactId>jakarta.json-api</artifactId>
-            <version>2.0.1</version>
-          </dependency>
-          <dependency>
-            <groupId>org.eclipse.parsson</groupId>
-            <artifactId>parsson</artifactId>
-            <version>1.0.2</version>
-          </dependency>
-          <dependency>
-            <groupId>jakarta.xml.bind</groupId>
-            <artifactId>jakarta.xml.bind-api</artifactId>
-            <version>3.0.1</version>
-          </dependency>
-          <dependency>
-            <groupId>org.glassfish.jaxb</groupId>
-            <artifactId>jaxb-runtime</artifactId>
-            <version>3.0.2</version>
-          </dependency>
-        </dependencies>
-      </dependencyManagement>
+      <properties>
+          <version.jakarta.json.api>2.0.1</version.jakarta.json.api>
+          <version.parsson>1.0.2</version.parsson>
+          <version.jakarta.xml.bind.api>3.0.1</version.jakarta.xml.bind.api>
+          <version.jaxb-runtime>3.0.2</version.jaxb-runtime>
+          <version.mockito-core>4.11.0</version.mockito-core>
+      </properties>
     </profile>
     <profile>
       <id>multirelease</id>
