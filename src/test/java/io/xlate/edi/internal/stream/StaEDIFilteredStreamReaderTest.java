@@ -64,6 +64,11 @@ class StaEDIFilteredStreamReaderTest implements ConstantsTest {
         int matches = 0;
 
         while (reader.hasNext()) {
+            /*
+             * Additional call to `hasNext` has not effect on the subsequent call to `next`
+             * or the processing of the stream.
+             */
+            assertTrue(reader.hasNext());
             event = reader.next();
 
             if (event != EDIStreamEvent.ELEMENT_DATA) {
@@ -112,9 +117,9 @@ class StaEDIFilteredStreamReaderTest implements ConstantsTest {
 
             tag = reader.getText();
             assertTrue(
-                       tag.indexOf('S') > -1 ||
-                               tag.indexOf('G') > -1 ||
-                               tag.indexOf('5') > -1);
+                tag.indexOf('S') > -1 ||
+                        tag.indexOf('G') > -1 ||
+                        tag.indexOf('5') > -1);
             matches++;
         }
 
