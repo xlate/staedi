@@ -695,7 +695,7 @@ class ErrorEventsTest {
         reader.setTransactionSchema(schema);
 
         assertTrue(reader.hasNext(), "Expected error missing");
-        assertEquals(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR, reader.getEventType());
+        assertEquals(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR, reader.next());
         assertEquals(EDIStreamValidationError.REQUIRED_DATA_ELEMENT_MISSING, reader.getErrorType());
         assertEquals("AK4", reader.getLocation().getSegmentTag());
         assertEquals(1, reader.getLocation().getElementPosition());

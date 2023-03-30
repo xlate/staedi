@@ -535,6 +535,7 @@ class SegmentValidationTest {
         events.add(StaEDITestEvent.from(reader, false));
 
         while (reader.hasNext()) {
+            reader.next();
             events.add(StaEDITestEvent.from(reader, false));
         }
 
@@ -643,6 +644,7 @@ class SegmentValidationTest {
         events.add(StaEDITestEvent.from(reader, false));
 
         while (reader.hasNext()) {
+            reader.next();
             events.add(StaEDITestEvent.from(reader, false));
         }
 
@@ -693,6 +695,7 @@ class SegmentValidationTest {
         events.add(StaEDITestEvent.from(reader, false));
 
         while (reader.hasNext()) {
+            reader.next();
             events.add(StaEDITestEvent.from(reader, false));
         }
 
@@ -728,6 +731,7 @@ class SegmentValidationTest {
         events.add(StaEDITestEvent.from(reader, false));
 
         while (reader.hasNext()) {
+            reader.next();
             events.add(StaEDITestEvent.from(reader, false));
         }
 

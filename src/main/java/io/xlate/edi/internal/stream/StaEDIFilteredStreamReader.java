@@ -84,6 +84,10 @@ class StaEDIFilteredStreamReader implements EDIStreamReader {
 
     @Override
     public boolean hasNext() throws EDIStreamException {
+        if (peekEvent != null) {
+            return true;
+        }
+
         while (delegate.hasNext()) {
             EDIStreamEvent event = delegate.next();
 
