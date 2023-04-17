@@ -143,10 +143,6 @@ public class TradacomsDialect extends Dialect {
         updateTransactionVersionString(null);
     }
 
-    void updateTransactionVersionString(String[] transactionVersion) {
-        transactionVersionString = transactionVersion != null ? String.join(".", transactionVersion) : "";
-    }
-
     @Override
     public void elementData(CharSequence data, Location location) {
         if (MHD.contentEquals(location.getSegmentTag())) {
@@ -163,8 +159,7 @@ public class TradacomsDialect extends Dialect {
                 transactionType = data.toString();
                 break;
             case 2:
-                transactionVersion[TX_VERSION] = data.toString();
-                updateTransactionVersionString(transactionVersion);
+                setTransactionVersionElement(data, TX_VERSION);
                 break;
             default:
                 break;

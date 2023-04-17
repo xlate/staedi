@@ -278,10 +278,6 @@ public class EDIFACTDialect extends Dialect {
         updateTransactionVersionString(null);
     }
 
-    void updateTransactionVersionString(String[] transactionVersion) {
-        transactionVersionString = transactionVersion != null ? String.join(".", transactionVersion) : "";
-    }
-
     @Override
     public void elementData(CharSequence data, Location location) {
         switch (location.getSegmentTag()) {
@@ -300,20 +296,17 @@ public class EDIFACTDialect extends Dialect {
         if (location.getElementPosition() == 1) {
             clearTransactionVersion();
         } else if (location.getElementPosition() == 6) {
-            transactionVersion[TX_AGENCY] = data.toString();
+            setTransactionVersionElement(data, TX_AGENCY);
         } else if (location.getElementPosition() == 7) {
             switch (location.getComponentPosition()) {
             case 1:
-                transactionVersion[TX_VERSION] = data.toString();
-                updateTransactionVersionString(transactionVersion);
+                setTransactionVersionElement(data, TX_VERSION);
                 break;
             case 2:
-                transactionVersion[TX_RELEASE] = data.toString();
-                updateTransactionVersionString(transactionVersion);
+                setTransactionVersionElement(data, TX_RELEASE);
                 break;
             case 3:
-                transactionVersion[TX_ASSIGNED_CODE] = data.toString();
-                updateTransactionVersionString(transactionVersion);
+                setTransactionVersionElement(data, TX_ASSIGNED_CODE);
                 break;
             default:
                 break;
@@ -330,20 +323,16 @@ public class EDIFACTDialect extends Dialect {
                 transactionType = data.toString();
                 break;
             case 2:
-                transactionVersion[TX_VERSION] = data.toString();
-                updateTransactionVersionString(transactionVersion);
+                setTransactionVersionElement(data, TX_VERSION);
                 break;
             case 3:
-                transactionVersion[TX_RELEASE] = data.toString();
-                updateTransactionVersionString(transactionVersion);
+                setTransactionVersionElement(data, TX_RELEASE);
                 break;
             case 4:
-                transactionVersion[TX_AGENCY] = data.toString();
-                updateTransactionVersionString(transactionVersion);
+                setTransactionVersionElement(data, TX_AGENCY);
                 break;
             case 5:
-                transactionVersion[TX_ASSIGNED_CODE] = data.toString();
-                updateTransactionVersionString(transactionVersion);
+                setTransactionVersionElement(data, TX_ASSIGNED_CODE);
                 break;
             default:
                 break;

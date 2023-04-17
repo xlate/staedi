@@ -176,10 +176,6 @@ public class X12Dialect extends Dialect {
         updateTransactionVersionString(null);
     }
 
-    void updateTransactionVersionString(String[] transactionVersion) {
-        transactionVersionString = transactionVersion != null ? String.join(".", transactionVersion) : "";
-    }
-
     @Override
     public void elementData(CharSequence data, Location location) {
         if (ISX.equals(location.getSegmentTag()) && numericVersion() >= RELEASE_ISX_SEGMENT) {
@@ -211,8 +207,7 @@ public class X12Dialect extends Dialect {
                 break;
             case 3:
                 if (data.length() > 0) {
-                    transactionVersion[TX_VERSION] = data.toString();
-                    updateTransactionVersionString(transactionVersion);
+                    setTransactionVersionElement(data, TX_VERSION);
                 }
                 break;
             default:
