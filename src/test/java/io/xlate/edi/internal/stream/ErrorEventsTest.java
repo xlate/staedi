@@ -75,97 +75,25 @@ class ErrorEventsTest {
 
         reader = factory.createFilteredReader(reader, errorFilter);
 
-        assertEquals(EDIStreamEvent.ELEMENT_DATA_ERROR, reader.next());
-        assertEquals(EDIStreamValidationError.INVALID_CHARACTER_DATA, reader.getErrorType());
-        assertEquals("AK302-R1", reader.getText());
-        assertEquals(2, reader.getLocation().getElementPosition());
-        assertEquals(1, reader.getLocation().getElementOccurrence());
-        assertEquals(-1, reader.getLocation().getComponentPosition());
+        assertNextEvent(reader, EDIStreamValidationError.INVALID_CHARACTER_DATA, "AK3", 6, 2, 1, -1, "AK302-R1");
 
-        assertEquals(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR, reader.next());
-        assertEquals(EDIStreamValidationError.TOO_MANY_REPETITIONS, reader.getErrorType());
-        assertEquals(2, reader.getLocation().getElementPosition());
-        assertEquals(2, reader.getLocation().getElementOccurrence());
-        assertEquals(-1, reader.getLocation().getComponentPosition());
+        assertNextEvent(reader, EDIStreamValidationError.TOO_MANY_REPETITIONS,   "AK3", 6, 2, 2, -1, "AK302-R2");
+        assertNextEvent(reader, EDIStreamValidationError.INVALID_CHARACTER_DATA, "AK3", 6, 2, 2, -1, "AK302-R2");
 
-        assertEquals(EDIStreamEvent.ELEMENT_DATA_ERROR, reader.next());
-        assertEquals(EDIStreamValidationError.INVALID_CHARACTER_DATA, reader.getErrorType());
-        assertEquals("AK302-R2", reader.getText());
-        assertEquals(2, reader.getLocation().getElementPosition());
-        assertEquals(2, reader.getLocation().getElementOccurrence());
-        assertEquals(-1, reader.getLocation().getComponentPosition());
+        assertNextEvent(reader, EDIStreamValidationError.TOO_MANY_REPETITIONS,   "AK3", 6, 2, 3, -1, "");
+        assertNextEvent(reader, EDIStreamValidationError.TOO_MANY_COMPONENTS,    "AK3", 6, 2, 3, 1, "AK302-R3-COMP1");
+        assertNextEvent(reader, EDIStreamValidationError.TOO_MANY_COMPONENTS,    "AK3", 6, 2, 3, 2, "AK302-R3-COMP2");
 
-        assertEquals(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR, reader.next());
-        assertEquals(EDIStreamValidationError.TOO_MANY_REPETITIONS, reader.getErrorType());
-        assertEquals(2, reader.getLocation().getElementPosition());
-        assertEquals(3, reader.getLocation().getElementOccurrence());
-        assertEquals(-1, reader.getLocation().getComponentPosition());
+        assertNextEvent(reader, EDIStreamValidationError.DATA_ELEMENT_TOO_LONG,  "AK3", 6, 4, 1, -1, "AK304-R1");
+        assertNextEvent(reader, EDIStreamValidationError.INVALID_CODE_VALUE,     "AK3", 6, 4, 1, -1, "AK304-R1");
 
-        assertEquals(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR, reader.next());
-        assertEquals(EDIStreamValidationError.TOO_MANY_COMPONENTS, reader.getErrorType());
-        assertEquals(2, reader.getLocation().getElementPosition());
-        assertEquals(3, reader.getLocation().getElementOccurrence());
-        assertEquals(1, reader.getLocation().getComponentPosition());
+        assertNextEvent(reader, EDIStreamValidationError.TOO_MANY_REPETITIONS,   "AK3", 6, 4, 2, -1, "AK304-R2");
+        assertNextEvent(reader, EDIStreamValidationError.DATA_ELEMENT_TOO_LONG,  "AK3", 6, 4, 2, -1, "AK304-R2");
+        assertNextEvent(reader, EDIStreamValidationError.INVALID_CODE_VALUE,     "AK3", 6, 4, 2, -1, "AK304-R2");
 
-        assertEquals(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR, reader.next());
-        assertEquals(EDIStreamValidationError.TOO_MANY_COMPONENTS, reader.getErrorType());
-        assertEquals(2, reader.getLocation().getElementPosition());
-        assertEquals(3, reader.getLocation().getElementOccurrence());
-        assertEquals(2, reader.getLocation().getComponentPosition());
-
-        assertEquals(EDIStreamEvent.ELEMENT_DATA_ERROR, reader.next());
-        assertEquals(EDIStreamValidationError.DATA_ELEMENT_TOO_LONG, reader.getErrorType());
-        assertEquals("AK304-R1", reader.getText());
-        assertEquals(4, reader.getLocation().getElementPosition());
-        assertEquals(1, reader.getLocation().getElementOccurrence());
-        assertEquals(-1, reader.getLocation().getComponentPosition());
-
-        assertEquals(EDIStreamEvent.ELEMENT_DATA_ERROR, reader.next());
-        assertEquals(EDIStreamValidationError.INVALID_CODE_VALUE, reader.getErrorType());
-        assertEquals("AK304-R1", reader.getText());
-        assertEquals(4, reader.getLocation().getElementPosition());
-        assertEquals(1, reader.getLocation().getElementOccurrence());
-        assertEquals(-1, reader.getLocation().getComponentPosition());
-
-        assertEquals(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR, reader.next());
-        assertEquals(EDIStreamValidationError.TOO_MANY_REPETITIONS, reader.getErrorType());
-        assertEquals(4, reader.getLocation().getElementPosition());
-        assertEquals(2, reader.getLocation().getElementOccurrence());
-        assertEquals(-1, reader.getLocation().getComponentPosition());
-
-        assertEquals(EDIStreamEvent.ELEMENT_DATA_ERROR, reader.next());
-        assertEquals(EDIStreamValidationError.DATA_ELEMENT_TOO_LONG, reader.getErrorType());
-        assertEquals("AK304-R2", reader.getText());
-        assertEquals(4, reader.getLocation().getElementPosition());
-        assertEquals(2, reader.getLocation().getElementOccurrence());
-        assertEquals(-1, reader.getLocation().getComponentPosition());
-
-        assertEquals(EDIStreamEvent.ELEMENT_DATA_ERROR, reader.next());
-        assertEquals(EDIStreamValidationError.INVALID_CODE_VALUE, reader.getErrorType());
-        assertEquals("AK304-R2", reader.getText());
-        assertEquals(4, reader.getLocation().getElementPosition());
-        assertEquals(2, reader.getLocation().getElementOccurrence());
-        assertEquals(-1, reader.getLocation().getComponentPosition());
-
-        assertEquals(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR, reader.next());
-        assertEquals(EDIStreamValidationError.TOO_MANY_REPETITIONS, reader.getErrorType());
-        assertEquals(4, reader.getLocation().getElementPosition());
-        assertEquals(3, reader.getLocation().getElementOccurrence());
-        assertEquals(-1, reader.getLocation().getComponentPosition());
-
-        assertEquals(EDIStreamEvent.ELEMENT_DATA_ERROR, reader.next());
-        assertEquals(EDIStreamValidationError.DATA_ELEMENT_TOO_LONG, reader.getErrorType());
-        assertEquals("AK304-R3", reader.getText());
-        assertEquals(4, reader.getLocation().getElementPosition());
-        assertEquals(3, reader.getLocation().getElementOccurrence());
-        assertEquals(-1, reader.getLocation().getComponentPosition());
-
-        assertEquals(EDIStreamEvent.ELEMENT_DATA_ERROR, reader.next());
-        assertEquals(EDIStreamValidationError.INVALID_CODE_VALUE, reader.getErrorType());
-        assertEquals("AK304-R3", reader.getText());
-        assertEquals(4, reader.getLocation().getElementPosition());
-        assertEquals(3, reader.getLocation().getElementOccurrence());
-        assertEquals(-1, reader.getLocation().getComponentPosition());
+        assertNextEvent(reader, EDIStreamValidationError.TOO_MANY_REPETITIONS,   "AK3", 6, 4, 3, -1, "AK304-R3");
+        assertNextEvent(reader, EDIStreamValidationError.DATA_ELEMENT_TOO_LONG,  "AK3", 6, 4, 3, -1, "AK304-R3");
+        assertNextEvent(reader, EDIStreamValidationError.INVALID_CODE_VALUE,     "AK3", 6, 4, 3, -1, "AK304-R3");
     }
 
     @Test
@@ -795,13 +723,26 @@ class ErrorEventsTest {
                          String txt)
             throws EDIStreamException {
 
+        assertNextEvent(reader, error, segTag, segPos, elePos, 1, -1, txt);
+    }
+
+    void assertNextEvent(EDIStreamReader reader,
+                         EDIStreamValidationError error,
+                         String segTag,
+                         int segPos,
+                         int elePos,
+                         int eleOcc,
+                         int cmpPos,
+                         String txt)
+            throws EDIStreamException {
+
         assertEquals(error.getCategory(), reader.next());
         assertEquals(error, reader.getErrorType());
         assertEquals(segTag, reader.getLocation().getSegmentTag());
         assertEquals(segPos, reader.getLocation().getSegmentPosition());
         assertEquals(elePos, reader.getLocation().getElementPosition());
-        assertEquals(1, reader.getLocation().getElementOccurrence());
-        assertEquals(-1, reader.getLocation().getComponentPosition());
+        assertEquals(eleOcc, reader.getLocation().getElementOccurrence());
+        assertEquals(cmpPos, reader.getLocation().getComponentPosition());
         assertEquals(txt, reader.getText());
     }
 }

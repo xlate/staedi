@@ -130,6 +130,15 @@ public abstract class Dialect {
 
     protected abstract void clearTransactionVersion();
 
+    void updateTransactionVersionString(String[] transactionVersion) {
+        transactionVersionString = transactionVersion != null ? String.join(".", transactionVersion) : "";
+    }
+
+    void setTransactionVersionElement(CharSequence data, int versionElement) {
+        transactionVersion[versionElement] = data.toString();
+        updateTransactionVersionString(transactionVersion);
+    }
+
     /**
      * Notify the dialect that a transaction is complete.
      */
