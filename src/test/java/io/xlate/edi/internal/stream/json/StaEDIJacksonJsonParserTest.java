@@ -261,4 +261,32 @@ class StaEDIJacksonJsonParserTest extends StaEDIReaderTestBase implements JsonPa
 
         assertTrue(matched);
     }
+
+    @Test
+    void testBinaryElementRetrieval() throws Exception {
+        ediReaderConfig.put(EDIInputFactory.JSON_NULL_EMPTY_ELEMENTS, true);
+        setupReader("/x12/simple_with_binary_segment.edi", "/x12/EDISchemaBinarySegment.xml");
+
+        JsonParser jsonParser = JsonParserFactory.createJsonParser(ediReader, JsonParser.class, ediReaderConfig);
+        int matched = 0;
+
+        while (jsonParser.nextToken() != null) {
+            String pointer = jsonParser.getParsingContext().pathAsPointer().toString();
+
+            if ("/data/1/data/1/data/1/data/1".equals(pointer)) {
+                matched++;
+                assertArrayEquals("1234567890123456789012345".getBytes(), jsonParser.getBinaryValue());
+            }
+            if ("/data/1/data/1/data/2/data/1".equals(pointer)) {
+                matched++;
+                assertArrayEquals("12345678901234567890\n1234".getBytes(), jsonParser.getBinaryValue());
+            }
+            if ("/data/1/data/1/data/3/data/1".equals(pointer)) {
+                matched++;
+                assertArrayEquals("1234567890\n1234567890\n12\n".getBytes(), jsonParser.getBinaryValue());
+            }
+        }
+
+        assertEquals(3, matched);
+    }
 }

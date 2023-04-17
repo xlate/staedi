@@ -543,7 +543,9 @@ public class ProxyEventHandler implements EventHandler {
 
     @Override
     public boolean binaryData(InputStream binaryStream) {
-        enqueueEvent(EDIStreamEvent.ELEMENT_DATA_BINARY, EDIStreamValidationError.NONE, "", null, location);
+        Validator validator = validator();
+        EDIReference typeReference = validator != null ? validator.getElementReference() : null;
+        enqueueEvent(EDIStreamEvent.ELEMENT_DATA_BINARY, EDIStreamValidationError.NONE, "", typeReference, location);
         setBinary(binaryStream);
         return true;
     }

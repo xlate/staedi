@@ -1,0 +1,110 @@
+{
+    "name": "INTERCHANGE",
+    "type": "loop",
+    "data": [
+        {
+            "name": "ISA",
+            "type": "segment",
+            "data": [
+                "00",
+                "          ",
+                "00",
+                "          ",
+                "ZZ",
+                "ReceiverID     ",
+                "ZZ",
+                "Sender         ",
+                "050812",
+                "1953",
+                "^",
+                "00501",
+                508121953,
+                "0",
+                "P",
+                ":"
+            ]
+        },
+        {
+            "name": "GROUP",
+            "type": "loop",
+            "data": [
+                {
+                    "name": "GS",
+                    "type": "segment",
+                    "data": [
+                        "FA",
+                        "ReceiverDept",
+                        "SenderDept",
+                        "20190922",
+                        "155401",
+                        1,
+                        "X",
+                        "005010"
+                    ]
+                },
+                {
+                    "name": "TRANSACTION",
+                    "type": "loop",
+                    "data": [
+                        {
+                            "name": "ST",
+                            "type": "segment",
+                            "data": [
+                                "000",
+                                "0001"
+                            ]
+                        },
+                        {
+                            "name": "BIN",
+                            "type": "segment",
+                            "data": [
+                                25,
+                                "MTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM0NQ=="
+                            ]
+                        },
+                        {
+                            "name": "BIN",
+                            "type": "segment",
+                            "data": [
+                                25,
+                                "MTIzNDU2Nzg5MDEyMzQ1Njc4OTAKMTIzNA=="
+                            ]
+                        },
+                        {
+                            "name": "BIN",
+                            "type": "segment",
+                            "data": [
+                                25,
+                                "MTIzNDU2Nzg5MAoxMjM0NTY3ODkwCjEyCg=="
+                            ]
+                        },
+                        {
+                            "name": "SE",
+                            "type": "segment",
+                            "data": [
+                                5,
+                                "0001"
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "GE",
+                    "type": "segment",
+                    "data": [
+                        1,
+                        1
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "IEA",
+            "type": "segment",
+            "data": [
+                1,
+                508121953
+            ]
+        }
+    ]
+}

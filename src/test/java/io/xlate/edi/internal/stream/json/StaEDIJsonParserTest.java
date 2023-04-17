@@ -391,4 +391,21 @@ class StaEDIJsonParserTest extends StaEDIReaderTestBase implements JsonParserInv
         assertEquals(exceptionType, errors.get(0).getClass());
     }
 
+    @ParameterizedTest
+    @ValueSource(
+            classes = {
+                        jakarta.json.stream.JsonParser.class,
+                        javax.json.stream.JsonParser.class,
+                        com.fasterxml.jackson.core.JsonParser.class
+            })
+    <T> void testBinaryDataReadAsEncodedString(Class<T> parserInterface) throws Throwable {
+        ediReaderConfig.forEach(ediInputFactory::setProperty);
+        setupReader("/x12/simple_with_binary_segment.edi", "/x12/EDISchemaBinarySegment.xml");
+        T jsonParser = JsonParserFactory.createJsonParser(ediReader, parserInterface, ediReaderConfig);
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        copyParserToGenerator(ediReader, jsonParser, buffer);
+        List<String> expected = Files.readAllLines(Paths.get(getClass().getResource("/x12/simple_with_binary_segment.json").toURI()));
+        System.out.println(buffer.toString());
+        JSONAssert.assertEquals(String.join("", expected), buffer.toString(), true);
+    }
 }

@@ -15,13 +15,16 @@
  ******************************************************************************/
 package io.xlate.edi.internal.stream.json;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.text.DecimalFormat;
 import java.text.ParsePosition;
 import java.util.ArrayDeque;
+import java.util.Base64;
 import java.util.Map;
 import java.util.Queue;
 import java.util.function.Function;
@@ -65,6 +68,7 @@ abstract class StaEDIJsonParser<E extends Exception> implements Configurable {
 
     Event currentEvent;
     String currentValue;
+    ByteArrayOutputStream currentBinaryValue = new ByteArrayOutputStream();
     BigDecimal currentNumber;
     boolean closed = false;
 
@@ -191,7 +195,24 @@ abstract class StaEDIJsonParser<E extends Exception> implements Configurable {
         enqueue(Event.START_ARRAY, null);
     }
 
-    void enqueueDataElement() {
+    void readBinaryValue() throws E {
+        try (InputStream binaryStream = ediReader.getBinaryData()) {
+            byte[] buffer = new byte[4096];
+            int bytesRead = -1;
+
+            while ((bytesRead = binaryStream.read(buffer)) > -1) {
+                currentBinaryValue.write(buffer, 0, bytesRead);
+            }
+        } catch (IOException e) {
+            throw newJsonException(MSG_EXCEPTION, e);
+        }
+    }
+
+    boolean isNumber(EDISimpleType elementType) {
+        return elementType.getBase() == Base.DECIMAL || elementType.getBase() == Base.NUMERIC;
+    }
+
+    void enqueueDataElement(boolean binaryData) throws E {
         EDIReference referencedType = ediReader.getSchemaTypeReference();
         EDISimpleType elementType = null;
 
@@ -207,13 +228,16 @@ abstract class StaEDIJsonParser<E extends Exception> implements Configurable {
         }
 
         final Event dataEvent;
-        final String dataText = ediReader.getText();
+        final String dataText = ediReader.hasText() ? ediReader.getText() : "";
 
         if (elementType == null) {
             dataEvent = Event.VALUE_STRING;
+        } else if (binaryData) {
+            readBinaryValue();
+            dataEvent = Event.VALUE_STRING;
         } else if (dataText.isEmpty()) {
             dataEvent = this.emptyElementsNull ? Event.VALUE_NULL : Event.VALUE_STRING;
-        } else if (elementType.getBase() == Base.DECIMAL || elementType.getBase() == Base.NUMERIC) {
+        } else if (isNumber(elementType)) {
             Event numberEvent;
 
             try {
@@ -239,10 +263,14 @@ abstract class StaEDIJsonParser<E extends Exception> implements Configurable {
         LOGGER.finer(() -> "Enqueue EDI event: " + ediEvent);
         currentNumber = null;
         currentValue = null;
+        currentBinaryValue.reset();
 
         switch (ediEvent) {
         case ELEMENT_DATA:
-            enqueueDataElement();
+            enqueueDataElement(false);
+            break;
+        case ELEMENT_DATA_BINARY:
+            enqueueDataElement(true);
             break;
         case START_INTERCHANGE:
             enqueueStructureBegin("loop", "INTERCHANGE");
@@ -389,6 +417,9 @@ abstract class StaEDIJsonParser<E extends Exception> implements Configurable {
      */
     public String getString() {
         assertEventValueString();
+        if (currentBinaryValue.size() > 0) {
+            return Base64.getEncoder().encodeToString(currentBinaryValue.toByteArray());
+        }
         return this.currentValue;
     }
 

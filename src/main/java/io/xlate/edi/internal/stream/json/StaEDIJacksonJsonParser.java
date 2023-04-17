@@ -219,7 +219,7 @@ public class StaEDIJacksonJsonParser extends ParserMinimalBase {
 
     @Override
     public byte[] getBinaryValue(Base64Variant b64variant) throws IOException {
-        return b64variant.decode(getText());
+        return parser.currentBinaryValue.toByteArray();
     }
 
     @Override

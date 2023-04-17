@@ -435,11 +435,11 @@ public interface EDIStreamReader extends Closeable, EDIStreamConstants {
     void setBinaryDataLength(long length) throws EDIStreamException;
 
     /**
-     * Returns a ByteBuffer object containing the binary element data read in
-     * the previous data element. The limit of the buffer will be set to the
-     * length of the data.
+     * Returns an InputStream for reading the binary element data for the current
+     * element. The length of the input stream is determined by the value previously
+     * passed to {@link #setBinaryDataLength(long)}.
      *
-     * @return buffer containing binary data
+     * @return stream containing binary data
      * @throws IllegalStateException
      *             if the stream reader did not complete the scanning of a
      *             binary data element immediately preceding this call.
