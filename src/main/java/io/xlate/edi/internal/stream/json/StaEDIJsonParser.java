@@ -15,17 +15,22 @@
  ******************************************************************************/
 package io.xlate.edi.internal.stream.json;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Array;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.text.DecimalFormat;
 import java.text.ParsePosition;
 import java.util.ArrayDeque;
+import java.util.Base64;
 import java.util.Map;
 import java.util.Queue;
 import java.util.function.Function;
 import java.util.function.ToIntFunction;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import io.xlate.edi.internal.stream.Configurable;
@@ -38,7 +43,7 @@ import io.xlate.edi.stream.EDIStreamException;
 import io.xlate.edi.stream.EDIStreamReader;
 import io.xlate.edi.stream.EDIValidationException;
 
-abstract class StaEDIJsonParser implements Configurable {
+abstract class StaEDIJsonParser<E extends Exception> implements Configurable {
 
     private static final Logger LOGGER = Logger.getLogger(StaEDIJsonParser.class.getName());
 
@@ -63,7 +68,9 @@ abstract class StaEDIJsonParser implements Configurable {
 
     Event currentEvent;
     String currentValue;
+    ByteArrayOutputStream currentBinaryValue = new ByteArrayOutputStream();
     BigDecimal currentNumber;
+    boolean closed = false;
 
     enum Event {
         /**
@@ -86,14 +93,6 @@ abstract class StaEDIJsonParser implements Configurable {
          * @see jakarta.json.stream.JsonParser.Event#VALUE_NUMBER
          */
         VALUE_NUMBER,
-        /**
-         * @see jakarta.json.stream.JsonParser.Event#VALUE_TRUE
-         */
-        VALUE_TRUE,
-        /**
-         * @see jakarta.json.stream.JsonParser.Event#VALUE_FALSE
-         */
-        VALUE_FALSE,
         /**
          * @see jakarta.json.stream.JsonParser.Event#VALUE_NULL
          */
@@ -123,24 +122,26 @@ abstract class StaEDIJsonParser implements Configurable {
 
     @SuppressWarnings("unchecked")
     static <E extends Enum<E>> E[] mapEvents(Class<E> eventType) {
-        ToIntFunction<E> ordinal = e -> Event.valueOf(e.name()).ordinal();
+        Map<String, Integer> ordinals = Stream.of(Event.values()).collect(Collectors.toMap(Enum::name, Enum::ordinal));
+        ToIntFunction<E> ordinal = e -> ordinals.get(e.name());
 
         return Stream.of(eventType.getEnumConstants())
+                .filter(c -> ordinals.containsKey(c.name()))
                 .sorted((c1, c2) -> Integer.compare(ordinal.applyAsInt(c1), ordinal.applyAsInt(c2)))
                 .map(eventType::cast)
                 .toArray(size -> (E[]) Array.newInstance(eventType, size));
     }
 
-    protected abstract RuntimeException newJsonException(String message, Throwable cause);
+    protected abstract E newJsonException(String message, Throwable cause);
 
-    protected abstract RuntimeException newJsonParsingException(String message, Throwable cause);
+    protected abstract E newJsonParsingException(String message, Throwable cause);
 
     @Override
     public Object getProperty(String name) {
         return properties.get(name);
     }
 
-    <T> T executeWithReader(EDIStreamReaderRunner<T> runner) {
+    <T> T executeWithReader(EDIStreamReaderRunner<T> runner) throws E {
         try {
             return runner.execute();
         } catch (EDIStreamException e) {
@@ -160,9 +161,14 @@ abstract class StaEDIJsonParser implements Configurable {
     void parseNumber(EDISimpleType elementType, String text) {
         if (elementType.getBase() == Base.NUMERIC) {
             final Integer scale = elementType.getScale();
-            final long unscaled = Long.parseLong(text);
 
-            this.currentNumber = BigDecimal.valueOf(unscaled, scale);
+            try {
+                final long unscaled = Long.parseLong(text);
+                this.currentNumber = BigDecimal.valueOf(unscaled, scale);
+            } catch (NumberFormatException e) {
+                final BigInteger unscaled = new BigInteger(text);
+                this.currentNumber = new BigDecimal(unscaled, scale);
+            }
         } else {
             decimalPosition.setIndex(0);
             decimalParser.setParseBigDecimal(true);
@@ -189,7 +195,24 @@ abstract class StaEDIJsonParser implements Configurable {
         enqueue(Event.START_ARRAY, null);
     }
 
-    void enqueueDataElement() {
+    void readBinaryValue() throws E {
+        try (InputStream binaryStream = ediReader.getBinaryData()) {
+            byte[] buffer = new byte[4096];
+            int bytesRead = -1;
+
+            while ((bytesRead = binaryStream.read(buffer)) > -1) {
+                currentBinaryValue.write(buffer, 0, bytesRead);
+            }
+        } catch (IOException e) {
+            throw newJsonException(MSG_EXCEPTION, e);
+        }
+    }
+
+    boolean isNumber(EDISimpleType elementType) {
+        return elementType.getBase() == Base.DECIMAL || elementType.getBase() == Base.NUMERIC;
+    }
+
+    void enqueueDataElement(boolean binaryData) throws E {
         EDIReference referencedType = ediReader.getSchemaTypeReference();
         EDISimpleType elementType = null;
 
@@ -205,11 +228,16 @@ abstract class StaEDIJsonParser implements Configurable {
         }
 
         final Event dataEvent;
-        final String dataText = ediReader.getText();
+        final String dataText = ediReader.hasText() ? ediReader.getText() : "";
 
-        if (dataText.isEmpty() || elementType == null) {
+        if (elementType == null) {
+            dataEvent = Event.VALUE_STRING;
+        } else if (binaryData) {
+            readBinaryValue();
+            dataEvent = Event.VALUE_STRING;
+        } else if (dataText.isEmpty()) {
             dataEvent = this.emptyElementsNull ? Event.VALUE_NULL : Event.VALUE_STRING;
-        } else if (elementType.getBase() == Base.DECIMAL || elementType.getBase() == Base.NUMERIC) {
+        } else if (isNumber(elementType)) {
             Event numberEvent;
 
             try {
@@ -231,13 +259,18 @@ abstract class StaEDIJsonParser implements Configurable {
         }
     }
 
-    void enqueueEvent(EDIStreamEvent ediEvent) {
+    void enqueueEvent(EDIStreamEvent ediEvent) throws E {
         LOGGER.finer(() -> "Enqueue EDI event: " + ediEvent);
         currentNumber = null;
+        currentValue = null;
+        currentBinaryValue.reset();
 
         switch (ediEvent) {
         case ELEMENT_DATA:
-            enqueueDataElement();
+            enqueueDataElement(false);
+            break;
+        case ELEMENT_DATA_BINARY:
+            enqueueDataElement(true);
             break;
         case START_INTERCHANGE:
             enqueueStructureBegin("loop", "INTERCHANGE");
@@ -275,7 +308,7 @@ abstract class StaEDIJsonParser implements Configurable {
         }
     }
 
-    Event nextEvent() {
+    Event nextEvent() throws E {
         if (eventQueue.isEmpty()) {
             LOGGER.finer(() -> "eventQueue is empty, calling ediReader.next()");
             enqueueEvent(executeWithReader(ediReader::next));
@@ -307,11 +340,13 @@ abstract class StaEDIJsonParser implements Configurable {
         return ediReader.getLocation().getCharacterOffset();
     }
 
-    public void close() {
+    public void close() throws E {
         try {
             ediReader.close();
         } catch (IOException e) {
             throw newJsonException(MSG_EXCEPTION, e);
+        } finally {
+            closed = true;
         }
     }
 
@@ -350,7 +385,7 @@ abstract class StaEDIJsonParser implements Configurable {
      * @see jakarta.json.stream.JsonParser#hasNext()
      * @see javax.json.stream.JsonParser#hasNext()
      */
-    public boolean hasNext() {
+    public boolean hasNext() throws E {
         return !eventQueue.isEmpty() || executeWithReader(ediReader::hasNext);
     }
 
@@ -382,6 +417,9 @@ abstract class StaEDIJsonParser implements Configurable {
      */
     public String getString() {
         assertEventValueString();
+        if (currentBinaryValue.size() > 0) {
+            return Base64.getEncoder().encodeToString(currentBinaryValue.toByteArray());
+        }
         return this.currentValue;
     }
 

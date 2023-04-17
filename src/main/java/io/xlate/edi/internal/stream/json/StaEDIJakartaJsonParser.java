@@ -19,7 +19,7 @@ import java.util.Map;
 
 import io.xlate.edi.stream.EDIStreamReader;
 
-final class StaEDIJakartaJsonParser extends StaEDIJsonParser
+final class StaEDIJakartaJsonParser extends StaEDIJsonParser<jakarta.json.JsonException>
         implements jakarta.json.stream.JsonParser, jakarta.json.stream.JsonLocation {
 
     static final jakarta.json.stream.JsonParser.Event[] eventMap = mapEvents(jakarta.json.stream.JsonParser.Event.class);
@@ -30,12 +30,12 @@ final class StaEDIJakartaJsonParser extends StaEDIJsonParser
     }
 
     @Override
-    protected RuntimeException newJsonException(String message, Throwable cause) {
+    protected jakarta.json.JsonException newJsonException(String message, Throwable cause) {
         return new jakarta.json.JsonException(message, cause);
     }
 
     @Override
-    protected RuntimeException newJsonParsingException(String message, Throwable cause) {
+    protected jakarta.json.JsonException newJsonParsingException(String message, Throwable cause) {
         return new jakarta.json.stream.JsonParsingException(message, cause, this);
     }
 
