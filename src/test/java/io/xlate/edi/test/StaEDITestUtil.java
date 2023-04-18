@@ -87,6 +87,23 @@ public class StaEDITestUtil {
         assertEquals(referenceCode, reader.getReferenceCode());
     }
 
+    public static void assertLocation(EDIStreamReader reader, int segPos, int elePos, int eleOcc, int cmpPos)
+            throws EDIStreamException {
+        assertEquals(segPos, reader.getLocation().getSegmentPosition());
+        assertEquals(elePos, reader.getLocation().getElementPosition());
+        assertEquals(eleOcc, reader.getLocation().getElementOccurrence());
+        assertEquals(cmpPos, reader.getLocation().getComponentPosition());
+    }
+
+    public static void assertTextLocation(EDIStreamReader reader, String text, int segPos, int elePos, int eleOcc, int cmpPos)
+            throws EDIStreamException {
+        assertEquals(text, reader.getText());
+        assertEquals(segPos, reader.getLocation().getSegmentPosition());
+        assertEquals(elePos, reader.getLocation().getElementPosition());
+        assertEquals(eleOcc, reader.getLocation().getElementOccurrence());
+        assertEquals(cmpPos, reader.getLocation().getComponentPosition());
+    }
+
     public static String[] getJavaVersion() {
         String versionString = System.getProperty("java.version");
         return versionString.split("[\\._]");

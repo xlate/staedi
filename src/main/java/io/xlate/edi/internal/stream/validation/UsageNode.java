@@ -19,6 +19,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import io.xlate.edi.internal.stream.tokenization.Dialect;
@@ -67,6 +69,13 @@ class UsageNode {
 
     public static UsageNode getFirstChild(UsageNode node) {
         return node != null ? node.getFirstChild() : null;
+    }
+
+    static <I, T, R> R withTypeOrElseGet(I reference, Class<T> type, Function<T, R> mapper, Supplier<R> defaultValue) {
+        if (type.isInstance(reference)) {
+            return mapper.apply(type.cast(reference));
+        }
+        return defaultValue.get();
     }
 
     public UsageNode getFirstSiblingSameType() {
@@ -131,18 +140,11 @@ class UsageNode {
     }
 
     String getId() {
-        if (link instanceof EDITypeImplementation) {
-            return ((EDITypeImplementation) link).getId();
-        }
-
-        return link.getReferencedType().getId();
+        return withTypeOrElseGet(link, EDITypeImplementation.class, EDITypeImplementation::getId, link.getReferencedType()::getId);
     }
 
     EDISimpleType getSimpleType() {
-        if (link instanceof EDISimpleType) {
-            return (EDISimpleType) link;
-        }
-        return (EDISimpleType) link.getReferencedType();
+        return withTypeOrElseGet(link, EDISimpleType.class, EDISimpleType.class::cast, () -> (EDISimpleType) link.getReferencedType());
     }
 
     void validate(Dialect dialect, CharSequence value, List<EDIStreamValidationError> errors) {
@@ -155,12 +157,7 @@ class UsageNode {
 
     List<EDISyntaxRule> getSyntaxRules() {
         EDIType referencedNode = link.getReferencedType();
-
-        if (referencedNode instanceof EDIComplexType) {
-            return ((EDIComplexType) referencedNode).getSyntaxRules();
-        }
-
-        return Collections.emptyList();
+        return withTypeOrElseGet(referencedNode, EDIComplexType.class, EDIComplexType::getSyntaxRules, Collections::emptyList);
     }
 
     int getIndex() {

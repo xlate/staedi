@@ -127,6 +127,14 @@ class StaEDIStreamWriterTest {
     }
 
     @Test
+    void testGetDelimitersIllegal() throws EDIStreamException {
+        EDIOutputFactory factory = EDIOutputFactory.newFactory();
+        OutputStream stream = new ByteArrayOutputStream(4096);
+        EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
+        assertThrows(IllegalStateException.class, () -> writer.getDelimiters());
+    }
+
+    @Test
     void testStartInterchange() {
         try {
             EDIOutputFactory factory = EDIOutputFactory.newFactory();
@@ -237,6 +245,15 @@ class StaEDIStreamWriterTest {
     }
 
     @Test
+    void testStartComponentIllegal() throws EDIStreamException {
+        EDIOutputFactory factory = EDIOutputFactory.newFactory();
+        OutputStream stream = new ByteArrayOutputStream(4096);
+        EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
+        writer.startInterchange();
+        assertThrows(IllegalStateException.class, () -> writer.startComponent());
+    }
+
+    @Test
     void testWriteStartElement() throws EDIStreamException {
         EDIOutputFactory factory = EDIOutputFactory.newFactory();
         OutputStream stream = new ByteArrayOutputStream(4096);
@@ -340,6 +357,32 @@ class StaEDIStreamWriterTest {
         writer.writeStartSegment("ISA");
         writer.writeStartElement();
         assertThrows(IllegalStateException.class, () -> writer.writeStartElementBinary());
+    }
+
+    @Test
+    void testWriteBinaryDataIllegal() throws IllegalStateException, EDIStreamException {
+        EDIOutputFactory factory = EDIOutputFactory.newFactory();
+        OutputStream stream = new ByteArrayOutputStream(4096);
+        EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
+        writer.startInterchange();
+        writer.writeStartSegment("ISA");
+        writer.writeStartElement();
+        ByteBuffer binaryData = ByteBuffer.allocate(1);
+        assertThrows(IllegalStateException.class, () -> writer.writeBinaryData(binaryData));
+    }
+
+    @Test
+    void testStartComponentIllegalInElementBinary() throws IllegalStateException, EDIStreamException {
+        EDIOutputFactory factory = EDIOutputFactory.newFactory();
+        ByteArrayOutputStream stream = new ByteArrayOutputStream(4096);
+        EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
+        writer.startInterchange();
+        writeHeader(writer);
+        writer.flush();
+        stream.reset();
+        writer.writeStartSegment("BIN");
+        writer.writeStartElementBinary();
+        assertThrows(IllegalStateException.class, () -> writer.startComponent());
     }
 
     @Test

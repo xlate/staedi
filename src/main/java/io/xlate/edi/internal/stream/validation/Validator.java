@@ -1382,13 +1382,7 @@ public class Validator {
         final int index;
 
         if (isComposite) {
-            int componentPosition = location.getComponentPosition();
-
-            if (componentPosition < 1) {
-                index = 1;
-            } else {
-                index = componentPosition;
-            }
+            index = Math.max(location.getComponentPosition(), 1);
         } else {
             index = location.getElementPosition();
         }

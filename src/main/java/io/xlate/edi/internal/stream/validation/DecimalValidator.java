@@ -60,13 +60,13 @@ class DecimalValidator extends NumericValidator {
 
             case '-':
                 length--;
-                invalid = !validNegativeSymbol(i, value, invalid);
+                invalid = invalidNegativeSymbol(i, value, invalid);
                 break;
 
             default:
                 if (dialect.isDecimalMark(value.charAt(i))) {
                     length--;
-                    invalid = !validDecimalSymbol(++dec, exp, invalid);
+                    invalid = invalidDecimalSymbol(++dec, exp, invalid);
                 } else {
                     invalid = true;
                 }
@@ -78,19 +78,11 @@ class DecimalValidator extends NumericValidator {
         return invalid ? -length : length;
     }
 
-    boolean validNegativeSymbol(int currentIndex, CharSequence value, boolean currentlyInvalid) {
-        if (currentlyInvalid) {
-            return false;
-        }
-
-        return currentIndex == 0 || value.charAt(currentIndex - 1) == 'E';
+    boolean invalidNegativeSymbol(int currentIndex, CharSequence value, boolean currentlyInvalid) {
+        return currentlyInvalid || (currentIndex > 0 && value.charAt(currentIndex - 1) != 'E');
     }
 
-    boolean validDecimalSymbol(int decimalCount, int exponentCount, boolean currentlyInvalid) {
-        if (currentlyInvalid) {
-            return false;
-        }
-
-        return !(decimalCount > 1 || exponentCount > 0);
+    boolean invalidDecimalSymbol(int decimalCount, int exponentCount, boolean currentlyInvalid) {
+        return currentlyInvalid || decimalCount > 1 || exponentCount > 0;
     }
 }
