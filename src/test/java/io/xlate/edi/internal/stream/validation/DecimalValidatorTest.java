@@ -67,10 +67,12 @@ class DecimalValidatorTest {
         assertEquals(-6, v.validate(dialectEdifact, "1,234E-5,6"));
         assertEquals(-6, v.validate(dialectEdifact, "-1,234E-5E-6"));
         assertEquals(-2, v.validate(dialectEdifact, "1E--2,"));
+        assertEquals(-6, v.validate(dialectEdifact, "1E,234E-5,6"));
 
         assertEquals(-6, v.validate(dialectX12, "1.234E-5.6"));
         assertEquals(-6, v.validate(dialectX12, "-1.234E-5E-6"));
         assertEquals(-2, v.validate(dialectX12, "1E--2."));
+        assertEquals(-6, v.validate(dialectX12, "1E.234E-5.6"));
     }
 
     @Test

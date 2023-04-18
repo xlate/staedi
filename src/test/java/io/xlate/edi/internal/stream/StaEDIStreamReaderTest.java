@@ -15,6 +15,8 @@
  ******************************************************************************/
 package io.xlate.edi.internal.stream;
 
+import static io.xlate.edi.test.StaEDITestUtil.assertLocation;
+import static io.xlate.edi.test.StaEDITestUtil.assertTextLocation;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -65,6 +67,7 @@ import io.xlate.edi.schema.Schema;
 import io.xlate.edi.schema.SchemaFactory;
 import io.xlate.edi.stream.EDIInputFactory;
 import io.xlate.edi.stream.EDIStreamConstants.Delimiters;
+import io.xlate.edi.test.StaEDITestUtil;
 import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamException;
 import io.xlate.edi.stream.EDIStreamReader;
@@ -1026,19 +1029,13 @@ class StaEDIStreamReaderTest implements ConstantsTest {
         String tag = null;
         int conditions = 0;
 
-        assertEquals(-1, reader.getLocation().getSegmentPosition());
-        assertEquals(-1, reader.getLocation().getElementPosition());
-        assertEquals(-1, reader.getLocation().getComponentPosition());
-        assertEquals(-1, reader.getLocation().getElementOccurrence());
+        assertLocation(reader, -1, -1, -1, -1);
 
         while (reader.hasNext()) {
             switch (reader.next()) {
             case START_SEGMENT:
                 s += s == -1 ? 2 : 1;
-                assertEquals(s, reader.getLocation().getSegmentPosition());
-                assertEquals(-1, reader.getLocation().getElementPosition());
-                assertEquals(-1, reader.getLocation().getComponentPosition());
-                assertEquals(-1, reader.getLocation().getElementOccurrence());
+                assertLocation(reader, s, -1, -1, -1);
                 tag = reader.getText();
                 break;
             case ELEMENT_DATA:
@@ -1047,23 +1044,21 @@ class StaEDIStreamReaderTest implements ConstantsTest {
                     if (l.getElementPosition() == 2) {
                         switch (l.getElementOccurrence()) {
                         case 1:
-                            assertEquals("AK302-R1", reader.getText());
-                            assertEquals(-1, l.getComponentPosition());
+                            assertTextLocation(reader, "AK302-R1", 6, 2, 1, -1);
                             conditions++;
                             break;
                         case 2:
-                            assertEquals("AK302-R2", reader.getText());
-                            assertEquals(-1, l.getComponentPosition());
+                            assertTextLocation(reader, "AK302-R2", 6, 2, 2, -1);
                             conditions++;
                             break;
                         case 3:
                             switch (l.getComponentPosition()) {
                             case 1:
-                                assertEquals("AK302-R3-COMP1", reader.getText());
+                                assertTextLocation(reader, "AK302-R3-COMP1", 6, 2, 3, 1);
                                 conditions++;
                                 break;
                             case 2:
-                                assertEquals("AK302-R3-COMP2", reader.getText());
+                                assertTextLocation(reader, "AK302-R3-COMP2", 6, 2, 3, 2);
                                 conditions++;
                                 break;
                             default:
@@ -1074,24 +1069,20 @@ class StaEDIStreamReaderTest implements ConstantsTest {
                     } else if (l.getElementPosition() == 4) {
                         switch (l.getElementOccurrence()) {
                         case 1:
-                            assertEquals("AK304-R1", reader.getText());
-                            assertEquals(-1, l.getComponentPosition());
+                            assertTextLocation(reader, "AK304-R1", 6, 4, 1, -1);
                             conditions++;
                             break;
                         case 2:
-                            assertEquals("AK304-R2", reader.getText());
-                            assertEquals(-1, l.getComponentPosition());
+                            assertTextLocation(reader, "AK304-R2", 6, 4, 2, -1);
                             conditions++;
                             break;
                         case 3:
-                            assertEquals("AK304-R3", reader.getText());
-                            assertEquals(-1, l.getComponentPosition());
+                            assertTextLocation(reader, "AK304-R3", 6, 4, 3, -1);
                             conditions++;
                             break;
                         }
                     } else {
-                        assertEquals(-1, l.getComponentPosition());
-                        assertEquals(1, l.getElementOccurrence());
+                        assertLocation(reader, 6, l.getElementPosition(), 1, -1);
                     }
                 } else if ("AK4".equals(tag)) {
                     if (l.getElementPosition() == 4) {

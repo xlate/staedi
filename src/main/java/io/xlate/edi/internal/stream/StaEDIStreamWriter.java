@@ -195,28 +195,26 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         }
     }
 
-    private void ensureState(State s) {
-        if (this.state != s) {
+    private void ensureFalse(boolean illegalState) {
+        if (illegalState) {
             throw new IllegalStateException();
         }
+    }
+
+    private void ensureState(State s) {
+        ensureFalse(this.state != s);
     }
 
     private void ensureLevel(int l) {
-        if (this.level != l) {
-            throw new IllegalStateException();
-        }
+        ensureFalse(this.level != l);
     }
 
     private void ensureLevelAtLeast(int lvl) {
-        if (this.level < lvl) {
-            throw new IllegalStateException();
-        }
+        ensureFalse(this.level < lvl);
     }
 
     private void ensureLevelBetween(int min, int max) {
-        if (this.level < min || this.level > max) {
-            throw new IllegalStateException();
-        }
+        ensureFalse(this.level < min || this.level > max);
     }
 
     @Override
@@ -365,9 +363,6 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
                 break;
             case HEADER_ELEMENT_END:
                 state = State.ELEMENT_END;
-                break;
-            case HEADER_COMPONENT_END:
-                state = State.COMPONENT_END;
                 break;
             case HEADER_SEGMENT_END:
                 state = State.SEGMENT_END;
@@ -627,10 +622,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     @Override
     public EDIStreamWriter startComponent() throws EDIStreamException {
         ensureLevelBetween(LEVEL_ELEMENT, LEVEL_COMPOSITE);
-
-        if (state == State.ELEMENT_DATA_BINARY) {
-            throw new IllegalStateException();
-        }
+        ensureFalse(state == State.ELEMENT_DATA_BINARY);
 
         if (LEVEL_ELEMENT == level) {
             // Level is LEVEL_ELEMENT only for the first component
