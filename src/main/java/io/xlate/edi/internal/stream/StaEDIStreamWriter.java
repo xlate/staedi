@@ -394,7 +394,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     }
 
     @Override
-    public EDIStreamWriter startInterchange() throws EDIStreamException {
+    public EDIStreamWriter startInterchange() {
         ensureLevel(LEVEL_INITIAL);
         ensureState(State.INITIAL);
         level = LEVEL_INTERCHANGE;

@@ -143,6 +143,18 @@ public interface EDIStreamWriter extends AutoCloseable {
      */
     Map<String, Character> getDelimiters();
 
+    /**
+     * Initialize this writer to begin writing an interchange.
+     *
+     * This method does not write any output to the underlying stream.
+     *
+     * @return this EDI stream writer
+     * @throws EDIStreamException
+     *             is not thrown and will be removed in the next major version
+     *             of StAEDI.
+     * @throws IllegalStateException
+     *             when the writer is in any state other than the initial state
+     */
     EDIStreamWriter startInterchange() throws EDIStreamException;
 
     EDIStreamWriter endInterchange() throws EDIStreamException;

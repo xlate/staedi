@@ -119,6 +119,29 @@ public interface EDIStreamReader extends Closeable, EDIStreamConstants {
      * Calls to this method are only valid when interchange type has been
      * determined, after START_INTERCHANGE.
      *
+     * The elements of the returned array are specific to the standard:
+     *
+     * <p>
+     * For EDIFACT:
+     * <ol>
+     * <li>Syntax identifier: UNB01-1
+     * <li>Syntax version number: UNB01-2
+     * <li>Service code list directory version number: UNB01-3 (syntax version 4+)
+     * <li>Character encoding, coded: UNB01-4 (syntax version 4+)
+     * <li>Syntax release number: UNB01-5 (syntax version and release 4.1+)
+     * </ol>
+     * <p>
+     * For X12:
+     * <ol>
+     * <li>Interchange Control Version Number: ISA12
+     * </ol>
+     * <p>
+     * For TRADACOMS:
+     * <ol>
+     * <li>Syntax rules identifier: STX01-1
+     * <li>Syntax rules version: STX01-2
+     * </ol>
+     *
      * @return the version
      * @throws IllegalStateException
      *             when the version has not yet been determined, prior to the
