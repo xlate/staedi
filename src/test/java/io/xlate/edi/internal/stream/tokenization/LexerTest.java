@@ -92,9 +92,9 @@ class LexerTest {
         }
 
         @Override
-        public boolean elementData(char[] text, int start, int length) {
+        public boolean elementData(CharSequence text, boolean fromStream) {
             content.put("LAST", "elementData");
-            content.put("ELEMENT", new String(text, start, length));
+            content.put("ELEMENT", text.toString());
             return true;
         }
 
@@ -160,9 +160,8 @@ class LexerTest {
             return true;
         }
 
-        @Override
-        public boolean elementData(char[] text, int start, int length) {
-            element = new String(text, start, length);
+        public boolean elementData(CharSequence text, boolean fromStream) {
+            element = text.toString();
             return true;
         }
 

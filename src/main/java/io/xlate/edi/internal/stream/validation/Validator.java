@@ -1291,7 +1291,7 @@ public class Validator {
                 location.incrementElementPosition();
             }
 
-            handler.elementData(null, 0, 0);
+            handler.elementData("", false);
         }
 
         if (!isComposite && implSegmentSelected && index == children.size()) {

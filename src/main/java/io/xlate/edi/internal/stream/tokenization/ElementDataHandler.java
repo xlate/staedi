@@ -4,7 +4,7 @@ import java.io.InputStream;
 
 public interface ElementDataHandler {
 
-    boolean elementData(char[] text, int start, int length);
+    boolean elementData(CharSequence text, boolean fromStream);
 
     boolean binaryData(InputStream binary);
 

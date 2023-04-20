@@ -858,8 +858,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     }
 
     @Override
-    public boolean elementData(char[] text, int start, int length) {
-        elementHolder.set(text, start, length);
+    public boolean elementData(CharSequence text, boolean fromStream) {
         dialect.elementData(elementHolder, location);
 
         validator().ifPresent(validator -> {

@@ -18,6 +18,7 @@ package io.xlate.edi.internal.stream.tokenization;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
@@ -25,8 +26,10 @@ import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CoderResult;
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.function.IntSupplier;
 import java.util.logging.Logger;
 
+import io.xlate.edi.internal.stream.CharArraySequence;
 import io.xlate.edi.internal.stream.LocationView;
 import io.xlate.edi.internal.stream.StaEDIStreamLocation;
 import io.xlate.edi.stream.Location;
@@ -60,6 +63,7 @@ public class Lexer {
     private char[] readChar = new char[1];
     private CharBuffer readCharBuf = CharBuffer.wrap(readChar);
     private ByteBuffer readByteBuf = ByteBuffer.allocate(4);
+    private CharArraySequence elementHolder = new CharArraySequence();
 
     private final StaEDIStreamLocation location;
     private final CharacterSet characters;
@@ -132,7 +136,8 @@ public class Lexer {
 
         en = (notifyState, start, length) -> {
             updateLocation(notifyState, location);
-            return handler.elementData(buffer.array(), start, length);
+            elementHolder.set(buffer.array(), start, length);
+            return handler.elementData(elementHolder, true);
         };
 
         bn = (notifyState, start, length) -> {
@@ -175,6 +180,18 @@ public class Lexer {
     }
 
     public void parse() throws IOException, EDIException {
+        try {
+            parse(this::readCharacterUnchecked);
+        } catch (UncheckedIOException e) {
+            throw e.getCause();
+        }
+    }
+
+    public void parse(CharBuffer buffer) throws EDIException {
+        parse(() -> buffer.hasRemaining() ? buffer.get() : -1);
+    }
+
+    void parse(IntSupplier inputSource) throws EDIException {
         if (nextEvent()) {
             return;
         }
@@ -186,7 +203,7 @@ public class Lexer {
 
         boolean eventsReady = false;
 
-        while (!eventsReady && (input = readCharacter()) > -1) {
+        while (!eventsReady && (input = inputSource.getAsInt()) > -1) {
             location.incrementOffset(input);
 
             CharacterClass clazz = characters.getClass(input);
@@ -302,6 +319,14 @@ public class Lexer {
 
         if (input < 0) {
             throw error(EDIException.INCOMPLETE_STREAM);
+        }
+    }
+
+    int readCharacterUnchecked() {
+        try {
+            return readCharacter();
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
     }
 
