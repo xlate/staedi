@@ -24,6 +24,19 @@ import io.xlate.edi.schema.Schema;
 
 public abstract class EDIInputFactory extends PropertySupport {
 
+    /**
+     * When set to false, control structures, segments, elements, and codes will
+     * not be validated unless a user-provided control schema has been set using
+     * {@link EDIStreamReader#setControlSchema(Schema)}.
+     *
+     * When set to true AND no user-provided control schema has been set, the
+     * reader will attempt to find a known control schema for the detected EDI
+     * dialect and version to be used for control structure validation.
+     *
+     * Default value: true
+     *
+     * @see EDIOutputFactory#EDI_VALIDATE_CONTROL_STRUCTURE
+     */
     public static final String EDI_VALIDATE_CONTROL_STRUCTURE = "io.xlate.edi.stream.EDI_VALIDATE_CONTROL_STRUCTURE";
 
     /**

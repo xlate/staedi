@@ -19,6 +19,8 @@ import java.io.OutputStream;
 
 import javax.xml.stream.XMLStreamWriter;
 
+import io.xlate.edi.schema.Schema;
+
 public abstract class EDIOutputFactory extends PropertySupport {
 
     /**
@@ -53,6 +55,23 @@ public abstract class EDIOutputFactory extends PropertySupport {
      * @since 1.11
      */
     public static final String FORMAT_ELEMENTS = "io.xlate.edi.stream.FORMAT_ELEMENTS";
+
+    /**
+     * When set to false, control structures, segments, elements, and codes will
+     * not be validated unless a user-provided control schema has been set using
+     * {@link EDIStreamWriter#setControlSchema(Schema)}.
+     *
+     * When set to true AND no user-provided control schema has been set, the
+     * writer will attempt to find a known control schema for the detected EDI
+     * dialect and version to be used for control structure validation.
+     *
+     * Default value: false
+     *
+     * @see EDIInputFactory#EDI_VALIDATE_CONTROL_STRUCTURE
+     *
+     * @since 2.0
+     */
+    public static final String EDI_VALIDATE_CONTROL_STRUCTURE = "io.xlate.edi.stream.EDI_VALIDATE_CONTROL_STRUCTURE";
 
     /**
      * Create a new instance of the factory. This static method creates a new

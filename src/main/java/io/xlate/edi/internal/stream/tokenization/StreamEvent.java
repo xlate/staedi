@@ -70,7 +70,7 @@ public class StreamEvent {
         this.typeReference = typeReference;
     }
 
-    public Location getLocation() {
+    public StaEDIStreamLocation getLocation() {
         return location;
     }
 

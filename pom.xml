@@ -352,7 +352,7 @@
         <jdk>(,11)</jdk>
       </activation>
       <properties>
-          <version.jakarta.json.api>2.0.1</version.jakarta.json.api>
+          <version.jakarta.json.api>2.0.2</version.jakarta.json.api>
           <version.parsson>1.0.2</version.parsson>
           <version.jakarta.xml.bind.api>3.0.1</version.jakarta.xml.bind.api>
           <version.jaxb-runtime>3.0.2</version.jaxb-runtime>

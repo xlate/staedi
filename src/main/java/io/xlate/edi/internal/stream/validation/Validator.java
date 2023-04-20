@@ -1263,6 +1263,13 @@ public class Validator {
         }
     }
 
+    public static List<UsageError> validateCharacters(CharSequence value) {
+        if (AlphaNumericValidator.validCharacters(value, value.length())) {
+            return Collections.emptyList();
+        }
+        return Collections.singletonList(new UsageError(EDIStreamValidationError.INVALID_CHARACTER_DATA));
+    }
+
     void validateControlValue(UsageNode loop, StaEDIStreamLocation position, CharSequence value, List<EDIStreamValidationError> errors) {
         if (loop instanceof ControlUsageNode) {
             ((ControlUsageNode) loop).validateReference(position, value, errors);

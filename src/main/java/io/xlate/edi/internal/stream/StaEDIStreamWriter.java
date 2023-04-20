@@ -15,6 +15,7 @@
  ******************************************************************************/
 package io.xlate.edi.internal.stream;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -28,27 +29,21 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
-import io.xlate.edi.internal.stream.tokenization.CharacterClass;
-import io.xlate.edi.internal.stream.tokenization.CharacterSet;
+import io.xlate.edi.internal.schema.SchemaUtils;
 import io.xlate.edi.internal.stream.tokenization.Dialect;
 import io.xlate.edi.internal.stream.tokenization.DialectFactory;
 import io.xlate.edi.internal.stream.tokenization.EDIException;
 import io.xlate.edi.internal.stream.tokenization.EDIFACTDialect;
-import io.xlate.edi.internal.stream.tokenization.ElementDataHandler;
-import io.xlate.edi.internal.stream.tokenization.State;
-import io.xlate.edi.internal.stream.tokenization.ValidationEventHandler;
-import io.xlate.edi.internal.stream.tokenization.X12Dialect;
-import io.xlate.edi.internal.stream.validation.UsageError;
-import io.xlate.edi.internal.stream.validation.Validator;
-import io.xlate.edi.schema.EDIReference;
-import io.xlate.edi.schema.EDIType;
+import io.xlate.edi.internal.stream.tokenization.Lexer;
+import io.xlate.edi.internal.stream.tokenization.ProxyEventHandler;
+import io.xlate.edi.schema.EDISchemaException;
 import io.xlate.edi.schema.Schema;
+import io.xlate.edi.stream.EDIInputFactory;
 import io.xlate.edi.stream.EDIOutputErrorReporter;
 import io.xlate.edi.stream.EDIOutputFactory;
 import io.xlate.edi.stream.EDIStreamConstants.Delimiters;
@@ -59,7 +54,7 @@ import io.xlate.edi.stream.EDIStreamWriter;
 import io.xlate.edi.stream.EDIValidationException;
 import io.xlate.edi.stream.Location;
 
-public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, ValidationEventHandler {
+public class StaEDIStreamWriter implements EDIStreamWriter, Configurable /*ElementDataHandler, ValidationEventHandler*/ {
 
     static final Logger LOGGER = Logger.getLogger(StaEDIStreamWriter.class.getName());
 
@@ -71,30 +66,36 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     private static final int LEVEL_COMPONENT = 5;
 
     private int level;
+    private boolean dialectHeaderReceived = false;
+    private boolean dialectHeaderProcessed = false;
+    private boolean inBinaryElement = false;
 
-    private State state = State.INITIAL;
-    private CharacterSet characters = new CharacterSet();
+    //private State state = State.INITIAL;
+    //private CharacterSet characters = new CharacterSet();
 
     private final OutputStream stream;
     private final OutputStreamWriter writer;
+    private final ProxyEventHandler proxy;
+    private final Lexer lexer;
     private final Map<String, Object> properties;
     private final EDIOutputErrorReporter reporter;
     private Dialect dialect;
-    CharBuffer unconfirmedBuffer = CharBuffer.allocate(500);
+    //CharBuffer unconfirmedBuffer = CharBuffer.allocate(500);
 
-    private final StaEDIStreamLocation location;
+    private StaEDIStreamLocation location;
     private Schema controlSchema;
-    private Validator controlValidator;
-    private boolean transactionSchemaAllowed = false;
-    private boolean transaction = false;
-    private Schema transactionSchema;
-    private Validator transactionValidator;
-    private CharArraySequence dataHolder = new CharArraySequence();
-    private boolean atomicElementWrite = false;
-    private CharBuffer elementBuffer = CharBuffer.allocate(500);
-    private final StringBuilder formattedElement = new StringBuilder();
+    //private Validator controlValidator;
+    //private boolean transactionSchemaAllowed = false;
+    //private boolean transaction = false;
+    //private Schema transactionSchema;
+    //private Validator transactionValidator;
+    //private CharArraySequence dataHolder = new CharArraySequence();
+    //private boolean atomicElementWrite = false;
+    //private CharBuffer elementBuffer = CharBuffer.allocate(500);
+    //private final StringBuilder formattedElement = new StringBuilder();
     private List<EDIValidationException> errors = new ArrayList<>();
-    private CharArraySequence elementHolder = new CharArraySequence();
+    //private CharArraySequence elementHolder = new CharArraySequence();
+    CharBuffer outputBuffer = (CharBuffer) CharBuffer.allocate(500).clear();
 
     private char segmentTerminator;
     private char segmentTagTerminator;
@@ -122,34 +123,24 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         this.writer = new OutputStreamWriter(stream, charset);
         this.properties = new HashMap<>(properties);
         this.reporter = reporter;
-        this.emptyElementTruncation = booleanValue(properties.get(EDIOutputFactory.TRUNCATE_EMPTY_ELEMENTS));
-        this.prettyPrint = booleanValue(properties.get(EDIOutputFactory.PRETTY_PRINT));
-        this.formatElements = booleanValue(properties.get(EDIOutputFactory.FORMAT_ELEMENTS));
+        this.emptyElementTruncation = getProperty(EDIOutputFactory.TRUNCATE_EMPTY_ELEMENTS, Boolean::parseBoolean, false);
+        this.prettyPrint = getProperty(EDIOutputFactory.PRETTY_PRINT, Boolean::parseBoolean, false);
+        this.formatElements = getProperty(EDIOutputFactory.FORMAT_ELEMENTS, Boolean::parseBoolean, false);
         this.location = new StaEDIStreamLocation();
+
+        StaEDIStreamLocation outLocation = new StaEDIStreamLocation();
+        this.proxy = new ProxyEventHandler(outLocation, null, false);
+        this.lexer = new Lexer(new ByteArrayInputStream(new byte[0]), Charset.defaultCharset(), proxy, outLocation, false);
     }
 
-    boolean booleanValue(Object value) {
-        if (value instanceof Boolean) {
-            return (Boolean) value;
-        }
-        if (value instanceof String) {
-            return Boolean.valueOf(value.toString());
-        }
-        if (value == null) {
-            return false;
-        }
-        LOGGER.warning(() -> "Value [" + value + "] could not be converted to boolean");
-        return false;
-    }
-
-    private void setupDelimiters() {
-        segmentTerminator = getDelimiter(properties, Delimiters.SEGMENT, dialect::getSegmentTerminator);
+    private void setupDelimiters(Dialect dialect) {
+        segmentTerminator = getDelimiter(dialect.isConfirmed(), properties, Delimiters.SEGMENT, dialect::getSegmentTerminator);
         segmentTagTerminator = dialect.getSegmentTagTerminator(); // Not configurable - TRADACOMS
-        dataElementSeparator = getDelimiter(properties, Delimiters.DATA_ELEMENT, dialect::getDataElementSeparator);
-        componentElementSeparator = getDelimiter(properties, Delimiters.COMPONENT_ELEMENT, dialect::getComponentElementSeparator);
-        decimalMark = getDelimiter(properties, Delimiters.DECIMAL, dialect::getDecimalMark);
-        releaseIndicator = getDelimiter(properties, Delimiters.RELEASE, dialect::getReleaseIndicator);
-        repetitionSeparator = getDelimiter(properties, Delimiters.REPETITION, dialect::getRepetitionSeparator);
+        dataElementSeparator = getDelimiter(dialect.isConfirmed(), properties, Delimiters.DATA_ELEMENT, dialect::getDataElementSeparator);
+        componentElementSeparator = getDelimiter(dialect.isConfirmed(), properties, Delimiters.COMPONENT_ELEMENT, dialect::getComponentElementSeparator);
+        decimalMark = getDelimiter(dialect.isConfirmed(), properties, Delimiters.DECIMAL, dialect::getDecimalMark);
+        releaseIndicator = getDelimiter(dialect.isConfirmed(), properties, Delimiters.RELEASE, dialect::getReleaseIndicator);
+        repetitionSeparator = getDelimiter(dialect.isConfirmed(), properties, Delimiters.REPETITION, dialect::getRepetitionSeparator);
 
         String lineSeparator = System.getProperty("line.separator");
 
@@ -172,8 +163,8 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
                      .anyMatch(properties::containsKey);
     }
 
-    char getDelimiter(Map<String, Object> properties, String key, Supplier<Character> dialectSupplier) {
-        if (properties.containsKey(key) && !dialect.isConfirmed()) {
+    char getDelimiter(boolean confirmed, Map<String, Object> properties, String key, Supplier<Character> dialectSupplier) {
+        if (properties.containsKey(key) && !confirmed) {
             return (char) properties.get(key);
         }
         return dialectSupplier.get();
@@ -201,9 +192,9 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         }
     }
 
-    private void ensureState(State s) {
-        ensureFalse(this.state != s);
-    }
+//    private void ensureState(State s) {
+//        ensureFalse(this.state != s);
+//    }
 
     private void ensureLevel(int l) {
         ensureFalse(this.level != l);
@@ -235,7 +226,6 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     public void flush() throws EDIStreamException {
         try {
             writer.flush();
-            stream.flush();
         } catch (IOException e) {
             throw new EDIStreamException("Exception flushing output stream", location, e);
         }
@@ -249,21 +239,23 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     @Override
     public void setControlSchema(Schema controlSchema) {
         ensureLevel(LEVEL_INITIAL);
+        proxy.setControlSchema(controlSchema, true);
         this.controlSchema = controlSchema;
-        controlValidator = Validator.forSchema(controlSchema, null, true, formatElements);
+//        controlValidator = Validator.forSchema(controlSchema, null, true, formatElements);
     }
 
     @Override
     public void setTransactionSchema(Schema transactionSchema) {
-        if (!Objects.equals(this.transactionSchema, transactionSchema)) {
-            this.transactionSchema = transactionSchema;
-            transactionValidator = Validator.forSchema(transactionSchema, controlSchema, true, formatElements);
-        }
+        proxy.setTransactionSchema(transactionSchema);
+//        if (!Objects.equals(this.transactionSchema, transactionSchema)) {
+//            this.transactionSchema = transactionSchema;
+//            transactionValidator = Validator.forSchema(transactionSchema, controlSchema, true, formatElements);
+//        }
     }
 
     @Override
     public Location getLocation() {
-        return location;
+        return location != null ? location : lexer.getLocation();
     }
 
     @Override
@@ -292,111 +284,122 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         return delimiters;
     }
 
-    private Optional<Validator> validator() {
-        Validator validator;
+//    private Optional<Validator> validator() {
+//        Validator validator;
+//
+//        // Do not use the transactionValidator in the period where it may be set/mutated by the user
+//        if (transaction && !transactionSchemaAllowed) {
+//            validator = transactionValidator;
+//        } else {
+//            validator = controlValidator;
+//        }
+//
+//        return Optional.ofNullable(validator);
+//    }
 
-        // Do not use the transactionValidator in the period where it may be set/mutated by the user
-        if (transaction && !transactionSchemaAllowed) {
-            validator = transactionValidator;
-        } else {
-            validator = controlValidator;
-        }
+//    private void write(int output) throws EDIStreamException {
+//        write(output, false);
+//    }
+//
+//    private void write(int output, boolean isPrettyPrint) throws EDIStreamException {
+//        CharacterClass clazz;
+//
+//        clazz = characters.getClass(output);
+//
+//        if (clazz == CharacterClass.INVALID) {
+//            throw new EDIStreamException(String.format("Invalid character: 0x%04X", output), location);
+//        }
+//
+//        state = State.transition(state, dialect, clazz);
+//
+//        switch (state) {
+//        case HEADER_X12_I: // I(SA)
+//        case HEADER_EDIFACT_U: // U(NA) or U(NB)
+//        case HEADER_TRADACOMS_S: // S(TX)
+//            unconfirmedBuffer.clear();
+//            writeHeader((char) output, isPrettyPrint);
+//            break;
+//        case HEADER_X12_S:
+//        case HEADER_EDIFACT_N:
+//        case HEADER_TRADACOMS_T:
+//        case INTERCHANGE_CANDIDATE:
+//        case HEADER_DATA:
+//        case HEADER_ELEMENT_END:
+//        case HEADER_COMPONENT_END:
+//        case HEADER_SEGMENT_END:
+//            writeHeader((char) output, isPrettyPrint);
+//            break;
+//        case INVALID:
+//            throw new EDIException(String.format("Invalid state: %s; output 0x%04X", state, output));
+//        default:
+//            writeOutput(output);
+//            break;
+//        }
+//    }
+//
+//    void writeHeader(char output, boolean isPrettyPrint) throws EDIStreamException {
+//        if (!isPrettyPrint && !dialect.appendHeader(characters, output)) {
+//            throw new EDIStreamException(String.format("Failed writing %s header: %s", dialect.getStandard(), dialect.getRejectionMessage()));
+//        }
+//
+//        unconfirmedBuffer.append(output);
+//
+//        if (dialect.isConfirmed()) {
+//            // Set up the delimiters again once the dialect has confirmed them
+//            setupDelimiters(dialect);
+//
+//            // Switching to non-header states to proceed after dialect is confirmed
+//            switch (state) {
+//            case HEADER_DATA:
+//                state = State.TAG_SEARCH;
+//                break;
+//            case HEADER_ELEMENT_END:
+//                state = State.ELEMENT_END;
+//                break;
+//            case HEADER_SEGMENT_END:
+//                state = State.SEGMENT_END;
+//                break;
+//            default:
+//                throw new IllegalStateException("Confirmed at state " + state);
+//            }
+//
+//            unconfirmedBuffer.flip();
+//
+//            if (EDIFACTDialect.UNA.equals(dialect.getHeaderTag())) {
+//                // Overlay the UNA segment repetition separator now that it has be confirmed
+//                unconfirmedBuffer.put(7, this.repetitionSeparator > 0 ? this.repetitionSeparator : ' ');
+//            }
+//
+//            while (unconfirmedBuffer.hasRemaining()) {
+//                writeOutput(unconfirmedBuffer.get());
+//            }
+//        }
+//    }
+//
+//    void writeOutput(int output) throws EDIStreamException {
+//        try {
+//            location.incrementOffset(output);
+//            outputBuffer.append((char) output);
+//            //writer.write(output);
+//        } catch (Exception e) {
+//            throw new EDIStreamException("Exception to output stream", location, e);
+//        }
+//    }
 
-        return Optional.ofNullable(validator);
-    }
-
-    private void write(int output) throws EDIStreamException {
-        write(output, false);
-    }
-
-    private void write(int output, boolean isPrettyPrint) throws EDIStreamException {
-        CharacterClass clazz;
-
-        clazz = characters.getClass(output);
-
-        if (clazz == CharacterClass.INVALID) {
-            throw new EDIStreamException(String.format("Invalid character: 0x%04X", output), location);
-        }
-
-        state = State.transition(state, dialect, clazz);
-
-        switch (state) {
-        case HEADER_X12_I: // I(SA)
-        case HEADER_EDIFACT_U: // U(NA) or U(NB)
-        case HEADER_TRADACOMS_S: // S(TX)
-            unconfirmedBuffer.clear();
-            writeHeader((char) output, isPrettyPrint);
-            break;
-        case HEADER_X12_S:
-        case HEADER_EDIFACT_N:
-        case HEADER_TRADACOMS_T:
-        case INTERCHANGE_CANDIDATE:
-        case HEADER_DATA:
-        case HEADER_ELEMENT_END:
-        case HEADER_COMPONENT_END:
-        case HEADER_SEGMENT_END:
-            writeHeader((char) output, isPrettyPrint);
-            break;
-        case INVALID:
-            throw new EDIException(String.format("Invalid state: %s; output 0x%04X", state, output));
-        default:
-            writeOutput(output);
-            break;
-        }
-    }
-
-    void writeHeader(char output, boolean isPrettyPrint) throws EDIStreamException {
-        if (!isPrettyPrint && !dialect.appendHeader(characters, output)) {
-            throw new EDIStreamException(String.format("Failed writing %s header: %s", dialect.getStandard(), dialect.getRejectionMessage()));
-        }
-
-        unconfirmedBuffer.append(output);
-
-        if (dialect.isConfirmed()) {
-            // Set up the delimiters again once the dialect has confirmed them
-            setupDelimiters();
-
-            // Switching to non-header states to proceed after dialect is confirmed
-            switch (state) {
-            case HEADER_DATA:
-                state = State.TAG_SEARCH;
-                break;
-            case HEADER_ELEMENT_END:
-                state = State.ELEMENT_END;
-                break;
-            case HEADER_SEGMENT_END:
-                state = State.SEGMENT_END;
-                break;
-            default:
-                throw new IllegalStateException("Confirmed at state " + state);
-            }
-
-            unconfirmedBuffer.flip();
-
-            if (EDIFACTDialect.UNA.equals(dialect.getHeaderTag())) {
-                // Overlay the UNA segment repetition separator now that it has be confirmed
-                unconfirmedBuffer.put(7, this.repetitionSeparator > 0 ? this.repetitionSeparator : ' ');
-            }
-
-            while (unconfirmedBuffer.hasRemaining()) {
-                writeOutput(unconfirmedBuffer.get());
-            }
-        }
-    }
-
-    void writeOutput(int output) throws EDIStreamException {
+    void write(int output) throws EDIStreamException {
         try {
-            location.incrementOffset(output);
-            writer.write(output);
-        } catch (IOException e) {
-            throw new EDIStreamException("Exception to output stream", location, e);
+//            location.incrementOffset(output);
+            outputBuffer.append((char) output);
+            //writer.write(output);
+        } catch (Exception e) {
+            throw new EDIStreamException("Exception writing to output stream", location, e);
         }
     }
 
     @Override
     public EDIStreamWriter startInterchange() {
         ensureLevel(LEVEL_INITIAL);
-        ensureState(State.INITIAL);
+        //ensureState(State.INITIAL);
         level = LEVEL_INTERCHANGE;
         if (controlSchema == null) {
             LOGGER.warning("Starting interchange without control structure validation. See EDIStreamWriter#setControlSchema");
@@ -409,48 +412,64 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         ensureLevel(LEVEL_INTERCHANGE);
         level = LEVEL_INITIAL;
         flush();
+        dialectHeaderReceived = false;
+        dialectHeaderProcessed = false;
+        location = null;
+        dialect = null;
         return this;
     }
 
     @Override
     public EDIStreamWriter writeStartSegment(String name) throws EDIStreamException {
         ensureLevel(LEVEL_INTERCHANGE);
-        location.incrementSegmentPosition(name);
+//        location.incrementSegmentPosition(name);
 
-        if (state == State.INITIAL) {
-            dialect = DialectFactory.getDialect(name);
-            setupDelimiters();
+        if (!dialectHeaderReceived) {
+            dialect = dialect != null ? dialect : DialectFactory.getDialect(name);
+
+            location = lexer.getLocation().copy();
+            location.incrementSegmentPosition(name);
+
+            setupDelimiters(dialect);
 
             if (dialect instanceof EDIFACTDialect) {
-                if (EDIFACTDialect.UNB.equals(name) && areDelimitersSpecified()) {
-                    /*
-                     * Writing the EDIFACT header when delimiters were given via properties requires that
-                     * a UNA is written first.
-                     */
-                    dialect = DialectFactory.getDialect(EDIFACTDialect.UNA);
-                    writeServiceAdviceString();
-                    segmentValidation(name);
+                if (EDIFACTDialect.UNB.equals(name)) {
+//                    /*
+//                     * Writing the EDIFACT header when delimiters were given via properties requires that
+//                     * a UNA is written first.
+//                     */
+//                    dialect = DialectFactory.getDialect(EDIFACTDialect.UNA);
+                    if (EDIFACTDialect.UNB.equals(dialect.getHeaderTag()) && areDelimitersSpecified()) {
+                        writeServiceAdviceString();
+                    }
+                    //segmentValidation(name);
                     // Now write the UNB
                     writeString(name);
+                    dialectHeaderReceived = true;
+                } else if (EDIFACTDialect.UNA.equals(name)) {
+                    writeString(name);
+                    writeServiceAdviceCharacters();
                 } else {
-                    if (EDIFACTDialect.UNA.equals(name)) {
-                        writeString(name);
-                        writeServiceAdviceCharacters();
-                    } else {
-                        segmentValidation(name);
-                        writeString(name);
-                    }
+                    // Unexpected header segment
+                    writeString(name);
+                    dialectHeaderReceived = true;
                 }
             } else {
-                segmentValidation(name);
+                //segmentValidation(name);
                 writeString(name);
+                dialectHeaderReceived = true;
             }
         } else {
-            segmentValidation(name);
+            //segmentValidation(name);
             writeString(name);
+            if (segmentTagTerminator != '\0') {
+                signalElementDataCompleteEvent(segmentTagTerminator);
+            } else {
+                signalElementDataCompleteEvent(dataElementSeparator);
+            }
         }
 
-        countSegment(name);
+        //countSegment(name);
         level = LEVEL_SEGMENT;
         emptyElements = 0;
         terminateSegmentTag();
@@ -458,20 +477,20 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         return this;
     }
 
-    void countSegment(String name) {
-        if (controlValidator != null) {
-            controlValidator.countSegment(name);
-        }
-    }
+//    void countSegment(String name) {
+//        if (controlValidator != null) {
+//            controlValidator.countSegment(name);
+//        }
+//    }
 
-    void segmentValidation(String name) {
-        validate(validator -> validator.validateSegment(this, name));
-
-        if (exitTransaction(name)) {
-            transaction = false;
-            validate(validator -> validator.validateSegment(this, name));
-        }
-    }
+//    void segmentValidation(String name) {
+//        validate(validator -> validator.validateSegment(this, name));
+//
+//        if (exitTransaction(name)) {
+//            transaction = false;
+//            validate(validator -> validator.validateSegment(this, name));
+//        }
+//    }
 
     void terminateSegmentTag() throws EDIStreamException {
         if (this.segmentTagTerminator != '\0') {
@@ -487,7 +506,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     void writeServiceAdviceString() throws EDIStreamException {
         writeString(EDIFACTDialect.UNA);
         writeServiceAdviceCharacters();
-        writeSegmentTerminator();
+        writeDelimiter(Delimiters.SEGMENT);
     }
 
     void writeServiceAdviceCharacters() throws EDIStreamException {
@@ -505,51 +524,83 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         }
     }
 
-    void writeSegmentTerminator() throws EDIStreamException {
-        write(this.segmentTerminator);
+    void writeDelimiter(String delimiterType) throws EDIStreamException {
+        boolean invokeErrorDetection = true;
 
-        if (prettyPrint) {
-            for (int i = 0, m = prettyPrintString.length(); i < m; i++) {
-                write(prettyPrintString.charAt(i), true);
+        switch (delimiterType) {
+        case Delimiters.RELEASE:
+            write(this.releaseIndicator);
+            invokeErrorDetection = false;
+            break;
+        case Delimiters.COMPONENT_ELEMENT:
+            write(this.componentElementSeparator);
+            invokeErrorDetection = dialectHeaderProcessed;
+            break;
+        case Delimiters.DATA_ELEMENT:
+            location.setRepeating(false);
+            write(this.dataElementSeparator);
+            invokeErrorDetection = dialectHeaderProcessed;
+            break;
+        case Delimiters.REPETITION:
+            location.setRepeating(true);
+            write(this.repetitionSeparator);
+            invokeErrorDetection = dialectHeaderProcessed;
+            break;
+        case Delimiters.SEGMENT:
+            location.setRepeating(false);
+            write(this.segmentTerminator);
+            invokeErrorDetection = dialectHeaderReceived;
+            if (prettyPrint) {
+                for (int i = 0, m = prettyPrintString.length(); i < m; i++) {
+                    write(prettyPrintString.charAt(i)/*, true*/);
+                }
             }
+            break;
+        default:
+            // unexpected
+            break;
+        }
+
+        if (invokeErrorDetection) {
+            errorDetection();
         }
     }
 
-    boolean exitTransaction(CharSequence tag) {
-        return transaction && !transactionSchemaAllowed && controlSchema != null
-                && controlSchema.containsSegment(tag.toString());
-    }
+//    boolean exitTransaction(CharSequence tag) {
+//        return transaction && !transactionSchemaAllowed && controlSchema != null
+//                && controlSchema.containsSegment(tag.toString());
+//    }
 
     @Override
     public EDIStreamWriter writeEndSegment() throws EDIStreamException {
         ensureLevelAtLeast(LEVEL_SEGMENT);
-        if (level > LEVEL_SEGMENT) {
-            validateElement(this.elementBuffer::flip, this.elementBuffer);
-        }
-        level = LEVEL_SEGMENT;
-        validate(validator -> validator.validateSyntax(dialect, this, this, location, false));
+//        if (level > LEVEL_SEGMENT) {
+//            validateElement(this.elementBuffer::flip, this.elementBuffer);
+//        }
+//        level = LEVEL_SEGMENT;
+//        validate(validator -> validator.validateSyntax(dialect, this, this, location, false));
 
-        if (state == State.ELEMENT_DATA_BINARY) {
-            state = State.ELEMENT_END_BINARY;
-        }
+//        if (state == State.ELEMENT_DATA_BINARY) {
+//            state = State.ELEMENT_END_BINARY;
+//        }
 
-        writeSegmentTerminator();
+        writeDelimiter(Delimiters.SEGMENT);
 
-        switch (state) {
-        case SEGMENT_END:
-        case HEADER_SEGMENT_END:
-        case INITIAL: // Ending final segment of the interchange
-            break;
-        default:
-            if (state.isHeaderState() && dialect instanceof X12Dialect) {
-                throw new EDIStreamException("Invalid X12 ISA segment: too short or elements missing");
-            }
-            break;
-        }
+//        switch (state) {
+//        case SEGMENT_END:
+//        case HEADER_SEGMENT_END:
+//        case INITIAL: // Ending final segment of the interchange
+//            break;
+//        default:
+//            if (state.isHeaderState() && dialect instanceof X12Dialect) {
+//                throw new EDIStreamException("Invalid X12 ISA segment: too short or elements missing");
+//            }
+//            break;
+//        }
 
         level = LEVEL_INTERCHANGE;
-        location.clearSegmentLocations();
-        transactionSchemaAllowed = false;
+//        location.clearSegmentLocations();
+//        transactionSchemaAllowed = false;
 
         return this;
     }
@@ -558,14 +609,16 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     public EDIStreamWriter writeStartElement() throws EDIStreamException {
         ensureLevel(LEVEL_SEGMENT);
         level = LEVEL_ELEMENT;
-        location.incrementElementPosition();
-        elementBuffer.clear();
+        if (!dialectHeaderProcessed) {
+            location.incrementElement(false);
+        }
+        //elementBuffer.clear();
         elementLength = 0;
         emptyComponents = 0;
         unterminatedComponent = false;
 
         if (!emptyElementTruncation && unterminatedElement) {
-            write(this.dataElementSeparator);
+            writeDelimiter(Delimiters.DATA_ELEMENT);
         }
 
         return this;
@@ -574,18 +627,25 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     @Override
     public EDIStreamWriter writeStartElementBinary() throws EDIStreamException {
         writeStartElement();
-        state = State.ELEMENT_DATA_BINARY;
+//        state = State.ELEMENT_DATA_BINARY;
+        writeRequiredSeparators(1);
+        errorDetection();
+        flush(); // Write `Writer` buffers to stream before writing binary
+        // From the Lexer's perspective, writing a binary element will look like an empty element
+        inBinaryElement = true;
+        location.incrementElement(false);
         return this;
     }
 
     @Override
     public EDIStreamWriter writeRepeatElement() throws EDIStreamException {
         ensureLevelAtLeast(LEVEL_SEGMENT);
-        write(this.repetitionSeparator);
+        // TODO: test writeRequiredSeparators(1);
+        writeDelimiter(Delimiters.REPETITION);
         // The repetition separator was used instead of the data element separator
         unterminatedElement = false;
         level = LEVEL_ELEMENT;
-        location.incrementElementOccurrence();
+
         elementLength = 0;
         emptyComponents = 0;
         unterminatedComponent = false;
@@ -596,16 +656,21 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     public EDIStreamWriter endElement() throws EDIStreamException {
         ensureLevelAtLeast(LEVEL_ELEMENT);
 
-        if (!atomicElementWrite) {
-            if (level > LEVEL_ELEMENT) {
-                validate(validator -> validator.validateSyntax(dialect, this, this, location, true));
-            } else {
-                validateElement(this.elementBuffer::flip, this.elementBuffer);
-            }
+//        if (!atomicElementWrite) {
+//            if (level > LEVEL_ELEMENT) {
+//                validate(validator -> validator.validateSyntax(dialect, this, this, location, true));
+//            } else {
+//                validateElement(this.elementBuffer::flip, this.elementBuffer);
+//            }
+//        }
+
+        signalElementDataCompleteEvent(dataElementSeparator);
+        if (!dialectHeaderProcessed) {
+            location.clearComponentPosition();
         }
 
-        location.clearComponentPosition();
         level = LEVEL_SEGMENT;
+        inBinaryElement = false;
 
         if (elementLength > 0) {
             unterminatedElement = true;
@@ -613,9 +678,9 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
             emptyElements++;
         }
 
-        if (state == State.ELEMENT_DATA_BINARY) {
-            state = State.ELEMENT_END_BINARY;
-        }
+//        if (state == State.ELEMENT_DATA_BINARY) {
+//            state = State.ELEMENT_END_BINARY;
+//        }
 
         return this;
     }
@@ -623,20 +688,24 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     @Override
     public EDIStreamWriter startComponent() throws EDIStreamException {
         ensureLevelBetween(LEVEL_ELEMENT, LEVEL_COMPOSITE);
-        ensureFalse(state == State.ELEMENT_DATA_BINARY);
+        ensureFalse(inBinaryElement);
 
-        if (LEVEL_ELEMENT == level) {
-            // Level is LEVEL_ELEMENT only for the first component
-            validateCompositeOccurrence();
-        }
+//        if (LEVEL_ELEMENT == level) {
+//            // Level is LEVEL_ELEMENT only for the first component
+//            validateCompositeOccurrence();
+//        }
 
         if (LEVEL_COMPOSITE == level && !emptyElementTruncation) {
-            write(this.componentElementSeparator);
+            writeDelimiter(Delimiters.COMPONENT_ELEMENT);
         }
 
         level = LEVEL_COMPONENT;
-        location.incrementComponentPosition();
-        elementBuffer.clear();
+        if (!dialectHeaderProcessed) {
+            location.setComposite(true);
+            location.incrementElement(false);
+        }
+//        location.incrementComponentPosition();
+        //elementBuffer.clear();
         elementLength = 0;
         return this;
     }
@@ -645,9 +714,9 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     public EDIStreamWriter endComponent() throws EDIStreamException {
         ensureLevel(LEVEL_COMPONENT);
 
-        if (!atomicElementWrite) {
-            validateElement(this.elementBuffer::flip, this.elementBuffer);
-        }
+//        if (!atomicElementWrite) {
+//            validateElement(this.elementBuffer::flip, this.elementBuffer);
+//        }
 
         if (elementLength > 0) {
             unterminatedComponent = true;
@@ -655,73 +724,79 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
             emptyComponents++;
         }
 
+        signalElementDataCompleteEvent(componentElementSeparator);
         level = LEVEL_COMPOSITE;
+        inBinaryElement = false;
         return this;
     }
 
     @Override
     public EDIStreamWriter writeElement(CharSequence text) throws EDIStreamException {
-        atomicElementWrite = true;
+//        atomicElementWrite = true;
         writeStartElement();
-        CharSequence value = validateElement(() -> {}, text);
-        writeElementData(value);
+//        CharSequence value = validateElement(() -> {}, text);
+//        writeElementData(value);
+        writeElementData(text);
         endElement();
-        atomicElementWrite = false;
+//        atomicElementWrite = false;
         return this;
     }
 
     @Override
     public EDIStreamWriter writeElement(char[] text, int start, int end) throws EDIStreamException {
-        atomicElementWrite = true;
+//        atomicElementWrite = true;
         writeStartElement();
-        CharSequence value = validateElement(() -> dataHolder.set(text, start, start + end), dataHolder);
-        writeElementData(value);
+//        CharSequence value = validateElement(() -> dataHolder.set(text, start, start + end), dataHolder);
+//        writeElementData(value);
+        writeElementData(text, start, end);
         endElement();
-        atomicElementWrite = false;
+//        atomicElementWrite = false;
         return this;
     }
 
     @Override
     public EDIStreamWriter writeEmptyElement() throws EDIStreamException {
-        atomicElementWrite = true;
+//        atomicElementWrite = true;
         writeStartElement();
         // Ignore possibly-formatted value
-        validateElement(dataHolder::clear, dataHolder);
+//        validateElement(dataHolder::clear, dataHolder);
         endElement();
-        atomicElementWrite = false;
+//        atomicElementWrite = false;
         return this;
     }
 
     @Override
     public EDIStreamWriter writeComponent(CharSequence text) throws EDIStreamException {
-        atomicElementWrite = true;
+//        atomicElementWrite = true;
         startComponent();
-        CharSequence value = validateElement(() -> {}, text);
-        writeElementData(value);
+//        CharSequence value = validateElement(() -> {}, text);
+//        writeElementData(value);
+        writeElementData(text);
         endComponent();
-        atomicElementWrite = false;
+//        atomicElementWrite = false;
         return this;
     }
 
     @Override
     public EDIStreamWriter writeComponent(char[] text, int start, int end) throws EDIStreamException {
-        atomicElementWrite = true;
+//        atomicElementWrite = true;
         startComponent();
-        CharSequence value = validateElement(() -> dataHolder.set(text, start, start + end), dataHolder);
-        writeElementData(value);
+//        CharSequence value = validateElement(() -> dataHolder.set(text, start, start + end), dataHolder);
+//        writeElementData(value);
+        writeElementData(text, start, end);
         endComponent();
-        atomicElementWrite = false;
+//        atomicElementWrite = false;
         return this;
     }
 
     @Override
     public EDIStreamWriter writeEmptyComponent() throws EDIStreamException {
-        atomicElementWrite = true;
+//        atomicElementWrite = true;
         startComponent();
         // Ignore possibly-formatted value
-        validateElement(dataHolder::clear, dataHolder);
+//        validateElement(dataHolder::clear, dataHolder);
         endComponent();
-        atomicElementWrite = false;
+//        atomicElementWrite = false;
         return this;
     }
 
@@ -730,24 +805,24 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
             return;
         }
 
-        writeRequiredSeparator(emptyElements, unterminatedElement, this.dataElementSeparator);
+        writeRequiredSeparator(emptyElements, unterminatedElement, Delimiters.DATA_ELEMENT);
         emptyElements = 0;
         unterminatedElement = false;
 
         if (level == LEVEL_COMPONENT) {
-            writeRequiredSeparator(emptyComponents, unterminatedComponent, this.componentElementSeparator);
+            writeRequiredSeparator(emptyComponents, unterminatedComponent, Delimiters.COMPONENT_ELEMENT);
             emptyComponents = 0;
             unterminatedComponent = false;
         }
     }
 
-    void writeRequiredSeparator(int emptyCount, boolean unterminated, char separator) throws EDIStreamException {
+    void writeRequiredSeparator(int emptyCount, boolean unterminated, String delimiterType) throws EDIStreamException {
         for (int i = 0; i < emptyCount; i++) {
-            write(separator);
+            writeDelimiter(delimiterType);
         }
 
         if (unterminated) {
-            write(separator);
+            writeDelimiter(delimiterType);
         }
     }
 
@@ -759,16 +834,16 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         for (int i = 0, m = text.length(); i < m; i++) {
             char curr = text.charAt(i);
 
-            if (characters.isDelimiter(curr)) {
+            if (lexer.getCharacterSet().isDelimiter(curr)) {
                 if (releaseIndicator > 0) {
-                    write(releaseIndicator);
+                    writeDelimiter(Delimiters.RELEASE);
                 } else {
                     throw new IllegalArgumentException("Value contains separator: " + curr);
                 }
             }
 
             write(curr);
-            elementBuffer.put(curr);
+            //elementBuffer.put(curr);
             elementLength++;
         }
         return this;
@@ -782,11 +857,11 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
 
         for (int i = start, m = end; i < m; i++) {
             char curr = text[i];
-            if (characters.isDelimiter(curr)) {
+            if (lexer.getCharacterSet().isDelimiter(curr)) {
                 throw new IllegalArgumentException("Value contains separator");
             }
             write(curr);
-            elementBuffer.put(curr);
+            //elementBuffer.put(curr);
             elementLength++;
         }
 
@@ -796,14 +871,10 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     @Override
     public EDIStreamWriter writeBinaryData(InputStream binaryStream) throws EDIStreamException {
         ensureLevel(LEVEL_ELEMENT);
-        ensureState(State.ELEMENT_DATA_BINARY);
+        ensureFalse(!inBinaryElement);
         int output;
 
         try {
-            writeRequiredSeparators(binaryStream.available());
-
-            flush(); // Write `Writer` buffers to stream before writing binary
-
             while ((output = binaryStream.read()) != -1) {
                 location.incrementOffset(output);
                 stream.write(output);
@@ -819,13 +890,10 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     @Override
     public EDIStreamWriter writeBinaryData(byte[] binary, int start, int end) throws EDIStreamException {
         ensureLevel(LEVEL_ELEMENT);
-        ensureState(State.ELEMENT_DATA_BINARY);
+        ensureFalse(!inBinaryElement);
         ensureArgs(binary.length, start, end);
-        writeRequiredSeparators(end - start);
 
         try {
-            flush(); // Write `Writer` buffers to stream before writing binary
-
             for (int i = start; i < end; i++) {
                 location.incrementOffset(binary[i]);
                 stream.write(binary[i]);
@@ -841,165 +909,276 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     @Override
     public EDIStreamWriter writeBinaryData(ByteBuffer binary) throws EDIStreamException {
         ensureLevel(LEVEL_ELEMENT);
-        ensureState(State.ELEMENT_DATA_BINARY);
-        writeRequiredSeparators(binary.remaining());
+        ensureFalse(!inBinaryElement);
 
-        while (binary.hasRemaining()) {
-            write(binary.get());
-            elementLength++;
+        try {
+            while (binary.hasRemaining()) {
+                byte out = binary.get();
+                location.incrementOffset(out);
+                stream.write(out);
+                elementLength++;
+            }
+        } catch (IOException e) {
+            throw new EDIStreamException("Exception writing binary element data", location, e);
         }
 
         return this;
     }
 
-    @Override
-    public boolean binaryData(InputStream binary) {
-        // No operation
-        return true;
-    }
-
-    @Override
-    public boolean elementData(CharSequence text, boolean fromStream) {
-        if (level > LEVEL_ELEMENT) {
-            location.incrementComponentPosition();
-        } else {
-            location.incrementElementPosition();
-        }
-
-        dialect.elementData(elementHolder, location);
-
-        validator().ifPresent(validator -> {
-            if (!validator.validateElement(dialect, location, elementHolder, null)) {
-                reportElementErrors(validator, elementHolder);
-            }
-        });
-
-        return true;
-    }
-
-    @Override
-    public void loopBegin(EDIReference typeReference) {
-        final String loopCode = typeReference.getReferencedType().getCode();
-
-        if (EDIType.Type.TRANSACTION.toString().equals(loopCode)) {
-            transaction = true;
-            transactionSchemaAllowed = true;
-            if (transactionValidator != null) {
-                transactionValidator.reset();
-            }
+    void signalElementDataCompleteEvent(int delimiter) throws EDIStreamException {
+        if (dialectHeaderProcessed) {
+            errorDetection();
+            lexer.signalElementDataCompleteEvent(delimiter);
+            outputBuffer.flip();
+            processProxyEvents();
+            outputBuffer.clear();
         }
     }
 
-    @Override
-    public void loopEnd(EDIReference typeReference) {
-        final String loopCode = typeReference.getReferencedType().getCode();
-
-        if (EDIType.Type.TRANSACTION.toString().equals(loopCode)) {
-            transaction = false;
-            dialect.transactionEnd();
-        } else if (EDIType.Type.GROUP.toString().equals(loopCode)) {
-            dialect.groupEnd();
-        }
-    }
-
-    @Override
-    public void elementError(EDIStreamEvent event,
-                             EDIStreamValidationError error,
-                             EDIReference typeReference,
-                             CharSequence data,
-                             int element,
-                             int component,
-                             int repetition) {
-
-        StaEDIStreamLocation copy = location.copy();
-        copy.setElementPosition(element);
-        copy.setElementOccurrence(repetition);
-        copy.setComponentPosition(component);
-
-        if (this.reporter != null) {
-            this.reporter.report(error, this, copy, data, typeReference);
-        } else {
-            errors.add(new EDIValidationException(event, error, copy, data));
-        }
-    }
-
-    @Override
-    public void segmentError(CharSequence token, EDIReference typeReference, EDIStreamValidationError error) {
-        if (this.reporter != null) {
-            this.reporter.report(error, this, this.getLocation(), token, typeReference);
-        } else {
-            errors.add(new EDIValidationException(EDIStreamEvent.SEGMENT_ERROR, error, location, token));
-        }
-    }
-
-    private void validate(Consumer<Validator> command) {
-        validator().ifPresent(validator -> {
-            errors.clear();
-            command.accept(validator);
-
-            if (!errors.isEmpty()) {
-                throw validationExceptionChain(errors);
-            }
-        });
-    }
-
-    private void validateCompositeOccurrence() {
-        validator().ifPresent(validator -> {
-            errors.clear();
-
-            if (!validator.validCompositeOccurrences(dialect, location)) {
-                reportElementErrors(validator, "");
-            }
-
-            if (!errors.isEmpty()) {
-                throw validationExceptionChain(errors);
-            }
-        });
-    }
-
-    private CharSequence validateElement(Runnable setupCommand, CharSequence data) {
-        return validator()
-                .map(validator -> validateElement(setupCommand, data, validator))
-                .orElse(data);
-    }
-
-    CharSequence validateElement(Runnable setupCommand, CharSequence data, Validator validator) {
-        CharSequence elementData;
-
-        if (this.formatElements) {
-            elementData = this.formattedElement;
-            this.formattedElement.setLength(0);
-            this.formattedElement.append(data); // Validator will clear and re-format if configured
-        } else {
-            elementData = data;
-        }
-
+    void errorDetection() throws EDIStreamException {
         errors.clear();
-        setupCommand.run();
+        outputBuffer.flip();
+        lexer.parse(outputBuffer);
+        processProxyEvents();
 
-        if (!validator.validateElement(dialect, location, data, this.formattedElement)) {
-            reportElementErrors(validator, elementData);
+        outputBuffer.rewind();
+
+        if (!dialectHeaderProcessed) {
+            dialect = lexer.getDialect();
+            location = lexer.getLocation();
+
+            if (!dialect.isConfirmed()) {
+                throw new EDIStreamException("Header data could not be processed as a valid " + dialect.getStandard() + " header. Data: [" + outputBuffer + "]");
+            }
+
+            setupDelimiters(dialect);
+
+            if (EDIFACTDialect.UNA.equals(dialect.getHeaderTag())) {
+                // Overlay the UNA segment repetition separator now that it has be confirmed
+                outputBuffer.put(7, this.repetitionSeparator > 0 ? this.repetitionSeparator : ' ');
+            }
+
+            dialectHeaderProcessed = true;
+        }
+
+        try {
+            writer.write(outputBuffer.array(), outputBuffer.arrayOffset(), outputBuffer.length());
+        } catch (IOException e) {
+            throw new EDIStreamException("", location, e);
+        }
+        outputBuffer.clear();
+    }
+
+    void processProxyEvents() throws EDIStreamException {
+        errors.clear();
+        EDIStreamEvent event;
+
+        while ((event = nextEvent()) != null) {
+            if (EDIStreamEvent.START_INTERCHANGE == event && useInternalControlSchema()) {
+                try {
+                    LOGGER.finer(() -> "Setting control schema: " + lexer.getDialect().getStandard() + ", " + lexer.getDialect().getVersion());
+                    this.controlSchema = SchemaUtils.getControlSchema(lexer.getDialect().getStandard(), lexer.getDialect().getVersion());
+                    proxy.setControlSchema(controlSchema, true);
+                    LOGGER.finer(() -> "Done setting control schema: " + lexer.getDialect().getStandard() + ", " + lexer.getDialect().getVersion());
+                } catch (EDISchemaException e) {
+                    LOGGER.log(Level.WARNING,
+                               String.format("Exception loading controlSchema for standard %s, version %s: %s",
+                                             getStandard(),
+                                             Arrays.stream(lexer.getDialect().getVersion()).map(Object::toString)
+                                                   .collect(Collectors.joining(", ")),
+                                             e.getMessage()),
+                               e);
+                }
+            }
+
+            if (event.isError()) {
+                Location errLocation = proxy.getLocation().copy();
+                EDIStreamValidationError error = proxy.getErrorType();
+                CharSequence data = proxy.getCharacters(); //.toString();
+                data = data != null ? data.toString() : null;
+
+                if (this.reporter != null) {
+                    this.reporter.report(error, this, errLocation, data, proxy.getSchemaTypeReference());
+                } else {
+                    errors.add(new EDIValidationException(event, error, errLocation, data));
+                }
+            }
+
+            advanceProxyQueue();
         }
 
         if (!errors.isEmpty()) {
             throw validationExceptionChain(errors);
         }
-
-        dialect.elementData(elementData, location);
-        return elementData;
     }
 
-    void reportElementErrors(Validator validator, CharSequence data) {
-        for (UsageError error : validator.getElementErrors()) {
-            elementError(error.getError().getCategory(),
-                         error.getError(),
-                         error.getTypeReference(),
-                         data,
-                         location.getElementPosition(),
-                         location.getComponentPosition(),
-                         location.getElementOccurrence());
+    EDIStreamEvent nextEvent() throws EDIException {
+        EDIStreamEvent event = proxy.getEvent();
+
+        if (event == null) {
+            advanceProxyQueue();
+            event = proxy.getEvent();
+        }
+
+        return event;
+    }
+
+    void advanceProxyQueue() throws EDIException {
+        if (!proxy.nextEvent()) {
+            proxy.resetEvents();
+            lexer.parse(outputBuffer);
         }
     }
+
+//    @Override
+//    public boolean binaryData(InputStream binary) {
+//        // No operation
+//        return true;
+//    }
+//
+//    @Override
+//    public boolean elementData(char[] text, int start, int length) {
+//        if (level > LEVEL_ELEMENT) {
+//            location.incrementComponentPosition();
+//        } else {
+//            location.incrementElementPosition();
+//        }
+//
+//        elementHolder.set(text, start, length);
+//        dialect.elementData(elementHolder, location);
+//
+//        validator().ifPresent(validator -> {
+//            if (!validator.validateElement(dialect, location, elementHolder, null)) {
+//                reportElementErrors(validator, elementHolder);
+//            }
+//        });
+//
+//        return true;
+//    }
+//
+//    @Override
+//    public void loopBegin(EDIReference typeReference) {
+//        final String loopCode = typeReference.getReferencedType().getCode();
+//
+//        if (EDIType.Type.TRANSACTION.toString().equals(loopCode)) {
+//            transaction = true;
+//            transactionSchemaAllowed = true;
+//            if (transactionValidator != null) {
+//                transactionValidator.reset();
+//            }
+//        }
+//    }
+//
+//    @Override
+//    public void loopEnd(EDIReference typeReference) {
+//        final String loopCode = typeReference.getReferencedType().getCode();
+//
+//        if (EDIType.Type.TRANSACTION.toString().equals(loopCode)) {
+//            transaction = false;
+//            dialect.transactionEnd();
+//        } else if (EDIType.Type.GROUP.toString().equals(loopCode)) {
+//            dialect.groupEnd();
+//        }
+//    }
+//
+//    @Override
+//    public void elementError(EDIStreamEvent event,
+//                             EDIStreamValidationError error,
+//                             EDIReference typeReference,
+//                             CharSequence data,
+//                             int element,
+//                             int component,
+//                             int repetition) {
+//
+//        StaEDIStreamLocation copy = location.copy();
+//        copy.setElementPosition(element);
+//        copy.setElementOccurrence(repetition);
+//        copy.setComponentPosition(component);
+//
+//        if (this.reporter != null) {
+//            this.reporter.report(error, this, copy, data, typeReference);
+//        } else {
+//            errors.add(new EDIValidationException(event, error, copy, data));
+//        }
+//    }
+//
+//    @Override
+//    public void segmentError(CharSequence token, EDIReference typeReference, EDIStreamValidationError error) {
+//        if (this.reporter != null) {
+//            this.reporter.report(error, this, this.getLocation(), token, typeReference);
+//        } else {
+//            errors.add(new EDIValidationException(EDIStreamEvent.SEGMENT_ERROR, error, location, token));
+//        }
+//    }
+//
+//    private void validate(Consumer<Validator> command) {
+//        validator().ifPresent(validator -> {
+//            errors.clear();
+//            command.accept(validator);
+//
+//            if (!errors.isEmpty()) {
+//                throw validationExceptionChain(errors);
+//            }
+//        });
+//    }
+//
+//    private void validateCompositeOccurrence() {
+//        validator().ifPresent(validator -> {
+//            errors.clear();
+//
+//            if (!validator.validCompositeOccurrences(dialect, location)) {
+//                reportElementErrors(validator, "");
+//            }
+//
+//            if (!errors.isEmpty()) {
+//                throw validationExceptionChain(errors);
+//            }
+//        });
+//    }
+//
+//    private CharSequence validateElement(Runnable setupCommand, CharSequence data) {
+//        return validator()
+//                .map(validator -> validateElement(setupCommand, data, validator))
+//                .orElse(data);
+//    }
+//
+//    CharSequence validateElement(Runnable setupCommand, CharSequence data, Validator validator) {
+//        CharSequence elementData;
+//
+//        if (this.formatElements) {
+//            elementData = this.formattedElement;
+//            this.formattedElement.setLength(0);
+//            this.formattedElement.append(data); // Validator will clear and re-format if configured
+//        } else {
+//            elementData = data;
+//        }
+//
+//        errors.clear();
+//        setupCommand.run();
+//
+//        if (!validator.validateElement(dialect, location, data, this.formattedElement)) {
+//            reportElementErrors(validator, elementData);
+//        }
+//
+//        if (!errors.isEmpty()) {
+//            throw validationExceptionChain(errors);
+//        }
+//
+//        dialect.elementData(elementData, location);
+//        return elementData;
+//    }
+//
+//    void reportElementErrors(Validator validator, CharSequence data) {
+//        for (UsageError error : validator.getElementErrors()) {
+//            elementError(error.getError().getCategory(),
+//                         error.getError(),
+//                         error.getTypeReference(),
+//                         data,
+//                         location.getElementPosition(),
+//                         location.getComponentPosition(),
+//                         location.getElementOccurrence());
+//        }
+//    }
 
     EDIValidationException validationExceptionChain(List<EDIValidationException> errors) {
         Iterator<EDIValidationException> iter = errors.iterator();
@@ -1013,5 +1192,13 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         }
 
         return first;
+    }
+
+    boolean useInternalControlSchema() {
+        if (this.controlSchema != null) {
+            return false;
+        }
+
+        return getProperty(EDIInputFactory.EDI_VALIDATE_CONTROL_STRUCTURE, Boolean::parseBoolean, false);
     }
 }

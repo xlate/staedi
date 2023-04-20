@@ -65,9 +65,10 @@ class StaEDIXMLStreamWriterTest {
 
     static void unconfirmedBufferEquals(String expected, EDIStreamWriter writer) {
         StaEDIStreamWriter writerImpl = (StaEDIStreamWriter) writer;
-        writerImpl.unconfirmedBuffer.mark();
-        writerImpl.unconfirmedBuffer.flip();
-        assertEquals(expected, writerImpl.unconfirmedBuffer.toString());
+        if (writerImpl.outputBuffer.position() > 0 || writerImpl.outputBuffer.limit() == writerImpl.outputBuffer.capacity()) {
+            writerImpl.outputBuffer.flip();
+        }
+        assertEquals(expected, writerImpl.outputBuffer.toString());
     }
 
     @Test

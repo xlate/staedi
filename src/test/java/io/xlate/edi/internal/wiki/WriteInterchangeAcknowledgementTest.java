@@ -54,7 +54,7 @@ class WriteInterchangeAcknowledgementTest {
               .writeEndSegment();
 
         writer.writeStartSegment("IEA")
-              .writeElement("1")
+              .writeElement("0") // No included functional groups
               .writeElement("000000001")
               .writeEndSegment();
 

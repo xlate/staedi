@@ -15,11 +15,11 @@
  ******************************************************************************/
 package io.xlate.edi.internal.stream.tokenization;
 
-import io.xlate.edi.stream.EDIStreamException;
-import io.xlate.edi.stream.Location;
-
 import java.util.HashMap;
 import java.util.Map;
+
+import io.xlate.edi.stream.EDIStreamException;
+import io.xlate.edi.stream.Location;
 
 public class EDIException extends EDIStreamException {
 
@@ -41,7 +41,7 @@ public class EDIException extends EDIStreamException {
         exceptionMessages.put(INVALID_STATE,
                               "EDIE003 - Invalid processing state");
         exceptionMessages.put(INVALID_CHARACTER,
-                              "EDIE004 - Invalid input character");
+                              "EDIE004 - Invalid character");
         exceptionMessages.put(INCOMPLETE_STREAM,
                               "EDIE005 - Unexpected end of stream");
     }
@@ -55,7 +55,7 @@ public class EDIException extends EDIStreamException {
     }
 
     EDIException(Integer id, String message, Location location) {
-        super(exceptionMessages.get(id) + "; " + message, location);
+        super(buildMessage(exceptionMessages.get(id), location) + "; " + message, location);
     }
 
     public EDIException(Integer id, String message) {

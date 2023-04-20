@@ -45,9 +45,10 @@ public class Lexer {
     }
 
     private final Deque<Mode> modes = new ArrayDeque<>();
-    private int input = 0;
     private State state = State.INITIAL;
+    private int previousInput = 0;
     private State previous;
+    private boolean dataEventNotified = false;
 
     private interface Notifier {
         boolean execute(State state, int start, int length);
@@ -107,6 +108,10 @@ public class Lexer {
         };
 
         ssn = (notifyState, start, length) -> {
+            if (dataEventNotified) {
+                dataEventNotified = false;
+                return false;
+            }
             String segmentTag = new String(buffer.array(), start, length);
             return handler.segmentBegin(segmentTag);
         };
@@ -117,6 +122,10 @@ public class Lexer {
         bn = (notifyState, start, length) -> handler.binaryData(binaryStream);
 
         en = (notifyState, start, length) -> {
+            if (dataEventNotified) {
+                dataEventNotified = false;
+                return false;
+            }
             elementHolder.set(buffer.array(), start, length);
             return handler.elementData(elementHolder, true);
         };
@@ -125,6 +134,14 @@ public class Lexer {
 
     public Dialect getDialect() {
         return dialect;
+    }
+
+    public StaEDIStreamLocation getLocation() {
+        return location;
+    }
+
+    public CharacterSet getCharacterSet() {
+        return characters;
     }
 
     public void invalidate() {
@@ -171,141 +188,188 @@ public class Lexer {
 
     public void parse() throws IOException, EDIException {
         try {
-            parse(this::readCharacterUnchecked);
+            parse(this::readCharacterUnchecked, false);
         } catch (UncheckedIOException e) {
             throw e.getCause();
         }
     }
 
-    void parse(IntSupplier inputSource) throws EDIException {
+    public void parse(CharBuffer buffer) throws EDIException {
+        IntSupplier inputSource = () -> buffer.hasRemaining() ? buffer.get() : -1;
+        parse(inputSource, true);
+    }
+
+    public void signalElementDataCompleteEvent(int delimiter) throws EDIException {
+        CharacterClass clazz = characters.getClass(delimiter);
+        State dataCompleteState = State.transition(state, dialect, clazz);
+
+        switch (dataCompleteState) {
+        case SEGMENT_BEGIN:
+        case TRAILER_BEGIN:
+            openSegment();
+            nextEvent();
+            dataEventNotified = true;
+            break;
+        case COMPONENT_END:
+            handleComponent();
+            nextEvent();
+            dataEventNotified = true;
+            break;
+        case ELEMENT_END:
+        case TRAILER_ELEMENT_END:
+            handleElement();
+            nextEvent();
+            dataEventNotified = true;
+            break;
+        default:
+            throw new IllegalStateException(dataCompleteState.toString());
+        }
+    }
+
+    void parse(IntSupplier inputSource, boolean allowPartialStream) throws EDIException {
         if (nextEvent()) {
             return;
         }
 
         if (state == State.INVALID) {
             // Unable to proceed once the state becomes invalid
-            throw invalidStateError();
+            throw invalidStateError(previousInput);
         }
 
+        int input = 0;
         boolean eventsReady = false;
 
         while (!eventsReady && (input = inputSource.getAsInt()) > -1) {
-            location.incrementOffset(input);
+            eventsReady = processInputCharacter(input);
+        }
 
-            CharacterClass clazz = characters.getClass(input);
-            previous = state;
-            state = State.transition(state, dialect, clazz);
-            LOGGER.finer(() -> String.format("%s + (%s, '%s', %s) -> %s", previous, Dialect.getStandard(dialect), (char) input, clazz, state));
+        if (input < 0 && !allowPartialStream) {
+            throw error(EDIException.INCOMPLETE_STREAM);
+        }
+    }
 
-            switch (state) {
-            case INITIAL:
-            case TAG_SEARCH:
-            case HEADER_EDIFACT_UNB_SEARCH:
-                break;
-            case HEADER_X12_I:
-            case HEADER_X12_S:
-            case HEADER_EDIFACT_N:
-            case HEADER_EDIFACT_U:
-            case HEADER_TRADACOMS_S:
-            case HEADER_TRADACOMS_T:
-            case TAG_1:
-            case TAG_2:
-            case TAG_3:
-            case TRAILER_X12_I:
-            case TRAILER_X12_E:
-            case TRAILER_X12_A:
-            case TRAILER_EDIFACT_U:
-            case TRAILER_EDIFACT_N:
-            case TRAILER_EDIFACT_Z:
-            case TRAILER_TRADACOMS_E:
-            case TRAILER_TRADACOMS_N:
-            case TRAILER_TRADACOMS_D:
-            case ELEMENT_DATA:
-            case TRAILER_ELEMENT_DATA:
+    boolean processInputCharacter(int input) throws EDIException {
+        boolean eventsReady = false;
+        location.incrementOffset(input);
+
+        CharacterClass clazz = characters.getClass(input);
+        previous = state;
+        previousInput = input;
+
+        state = State.transition(state, dialect, clazz);
+        LOGGER.finer(() -> String.format("%s + (%s, '%s', %s) -> %s", previous, Dialect.getStandard(dialect), (char) input, clazz, state));
+
+        switch (state) {
+        case INITIAL:
+        case TAG_SEARCH:
+        case HEADER_EDIFACT_UNB_SEARCH:
+            break;
+        case HEADER_X12_I:
+        case HEADER_X12_S:
+        case HEADER_EDIFACT_N:
+        case HEADER_EDIFACT_U:
+        case HEADER_TRADACOMS_S:
+        case HEADER_TRADACOMS_T:
+        case TAG_1:
+        case TAG_2:
+        case TAG_3:
+        case TRAILER_X12_I:
+        case TRAILER_X12_E:
+        case TRAILER_X12_A:
+        case TRAILER_EDIFACT_U:
+        case TRAILER_EDIFACT_N:
+        case TRAILER_EDIFACT_Z:
+        case TRAILER_TRADACOMS_E:
+        case TRAILER_TRADACOMS_N:
+        case TRAILER_TRADACOMS_D:
+        case ELEMENT_DATA:
+        case TRAILER_ELEMENT_DATA:
+            buffer.put((char) input);
+            break;
+        case ELEMENT_INVALID_DATA:
+            if (!characters.isIgnored(input)) {
                 buffer.put((char) input);
-                break;
-            case ELEMENT_INVALID_DATA:
-                if (!characters.isIgnored(input)) {
-                    buffer.put((char) input);
-                }
-                break;
-            case HEADER_EDIFACT_UNB_1: // U - When UNA is present
-            case HEADER_EDIFACT_UNB_2: // N - When UNA is present
-            case HEADER_EDIFACT_UNB_3: // B - When UNA is present
-                handleStateHeaderTag(input);
-                break;
-            case HEADER_RELEASE:
-            case DATA_RELEASE:
-                // Skip this character - next character will be literal value
-                break;
-            case ELEMENT_DATA_BINARY:
-                handleStateElementDataBinary();
-                break;
-            case INTERCHANGE_CANDIDATE:
-                // ISA, UNA, or UNB was found
-                handleStateInterchangeCandidate(input);
-                break;
-            case HEADER_DATA:
-            case HEADER_INVALID_DATA:
-                handleStateHeaderData(input);
-                eventsReady = dialectConfirmed(State.TAG_SEARCH);
-                break;
-            case HEADER_SEGMENT_BEGIN:
-                dialect.appendHeader(characters, (char) input);
-                openSegment();
-                eventsReady = dialectConfirmed(State.ELEMENT_END);
-                break;
-            case HEADER_ELEMENT_END:
-                dialect.appendHeader(characters, (char) input);
-                handleElement();
-                eventsReady = dialectConfirmed(State.ELEMENT_END);
-                break;
-            case HEADER_COMPONENT_END:
-                dialect.appendHeader(characters, (char) input);
-                handleComponent();
-                eventsReady = dialectConfirmed(State.COMPONENT_END);
-                break;
-            case SEGMENT_BEGIN:
-            case TRAILER_BEGIN:
-                openSegment();
-                eventsReady = nextEvent();
-                break;
-            case SEGMENT_END:
-                closeSegment();
-                eventsReady = nextEvent();
-                break;
-            case SEGMENT_EMPTY:
-                emptySegment();
-                eventsReady = nextEvent();
-                break;
-            case COMPONENT_END:
-                handleComponent();
-                eventsReady = nextEvent();
-                break;
-            case ELEMENT_END:
-            case TRAILER_ELEMENT_END:
-            case ELEMENT_REPEAT:
-                handleElement();
-                eventsReady = nextEvent();
-                break;
-            case INTERCHANGE_END:
-                closeInterchange();
-                eventsReady = nextEvent();
-                break;
-            default:
-                if (characters.isIgnored(input)) {
-                    state = previous;
-                } else if (clazz != CharacterClass.INVALID) {
-                    throw invalidStateError();
-                } else {
-                    throw error(EDIException.INVALID_CHARACTER);
-                }
+            }
+            break;
+        case HEADER_EDIFACT_UNB_1: // U - When UNA is present
+        case HEADER_EDIFACT_UNB_2: // N - When UNA is present
+        case HEADER_EDIFACT_UNB_3: // B - When UNA is present
+            handleStateHeaderTag(input);
+            break;
+        case HEADER_RELEASE:
+        case DATA_RELEASE:
+            // Skip this character - next character will be literal value
+            break;
+        case ELEMENT_DATA_BINARY:
+            handleStateElementDataBinary();
+            break;
+        case INTERCHANGE_CANDIDATE:
+            // ISA, UNA, or UNB was found
+            handleStateInterchangeCandidate(input);
+            break;
+        case HEADER_DATA:
+        case HEADER_INVALID_DATA:
+            handleStateHeaderData(input);
+            eventsReady = dialectConfirmed(State.TAG_SEARCH);
+            break;
+        case HEADER_SEGMENT_BEGIN:
+            dialect.appendHeader(characters, (char) input);
+            openSegment();
+            eventsReady = dialectConfirmed(State.ELEMENT_END);
+            break;
+        case HEADER_SEGMENT_END:
+            dialect.appendHeader(characters, (char) input);
+            closeSegment();
+            eventsReady = dialectConfirmed(State.SEGMENT_END);
+            break;
+        case HEADER_ELEMENT_END:
+            dialect.appendHeader(characters, (char) input);
+            handleElement();
+            eventsReady = dialectConfirmed(State.ELEMENT_END);
+            break;
+        case HEADER_COMPONENT_END:
+            dialect.appendHeader(characters, (char) input);
+            handleComponent();
+            eventsReady = dialectConfirmed(State.COMPONENT_END);
+            break;
+        case SEGMENT_BEGIN:
+        case TRAILER_BEGIN:
+            openSegment();
+            eventsReady = nextEvent();
+            break;
+        case SEGMENT_END:
+            closeSegment();
+            eventsReady = nextEvent();
+            break;
+        case SEGMENT_EMPTY:
+            emptySegment();
+            eventsReady = nextEvent();
+            break;
+        case COMPONENT_END:
+            handleComponent();
+            eventsReady = nextEvent();
+            break;
+        case ELEMENT_END:
+        case TRAILER_ELEMENT_END:
+        case ELEMENT_REPEAT:
+            handleElement();
+            eventsReady = nextEvent();
+            break;
+        case INTERCHANGE_END:
+            closeInterchange();
+            eventsReady = nextEvent();
+            break;
+        default:
+            if (characters.isIgnored(input)) {
+                state = previous;
+            } else if (clazz != CharacterClass.INVALID) {
+                throw invalidStateError(input);
+            } else {
+                throw error(EDIException.INVALID_CHARACTER);
             }
         }
 
-        if (input < 0) {
-            throw error(EDIException.INCOMPLETE_STREAM);
-        }
+        return eventsReady;
     }
 
     int readCharacterUnchecked() {
@@ -445,7 +509,7 @@ public class Lexer {
         return false;
     }
 
-    private EDIException invalidStateError() {
+    private EDIException invalidStateError(int input) {
         StringBuilder message = new StringBuilder();
         message.append(state);
         message.append(" (previous: ");
@@ -476,10 +540,10 @@ public class Lexer {
             int start = startQueue.remove();
             int length = lengthQueue.remove();
             eventsReady = event.execute(nextState, start, length);
-        }
 
-        if (events.isEmpty()) {
-            buffer.clear();
+            if (events.isEmpty()) {
+                buffer.clear();
+            }
         }
 
         return eventsReady;
@@ -522,7 +586,9 @@ public class Lexer {
     }
 
     private void openSegment() {
-        modes.push(Mode.SEGMENT);
+        if (modes.peek() != Mode.SEGMENT) {
+            modes.push(Mode.SEGMENT);
+        }
         enqueue(ssn, buffer.position());
     }
 

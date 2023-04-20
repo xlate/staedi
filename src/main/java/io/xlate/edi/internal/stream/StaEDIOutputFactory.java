@@ -41,6 +41,7 @@ public class StaEDIOutputFactory extends EDIOutputFactory {
         supportedProperties.add(PRETTY_PRINT);
         supportedProperties.add(TRUNCATE_EMPTY_ELEMENTS);
         supportedProperties.add(FORMAT_ELEMENTS);
+        supportedProperties.add(EDI_VALIDATE_CONTROL_STRUCTURE);
 
         properties.put(PRETTY_PRINT, Boolean.FALSE);
     }

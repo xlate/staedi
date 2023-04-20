@@ -16,7 +16,7 @@ public class EDIValidationException extends RuntimeException {
             EDIStreamValidationError error,
             Location location,
             CharSequence data) {
-        super("Encountered " + event + " [" + error + "]" + (location != null ? " " + location.toString() : ""));
+        super("Encountered " + event + " [" + error + "] for data={" + data + "} " + (location != null ? " " + location.toString() : ""));
         this.event = event;
         this.error = error;
         this.location = location != null ? location.copy() : null;

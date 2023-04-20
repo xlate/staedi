@@ -45,18 +45,30 @@ class AlphaNumericValidator extends ElementValidator {
 
         Set<String> valueSet = element.getValueSet(dialect.getTransactionVersionString());
 
-        if (!valueSet.isEmpty() && !valueSet.contains(value.toString())) {
-            errors.add(EDIStreamValidationError.INVALID_CODE_VALUE);
+        if (valueSet.isEmpty() || valueSet.contains(value.toString())) {
+            if (valueSet.isEmpty()) {
+                // Only validate the characters if not explicitly listed in the set of allowed values
+                validateCharacters(value, length, errors);
+            }
         } else {
-            for (int i = 0; i < length; i++) {
-                char character = value.charAt(i);
+            validateCharacters(value, length, errors);
+            errors.add(EDIStreamValidationError.INVALID_CODE_VALUE);
+        }
+    }
 
-                if (!CharacterSet.isValid(character)) {
-                    errors.add(EDIStreamValidationError.INVALID_CHARACTER_DATA);
-                    break;
-                }
+    static void validateCharacters(CharSequence value, int length, List<EDIStreamValidationError> errors) {
+        if (!validCharacters(value, length)) {
+            errors.add(EDIStreamValidationError.INVALID_CHARACTER_DATA);
+        }
+    }
+
+    static boolean validCharacters(CharSequence value, int length) {
+        for (int i = 0; i < length; i++) {
+            if (!CharacterSet.isValid(value.charAt(i))) {
+                return false;
             }
         }
+        return true;
     }
 
     @Override

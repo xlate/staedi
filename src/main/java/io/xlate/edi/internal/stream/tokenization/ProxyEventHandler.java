@@ -153,7 +153,7 @@ public class ProxyEventHandler implements EventHandler {
         return current(StreamEvent::getReferenceCode, null);
     }
 
-    public Location getLocation() {
+    public StaEDIStreamLocation getLocation() {
         return current(StreamEvent::getLocation, this.location);
     }
 
@@ -388,6 +388,7 @@ public class ProxyEventHandler implements EventHandler {
          * and the composite begin/end events must be generated.
          **/
         final boolean componentReceivedAsSimple;
+        final List<UsageError> errors;
 
         if (validator != null) {
             derivedComposite = !compositeFromStream && validator.isComposite(dialect, location);
@@ -400,15 +401,17 @@ public class ProxyEventHandler implements EventHandler {
 
             valid = validator.validateElement(dialect, location, text, null);
             typeReference = validator.getElementReference();
+            errors = validator.getElementErrors();
             enqueueElementOccurrenceErrors(text, validator, valid);
         } else {
-            valid = true;
+            errors = Validator.validateCharacters(text);
+            valid = errors.isEmpty();
             derivedComposite = false;
             componentReceivedAsSimple = false;
             typeReference = null;
         }
 
-        enqueueElementErrors(text, validator, valid);
+        enqueueElementErrors(text, errors, valid);
 
         boolean eventsReady = true;
 
@@ -532,12 +535,10 @@ public class ProxyEventHandler implements EventHandler {
         }
     }
 
-    void enqueueElementErrors(CharSequence text, Validator validator, boolean valid) {
+    void enqueueElementErrors(CharSequence text, List<UsageError> errors, boolean valid) {
         if (valid) {
             return;
         }
-
-        List<UsageError> errors = validator.getElementErrors();
 
         for (UsageError error : errors) {
             enqueueEvent(error.getError().getCategory(),
