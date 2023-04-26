@@ -319,12 +319,9 @@ public class ProxyEventHandler implements EventHandler {
     @Override
     public boolean compositeBegin(boolean isNil, boolean derived) {
         if (!derived) {
-            if (location.isRepeated()) {
-                location.incrementElementOccurrence();
-            } else {
-                location.incrementElementPosition();
-            }
+            location.incrementElement(true);
         }
+        location.setComposite(true);
 
         EDIReference typeReference = null;
         boolean eventsReady = true;
@@ -365,6 +362,8 @@ public class ProxyEventHandler implements EventHandler {
 
     @Override
     public boolean elementData(CharSequence text, boolean fromStream) {
+        location.incrementElement(false);
+
         boolean derivedComposite;
         EDIReference typeReference;
         final boolean compositeFromStream = location.getComponentPosition() > -1;
@@ -549,6 +548,7 @@ public class ProxyEventHandler implements EventHandler {
 
     @Override
     public boolean binaryData(InputStream binaryStream) {
+        location.incrementElement(false);
         Validator validator = validator();
         EDIReference typeReference = validator != null ? validator.getElementReference() : null;
         enqueueEvent(EDIStreamEvent.ELEMENT_DATA_BINARY, EDIStreamValidationError.NONE, "", typeReference, location);

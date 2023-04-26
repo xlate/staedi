@@ -15,12 +15,13 @@
  ******************************************************************************/
 package io.xlate.edi.internal.stream;
 
-import io.xlate.edi.internal.stream.tokenization.State;
 import io.xlate.edi.stream.Location;
 
 public class StaEDIStreamLocation extends LocationView implements Location {
 
-    private boolean repeated = false;
+    private boolean composite = false;
+    private boolean repeating = false;
+    private int repeatCount = -1;
 
     public StaEDIStreamLocation() {
         super();
@@ -33,7 +34,9 @@ public class StaEDIStreamLocation extends LocationView implements Location {
     @Override
     public StaEDIStreamLocation copy() {
         StaEDIStreamLocation copy = new StaEDIStreamLocation(this);
-        copy.repeated = this.repeated;
+        copy.composite = this.composite;
+        copy.repeating = this.repeating;
+        copy.repeatCount = this.repeatCount;
         return copy;
     }
 
@@ -69,99 +72,92 @@ public class StaEDIStreamLocation extends LocationView implements Location {
         this.columnNumber++;
     }
 
-    public void incrementSegmentPosition(String segmentTag) {
-        if (this.segmentPosition < 0) {
-            this.segmentPosition = 1;
-        } else {
-            this.segmentPosition++;
+    static int initOrIncrement(int position) {
+        if (position < 0) {
+            return 1;
         }
+        return position + 1;
+    }
 
+    public void incrementSegmentPosition(String segmentTag) {
+        this.segmentPosition = initOrIncrement(segmentPosition);
         this.segmentTag = segmentTag;
-
         clearSegmentLocations();
     }
 
     public void clearSegmentLocations() {
         this.elementPosition = -1;
         this.elementOccurrence = -1;
+        this.repeating = false;
+        this.repeatCount = -1;
         clearComponentPosition();
     }
 
     public void incrementElementPosition() {
-        if (this.elementPosition < 0) {
-            this.elementPosition = 1;
-        } else {
-            this.elementPosition++;
-        }
-
+        this.elementPosition = initOrIncrement(elementPosition);
         this.elementOccurrence = 1;
         clearComponentPosition();
     }
 
     public void incrementElementOccurrence() {
-        this.elementOccurrence++;
+        this.elementPosition = Math.max(elementPosition, 1);
+        this.elementOccurrence = initOrIncrement(elementOccurrence);
         clearComponentPosition();
     }
 
     public void incrementComponentPosition() {
-        if (this.componentPosition < 0) {
-            this.componentPosition = 1;
-        } else {
-            this.componentPosition++;
-        }
+        this.componentPosition = initOrIncrement(componentPosition);
     }
 
     public void clearComponentPosition() {
+        this.composite = false;
         this.componentPosition = -1;
     }
 
-    public void setRepeated(boolean repeated) {
-        this.repeated = repeated;
+    public void setComposite(boolean composite) {
+        this.composite = composite;
     }
 
-    public boolean isRepeated() {
-        return repeated;
-    }
-
-    public void updateLocation(State state) {
-        if (state == State.ELEMENT_REPEAT) {
-            if (isRepeated()) {
-                updateElementOccurrence();
+    public void setRepeating(boolean repeating) {
+        if (repeating) {
+            // Encountered a repeat delimiter
+            if (this.repeating) {
+                // Previous delimiter was repeat, increment
+                repeatCount++;
             } else {
-                setElementOccurrence(1);
+                // First repeat delimiter for this element
+                repeatCount = 0;
             }
-            setRepeated(true);
-        } else if (isRepeated()) {
-            if (state != State.COMPONENT_END) {
-                updateElementOccurrence();
-                setRepeated(false);
-            }
+        } else if (this.repeating) {
+            // Previous delimiter was repeat, this one is not. The element just completed is a repeat
+            repeatCount++;
         } else {
-            setElementOccurrence(1);
+            // Repeat does not apply
+            repeatCount = -1;
         }
 
-        switch (state) {
-        case COMPONENT_END:
-        case HEADER_COMPONENT_END:
-            incrementComponentPosition();
-            break;
-
-        default:
-            if (getComponentPosition() > 0) {
-                incrementComponentPosition();
-            } else if (getElementOccurrence() == 1) {
-                incrementElementPosition();
-            }
-            break;
-        }
+        this.repeating = repeating;
     }
 
-    void updateElementOccurrence() {
-        /*
-         * Only increment the position if we have not yet started
-         * the composite - i.e, only a single component is present.
-         */
-        if (getComponentPosition() < 1) {
+    public void incrementElement(boolean compositeBegin) {
+        if (composite) {
+            incrementComponentPosition();
+        } else if (elementPosition < 0 || repeatCount == -1) {
+            // First element of the segment or not a repeating element
+            incrementElementPosition();
+        } else if (repeating) {
+            if (compositeBegin) {
+                // Previous element delimiter was a repeater and the first component was encountered
+                incrementElementOccurrence();
+            } else if (repeatCount == 0) {
+                // First element of the repeating series is in a new element position
+                incrementElementPosition();
+            } else {
+                incrementElementOccurrence();
+            }
+        } else if (compositeBegin) {
+            incrementElementPosition();
+        } else {
             incrementElementOccurrence();
         }
     }

@@ -1285,12 +1285,6 @@ public class Validator {
 
         // Ensure the start index is at least zero. Index may be -1 for empty segments
         for (int i = Math.max(index, 0), max = children.size(); i < max; i++) {
-            if (isComposite) {
-                location.incrementComponentPosition();
-            } else {
-                location.incrementElementPosition();
-            }
-
             handler.elementData("", false);
         }
 

@@ -114,17 +114,13 @@ public class Lexer {
         sen = (notifyState, start, length) -> handler.segmentEnd();
         csn = (notifyState, start, length) -> handler.compositeBegin(false, false);
         cen = (notifyState, start, length) -> handler.compositeEnd(false);
+        bn = (notifyState, start, length) -> handler.binaryData(binaryStream);
 
         en = (notifyState, start, length) -> {
-            this.location.updateLocation(notifyState);
             elementHolder.set(buffer.array(), start, length);
             return handler.elementData(elementHolder, true);
         };
 
-        bn = (notifyState, start, length) -> {
-            this.location.updateLocation(notifyState);
-            return handler.binaryData(binaryStream);
-        };
     }
 
     public Dialect getDialect() {
@@ -166,10 +162,6 @@ public class Lexer {
         } catch (UncheckedIOException e) {
             throw e.getCause();
         }
-    }
-
-    public void parse(CharBuffer buffer) throws EDIException {
-        parse(() -> buffer.hasRemaining() ? buffer.get() : -1);
     }
 
     void parse(IntSupplier inputSource) throws EDIException {
@@ -534,6 +526,8 @@ public class Lexer {
     }
 
     private void handleElement() throws EDIException {
+        location.setRepeating(State.ELEMENT_REPEAT.equals(state));
+
         if (previous != State.ELEMENT_END_BINARY) {
             addElementEvent();
         }
