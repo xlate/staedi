@@ -15,6 +15,7 @@
  ******************************************************************************/
 package io.xlate.edi.internal.stream;
 
+import io.xlate.edi.internal.stream.tokenization.State;
 import io.xlate.edi.stream.Location;
 
 public class StaEDIStreamLocation extends LocationView implements Location {
@@ -120,5 +121,48 @@ public class StaEDIStreamLocation extends LocationView implements Location {
 
     public boolean isRepeated() {
         return repeated;
+    }
+
+    public void updateLocation(State state) {
+        if (state == State.ELEMENT_REPEAT) {
+            if (isRepeated()) {
+                updateElementOccurrence();
+            } else {
+                setElementOccurrence(1);
+            }
+            setRepeated(true);
+        } else if (isRepeated()) {
+            if (state != State.COMPONENT_END) {
+                updateElementOccurrence();
+                setRepeated(false);
+            }
+        } else {
+            setElementOccurrence(1);
+        }
+
+        switch (state) {
+        case COMPONENT_END:
+        case HEADER_COMPONENT_END:
+            incrementComponentPosition();
+            break;
+
+        default:
+            if (getComponentPosition() > 0) {
+                incrementComponentPosition();
+            } else if (getElementOccurrence() == 1) {
+                incrementElementPosition();
+            }
+            break;
+        }
+    }
+
+    void updateElementOccurrence() {
+        /*
+         * Only increment the position if we have not yet started
+         * the composite - i.e, only a single component is present.
+         */
+        if (getComponentPosition() < 1) {
+            incrementElementOccurrence();
+        }
     }
 }

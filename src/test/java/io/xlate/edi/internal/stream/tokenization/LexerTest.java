@@ -80,7 +80,7 @@ class LexerTest {
         }
 
         @Override
-        public boolean compositeBegin(boolean isNil) {
+        public boolean compositeBegin(boolean isNil, boolean derived) {
             content.put("LAST", "compositeBegin");
             return true;
         }
@@ -149,7 +149,7 @@ class LexerTest {
         }
 
         @Override
-        public boolean compositeBegin(boolean isNil) {
+        public boolean compositeBegin(boolean isNil, boolean derived) {
             compositeStarted = true;
             return true;
         }

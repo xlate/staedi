@@ -108,40 +108,21 @@ public class Lexer {
 
         ssn = (notifyState, start, length) -> {
             String segmentTag = new String(buffer.array(), start, length);
-            location.incrementSegmentPosition(segmentTag);
             return handler.segmentBegin(segmentTag);
         };
 
-        sen = (notifyState, start, length) -> {
-            boolean eventsReady = handler.segmentEnd();
-            location.clearSegmentLocations();
-            return eventsReady;
-        };
-
-        csn = (notifyState, start, length) -> {
-            if (location.isRepeated()) {
-                location.incrementElementOccurrence();
-            } else {
-                location.incrementElementPosition();
-            }
-
-            return handler.compositeBegin(false);
-        };
-
-        cen = (notifyState, start, length) -> {
-            boolean eventsReady = handler.compositeEnd(false);
-            location.clearComponentPosition();
-            return eventsReady;
-        };
+        sen = (notifyState, start, length) -> handler.segmentEnd();
+        csn = (notifyState, start, length) -> handler.compositeBegin(false, false);
+        cen = (notifyState, start, length) -> handler.compositeEnd(false);
 
         en = (notifyState, start, length) -> {
-            updateLocation(notifyState, location);
+            this.location.updateLocation(notifyState);
             elementHolder.set(buffer.array(), start, length);
             return handler.elementData(elementHolder, true);
         };
 
         bn = (notifyState, start, length) -> {
-            updateLocation(notifyState, location);
+            this.location.updateLocation(notifyState);
             return handler.binaryData(binaryStream);
         };
     }
@@ -478,49 +459,6 @@ public class Lexer {
     private EDIException error(int code) {
         Location where = new LocationView(location);
         return new EDIException(code, where);
-    }
-
-    private static void updateLocation(State state, StaEDIStreamLocation location) {
-        if (state == State.ELEMENT_REPEAT) {
-            if (location.isRepeated()) {
-                updateElementOccurrence(location);
-            } else {
-                location.setElementOccurrence(1);
-            }
-            location.setRepeated(true);
-        } else if (location.isRepeated()) {
-            if (state != State.COMPONENT_END) {
-                updateElementOccurrence(location);
-                location.setRepeated(false);
-            }
-        } else {
-            location.setElementOccurrence(1);
-        }
-
-        switch (state) {
-        case COMPONENT_END:
-        case HEADER_COMPONENT_END:
-            location.incrementComponentPosition();
-            break;
-
-        default:
-            if (location.getComponentPosition() > 0) {
-                location.incrementComponentPosition();
-            } else if (location.getElementOccurrence() == 1) {
-                location.incrementElementPosition();
-            }
-            break;
-        }
-    }
-
-    static void updateElementOccurrence(StaEDIStreamLocation location) {
-        /*
-         * Only increment the position if we have not yet started
-         * the composite - i.e, only a single component is present.
-         */
-        if (location.getComponentPosition() < 1) {
-            location.incrementElementOccurrence();
-        }
     }
 
     private boolean nextEvent() {

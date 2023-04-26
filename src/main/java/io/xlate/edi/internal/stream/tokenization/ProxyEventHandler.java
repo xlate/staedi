@@ -246,6 +246,7 @@ public class ProxyEventHandler implements EventHandler {
 
     @Override
     public boolean segmentBegin(String segmentTag) {
+        location.incrementSegmentPosition(segmentTag);
         this.segmentTag = segmentTag;
 
         /*
@@ -316,7 +317,15 @@ public class ProxyEventHandler implements EventHandler {
     }
 
     @Override
-    public boolean compositeBegin(boolean isNil) {
+    public boolean compositeBegin(boolean isNil, boolean derived) {
+        if (!derived) {
+            if (location.isRepeated()) {
+                location.incrementElementOccurrence();
+            } else {
+                location.incrementElementPosition();
+            }
+        }
+
         EDIReference typeReference = null;
         boolean eventsReady = true;
         Validator validator = validator();
@@ -380,7 +389,7 @@ public class ProxyEventHandler implements EventHandler {
             componentReceivedAsSimple = derivedComposite && fromStream;
 
             if (componentReceivedAsSimple) {
-                this.compositeBegin(text.length() == 0);
+                this.compositeBegin(text.length() == 0, true);
                 location.incrementComponentPosition();
             }
 
