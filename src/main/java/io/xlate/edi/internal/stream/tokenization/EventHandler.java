@@ -25,7 +25,7 @@ public interface EventHandler extends ElementDataHandler, ValidationEventHandler
 
     boolean segmentEnd();
 
-    boolean compositeBegin(boolean isNil);
+    boolean compositeBegin(boolean isNil, boolean derived);
 
     boolean compositeEnd(boolean isNil);
 

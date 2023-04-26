@@ -18,6 +18,7 @@ package io.xlate.edi.internal.schema;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
 
@@ -40,21 +41,21 @@ class Reference implements EDIReference {
     private final String description;
 
     static class Version extends VersionedProperty {
-        final Integer minOccurs;
-        final Integer maxOccurs;
+        final Optional<Integer> minOccurs;
+        final Optional<Integer> maxOccurs;
 
         Version(String minVersion, String maxVersion, Integer minOccurs, Integer maxOccurs) {
             super(minVersion, maxVersion);
-            this.minOccurs = minOccurs;
-            this.maxOccurs = maxOccurs;
+            this.minOccurs = Optional.ofNullable(minOccurs);
+            this.maxOccurs = Optional.ofNullable(maxOccurs);
         }
 
         public int getMinOccurs(Reference defaultElement) {
-            return minOccurs != null ? minOccurs.intValue() : defaultElement.getMinOccurs();
+            return minOccurs.orElseGet(defaultElement::getMinOccurs);
         }
 
         public int getMaxOccurs(Reference defaultElement) {
-            return maxOccurs != null ? maxOccurs.intValue() : defaultElement.getMaxOccurs();
+            return maxOccurs.orElseGet(defaultElement::getMaxOccurs);
         }
     }
 

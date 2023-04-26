@@ -394,7 +394,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     }
 
     @Override
-    public EDIStreamWriter startInterchange() throws EDIStreamException {
+    public EDIStreamWriter startInterchange() {
         ensureLevel(LEVEL_INITIAL);
         ensureState(State.INITIAL);
         level = LEVEL_INTERCHANGE;
@@ -526,6 +526,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         if (level > LEVEL_SEGMENT) {
             validateElement(this.elementBuffer::flip, this.elementBuffer);
         }
+        level = LEVEL_SEGMENT;
         validate(validator -> validator.validateSyntax(dialect, this, this, location, false));
 
         if (state == State.ELEMENT_DATA_BINARY) {
@@ -858,8 +859,13 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     }
 
     @Override
-    public boolean elementData(char[] text, int start, int length) {
-        elementHolder.set(text, start, length);
+    public boolean elementData(CharSequence text, boolean fromStream) {
+        if (level > LEVEL_ELEMENT) {
+            location.incrementComponentPosition();
+        } else {
+            location.incrementElementPosition();
+        }
+
         dialect.elementData(elementHolder, location);
 
         validator().ifPresent(validator -> {

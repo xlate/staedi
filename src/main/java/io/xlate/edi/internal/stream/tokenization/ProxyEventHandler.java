@@ -25,7 +25,6 @@ import java.util.Objects;
 import java.util.Queue;
 import java.util.function.Function;
 
-import io.xlate.edi.internal.stream.CharArraySequence;
 import io.xlate.edi.internal.stream.StaEDIStreamLocation;
 import io.xlate.edi.internal.stream.validation.UsageError;
 import io.xlate.edi.internal.stream.validation.Validator;
@@ -57,7 +56,6 @@ public class ProxyEventHandler implements EventHandler {
 
     private InputStream binary;
     private String segmentTag;
-    private CharArraySequence elementHolder = new CharArraySequence();
 
     private final Queue<StreamEvent> eventPool = new LinkedList<>();
     // Use implementation to access as both Deque & List
@@ -248,6 +246,7 @@ public class ProxyEventHandler implements EventHandler {
 
     @Override
     public boolean segmentBegin(String segmentTag) {
+        location.incrementSegmentPosition(segmentTag);
         this.segmentTag = segmentTag;
 
         /*
@@ -318,7 +317,12 @@ public class ProxyEventHandler implements EventHandler {
     }
 
     @Override
-    public boolean compositeBegin(boolean isNil) {
+    public boolean compositeBegin(boolean isNil, boolean derived) {
+        if (!derived) {
+            location.incrementElement(true);
+        }
+        location.setComposite(true);
+
         EDIReference typeReference = null;
         boolean eventsReady = true;
         Validator validator = validator();
@@ -357,18 +361,19 @@ public class ProxyEventHandler implements EventHandler {
     }
 
     @Override
-    public boolean elementData(char[] text, int start, int length) {
+    public boolean elementData(CharSequence text, boolean fromStream) {
+        location.incrementElement(false);
+
         boolean derivedComposite;
         EDIReference typeReference;
         final boolean compositeFromStream = location.getComponentPosition() > -1;
 
-        elementHolder.set(text, start, length);
-        dialect.elementData(elementHolder, location);
+        dialect.elementData(text, location);
         Validator validator = validator();
         boolean valid;
 
         if (levelCheckPending && startedLevel != null) {
-            setLevelIdentifiers();
+            setLevelIdentifiers(text);
         }
 
         /*
@@ -380,16 +385,16 @@ public class ProxyEventHandler implements EventHandler {
 
         if (validator != null) {
             derivedComposite = !compositeFromStream && validator.isComposite(dialect, location);
-            componentReceivedAsSimple = derivedComposite && text != null;
+            componentReceivedAsSimple = derivedComposite && fromStream;
 
             if (componentReceivedAsSimple) {
-                this.compositeBegin(elementHolder.length() == 0);
+                this.compositeBegin(text.length() == 0, true);
                 location.incrementComponentPosition();
             }
 
-            valid = validator.validateElement(dialect, location, elementHolder, null);
+            valid = validator.validateElement(dialect, location, text, null);
             typeReference = validator.getElementReference();
-            enqueueElementOccurrenceErrors(validator, valid);
+            enqueueElementOccurrenceErrors(text, validator, valid);
         } else {
             valid = true;
             derivedComposite = false;
@@ -397,14 +402,14 @@ public class ProxyEventHandler implements EventHandler {
             typeReference = null;
         }
 
-        enqueueElementErrors(validator, valid);
+        enqueueElementErrors(text, validator, valid);
 
         boolean eventsReady = true;
 
-        if (text != null && (!derivedComposite || length > 0) /* Not an inferred element */) {
+        if (fromStream && (!derivedComposite || text.length() > 0) /* Not an inferred element */) {
             enqueueEvent(EDIStreamEvent.ELEMENT_DATA,
                          EDIStreamValidationError.NONE,
-                         elementHolder,
+                         text,
                          typeReference,
                          location);
 
@@ -412,7 +417,7 @@ public class ProxyEventHandler implements EventHandler {
         }
 
         if (componentReceivedAsSimple) {
-            this.compositeEnd(length == 0);
+            this.compositeEnd(text.length() == 0);
             location.clearComponentPosition();
         }
 
@@ -446,13 +451,13 @@ public class ProxyEventHandler implements EventHandler {
                 loop.getParentIdPosition() != null;
     }
 
-    void setLevelIdentifiers() {
+    void setLevelIdentifiers(CharSequence text) {
         if (levelIdPosition.matchesLocation(location)) {
-            startedLevelId = elementHolder.toString();
+            startedLevelId = text.toString();
         }
 
         if (parentIdPosition.matchesLocation(location)) {
-            startedLevelParentId = elementHolder.toString();
+            startedLevelParentId = text.toString();
         }
     }
 
@@ -490,7 +495,7 @@ public class ProxyEventHandler implements EventHandler {
         }
     }
 
-    void enqueueElementOccurrenceErrors(Validator validator, boolean valid) {
+    void enqueueElementOccurrenceErrors(CharSequence text, Validator validator, boolean valid) {
         if (valid) {
             return;
         }
@@ -510,7 +515,7 @@ public class ProxyEventHandler implements EventHandler {
             case TOO_MANY_REPETITIONS:
                 enqueueEvent(error.getError().getCategory(),
                              error.getError(),
-                             elementHolder,
+                             text,
                              error.getTypeReference(),
                              location);
                 cursor.remove();
@@ -521,7 +526,7 @@ public class ProxyEventHandler implements EventHandler {
         }
     }
 
-    void enqueueElementErrors(Validator validator, boolean valid) {
+    void enqueueElementErrors(CharSequence text, Validator validator, boolean valid) {
         if (valid) {
             return;
         }
@@ -531,7 +536,7 @@ public class ProxyEventHandler implements EventHandler {
         for (UsageError error : errors) {
             enqueueEvent(error.getError().getCategory(),
                          error.getError(),
-                         elementHolder,
+                         text,
                          error.getTypeReference(),
                          location);
         }
@@ -543,6 +548,7 @@ public class ProxyEventHandler implements EventHandler {
 
     @Override
     public boolean binaryData(InputStream binaryStream) {
+        location.incrementElement(false);
         Validator validator = validator();
         EDIReference typeReference = validator != null ? validator.getElementReference() : null;
         enqueueEvent(EDIStreamEvent.ELEMENT_DATA_BINARY, EDIStreamValidationError.NONE, "", typeReference, location);

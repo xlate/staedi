@@ -18,6 +18,7 @@ package io.xlate.edi.internal.stream.tokenization;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
@@ -25,8 +26,10 @@ import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CoderResult;
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.function.IntSupplier;
 import java.util.logging.Logger;
 
+import io.xlate.edi.internal.stream.CharArraySequence;
 import io.xlate.edi.internal.stream.LocationView;
 import io.xlate.edi.internal.stream.StaEDIStreamLocation;
 import io.xlate.edi.stream.Location;
@@ -60,6 +63,7 @@ public class Lexer {
     private char[] readChar = new char[1];
     private CharBuffer readCharBuf = CharBuffer.wrap(readChar);
     private ByteBuffer readByteBuf = ByteBuffer.allocate(4);
+    private CharArraySequence elementHolder = new CharArraySequence();
 
     private final StaEDIStreamLocation location;
     private final CharacterSet characters;
@@ -104,41 +108,19 @@ public class Lexer {
 
         ssn = (notifyState, start, length) -> {
             String segmentTag = new String(buffer.array(), start, length);
-            location.incrementSegmentPosition(segmentTag);
             return handler.segmentBegin(segmentTag);
         };
 
-        sen = (notifyState, start, length) -> {
-            boolean eventsReady = handler.segmentEnd();
-            location.clearSegmentLocations();
-            return eventsReady;
-        };
-
-        csn = (notifyState, start, length) -> {
-            if (location.isRepeated()) {
-                location.incrementElementOccurrence();
-            } else {
-                location.incrementElementPosition();
-            }
-
-            return handler.compositeBegin(false);
-        };
-
-        cen = (notifyState, start, length) -> {
-            boolean eventsReady = handler.compositeEnd(false);
-            location.clearComponentPosition();
-            return eventsReady;
-        };
+        sen = (notifyState, start, length) -> handler.segmentEnd();
+        csn = (notifyState, start, length) -> handler.compositeBegin(false, false);
+        cen = (notifyState, start, length) -> handler.compositeEnd(false);
+        bn = (notifyState, start, length) -> handler.binaryData(binaryStream);
 
         en = (notifyState, start, length) -> {
-            updateLocation(notifyState, location);
-            return handler.elementData(buffer.array(), start, length);
+            elementHolder.set(buffer.array(), start, length);
+            return handler.elementData(elementHolder, true);
         };
 
-        bn = (notifyState, start, length) -> {
-            updateLocation(notifyState, location);
-            return handler.binaryData(binaryStream);
-        };
     }
 
     public Dialect getDialect() {
@@ -175,6 +157,14 @@ public class Lexer {
     }
 
     public void parse() throws IOException, EDIException {
+        try {
+            parse(this::readCharacterUnchecked);
+        } catch (UncheckedIOException e) {
+            throw e.getCause();
+        }
+    }
+
+    void parse(IntSupplier inputSource) throws EDIException {
         if (nextEvent()) {
             return;
         }
@@ -186,7 +176,7 @@ public class Lexer {
 
         boolean eventsReady = false;
 
-        while (!eventsReady && (input = readCharacter()) > -1) {
+        while (!eventsReady && (input = inputSource.getAsInt()) > -1) {
             location.incrementOffset(input);
 
             CharacterClass clazz = characters.getClass(input);
@@ -302,6 +292,14 @@ public class Lexer {
 
         if (input < 0) {
             throw error(EDIException.INCOMPLETE_STREAM);
+        }
+    }
+
+    int readCharacterUnchecked() {
+        try {
+            return readCharacter();
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
     }
 
@@ -455,49 +453,6 @@ public class Lexer {
         return new EDIException(code, where);
     }
 
-    private static void updateLocation(State state, StaEDIStreamLocation location) {
-        if (state == State.ELEMENT_REPEAT) {
-            if (location.isRepeated()) {
-                updateElementOccurrence(location);
-            } else {
-                location.setElementOccurrence(1);
-            }
-            location.setRepeated(true);
-        } else if (location.isRepeated()) {
-            if (state != State.COMPONENT_END) {
-                updateElementOccurrence(location);
-                location.setRepeated(false);
-            }
-        } else {
-            location.setElementOccurrence(1);
-        }
-
-        switch (state) {
-        case COMPONENT_END:
-        case HEADER_COMPONENT_END:
-            location.incrementComponentPosition();
-            break;
-
-        default:
-            if (location.getComponentPosition() > 0) {
-                location.incrementComponentPosition();
-            } else if (location.getElementOccurrence() == 1) {
-                location.incrementElementPosition();
-            }
-            break;
-        }
-    }
-
-    static void updateElementOccurrence(StaEDIStreamLocation location) {
-        /*
-         * Only increment the position if we have not yet started
-         * the composite - i.e, only a single component is present.
-         */
-        if (location.getComponentPosition() < 1) {
-            location.incrementElementOccurrence();
-        }
-    }
-
     private boolean nextEvent() {
         Notifier event = events.peek();
         boolean eventsReady = false;
@@ -571,6 +526,8 @@ public class Lexer {
     }
 
     private void handleElement() throws EDIException {
+        location.setRepeating(State.ELEMENT_REPEAT.equals(state));
+
         if (previous != State.ELEMENT_END_BINARY) {
             addElementEvent();
         }

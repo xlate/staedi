@@ -20,6 +20,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
 
@@ -42,27 +43,27 @@ class ElementType extends BasicType implements EDISimpleType {
     final List<Version> versions;
 
     static class Version extends VersionedProperty {
-        final Long minLength;
-        final Long maxLength;
-        final Map<String, String> values;
+        final Optional<Long> minLength;
+        final Optional<Long> maxLength;
+        final Optional<Map<String, String>> values;
 
         Version(String minVersion, String maxVersion, Long minLength, Long maxLength, Map<String, String> values) {
             super(minVersion, maxVersion);
-            this.minLength = minLength;
-            this.maxLength = maxLength;
-            this.values = values;
+            this.minLength = Optional.ofNullable(minLength);
+            this.maxLength = Optional.ofNullable(maxLength);
+            this.values = Optional.ofNullable(values);
         }
 
         public long getMinLength(ElementType defaultElement) {
-            return minLength != null ? minLength.longValue() : defaultElement.getMinLength();
+            return minLength.orElseGet(defaultElement::getMinLength);
         }
 
         public long getMaxLength(ElementType defaultElement) {
-            return maxLength != null ? maxLength.longValue() : defaultElement.getMaxLength();
+            return maxLength.orElseGet(defaultElement::getMaxLength);
         }
 
         public Map<String, String> getValues(ElementType defaultElement) {
-            return values != null ? values : defaultElement.getValues();
+            return values.orElseGet(defaultElement::getValues);
         }
     }
 
