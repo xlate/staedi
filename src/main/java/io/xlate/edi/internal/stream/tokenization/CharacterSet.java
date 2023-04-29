@@ -221,8 +221,24 @@ public class CharacterSet {
         }
     }
 
+    public boolean isWhitespace(int character) {
+        CharacterClass clazz = getClass(character);
+
+        switch (clazz) {
+        case SPACE:
+        case WHITESPACE:
+            return true;
+        default:
+            return ignore(clazz);
+        }
+    }
+
     public boolean isIgnored(int character) {
-        switch (getClass(character)) {
+        return ignore(getClass(character));
+    }
+
+    private boolean ignore(CharacterClass clazz) {
+        switch (clazz) {
         case CONTROL:
         case INVALID:
         case WHITESPACE:

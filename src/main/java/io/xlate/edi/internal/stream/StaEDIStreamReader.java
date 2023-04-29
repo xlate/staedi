@@ -31,6 +31,7 @@ import java.util.stream.Collectors;
 
 import io.xlate.edi.internal.schema.SchemaUtils;
 import io.xlate.edi.internal.stream.tokenization.Dialect;
+import io.xlate.edi.internal.stream.tokenization.EDIException;
 import io.xlate.edi.internal.stream.tokenization.Lexer;
 import io.xlate.edi.internal.stream.tokenization.ProxyEventHandler;
 import io.xlate.edi.schema.EDIReference;
@@ -60,6 +61,11 @@ public class StaEDIStreamReader implements EDIStreamReader, Configurable {
     private boolean complete = false;
     private boolean closed = false;
     private boolean deprecationLogged = false;
+
+    @FunctionalInterface
+    interface EDIStreamReaderRunner {
+        void execute() throws IOException, EDIException;
+    }
 
     public StaEDIStreamReader(
             InputStream stream,
@@ -176,6 +182,15 @@ public class StaEDIStreamReader implements EDIStreamReader, Configurable {
         return Collections.unmodifiableMap(delimiters);
     }
 
+    void executeTask(EDIStreamReaderRunner runner, String errorMessage) throws EDIStreamException {
+        try {
+            runner.execute();
+        } catch (IOException e) {
+            Location where = getLocation();
+            throw new EDIStreamException(errorMessage, where, e);
+        }
+    }
+
     private EDIStreamEvent nextEvent() throws EDIStreamException {
         ensureOpen();
         ensureIncomplete();
@@ -198,13 +213,7 @@ public class StaEDIStreamReader implements EDIStreamReader, Configurable {
 
         if (!proxy.nextEvent()) {
             proxy.resetEvents();
-
-            try {
-                lexer.parse();
-            } catch (IOException e) {
-                Location where = getLocation();
-                throw new EDIStreamException("Error parsing input", where, e);
-            }
+            executeTask(lexer::parse, "Error parsing input");
         }
 
         final EDIStreamEvent event = proxy.getEvent();
@@ -212,7 +221,7 @@ public class StaEDIStreamReader implements EDIStreamReader, Configurable {
         LOGGER.finer(() -> "EDI event: " + event);
 
         if (event == EDIStreamEvent.END_INTERCHANGE) {
-            complete = true;
+            executeTask(() -> complete = !proxy.hasNext() && !lexer.hasRemaining(), "Error reading input");
         }
 
         if (event == EDIStreamEvent.ELEMENT_DATA && proxy.isBinaryElementLength()) {
