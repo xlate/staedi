@@ -35,6 +35,7 @@ import javax.xml.stream.Location;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
+import io.xlate.edi.internal.ThrowingRunnable;
 import io.xlate.edi.internal.stream.tokenization.ProxyEventHandler;
 import io.xlate.edi.schema.EDIComplexType;
 import io.xlate.edi.schema.EDIReference;
@@ -192,20 +193,7 @@ final class StaEDIXMLStreamReader implements XMLStreamReader {
             name = buildName(parentName(), EDINamespaces.ELEMENTS);
             enqueueEvent(START_ELEMENT, name, false);
             enqueueEvent(CDATA, DUMMY_QNAME, false);
-
-            // This only will work if using a validation filter!
-            InputStream input = ediReader.getBinaryData();
-            byte[] buffer = new byte[4096];
-            int amount;
-
-            try (OutputStream output = Base64.getEncoder().wrap(cdataStream)) {
-                while ((amount = input.read(buffer)) > -1) {
-                    output.write(buffer, 0, amount);
-                }
-            } catch (IOException e) {
-                throw new XMLStreamException(e);
-            }
-
+            copyBinaryDataToCDataBuilder();
             enqueueEvent(END_ELEMENT, name, false);
             break;
 
@@ -308,6 +296,22 @@ final class StaEDIXMLStreamReader implements XMLStreamReader {
                 }
             }
         }
+    }
+
+    private void copyBinaryDataToCDataBuilder() throws XMLStreamException {
+        // This only will work if using a validation filter!
+        InputStream input = ediReader.getBinaryData();
+
+        ThrowingRunnable.run(() -> {
+            byte[] buffer = new byte[4096];
+            int amount;
+
+            try (OutputStream output = Base64.getEncoder().wrap(cdataStream)) {
+                while ((amount = input.read(buffer)) > -1) {
+                    output.write(buffer, 0, amount);
+                }
+            }
+        }, XMLStreamException::new);
     }
 
     private void requireCharacters() {
@@ -416,15 +420,11 @@ final class StaEDIXMLStreamReader implements XMLStreamReader {
 
     @Override
     public void close() throws XMLStreamException {
-        try {
-            eventQueue.clear();
-            elementQueue.clear();
-            elementStack.clear();
-            standardNameStack.clear();
-            ediReader.close();
-        } catch (IOException e) {
-            throw new XMLStreamException(e);
-        }
+        eventQueue.clear();
+        elementQueue.clear();
+        elementStack.clear();
+        standardNameStack.clear();
+        ThrowingRunnable.run(ediReader::close, XMLStreamException::new);
     }
 
     @Override

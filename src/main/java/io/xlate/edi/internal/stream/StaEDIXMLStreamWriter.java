@@ -12,9 +12,9 @@ import javax.xml.namespace.QName;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 
-import io.xlate.edi.stream.EDIStreamException;
-import io.xlate.edi.stream.EDIStreamWriter;
+import io.xlate.edi.internal.ThrowingRunnable;
 import io.xlate.edi.stream.EDINamespaces;
+import io.xlate.edi.stream.EDIStreamWriter;
 
 final class StaEDIXMLStreamWriter implements XMLStreamWriter {
 
@@ -40,17 +40,8 @@ final class StaEDIXMLStreamWriter implements XMLStreamWriter {
         namespaceStack.push(new HashMap<>()); // Root namespace scope
     }
 
-    @FunctionalInterface
-    interface EDIStreamWriterRunner {
-        void execute() throws EDIStreamException;
-    }
-
-    void execute(EDIStreamWriterRunner runner) throws XMLStreamException {
-        try {
-            runner.execute();
-        } catch (Exception e) {
-            throw new XMLStreamException(e);
-        }
+    void execute(ThrowingRunnable<Exception> task) throws XMLStreamException {
+        ThrowingRunnable.run(task, XMLStreamException::new);
     }
 
     boolean repeatedElement(QName name, QName previousElement) {

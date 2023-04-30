@@ -29,9 +29,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import io.xlate.edi.internal.ThrowingRunnable;
 import io.xlate.edi.internal.schema.SchemaUtils;
 import io.xlate.edi.internal.stream.tokenization.Dialect;
-import io.xlate.edi.internal.stream.tokenization.EDIException;
 import io.xlate.edi.internal.stream.tokenization.Lexer;
 import io.xlate.edi.internal.stream.tokenization.ProxyEventHandler;
 import io.xlate.edi.schema.EDIReference;
@@ -61,11 +61,6 @@ public class StaEDIStreamReader implements EDIStreamReader, Configurable {
     private boolean complete = false;
     private boolean closed = false;
     private boolean deprecationLogged = false;
-
-    @FunctionalInterface
-    interface EDIStreamReaderRunner {
-        void execute() throws IOException, EDIException;
-    }
 
     public StaEDIStreamReader(
             InputStream stream,
@@ -182,13 +177,14 @@ public class StaEDIStreamReader implements EDIStreamReader, Configurable {
         return Collections.unmodifiableMap(delimiters);
     }
 
-    void executeTask(EDIStreamReaderRunner runner, String errorMessage) throws EDIStreamException {
-        try {
-            runner.execute();
-        } catch (IOException e) {
+    void executeTask(ThrowingRunnable<Exception> task, String errorMessage) throws EDIStreamException {
+        ThrowingRunnable.run(task, e -> {
+            if (e instanceof EDIStreamException) {
+                return (EDIStreamException) e;
+            }
             Location where = getLocation();
-            throw new EDIStreamException(errorMessage, where, e);
-        }
+            return new EDIStreamException(errorMessage, where, e);
+        });
     }
 
     private EDIStreamEvent nextEvent() throws EDIStreamException {
