@@ -192,20 +192,7 @@ final class StaEDIXMLStreamReader implements XMLStreamReader {
             name = buildName(parentName(), EDINamespaces.ELEMENTS);
             enqueueEvent(START_ELEMENT, name, false);
             enqueueEvent(CDATA, DUMMY_QNAME, false);
-
-            // This only will work if using a validation filter!
-            InputStream input = ediReader.getBinaryData();
-            byte[] buffer = new byte[4096];
-            int amount;
-
-            try (OutputStream output = Base64.getEncoder().wrap(cdataStream)) {
-                while ((amount = input.read(buffer)) > -1) {
-                    output.write(buffer, 0, amount);
-                }
-            } catch (IOException e) {
-                throw new XMLStreamException(e);
-            }
-
+            copyBinaryDataToCDataBuilder();
             enqueueEvent(END_ELEMENT, name, false);
             break;
 
@@ -307,6 +294,22 @@ final class StaEDIXMLStreamReader implements XMLStreamReader {
                     transactionWrapperEnqueued = true;
                 }
             }
+        }
+    }
+
+    private void copyBinaryDataToCDataBuilder() throws XMLStreamException {
+        // This only will work if using a validation filter!
+        InputStream input = ediReader.getBinaryData();
+
+        try (OutputStream output = Base64.getEncoder().wrap(cdataStream)) {
+            byte[] buffer = new byte[4096];
+            int amount;
+
+            while ((amount = input.read(buffer)) > -1) {
+                output.write(buffer, 0, amount);
+            }
+        } catch (IOException e) {
+            throw new XMLStreamException(e);
         }
     }
 

@@ -36,7 +36,7 @@
     <elementType name="DateFreeText" base="string" maxLength="35" />
     <elementType name="Time" base="time" minLength="4" maxLength="4" />
     <elementType name="DateTimeQualifier" base="string" maxLength="3" />
-    
+
     <!-- Identifiers -->
     <elementType name="CompanyId" base="string" maxLength="3" />
     <elementType name="ReservationCtrlNumber" base="string" maxLength="20" />
@@ -69,16 +69,7 @@
     <segmentType name="RCI">
         <sequence>
             <!-- "The composite C330 will appear at least once and may be repeated up to eight more times." -->
-            <!-- FIXME With maxOccurs="9" doesn't work and with explicit repetitions it throws NPE -->
-            <composite type="ReservationCtrlInfoCompo" minOccurs="1" />
-            <composite type="ReservationCtrlInfoCompo" minOccurs="0" />
-            <composite type="ReservationCtrlInfoCompo" minOccurs="0" />
-            <composite type="ReservationCtrlInfoCompo" minOccurs="0" />
-            <composite type="ReservationCtrlInfoCompo" minOccurs="0" />
-            <composite type="ReservationCtrlInfoCompo" minOccurs="0" />
-            <composite type="ReservationCtrlInfoCompo" minOccurs="0" />
-            <composite type="ReservationCtrlInfoCompo" minOccurs="0" />
-            <composite type="ReservationCtrlInfoCompo" minOccurs="0" />
+            <composite type="ReservationCtrlInfoCompo" minOccurs="1" maxOccurs="9" />
         </sequence>
     </segmentType>
 

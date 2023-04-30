@@ -532,12 +532,8 @@ class EventSequenceTest {
             }
         });
 
-        assertEquals(EDIStreamEvent.START_SEGMENT, reader.nextTag());
-        assertEquals("ISA", reader.getText());
-        assertEquals("ISA", reader.getReferenceCode());
-        assertEquals(EDIStreamEvent.START_SEGMENT, reader.nextTag());
-        assertEquals("GS", reader.getText());
-        assertEquals("GS", reader.getReferenceCode());
+        assertTagEvent(reader, EDIStreamEvent.START_SEGMENT, "ISA");
+        assertTagEvent(reader, EDIStreamEvent.START_SEGMENT, "GS");
 
         assertEquals(EDIStreamEvent.START_TRANSACTION, reader.next(), "Expecting start of transaction");
         SchemaFactory schemaFactory = SchemaFactory.newFactory();
@@ -545,29 +541,12 @@ class EventSequenceTest {
         Schema schema = schemaFactory.createSchema(schemaLocation);
         reader.setTransactionSchema(schema);
 
-        assertEquals(EDIStreamEvent.START_SEGMENT, reader.nextTag());
-        assertEquals("ST", reader.getText());
-        assertEquals("ST", reader.getReferenceCode());
-
-        assertEquals(EDIStreamEvent.START_SEGMENT, reader.nextTag());
-        assertEquals("BHT", reader.getText());
-        assertEquals("BHT", reader.getReferenceCode());
-
-        assertEquals(EDIStreamEvent.START_SEGMENT, reader.nextTag());
-        assertEquals("HL", reader.getText());
-        assertEquals("HL", reader.getReferenceCode());
-
-        assertEquals(EDIStreamEvent.START_SEGMENT, reader.nextTag());
-        assertEquals("SE", reader.getText());
-        assertEquals("SE", reader.getReferenceCode());
-
-        assertEquals(EDIStreamEvent.START_SEGMENT, reader.nextTag());
-        assertEquals("GE", reader.getText());
-        assertEquals("GE", reader.getReferenceCode());
-
-        assertEquals(EDIStreamEvent.START_SEGMENT, reader.nextTag());
-        assertEquals("IEA", reader.getText());
-        assertEquals("IEA", reader.getReferenceCode());
+        assertTagEvent(reader, EDIStreamEvent.START_SEGMENT, "ST");
+        assertTagEvent(reader, EDIStreamEvent.START_SEGMENT, "BHT");
+        assertTagEvent(reader, EDIStreamEvent.START_SEGMENT, "HL");
+        assertTagEvent(reader, EDIStreamEvent.START_SEGMENT, "SE");
+        assertTagEvent(reader, EDIStreamEvent.START_SEGMENT, "GE");
+        assertTagEvent(reader, EDIStreamEvent.START_SEGMENT, "IEA");
 
         assertTrue(!reader.hasNext(), "Unexpected events exist");
     }
@@ -577,6 +556,12 @@ class EventSequenceTest {
         URL schemaLocation = getClass().getResource("/x12/EDISchema997.xml");
 
         return schemaFactory.createSchema(schemaLocation);
+    }
+
+    private void assertTagEvent(EDIStreamReader reader, EDIStreamEvent expectedEvent, String expectedText) throws EDIStreamException {
+        assertEquals(expectedEvent, reader.nextTag());
+        assertEquals(expectedText, reader.getText());
+        assertEquals(expectedText, reader.getReferenceCode());
     }
 
     @Test
