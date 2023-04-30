@@ -131,6 +131,11 @@ public class ProxyEventHandler implements EventHandler {
         return current(StreamEvent::getData, null);
     }
 
+    public boolean hasNext() {
+        // Current event is in the first position, second will be used for `nextEvent`
+        return eventQueue.size() > 1;
+    }
+
     public boolean nextEvent() {
         if (eventQueue.isEmpty()) {
             return false;

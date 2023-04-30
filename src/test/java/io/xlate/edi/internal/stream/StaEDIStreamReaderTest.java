@@ -2107,4 +2107,32 @@ class StaEDIStreamReaderTest implements ConstantsTest {
 
         assertEquals(expected, actual.toString());
     }
+
+    @Test
+    void testMultipleInterchangesInStream() throws EDIStreamException, IOException {
+        EDIInputFactory factory = EDIInputFactory.newFactory();
+        EDIStreamReader reader = factory.createEDIStreamReader(getClass().getResourceAsStream("/x12/simple997-multiple-interchanges.edi"));
+        int interchangeStart = 0;
+        int interchangeEnd = 0;
+
+        try {
+            while (reader.hasNext()) {
+                switch (reader.next()) {
+                case START_INTERCHANGE:
+                    interchangeStart++;
+                    break;
+                case END_INTERCHANGE:
+                    interchangeEnd++;
+                    break;
+                default:
+                    break;
+                }
+            }
+        } finally {
+            reader.close();
+        }
+
+        assertEquals(2, interchangeStart);
+        assertEquals(2, interchangeEnd);
+    }
 }

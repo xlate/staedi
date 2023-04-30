@@ -156,6 +156,19 @@ public class Lexer {
         state = State.ELEMENT_DATA_BINARY;
     }
 
+    public boolean hasRemaining() throws IOException {
+        stream.mark(200);
+        int peekInput;
+        boolean spaceOnly = true;
+
+        while ((peekInput = stream.read()) > -1 && spaceOnly) {
+            spaceOnly = characters.isWhitespace(peekInput);
+        }
+
+        stream.reset();
+        return !spaceOnly;
+    }
+
     public void parse() throws IOException, EDIException {
         try {
             parse(this::readCharacterUnchecked);
