@@ -27,6 +27,7 @@ import java.util.ArrayDeque;
 import java.util.Base64;
 import java.util.Map;
 import java.util.Queue;
+import java.util.concurrent.Callable;
 import java.util.function.Function;
 import java.util.function.ToIntFunction;
 import java.util.logging.Logger;
@@ -39,7 +40,6 @@ import io.xlate.edi.schema.EDISimpleType;
 import io.xlate.edi.schema.EDISimpleType.Base;
 import io.xlate.edi.stream.EDIInputFactory;
 import io.xlate.edi.stream.EDIStreamEvent;
-import io.xlate.edi.stream.EDIStreamException;
 import io.xlate.edi.stream.EDIStreamReader;
 import io.xlate.edi.stream.EDIValidationException;
 
@@ -107,11 +107,6 @@ abstract class StaEDIJsonParser<E extends Exception> implements Configurable {
         END_ARRAY
     }
 
-    @FunctionalInterface
-    interface EDIStreamReaderRunner<T> {
-        T execute() throws EDIStreamException;
-    }
-
     StaEDIJsonParser(EDIStreamReader ediReader, Map<String, Object> properties) {
         super();
         this.ediReader = ediReader;
@@ -141,10 +136,10 @@ abstract class StaEDIJsonParser<E extends Exception> implements Configurable {
         return properties.get(name);
     }
 
-    <T> T executeWithReader(EDIStreamReaderRunner<T> runner) throws E {
+    <T> T executeWithReader(Callable<T> runner) throws E {
         try {
-            return runner.execute();
-        } catch (EDIStreamException e) {
+            return runner.call();
+        } catch (Exception e) {
             if (e.getCause() instanceof IOException) {
                 throw newJsonException(MSG_EXCEPTION, e);
             } else {

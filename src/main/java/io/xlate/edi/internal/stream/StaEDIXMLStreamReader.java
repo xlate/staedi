@@ -35,6 +35,7 @@ import javax.xml.stream.Location;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
+import io.xlate.edi.internal.ThrowingRunnable;
 import io.xlate.edi.internal.stream.tokenization.ProxyEventHandler;
 import io.xlate.edi.schema.EDIComplexType;
 import io.xlate.edi.schema.EDIReference;
@@ -301,16 +302,16 @@ final class StaEDIXMLStreamReader implements XMLStreamReader {
         // This only will work if using a validation filter!
         InputStream input = ediReader.getBinaryData();
 
-        try (OutputStream output = Base64.getEncoder().wrap(cdataStream)) {
+        ThrowingRunnable.run(() -> {
             byte[] buffer = new byte[4096];
             int amount;
 
-            while ((amount = input.read(buffer)) > -1) {
-                output.write(buffer, 0, amount);
+            try (OutputStream output = Base64.getEncoder().wrap(cdataStream)) {
+                while ((amount = input.read(buffer)) > -1) {
+                    output.write(buffer, 0, amount);
+                }
             }
-        } catch (IOException e) {
-            throw new XMLStreamException(e);
-        }
+        }, XMLStreamException::new);
     }
 
     private void requireCharacters() {
@@ -419,15 +420,11 @@ final class StaEDIXMLStreamReader implements XMLStreamReader {
 
     @Override
     public void close() throws XMLStreamException {
-        try {
-            eventQueue.clear();
-            elementQueue.clear();
-            elementStack.clear();
-            standardNameStack.clear();
-            ediReader.close();
-        } catch (IOException e) {
-            throw new XMLStreamException(e);
-        }
+        eventQueue.clear();
+        elementQueue.clear();
+        elementStack.clear();
+        standardNameStack.clear();
+        ThrowingRunnable.run(ediReader::close, XMLStreamException::new);
     }
 
     @Override
