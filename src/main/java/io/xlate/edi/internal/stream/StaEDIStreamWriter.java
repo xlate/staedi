@@ -186,7 +186,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     }
 
     private static void ensureArgs(int arrayLength, int start, int end) {
-        if (start < 0 || start >= arrayLength || end > arrayLength) {
+        if (start < 0 || (start > 0 && start >= arrayLength) || end > arrayLength) {
             throw new IndexOutOfBoundsException();
         }
 
