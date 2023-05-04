@@ -32,6 +32,9 @@ class AcknowledgementBindTest {
         Marshaller m = context.createMarshaller();
         EDIOutputFactory oFactory = EDIOutputFactory.newFactory();
         oFactory.setProperty(EDIOutputFactory.PRETTY_PRINT, Boolean.TRUE);
+        oFactory.setErrorReporter((error, writer, location, data, typeReference) -> {
+            // ignore
+        });
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         EDIStreamWriter writer = oFactory.createEDIStreamWriter(out);
         XMLStreamWriter xmlWriter = oFactory.createXMLStreamWriter(writer);
@@ -49,11 +52,15 @@ class AcknowledgementBindTest {
         header.ISA09 = "200301";
         header.ISA10 = "1430";
         header.ISA11 = "^";
-        header.ISA12 = "00501";
+        header.ISA12 = "00704";
         header.ISA13 = "000000001";
         header.ISA14 = "0";
         header.ISA15 = "P";
         header.ISA16 = ":";
+
+        ISX syntaxExtension = new ISX();
+        syntaxExtension.ISX01 = "\\";
+        syntaxExtension.ISX02 = "";
 
         IEA trailer = new IEA();
         trailer.IEA01 = "0";
@@ -61,6 +68,7 @@ class AcknowledgementBindTest {
 
         Interchange interchange = new Interchange();
         interchange.header = header;
+        interchange.syntaxExtension = syntaxExtension;
         interchange.trailer = trailer;
 
         m.marshal(interchange, xmlWriter);
@@ -102,6 +110,9 @@ class AcknowledgementBindTest {
         @XmlElement(name = "ISA", namespace = EDINamespaces.SEGMENTS)
         ISA header;
 
+        @XmlElement(name = "ISX", namespace = EDINamespaces.SEGMENTS)
+        ISX syntaxExtension;
+
         @XmlElement(name = "IEA", namespace = EDINamespaces.SEGMENTS)
         IEA trailer;
     }
@@ -140,6 +151,14 @@ class AcknowledgementBindTest {
         String ISA15;
         @XmlElement(namespace = EDINamespaces.ELEMENTS)
         String ISA16;
+    }
+
+    @XmlType(namespace = EDINamespaces.SEGMENTS, propOrder = {})
+    static class ISX {
+        @XmlElement(namespace = EDINamespaces.ELEMENTS)
+        String ISX01;
+        @XmlElement(namespace = EDINamespaces.ELEMENTS)
+        String ISX02;
     }
 
     @XmlType(namespace = EDINamespaces.SEGMENTS, propOrder = {})
