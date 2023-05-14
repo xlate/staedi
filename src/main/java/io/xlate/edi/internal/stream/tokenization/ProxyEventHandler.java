@@ -317,7 +317,7 @@ public class ProxyEventHandler implements EventHandler {
             performLevelCheck();
         }
 
-        location.clearSegmentLocations();
+        location.clearSegmentLocations(true);
         enqueueEvent(EDIStreamEvent.END_SEGMENT, EDIStreamValidationError.NONE, segmentTag, typeReference, location);
         return true;
     }
@@ -498,7 +498,7 @@ public class ProxyEventHandler implements EventHandler {
         while (!openLevels.isEmpty() && !openLevels.getLast().isParentOf(parentId)) {
             HierarchicalLevel completed = openLevels.removeLast();
             completed.event.location.set(location);
-            completed.event.location.clearSegmentLocations();
+            completed.event.location.clearSegmentLocations(true);
 
             eventQueue.add(eventQueue.indexOf(successor), completed.event);
         }

@@ -22,8 +22,11 @@ import java.util.Objects;
  */
 public enum State {
 
-    // Initial States
+    // Invalid States
     INVALID(DialectCode.UNKNOWN, Category.INVALID),
+    INVALID_TAG_LENGTH(DialectCode.UNKNOWN, Category.INVALID),
+
+    // Initial States
     INITIAL(DialectCode.UNKNOWN, Category.INITIAL),
     INTERCHANGE_END(DialectCode.UNKNOWN, Category.INITIAL),
     HEADER_EDIFACT_U(DialectCode.UNKNOWN, Category.EDIFACT_1),
@@ -122,6 +125,7 @@ public enum State {
     }
 
     private static final State __ = State.INVALID;
+    private static final State _1 = State.INVALID_TAG_LENGTH;
 
     private static final State II = State.INITIAL;
 
@@ -210,7 +214,7 @@ public enum State {
     private static final State[] FROM_HEADER          = { HD, HD, HD, HD, HD, HD, HD, HD, HD, HD, HD, HD, HD, HZ, HE, HC, __, HR, HD, HD, HD, HV, HE };
     /* ^ 0              */
     private static final State[] FROM_HEADER_RELEASE  = { HD, HD, HD, HD, HD, HD, HD, HD, HD, HD, HD, HD, HD, HD, HD, HD, HD, HD, HV, HV, HD, HV, HD };
-    private static final State[] FROM_TAG_1           = { __, T2, T2, T2, T2, T2, T2, T2, T2, T2, T2, T2, T2, __, __, __, __, __, __, __, __, __, __ };
+    private static final State[] FROM_TAG_1           = { __, T2, T2, T2, T2, T2, T2, T2, T2, T2, T2, T2, T2, _1, _1, __, __, __, __, __, __, __, _1 };
     private static final State[] FROM_TAG_2           = { __, T3, T3, T3, T3, T3, T3, T3, T3, T3, T3, T3, T3, SY, SB, __, __, __, __, __, __, __, __ };
     private static final State[] FROM_TAG_3           = { __, __, __, __, __, __, __, __, __, __, __, __, __, SY, SB, __, __, __, __, __, __, __, __ };
     private static final State[] FROM_ED              = { ED, ED, ED, ED, ED, ED, ED, ED, ED, ED, ED, ED, ED, SE, EE, CE, ER, DR, EI, EI, ED, EI, __ };
@@ -221,10 +225,16 @@ public enum State {
     private static final State[] FROM_TRAILER         = { TD, TD, TD, TD, TD, TD, TD, TD, TD, TD, TD, TD, TD, IE, TE, __, __, __, __, __, TD, __, __ };
     /* ^ 9              */
 
+    /*-
+     *                                                  SPACE                                               SEGMT   CMPST   RELSE   CNTRL   INVLD     *
+     *                                                    |   A   B   D   E   I   N   S   T   U   X   Z       |       |       |       |       |       *
+     *                                                    |   |   |   |   |   |   |   |   |   |   |   | ALNUM | ELEMT | RPEAT | WHITE | OTHER | SEGTG *
+     *                                                    |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   *
+     *                                                    |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   */
     /******************* EDIFACT */
     private static final State[] FROM_TS_EDIFACT      = { TS, T1, T1, T1, T1, T1, T1, T1, T1, U7, T1, T1, T1, __, __, __, __, __, TS, __, __, __, __ };
     /* ^ 10 (follows common) */
-    private static final State[] FROM_EDIFACT_7       = { __, T2, T2, T2, T2, T2, U8, T2, T2, T2, T2, T2, T2, __, __, __, __, __, __, __, __, __, __ };
+    private static final State[] FROM_EDIFACT_7       = { __, T2, T2, T2, T2, T2, U8, T2, T2, T2, T2, T2, T2, __, _1, __, __, __, __, __, __, __, __ };
     private static final State[] FROM_EDIFACT_8       = { __, T3, T3, T3, T3, T3, T3, T3, T3, T3, T3, U9, T3, __, SB, __, __, __, __, __, __, __, __ };
     private static final State[] FROM_EDIFACT_9       = { __, __, __, __, __, __, __, __, __, __, __, __, __, __, TB, __, __, __, __, __, __, __, __ };
     private static final State[] FROM_EDIFACT_UNB_0   = { B0, __, __, __, __, __, __, __, B1, B1, __, __, __, __, __, __, __, __, B0, __, __, __, __ };
@@ -232,15 +242,27 @@ public enum State {
     private static final State[] FROM_EDIFACT_UNB_2   = { __, __, B3, __, __, __, __, __, __, __, __, __, __, __, BB, __, __, __, __, __, __, __, __ };
     private static final State[] FROM_EDIFACT_UNB_3   = { __, __, __, __, __, __, __, __, __, __, __, __, __, __, BB, __, __, __, __, __, __, __, __ };
 
+    /*-
+     *                                                  SPACE                                               SEGMT   CMPST   RELSE   CNTRL   INVLD     *
+     *                                                    |   A   B   D   E   I   N   S   T   U   X   Z       |       |       |       |       |       *
+     *                                                    |   |   |   |   |   |   |   |   |   |   |   | ALNUM | ELEMT | RPEAT | WHITE | OTHER | SEGTG *
+     *                                                    |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   *
+     *                                                    |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   */
     /******************* TRADACOMS */
     private static final State[] FROM_TS_TRADACOMS    = { TS, T1, T1, T1, C7, T1, T1, T1, T1, T1, T1, T1, T1, __, __, __, __, __, TS, __, __, __, __ };
     /* ^ 10 (follows common) */
-    private static final State[] FROM_TRADACOMS_7     = { __, T2, T2, T2, T2, T2, C8, T2, T2, T2, T2, T2, T2, __, __, __, __, __, __, __, __, __, __ };
+    private static final State[] FROM_TRADACOMS_7     = { __, T2, T2, T2, T2, T2, C8, T2, T2, T2, T2, T2, T2, __, __, __, __, __, __, __, __, __, _1 };
     private static final State[] FROM_TRADACOMS_8     = { __, T3, T3, C9, T3, T3, T3, T3, T3, T3, T3, T3, T3, __, __, __, __, __, __, __, __, __, SB };
     private static final State[] FROM_TRADACOMS_9     = { __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, TB };
     private static final State[] FROM_TAG_2_TRADACOMS = { __, T3, T3, T3, T3, T3, T3, T3, T3, T3, T3, T3, T3, SY, __, __, __, __, __, __, __, __, SB };
     private static final State[] FROM_TAG_3_TRADACOMS = { __, __, __, __, __, __, __, __, __, __, __, __, __, SY, __, __, __, __, __, __, __, __, SB };
 
+    /*-
+     *                                                  SPACE                                               SEGMT   CMPST   RELSE   CNTRL   INVLD     *
+     *                                                    |   A   B   D   E   I   N   S   T   U   X   Z       |       |       |       |       |       *
+     *                                                    |   |   |   |   |   |   |   |   |   |   |   | ALNUM | ELEMT | RPEAT | WHITE | OTHER | SEGTG *
+     *                                                    |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   *
+     *                                                    |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   */
     /******************* X12 */
     private static final State[] FROM_TS_X12          = { TS, T1, T1, T1, T1, X7, T1, T1, T1, T1, T1, T1, T1, __, __, __, __, __, TS, __, __, __, __ };
     /* ^ 10 (follows common) */
@@ -355,6 +377,10 @@ public enum State {
 
     public State transition(int dialect, CharacterClass clazz) {
         return TRANSITIONS[dialect][code][clazz.code];
+    }
+
+    public boolean isInvalid() {
+        return Category.INVALID == code;
     }
 
     public boolean isHeaderState() {

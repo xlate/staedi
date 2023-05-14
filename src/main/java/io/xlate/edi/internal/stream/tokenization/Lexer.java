@@ -30,9 +30,7 @@ import java.util.function.IntSupplier;
 import java.util.logging.Logger;
 
 import io.xlate.edi.internal.stream.CharArraySequence;
-import io.xlate.edi.internal.stream.LocationView;
 import io.xlate.edi.internal.stream.StaEDIStreamLocation;
-import io.xlate.edi.stream.Location;
 
 public class Lexer {
 
@@ -222,7 +220,11 @@ public class Lexer {
             dataEventNotified = true;
             break;
         default:
-            throw new IllegalStateException(dataCompleteState.toString());
+            if (clazz != CharacterClass.INVALID) {
+                throw invalidStateError(delimiter, dataCompleteState, state);
+            } else {
+                throw error(EDIException.INVALID_CHARACTER);
+            }
         }
     }
 
@@ -231,9 +233,9 @@ public class Lexer {
             return;
         }
 
-        if (state == State.INVALID) {
+        if (state.isInvalid()) {
             // Unable to proceed once the state becomes invalid
-            throw invalidStateError(previousInput);
+            throw invalidStateError(previousInput, state, previous);
         }
 
         int input = 0;
@@ -363,7 +365,7 @@ public class Lexer {
             if (characters.isIgnored(input)) {
                 state = previous;
             } else if (clazz != CharacterClass.INVALID) {
-                throw invalidStateError(input);
+                throw invalidStateError(input, this.state, this.previous);
             } else {
                 throw error(EDIException.INVALID_CHARACTER);
             }
@@ -509,11 +511,11 @@ public class Lexer {
         return false;
     }
 
-    private EDIException invalidStateError(int input) {
+    private EDIException invalidStateError(int input, State state, State previousState) {
         StringBuilder message = new StringBuilder();
         message.append(state);
         message.append(" (previous: ");
-        message.append(previous);
+        message.append(previousState);
         message.append("); input: '");
         message.append((char) input);
         message.append('\'');
@@ -521,13 +523,11 @@ public class Lexer {
     }
 
     private EDIException error(int code, CharSequence message) {
-        Location where = new LocationView(location);
-        return new EDIException(code, message.toString(), where);
+        return new EDIException(code, message.toString(), location.copy());
     }
 
     private EDIException error(int code) {
-        Location where = new LocationView(location);
-        return new EDIException(code, where);
+        return new EDIException(code, location.copy());
     }
 
     private boolean nextEvent() {

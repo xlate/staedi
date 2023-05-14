@@ -19,6 +19,7 @@ import io.xlate.edi.stream.Location;
 
 public class StaEDIStreamLocation extends LocationView implements Location {
 
+    private boolean afterSegment = false;
     private boolean composite = false;
     private boolean repeating = false;
     private int repeatCount = -1;
@@ -32,8 +33,14 @@ public class StaEDIStreamLocation extends LocationView implements Location {
     }
 
     @Override
+    public String toString() {
+        return super.toString(afterSegment);
+    }
+
+    @Override
     public StaEDIStreamLocation copy() {
         StaEDIStreamLocation copy = new StaEDIStreamLocation(this);
+        copy.afterSegment = this.afterSegment;
         copy.composite = this.composite;
         copy.repeating = this.repeating;
         copy.repeatCount = this.repeatCount;
@@ -82,10 +89,11 @@ public class StaEDIStreamLocation extends LocationView implements Location {
     public void incrementSegmentPosition(String segmentTag) {
         this.segmentPosition = initOrIncrement(segmentPosition);
         this.segmentTag = segmentTag;
-        clearSegmentLocations();
+        clearSegmentLocations(false);
     }
 
-    public void clearSegmentLocations() {
+    public void clearSegmentLocations(boolean afterSegment) {
+        this.afterSegment = afterSegment;
         this.elementPosition = -1;
         this.elementOccurrence = -1;
         this.repeating = false;

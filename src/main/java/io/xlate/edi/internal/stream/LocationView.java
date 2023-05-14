@@ -50,13 +50,18 @@ public class LocationView implements Location {
     }
 
     public String toString() {
+        return toString(false);
+    }
+
+    protected String toString(boolean afterSegment) {
         StringBuilder display = new StringBuilder();
 
         if (getSegmentPosition() < 0) {
             display.append("at offset ");
             display.append(getCharacterOffset());
         } else {
-            display.append("in segment ");
+            display.append(afterSegment ? "after " : "in ");
+            display.append("segment ");
             display.append(String.valueOf(getSegmentTag()));
             display.append(" at position ");
             display.append(String.valueOf(getSegmentPosition()));

@@ -345,9 +345,8 @@ class StaEDIStreamWriterTest {
         EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
         writer.startInterchange();
         writeHeader(writer);
-        writer.writeStartSegment("G");
         // Illegal transition from segment tag position 1 to element delimiter
-        assertThrows(EDIStreamException.class, () -> writer.writeElement("FOO"));
+        assertThrows(EDIStreamException.class, () -> writer.writeStartSegment("G"));
     }
 
     @Test
@@ -1240,8 +1239,7 @@ class StaEDIStreamWriterTest {
 
         writer.startInterchange();
         writeHeader(writer);
-        writer.writeStartSegment("ST");
-        EDIValidationException e = assertThrows(EDIValidationException.class, () -> writer.writeStartElement());
+        EDIValidationException e = assertThrows(EDIValidationException.class, () -> writer.writeStartSegment("ST"));
         assertEquals(EDIStreamEvent.SEGMENT_ERROR, e.getEvent());
         assertEquals(EDIStreamValidationError.LOOP_OCCURS_OVER_MAXIMUM_TIMES, e.getError());
         assertEquals("ST", e.getData().toString());
