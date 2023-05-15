@@ -399,6 +399,7 @@ public class Validator {
         return node;
     }
 
+
     private UsageNode startLoop(UsageNode loop, UsageNode currentChildren) {
         loop.incrementUsage();
         loop.resetChildren();
@@ -407,8 +408,6 @@ public class Validator {
 
         startSegment.reset();
         startSegment.incrementUsage();
-
-        //depth++;
 
         return startSegment;
     }
@@ -700,7 +699,6 @@ public class Validator {
             if (current instanceof ControlUsageNode) {
                 countControl();
             }
-
             Deque<UsageNode> loops = new ArrayDeque<UsageNode>();
             UsageNode parentLoopNode = childSegment.getParent();
             loops.push(parentLoopNode);
@@ -715,13 +713,11 @@ public class Validator {
                 handler.loopBegin(l.getLink());
                 depth++;
 
-                //TODO:: Here we have to change the first element mandatory check
                 if(!l.getFirstChild().getId().contentEquals(childSegment.getId()) && l.getFirstChild().getLink().getMinOccurs() > 0){
                     handler.segmentError(l.getFirstChild().getId(), l.getFirstChild().getLink(), MANDATORY_SEGMENT_MISSING);
                 }
 
             });
-
         }
 
         correctSegment = segment = startLoop(childSegment.getParent(),childSegment);
@@ -1325,13 +1321,7 @@ public class Validator {
 
         // Ensure the start index is at least zero. Index may be -1 for empty segments
         for (int i = Math.max(index, 0), max = children.size(); i < max; i++) {
-            if (isComposite) {
-                location.incrementComponentPosition();
-            } else {
-                location.incrementElementPosition();
-            }
-
-            handler.elementData(null, 0, 0);
+            handler.elementData("", false);
         }
 
         if (!isComposite && implSegmentSelected && index == children.size()) {
@@ -1422,13 +1412,7 @@ public class Validator {
         final int index;
 
         if (isComposite) {
-            int componentPosition = location.getComponentPosition();
-
-            if (componentPosition < 1) {
-                index = 1;
-            } else {
-                index = componentPosition;
-            }
+            index = Math.max(location.getComponentPosition(), 1);
         } else {
             index = location.getElementPosition();
         }
