@@ -363,21 +363,21 @@ public class Validator {
         final List<EDITypeImplementation> children;
 
         switch (impl.getType()) {
-        case COMPOSITE:
-            children = CompositeImplementation.class.cast(impl).getSequence();
-            break;
-        case ELEMENT:
-            children = Collections.emptyList();
-            break;
-        case TRANSACTION:
-        case LOOP:
-            children = LoopImplementation.class.cast(impl).getSequence();
-            break;
-        case SEGMENT:
-            children = SegmentImplementation.class.cast(impl).getSequence();
-            break;
-        default:
-            throw new IllegalArgumentException("Illegal type of EDITypeImplementation: " + impl.getType());
+            case COMPOSITE:
+                children = CompositeImplementation.class.cast(impl).getSequence();
+                break;
+            case ELEMENT:
+                children = Collections.emptyList();
+                break;
+            case TRANSACTION:
+            case LOOP:
+                children = LoopImplementation.class.cast(impl).getSequence();
+                break;
+            case SEGMENT:
+                children = SegmentImplementation.class.cast(impl).getSequence();
+                break;
+            default:
+                throw new IllegalArgumentException("Illegal type of EDITypeImplementation: " + impl.getType());
         }
 
         List<UsageNode> childUsages = node.getChildren();
@@ -399,16 +399,16 @@ public class Validator {
         return node;
     }
 
-    private UsageNode startLoop(UsageNode loop) {
+    private UsageNode startLoop(UsageNode loop, UsageNode currentChildren) {
         loop.incrementUsage();
         loop.resetChildren();
 
-        UsageNode startSegment = loop.getFirstChild();
+        UsageNode startSegment = currentChildren;
 
         startSegment.reset();
         startSegment.incrementUsage();
 
-        depth++;
+        //depth++;
 
         return startSegment;
     }
@@ -514,17 +514,17 @@ public class Validator {
         final boolean handled;
 
         switch (current.getNodeType()) {
-        case SEGMENT:
-            handled = handleSegment(tag, current, currentImpl, startDepth, handler);
-            break;
-        case GROUP:
-        case TRANSACTION:
-        case LOOP:
-            handled = handleLoop(tag, current, currentImpl, startDepth, handler);
-            break;
-        default:
-            handled = false;
-            break;
+            case SEGMENT:
+                handled = handleSegment(tag, current, currentImpl, startDepth, handler);
+                break;
+            case GROUP:
+            case TRANSACTION:
+            case LOOP:
+                handled = handleLoop(tag, current, currentImpl, startDepth, handler);
+                break;
+            default:
+                handled = false;
+                break;
         }
 
         return handled;
@@ -604,16 +604,16 @@ public class Validator {
         UsageNode segmentNode;
 
         switch (node.getNodeType()) {
-        case SEGMENT:
-            segmentNode = node;
-            break;
-        case GROUP:
-        case TRANSACTION:
-        case LOOP:
-            segmentNode = node.getFirstChild();
-            break;
-        default:
-            throw new IllegalStateException("Unexpected node type: " + node.getNodeType());
+            case SEGMENT:
+                segmentNode = node;
+                break;
+            case GROUP:
+            case TRANSACTION:
+            case LOOP:
+                segmentNode = node.getFirstChild();
+                break;
+            default:
+                throw new IllegalStateException("Unexpected node type: " + node.getNodeType());
         }
 
         return segmentNode;
@@ -648,8 +648,28 @@ public class Validator {
         return implNode;
     }
 
+    UsageNode getMatchedChildren(CharSequence tag,UsageNode parent,ValidationEventHandler handler){
+        UsageNode finalChildren = null;
+        for(UsageNode usageChildren : parent.getChildren()) {
+            if(usageChildren.getId().contentEquals(tag)) {
+                finalChildren = usageChildren;
+                break;
+            }else if(usageChildren.getChildren() != null && usageChildren.getNodeType().equals(Type.LOOP)) {
+                finalChildren = getMatchedChildren(tag,usageChildren,handler);
+
+                if(finalChildren != null) {
+                    break;
+                }
+            }
+        }
+
+        return finalChildren;
+    }
+
     boolean handleLoop(CharSequence tag, UsageNode current, UsageNode currentImpl, int startDepth, ValidationEventHandler handler) {
-        if (!current.getFirstChild().getId().contentEquals(tag)) {
+        UsageNode childSegment = getMatchedChildren(tag,current,handler);
+
+        if (childSegment == null ) {
             return false;
         }
 
@@ -680,11 +700,31 @@ public class Validator {
             if (current instanceof ControlUsageNode) {
                 countControl();
             }
-            loopStack.push(current);
-            handler.loopBegin(current.getLink());
+
+            Deque<UsageNode> loops = new ArrayDeque<UsageNode>();
+            UsageNode parentLoopNode = childSegment.getParent();
+            loops.push(parentLoopNode);
+
+            while(!current.getId().equalsIgnoreCase(parentLoopNode.getId())) {
+                parentLoopNode =  parentLoopNode.getParent();
+                loops.push(parentLoopNode);
+            }
+
+            loops.stream().forEach(l -> {
+                loopStack.push(l);
+                handler.loopBegin(l.getLink());
+                depth++;
+
+                //TODO:: Here we have to change the first element mandatory check
+                if(!l.getFirstChild().getId().contentEquals(childSegment.getId()) && l.getFirstChild().getLink().getMinOccurs() > 0){
+                    handler.segmentError(l.getFirstChild().getId(), l.getFirstChild().getLink(), MANDATORY_SEGMENT_MISSING);
+                }
+
+            });
+
         }
 
-        correctSegment = segment = startLoop(current);
+        correctSegment = segment = startLoop(childSegment.getParent(),childSegment);
 
         if (current.exceedsMaximumUsage(SEGMENT_VERSION)) {
             handleMissingMandatory(handler);
@@ -940,21 +980,21 @@ public class Validator {
     static void updateEventReferences(Deque<StreamEvent> eventQueue, EDIReference implType, EDIReference implSeg) {
         for (StreamEvent event : eventQueue) {
             switch (event.getType()) {
-            case START_LOOP:
-                // Assuming implType is not null if we find a START_LOOP event
-                Objects.requireNonNull(implType, "Unexpected loop event during implementation segment selection");
-                updateReferenceWhenMatched(event, implType);
-                break;
-            case START_SEGMENT:
-                updateReferenceWhenMatched(event, implSeg);
-                break;
-            case START_COMPOSITE:
-            case END_COMPOSITE:
-            case ELEMENT_DATA:
-                updateReference(event, (SegmentImplementation) implSeg);
-                break;
-            default:
-                break;
+                case START_LOOP:
+                    // Assuming implType is not null if we find a START_LOOP event
+                    Objects.requireNonNull(implType, "Unexpected loop event during implementation segment selection");
+                    updateReferenceWhenMatched(event, implType);
+                    break;
+                case START_SEGMENT:
+                    updateReferenceWhenMatched(event, implSeg);
+                    break;
+                case START_COMPOSITE:
+                case END_COMPOSITE:
+                case ELEMENT_DATA:
+                    updateReference(event, (SegmentImplementation) implSeg);
+                    break;
+                default:
+                    break;
             }
         }
     }
@@ -1223,12 +1263,12 @@ public class Validator {
     void handleRevalidatedElementErrors(RevalidationNode entry, List<UsageError> errors, ValidationEventHandler validationHandler) {
         for (UsageError error : errors) {
             validationHandler.elementError(error.getError().getCategory(),
-                                           error.getError(),
-                                           error.getTypeReference(),
-                                           entry.data,
-                                           entry.location.getElementPosition(),
-                                           entry.location.getComponentPosition(),
-                                           entry.location.getElementOccurrence());
+                    error.getError(),
+                    error.getTypeReference(),
+                    entry.data,
+                    entry.location.getElementPosition(),
+                    entry.location.getComponentPosition(),
+                    entry.location.getElementOccurrence());
         }
 
         errors.clear();
@@ -1285,7 +1325,13 @@ public class Validator {
 
         // Ensure the start index is at least zero. Index may be -1 for empty segments
         for (int i = Math.max(index, 0), max = children.size(); i < max; i++) {
-            handler.elementData("", false);
+            if (isComposite) {
+                location.incrementComponentPosition();
+            } else {
+                location.incrementElementPosition();
+            }
+
+            handler.elementData(null, 0, 0);
         }
 
         if (!isComposite && implSegmentSelected && index == children.size()) {
@@ -1293,12 +1339,12 @@ public class Validator {
 
             if (tooFewRepetitions(version, previousImpl)) {
                 validationHandler.elementError(IMPLEMENTATION_TOO_FEW_REPETITIONS.getCategory(),
-                                               IMPLEMENTATION_TOO_FEW_REPETITIONS,
-                                               previousImpl.getLink(),
-                                               null,
-                                               elementPosition + 1,
-                                               componentIndex + 1,
-                                               -1);
+                        IMPLEMENTATION_TOO_FEW_REPETITIONS,
+                        previousImpl.getLink(),
+                        null,
+                        elementPosition + 1,
+                        componentIndex + 1,
+                        -1);
             }
         }
 
@@ -1376,7 +1422,13 @@ public class Validator {
         final int index;
 
         if (isComposite) {
-            index = Math.max(location.getComponentPosition(), 1);
+            int componentPosition = location.getComponentPosition();
+
+            if (componentPosition < 1) {
+                index = 1;
+            } else {
+                index = componentPosition;
+            }
         } else {
             index = location.getElementPosition();
         }
