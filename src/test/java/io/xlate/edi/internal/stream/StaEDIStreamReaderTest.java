@@ -67,7 +67,6 @@ import io.xlate.edi.schema.Schema;
 import io.xlate.edi.schema.SchemaFactory;
 import io.xlate.edi.stream.EDIInputFactory;
 import io.xlate.edi.stream.EDIStreamConstants.Delimiters;
-import io.xlate.edi.test.StaEDITestUtil;
 import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamException;
 import io.xlate.edi.stream.EDIStreamReader;
@@ -2124,6 +2123,10 @@ class StaEDIStreamReaderTest implements ConstantsTest {
                 case END_INTERCHANGE:
                     interchangeEnd++;
                     break;
+                case SEGMENT_ERROR:
+                case ELEMENT_OCCURRENCE_ERROR:
+                case ELEMENT_DATA_ERROR:
+                    fail("Unexpected error: " + reader.getErrorType());
                 default:
                     break;
                 }
@@ -2132,7 +2135,7 @@ class StaEDIStreamReaderTest implements ConstantsTest {
             reader.close();
         }
 
-        assertEquals(2, interchangeStart);
-        assertEquals(2, interchangeEnd);
+        assertEquals(3, interchangeStart);
+        assertEquals(3, interchangeEnd);
     }
 }
