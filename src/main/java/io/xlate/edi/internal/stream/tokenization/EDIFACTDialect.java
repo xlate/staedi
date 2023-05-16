@@ -141,9 +141,9 @@ public class EDIFACTDialect extends Dialect {
 
     @Override
     public State getTagSearchState() {
-        if (isServiceAdviceSegment(this.headerTag)) {
-            return State.HEADER_EDIFACT_UNB_SEARCH;
-        }
+//        if (isServiceAdviceSegment(this.headerTag)) {
+//            return State.HEADER_EDIFACT_UNB_SEARCH;
+//        }
         return State.TAG_SEARCH;
     }
 

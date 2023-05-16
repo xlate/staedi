@@ -156,11 +156,11 @@ public enum State {
     private static final State HE = State.HEADER_ELEMENT_END;
     private static final State HZ = State.HEADER_SEGMENT_END;
 
-    private static final State B0 = State.HEADER_EDIFACT_UNB_SEARCH;
-    private static final State B1 = State.HEADER_EDIFACT_UNB_1;
-    private static final State B2 = State.HEADER_EDIFACT_UNB_2;
-    private static final State B3 = State.HEADER_EDIFACT_UNB_3;
-    private static final State BB = State.HEADER_SEGMENT_BEGIN;
+//    private static final State B0 = State.HEADER_EDIFACT_UNB_SEARCH;
+//    private static final State B1 = State.HEADER_EDIFACT_UNB_1;
+//    private static final State B2 = State.HEADER_EDIFACT_UNB_2;
+//    private static final State B3 = State.HEADER_EDIFACT_UNB_3;
+//    private static final State BB = State.HEADER_SEGMENT_BEGIN;
 
     private static final State TS = State.TAG_SEARCH;
     private static final State T1 = State.TAG_1;
@@ -237,10 +237,10 @@ public enum State {
     private static final State[] FROM_EDIFACT_7       = { __, T2, T2, T2, T2, T2, U8, T2, T2, T2, T2, T2, T2, __, _1, __, __, __, __, __, __, __, __ };
     private static final State[] FROM_EDIFACT_8       = { __, T3, T3, T3, T3, T3, T3, T3, T3, T3, T3, U9, T3, __, SB, __, __, __, __, __, __, __, __ };
     private static final State[] FROM_EDIFACT_9       = { __, __, __, __, __, __, __, __, __, __, __, __, __, __, TB, __, __, __, __, __, __, __, __ };
-    private static final State[] FROM_EDIFACT_UNB_0   = { B0, __, __, __, __, __, __, __, B1, B1, __, __, __, __, __, __, __, __, B0, __, __, __, __ };
-    private static final State[] FROM_EDIFACT_UNB_1   = { __, __, __, __, __, __, B2, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __ };
-    private static final State[] FROM_EDIFACT_UNB_2   = { __, __, B3, __, __, __, __, __, __, __, __, __, __, __, BB, __, __, __, __, __, __, __, __ };
-    private static final State[] FROM_EDIFACT_UNB_3   = { __, __, __, __, __, __, __, __, __, __, __, __, __, __, BB, __, __, __, __, __, __, __, __ };
+//    private static final State[] FROM_EDIFACT_UNB_0   = { B0, __, __, __, __, __, __, __, B1, B1, __, __, __, __, __, __, __, __, B0, __, __, __, __ };
+//    private static final State[] FROM_EDIFACT_UNB_1   = { __, __, __, __, __, __, B2, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __ };
+//    private static final State[] FROM_EDIFACT_UNB_2   = { __, __, B3, __, __, __, __, __, __, __, __, __, __, __, BB, __, __, __, __, __, __, __, __ };
+//    private static final State[] FROM_EDIFACT_UNB_3   = { __, __, __, __, __, __, __, __, __, __, __, __, __, __, BB, __, __, __, __, __, __, __, __ };
 
     /*-
      *                                                  SPACE                                               SEGMT   CMPST   RELSE   CNTRL   INVLD     *
@@ -297,10 +297,10 @@ public enum State {
         FROM_EDIFACT_7,
         FROM_EDIFACT_8,
         FROM_EDIFACT_9,
-        FROM_EDIFACT_UNB_0,
-        FROM_EDIFACT_UNB_1,
-        FROM_EDIFACT_UNB_2,
-        FROM_EDIFACT_UNB_3
+//        FROM_EDIFACT_UNB_0,
+//        FROM_EDIFACT_UNB_1,
+//        FROM_EDIFACT_UNB_2,
+//        FROM_EDIFACT_UNB_3
     };
 
     private static final State[][] TRANSITION_TRADACOMS = {
