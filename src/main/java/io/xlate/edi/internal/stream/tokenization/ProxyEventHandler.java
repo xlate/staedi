@@ -197,6 +197,7 @@ public class ProxyEventHandler implements EventHandler {
 
         if (validator != null) {
             validator.validateLoopSyntax(this);
+            validator.reset();
         }
 
         enqueueEvent(EDIStreamEvent.END_INTERCHANGE, EDIStreamValidationError.NONE, "", null, location);
