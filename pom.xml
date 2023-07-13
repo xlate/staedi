@@ -65,7 +65,7 @@
     <version.xmlunit>2.9.1</version.xmlunit>
     <version.mockito-core>5.4.0</version.mockito-core>
     <version.jsonassert>1.5.1</version.jsonassert>
-    <version.parsson>1.1.2</version.parsson>
+    <version.parsson>1.1.3</version.parsson>
     <version.jaxb-runtime>4.0.3</version.jaxb-runtime>
   </properties>
 
