@@ -78,7 +78,7 @@ jobs:
           git clean -ffdx --exclude=target/ && git reset --hard HEAD
 
       - name: Setup JDK
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: 17
