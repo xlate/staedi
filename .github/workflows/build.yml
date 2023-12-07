@@ -22,7 +22,7 @@ jobs:
   build:
     strategy:
       matrix:
-        java: [ 8, 11, 17 ]
+        java: [ 8, 11, 17, 21 ]
         os: [ ubuntu-latest, windows-latest ]
     name: "Build with JDK ${{matrix.java}} on ${{ matrix.os }}"
     runs-on: ${{ matrix.os }}
