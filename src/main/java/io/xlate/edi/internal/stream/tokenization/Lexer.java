@@ -247,7 +247,7 @@ public class Lexer {
                 break;
             case HEADER_DATA:
             case HEADER_INVALID_DATA:
-                handleStateHeaderData(input);
+                handleStateHeaderData((char) input);
                 eventsReady = dialectConfirmed(State.TAG_SEARCH);
                 break;
             case HEADER_SEGMENT_BEGIN:
@@ -397,8 +397,8 @@ public class Lexer {
         openSegment();
     }
 
-    void handleStateHeaderData(int input) throws EDIException {
-        dialect.appendHeader(characters, (char) input);
+    void handleStateHeaderData(char input) throws EDIException {
+        dialect.appendHeader(characters, input);
 
         switch (characters.getClass(input)) {
         case SEGMENT_DELIMITER:
@@ -412,8 +412,8 @@ public class Lexer {
         case RELEASE_CHARACTER:
             break;
         default:
-            if (dialect.getDecimalMark() != input && !characters.isIgnored(input)) {
-                buffer.put((char) input);
+            if (!dialect.isDecimalMark(input) && !characters.isIgnored(input)) {
+                buffer.put(input);
             }
             break;
         }

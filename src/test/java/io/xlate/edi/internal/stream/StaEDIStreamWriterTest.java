@@ -18,6 +18,7 @@ package io.xlate.edi.internal.stream;
 import static io.xlate.edi.test.StaEDITestUtil.normalizeLines;
 import static io.xlate.edi.test.StaEDITestUtil.write;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -1864,7 +1865,7 @@ class StaEDIStreamWriterTest {
         assertEquals(':', delimiters.get(Delimiters.COMPONENT_ELEMENT));
         assertEquals('.', delimiters.get(Delimiters.DECIMAL));
         assertEquals('?', delimiters.get(Delimiters.RELEASE));
-        assertNull(delimiters.get(Delimiters.REPETITION)); // Not introduced until v4
+        assertFalse(delimiters.containsKey(Delimiters.REPETITION)); // Not introduced until v4
 
         writer.flush();
         assertEquals("UNB+UNOA:3+005435656:1+006415160:1+060515:1434+00000000000778'",
@@ -1910,8 +1911,8 @@ class StaEDIStreamWriterTest {
         assertEquals('+', delimiters.get(Delimiters.DATA_ELEMENT));
         assertEquals(':', delimiters.get(Delimiters.COMPONENT_ELEMENT));
         assertEquals('.', delimiters.get(Delimiters.DECIMAL));
-        assertNull(delimiters.get(Delimiters.RELEASE));
-        assertNull(delimiters.get(Delimiters.REPETITION)); // Not introduced until v4
+        assertFalse(delimiters.containsKey(Delimiters.RELEASE));
+        assertFalse(delimiters.containsKey(Delimiters.REPETITION)); // Not introduced until v4
 
         writer.flush();
         assertEquals("UNA:+.  'UNB+UNOA:3+005435656:1+006415160:1+060515:1434+00000000000778'",

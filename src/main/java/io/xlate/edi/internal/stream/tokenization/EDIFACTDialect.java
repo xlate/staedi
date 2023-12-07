@@ -38,7 +38,7 @@ public class EDIFACTDialect extends Dialect {
     StringBuilder header;
     private int index = -1;
     private int unbStart = -1;
-    private boolean ignoreDecimalAdvice;
+    private boolean variableDecimalMark;
 
     private static final int TX_AGENCY = 0;
     private static final int TX_VERSION = 1;
@@ -65,11 +65,11 @@ public class EDIFACTDialect extends Dialect {
 
     @Override
     public boolean isDecimalMark(char value) {
-        if (!this.ignoreDecimalAdvice) {
-            return super.isDecimalMark(value);
+        if (variableDecimalMark) {
+            return value == DFLT_DECIMAL_MARK || value == ALT_DECIMAL_MARK;
         }
 
-        return value == DFLT_DECIMAL_MARK || value == ALT_DECIMAL_MARK;
+        return super.isDecimalMark(value);
     }
 
     boolean initialize(CharacterSet characters) {
@@ -78,19 +78,28 @@ public class EDIFACTDialect extends Dialect {
         if (parsedVersion.length > 1) {
             this.version = parsedVersion;
             final String syntaxVersion = this.version[1];
-            this.ignoreDecimalAdvice = syntaxVersion.compareTo("4") >= 0;
+            final boolean v4plus = syntaxVersion.compareTo("4") >= 0;
 
             characters.setClass(componentDelimiter, CharacterClass.COMPONENT_DELIMITER);
             characters.setClass(elementDelimiter, CharacterClass.ELEMENT_DELIMITER);
 
-            if (syntaxVersion.compareTo("4") >= 0 || releaseIndicator != ' ') {
+            if (v4plus || !isServiceAdviceSegment(headerTag)) {
+                /*
+                 * Decimal mark is variable:
+                 * - always in version 4
+                 * - when UNA segment is not received prior to version 4
+                 */
+                variableDecimalMark = true;
+            }
+
+            if (v4plus || releaseIndicator != ' ') {
                 // Must not be blank for version 4 and above, may be blank before version 4 if not used
                 characters.setClass(releaseIndicator, CharacterClass.RELEASE_CHARACTER);
             } else {
                 releaseIndicator = '\0';
             }
 
-            if (syntaxVersion.compareTo("4") >= 0) {
+            if (v4plus) {
                 // Must not be blank for version 4 and above
                 characters.setClass(elementRepeater, CharacterClass.ELEMENT_REPEATER);
             } else {

@@ -91,7 +91,7 @@ class EDIFACTDialectTest {
         assertEquals('\'', edifact.getSegmentTerminator());
         assertEquals('+', edifact.getDataElementSeparator());
         assertEquals(':', edifact.getComponentElementSeparator());
-        assertEquals('.', edifact.getDecimalMark());
+        assertEquals('.', edifact.getDecimalMark()); // UNA value ignored, per spec
         assertEquals('*', edifact.getRepetitionSeparator());
         assertEquals(' ', edifact.getReleaseIndicator());
     }
