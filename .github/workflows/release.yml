@@ -1,0 +1,73 @@
+name: Release
+
+on:
+  pull_request:
+    types: [closed]
+    paths:
+      - '.github/project.yml'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    name: release
+    if: ${{ github.event.pull_request.merged == true }}
+    env:
+      GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+
+    steps:
+      - uses: radcortez/project-metadata-action@main
+        name: retrieve project metadata
+        id: metadata
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          metadata-file-path: '.github/project.yml'
+
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.RELEASE_TOKEN }}
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: 17
+          server-id: ossrh # Value of the distributionManagement/repository/id field of the pom.xml
+          server-username: OSSRH_USERNAME # env variable for username in deploy
+          server-password: OSSRH_TOKEN # env variable for token in deploy
+          gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }} # Value of the GPG private key to import
+          gpg-passphrase: MAVEN_GPG_PASSPHRASE # env variable for GPG private key passphrase
+
+      - name: Setup Maven Cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2/repository
+          key: m2-repository-${{ hashFiles('**/pom.xml') }}
+
+      - name: maven release ${{ steps.metadata.outputs.current-version }}
+        env:
+          OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+          OSSRH_TOKEN: ${{ secrets.OSSRH_TOKEN }}
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b release
+
+          mvn -B release:prepare \
+            -DreleaseVersion=${{ steps.metadata.outputs.current-version }} \
+            -DdevelopmentVersion=${{ steps.metadata.outputs.next-version }}
+
+          git checkout ${{ github.base_ref }}
+          git rebase release
+
+          mvn -B release:perform
+
+      - name: Push Release Tag
+        run: |
+          git push
+          git push --tags
+
+      - uses: radcortez/milestone-release-action@main
+        name: milestone release
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          milestone-title: v${{ steps.metadata.outputs.current-version }}
