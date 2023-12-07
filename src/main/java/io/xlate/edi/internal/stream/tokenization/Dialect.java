@@ -25,7 +25,7 @@ public abstract class Dialect {
     protected char segmentDelimiter;
     protected char segmentTagTerminator = '\0';
     protected char elementDelimiter;
-    protected char decimalMark;
+    protected char decimalMark = '\0';
     protected char releaseIndicator;
     protected char componentDelimiter;
     protected char elementRepeater;
