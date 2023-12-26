@@ -17,6 +17,8 @@ package io.xlate.edi.internal.stream;
 
 import static io.xlate.edi.test.StaEDITestUtil.assertLocation;
 import static io.xlate.edi.test.StaEDITestUtil.assertTextLocation;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -49,6 +51,8 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.hamcrest.MatcherAssert;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -1036,6 +1040,12 @@ class StaEDIStreamReaderTest implements ConstantsTest {
                 s += s == -1 ? 2 : 1;
                 assertLocation(reader, s, -1, -1, -1);
                 tag = reader.getText();
+                String startSegmentLocation = reader.getLocation().toString();
+                assertThat(startSegmentLocation, containsString("in segment " + tag));
+                break;
+            case END_SEGMENT:
+                String endSegmentLocation = reader.getLocation().toString();
+                assertThat(endSegmentLocation, containsString("after segment " + tag));
                 break;
             case ELEMENT_DATA:
                 Location l = reader.getLocation();

@@ -17,7 +17,7 @@ package io.xlate.edi.internal.stream;
 
 import io.xlate.edi.stream.Location;
 
-public class LocationView implements Location {
+abstract class LocationView implements Location {
 
     protected int lineNumber;
     protected int columnNumber;
@@ -28,7 +28,7 @@ public class LocationView implements Location {
     protected int componentPosition;
     protected int elementOccurrence;
 
-    public LocationView(Location source) {
+    protected LocationView(Location source) {
         lineNumber = source.getLineNumber();
         columnNumber = source.getColumnNumber();
         characterOffset = source.getCharacterOffset();
@@ -49,14 +49,15 @@ public class LocationView implements Location {
         elementOccurrence = -1;
     }
 
-    public String toString() {
+    protected String toString(boolean afterSegment) {
         StringBuilder display = new StringBuilder();
 
         if (getSegmentPosition() < 0) {
             display.append("at offset ");
             display.append(getCharacterOffset());
         } else {
-            display.append("in segment ");
+            display.append(afterSegment ? "after " : "in ");
+            display.append("segment ");
             display.append(String.valueOf(getSegmentTag()));
             display.append(" at position ");
             display.append(String.valueOf(getSegmentPosition()));
@@ -119,10 +120,5 @@ public class LocationView implements Location {
     @Override
     public int getElementOccurrence() {
         return elementOccurrence;
-    }
-
-    @Override
-    public Location copy() {
-        return new LocationView(this);
     }
 }

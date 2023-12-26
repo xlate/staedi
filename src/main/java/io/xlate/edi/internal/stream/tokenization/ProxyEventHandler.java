@@ -35,7 +35,6 @@ import io.xlate.edi.schema.EDIType;
 import io.xlate.edi.schema.Schema;
 import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamValidationError;
-import io.xlate.edi.stream.Location;
 
 public class ProxyEventHandler implements EventHandler {
 
@@ -153,7 +152,7 @@ public class ProxyEventHandler implements EventHandler {
         return current(StreamEvent::getReferenceCode, null);
     }
 
-    public Location getLocation() {
+    public StaEDIStreamLocation getLocation() {
         return current(StreamEvent::getLocation, this.location);
     }
 
@@ -317,7 +316,7 @@ public class ProxyEventHandler implements EventHandler {
             performLevelCheck();
         }
 
-        location.clearSegmentLocations();
+        location.clearSegmentLocations(true);
         enqueueEvent(EDIStreamEvent.END_SEGMENT, EDIStreamValidationError.NONE, segmentTag, typeReference, location);
         return true;
     }
@@ -495,7 +494,7 @@ public class ProxyEventHandler implements EventHandler {
         while (!openLevels.isEmpty() && !openLevels.getLast().isParentOf(parentId)) {
             HierarchicalLevel completed = openLevels.removeLast();
             completed.event.location.set(location);
-            completed.event.location.clearSegmentLocations();
+            completed.event.location.clearSegmentLocations(true);
 
             eventQueue.add(eventQueue.indexOf(successor), completed.event);
         }
@@ -593,7 +592,7 @@ public class ProxyEventHandler implements EventHandler {
                               EDIStreamValidationError error,
                               CharSequence data,
                               EDIReference typeReference,
-                              Location location) {
+                              StaEDIStreamLocation location) {
 
         StreamEvent target = getPooledEvent();
 
