@@ -22,4 +22,4 @@ jobs:
         name: milestone review
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
-          milestone-title: ${{steps.metadata.outputs.current-version}}
+          milestone-title: v${{steps.metadata.outputs.current-version}}
