@@ -62,6 +62,7 @@
     <version.jackson>2.16.1</version.jackson>
 
     <version.junit-jupiter>5.10.1</version.junit-jupiter>
+    <version.hamcrest>2.2</version.hamcrest>
     <version.xmlunit>2.9.1</version.xmlunit>
     <version.mockito-core>5.8.0</version.mockito-core>
     <version.jsonassert>1.5.1</version.jsonassert>
@@ -255,6 +256,11 @@
         <version>${version.xmlunit}</version>
       </dependency>
       <dependency>
+        <groupId>org.hamcrest</groupId>
+        <artifactId>hamcrest-core</artifactId>
+        <version>${version.hamcrest}</version>
+      </dependency>
+      <dependency>
         <groupId>org.skyscreamer</groupId>
         <artifactId>jsonassert</artifactId>
         <version>${version.jsonassert}</version>
@@ -298,6 +304,11 @@
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.hamcrest</groupId>
+      <artifactId>hamcrest-core</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>

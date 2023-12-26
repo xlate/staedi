@@ -8,7 +8,6 @@ import io.xlate.edi.schema.EDIReference;
 import io.xlate.edi.schema.implementation.EDITypeImplementation;
 import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamValidationError;
-import io.xlate.edi.stream.Location;
 
 public class StreamEvent {
 
@@ -70,11 +69,11 @@ public class StreamEvent {
         this.typeReference = typeReference;
     }
 
-    public Location getLocation() {
+    public StaEDIStreamLocation getLocation() {
         return location;
     }
 
-    public void setLocation(Location location) {
+    public void setLocation(StaEDIStreamLocation location) {
         if (this.location == null) {
             this.location = new StaEDIStreamLocation(location);
         }

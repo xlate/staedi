@@ -548,7 +548,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         }
 
         level = LEVEL_INTERCHANGE;
-        location.clearSegmentLocations();
+        location.clearSegmentLocations(true);
         transactionSchemaAllowed = false;
 
         return this;

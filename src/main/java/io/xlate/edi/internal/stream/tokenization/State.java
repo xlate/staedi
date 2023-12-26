@@ -357,6 +357,10 @@ public enum State {
         return TRANSITIONS[dialect][code][clazz.code];
     }
 
+    public boolean isInvalid() {
+        return Category.INVALID == code;
+    }
+
     public boolean isHeaderState() {
         return Category.HEADER == code && DialectCode.UNKNOWN != table;
     }

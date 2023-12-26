@@ -21,6 +21,14 @@ public class EDIStreamException extends Exception {
 
     protected final transient Location location;
 
+    protected static String buildMessage(String message, Location location) {
+        String locationString = location.toString();
+        if (message.contains(locationString)) {
+            return message;
+        }
+        return message + " " + locationString;
+    }
+
     /**
      * Construct an exception with the associated message.
      *
@@ -58,7 +66,7 @@ public class EDIStreamException extends Exception {
      *            a nested error / exception
      */
     public EDIStreamException(String message, Location location, Throwable cause) {
-        super(message + " " + location.toString(), cause);
+        super(buildMessage(message, location), cause);
         this.location = location;
     }
 
@@ -72,7 +80,7 @@ public class EDIStreamException extends Exception {
      *            the location of the error
      */
     public EDIStreamException(String message, Location location) {
-        super(message + " " + location.toString());
+        super(buildMessage(message, location));
         this.location = location;
     }
 
