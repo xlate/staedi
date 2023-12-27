@@ -22,8 +22,25 @@ import javax.xml.stream.XMLStreamReader;
 
 import io.xlate.edi.schema.Schema;
 
+/**
+ * Defines an abstract implementation of a factory for getting EDIStreamReaders,
+ * JSON parsers (wrapping an existing EDIStreamReader), and XMLStreamReaders
+ * (wrapping an existing EDIStreamReader). An EDIInputErrorReporter may also be
+ * configured via the factory for use with each new EDIStreamReader created.
+ */
 public abstract class EDIInputFactory extends PropertySupport {
 
+    /**
+     * When set to false, control structures, segments, elements, and codes will
+     * not be validated unless a user-provided control schema has been set using
+     * {@link EDIStreamReader#setControlSchema(Schema)}.
+     *
+     * When set to true AND no user-provided control schema has been set, the
+     * reader will attempt to find a known control schema for the detected EDI
+     * dialect and version to be used for control structure validation.
+     *
+     * Default value: true
+     */
     public static final String EDI_VALIDATE_CONTROL_STRUCTURE = "io.xlate.edi.stream.EDI_VALIDATE_CONTROL_STRUCTURE";
 
     /**
@@ -136,6 +153,12 @@ public abstract class EDIInputFactory extends PropertySupport {
      */
     public static EDIInputFactory newFactory() {
         return new io.xlate.edi.internal.stream.StaEDIInputFactory();
+    }
+
+    /**
+     * Default constructor
+     */
+    protected EDIInputFactory() {
     }
 
     /**

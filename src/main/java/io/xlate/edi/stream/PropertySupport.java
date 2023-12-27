@@ -20,11 +20,25 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * Abstract parent class for factories that support setting, retrieving, and checking
+ * whether properties are supported.
+ */
 public abstract class PropertySupport {
 
+    /**
+     * Set of property keys/names supported by the subclass.
+     */
     protected final Set<String> supportedProperties;
+
+    /**
+     * Map of properties actually configured by the subclass.
+     */
     protected final Map<String, Object> properties;
 
+    /**
+     * Default constructor, initialize fields to empty collections.
+     */
     protected PropertySupport() {
         this.supportedProperties = new HashSet<>();
         this.properties = new HashMap<>();

@@ -15,12 +15,30 @@
  ******************************************************************************/
 package io.xlate.edi.stream;
 
+/**
+ * Checked exception that may be thrown by EDIInputFactory, EDIStreamReader,
+ * EDIOutputFactory, and EDIStreamWriter in the processing of EDI data.
+ */
 public class EDIStreamException extends Exception {
 
     private static final long serialVersionUID = -1232370584780899896L;
 
+    /**
+     * {@linkplain Location} of the exception
+     */
     protected final transient Location location;
 
+    /**
+     * Build a readable message that includes a detail message together with the
+     * location of the exception
+     *
+     * @param message
+     *            detail message for the exception
+     * @param location
+     *            location of the exception
+     * @return concatenation of the detail message and location if the message
+     *         does not already contain the location
+     */
     protected static String buildMessage(String message, Location location) {
         String locationString = location.toString();
         if (message.contains(locationString)) {
