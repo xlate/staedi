@@ -15,8 +15,17 @@
  ******************************************************************************/
 package io.xlate.edi.stream;
 
+/**
+ * Collection of constant values identifying the several EDI standards and the
+ * delimiters used in processing EDI data streams.
+ */
 public interface EDIStreamConstants {
 
+    /**
+     * Defines the constant values possibly returned by
+     * {@link EDIStreamReader#getStandard()} and
+     * {@link EDIStreamWriter#getStandard()}.
+     */
     public static class Standards {
         private Standards() {
         }
@@ -39,15 +48,50 @@ public interface EDIStreamConstants {
         public static final String X12 = "X12";
     }
 
+    /**
+     * Defines the constant values of EDI delimiters present in the maps
+     * returned by
+     * {@link EDIStreamReader#getDelimiters()}/{@link EDIStreamWriter#getDelimiters()}
+     * and accepted as properties for output via
+     * {@link EDIOutputFactory#setProperty(String, Object)}.
+     */
     public static class Delimiters {
         private Delimiters() {
         }
 
+        /**
+         * Key for the delimiter used to terminate/end a segment.
+         */
         public static final String SEGMENT = "io.xlate.edi.stream.delim.segment";
+
+        /**
+         * Key for the delimiter used to terminate/end a simple or composite
+         * data element.
+         */
         public static final String DATA_ELEMENT = "io.xlate.edi.stream.delim.dataElement";
+
+        /**
+         * Key for the delimiter used to terminate/end a component of a
+         * composite element.
+         */
         public static final String COMPONENT_ELEMENT = "io.xlate.edi.stream.delim.componentElement";
+
+        /**
+         * Key for the delimiter used to terminate/end a repeating data element.
+         */
         public static final String REPETITION = "io.xlate.edi.stream.delim.repetition";
+
+        /**
+         * Key for the character used as the decimal point for non-integer
+         * numeric element types.
+         */
         public static final String DECIMAL = "io.xlate.edi.stream.delim.decimal";
+
+        /**
+         * Key for the character used as a release character, allowing the next
+         * character in the EDI stream to be treated as data element text rather
+         * than a delimiter.
+         */
         public static final String RELEASE = "io.xlate.edi.stream.delim.release";
     }
 }

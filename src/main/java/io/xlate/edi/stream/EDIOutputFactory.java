@@ -19,6 +19,12 @@ import java.io.OutputStream;
 
 import javax.xml.stream.XMLStreamWriter;
 
+/**
+ * Defines an abstract implementation of a factory for getting EDIStreamWriters
+ * and XMLStreamWriters (wrapping an existing EDIStreamWriter). An EDIOutputErrorReporter
+ * may also be configured via the factory for use with each new EDIStreamWriter
+ * created.
+ */
 public abstract class EDIOutputFactory extends PropertySupport {
 
     /**
@@ -65,6 +71,12 @@ public abstract class EDIOutputFactory extends PropertySupport {
      */
     public static EDIOutputFactory newFactory() {
         return new io.xlate.edi.internal.stream.StaEDIOutputFactory();
+    }
+
+    /**
+     * Default constructor
+     */
+    protected EDIOutputFactory() {
     }
 
     /**

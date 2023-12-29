@@ -26,6 +26,15 @@ import io.xlate.edi.schema.EDIType;
 import io.xlate.edi.schema.Schema;
 import io.xlate.edi.schema.implementation.EDITypeImplementation;
 
+/**
+ * The EDIStreamReader interface allows forward, read-only access to EDI. It is
+ * designed to be the lowest level and most efficient way to read EDI data.
+ *
+ * <p>
+ * The EDIStreamReader is designed to iterate over EDI using {@link #next()} and
+ * {@link #hasNext()}. The data can be accessed using methods such as
+ * {@link #getEventType()} and {@link #getText()}.
+ */
 public interface EDIStreamReader extends Closeable, EDIStreamConstants {
 
     /**
@@ -51,7 +60,7 @@ public interface EDIStreamReader extends Closeable, EDIStreamConstants {
     /**
      * Get next parsing event
      *
-     * @return the integer code corresponding to the current parse event
+     * @return the event type corresponding to the current parse event
      * @throws NoSuchElementException
      *             if this is called when hasNext() returns false
      * @throws EDIStreamException

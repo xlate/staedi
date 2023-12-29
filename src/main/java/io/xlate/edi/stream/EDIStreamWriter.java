@@ -21,6 +21,12 @@ import java.util.Map;
 
 import io.xlate.edi.schema.Schema;
 
+/**
+ * The EDIStreamWriter interface specifies how to write EDI. Each method depends
+ * on the internal state of the writer and a client application must ensure that
+ * the methods are called in the proper sequence. For example, element data may
+ * not be written prior to starting an interchange and a segment.
+ */
 public interface EDIStreamWriter extends AutoCloseable {
 
     /**
@@ -132,7 +138,8 @@ public interface EDIStreamWriter extends AutoCloseable {
     String getStandard();
 
     /**
-     * Retrieve a read-only map of delimiters in use for the stream being written.
+     * Retrieve a read-only map of delimiters in use for the stream being
+     * written.
      *
      * @return The value of the property
      * @throws IllegalStateException
@@ -157,43 +164,320 @@ public interface EDIStreamWriter extends AutoCloseable {
      */
     EDIStreamWriter startInterchange() throws EDIStreamException;
 
+    /**
+     * Completes an interchange and returns the writer to its initial state. Any
+     * data pending output will be {@linkplain #flush() flushed}.
+     *
+     * @return this EDI stream writer
+     * @throws EDIStreamException
+     *             if an error occurs
+     * @throws IllegalStateException
+     *             when the writer is in a state writing a segment, element,
+     *             composite
+     */
     EDIStreamWriter endInterchange() throws EDIStreamException;
 
+    /**
+     * Begin a new segment with the given name and write the tag to the
+     * underlying output.
+     *
+     * @param name
+     *            name of the segment (i.e. the segment tag)
+     * @return this EDI stream writer
+     * @throws EDIStreamException
+     *             if an error occurs
+     * @throws IllegalStateException
+     *             when the writer is not in a state to begin a segment
+     */
     EDIStreamWriter writeStartSegment(String name) throws EDIStreamException;
 
+    /**
+     * Complete a segment by writing the segment terminator to the underlying
+     * output.
+     *
+     * @return this EDI stream writer
+     * @throws EDIStreamException
+     *             if an error occurs
+     * @throws IllegalStateException
+     *             when the writer is not in a state to end a segment
+     */
     EDIStreamWriter writeEndSegment() throws EDIStreamException;
 
+    /**
+     * Start a new element, composite or simple.
+     *
+     * @return this EDI stream writer
+     * @throws EDIStreamException
+     *             if an error occurs
+     * @throws IllegalStateException
+     *             when a segment has not been started with
+     *             {@link #writeStartSegment(String)}
+     */
     EDIStreamWriter writeStartElement() throws EDIStreamException;
 
+    /**
+     * Start a new element for binary data.
+     *
+     * @return this EDI stream writer
+     * @throws EDIStreamException
+     *             if an error occurs
+     * @throws IllegalStateException
+     *             when the a segment has not been started with
+     *             {@link #writeStartSegment(String)}
+     */
     EDIStreamWriter writeStartElementBinary() throws EDIStreamException;
 
+    /**
+     * Complete an element. A delimiter will not be written immediately.
+     *
+     * @return this EDI stream writer
+     * @throws EDIStreamException
+     *             if an error occurs
+     * @throws IllegalStateException
+     *             when the writer is not in the state of writing an element
+     */
     EDIStreamWriter endElement() throws EDIStreamException;
 
+    /**
+     * Write an element repeat delimiter/separator to the output stream.
+     * Following this method being called, the writer will be in a state to
+     * accept element data using {@link #writeElementData(CharSequence)} or
+     * {@link #writeElementData(char[], int, int)}.
+     *
+     * @return this EDI stream writer
+     * @throws EDIStreamException
+     *             if an error occurs
+     * @throws IllegalStateException
+     *             when the writer is not in a state for writing element data. A
+     *             segment must have already been started.
+     */
     EDIStreamWriter writeRepeatElement() throws EDIStreamException;
 
+    /**
+     * Start a component of a composite element.
+     *
+     * @return this EDI stream writer
+     * @throws EDIStreamException
+     *             if an error occurs
+     * @throws IllegalStateException
+     *             when an element has not been started with
+     *             {@link #writeStartElement()}
+     */
     EDIStreamWriter startComponent() throws EDIStreamException;
 
+    /**
+     * Complete a component of a composite element.
+     *
+     * @return this EDI stream writer
+     * @throws EDIStreamException
+     *             if an error occurs
+     * @throws IllegalStateException
+     *             when the writer is not in the state of writing an component
+     *             element
+     */
     EDIStreamWriter endComponent() throws EDIStreamException;
 
+    /**
+     * Write an empty simple element.
+     * <p>
+     * Shorthand for calling {@link #writeStartElement()} immediately followed
+     * by {@link #endElement()}.
+     *
+     * @return this EDI stream writer
+     * @throws EDIStreamException
+     *             if an error occurs
+     * @throws IllegalStateException
+     *             when the writer is not in a state for writing simple element
+     *             data
+     */
     EDIStreamWriter writeEmptyElement() throws EDIStreamException;
 
+    /**
+     * Begin an element, write text data from the given CharSequence to the
+     * output, and end the element.
+     * <p>
+     * Shorthand for calling {@link #writeStartElement()},
+     * {@link #writeElementData(CharSequence)}, and {@link #endElement()}, in
+     * that order.
+     *
+     * @param text
+     *            CharSequence containing element's full text data
+     * @return this EDI stream writer
+     * @throws EDIStreamException
+     *             if an error occurs
+     * @throws IllegalStateException
+     *             when the writer is not in a state for writing simple element
+     *             data
+     */
     EDIStreamWriter writeElement(CharSequence text) throws EDIStreamException;
 
+    /**
+     * Begin an element, write text data from the given char array to the
+     * output, and end the element. Data will be read from the offset given by
+     * start (inclusive) to the offset given by end (exclusive).
+     * <p>
+     * Shorthand for calling {@link #writeStartElement()},
+     * {@link #writeElementData(char[], int, int)}, and {@link #endElement()},
+     * in that order.
+     *
+     * @param text
+     *            char array containing element's full text data
+     * @param start
+     *            the start index, inclusive
+     * @param end
+     *            the end index, exclusive
+     * @return this EDI stream writer
+     * @throws EDIStreamException
+     *             if an error occurs
+     * @throws IllegalStateException
+     *             when the writer is not in a state for writing simple element
+     *             data
+     */
     EDIStreamWriter writeElement(char[] text, int start, int end) throws EDIStreamException;
 
+    /**
+     * Write an empty component
+     * <p>
+     * Shorthand for calling {@link #startComponent()} immediately followed by
+     * {@link #endComponent()}.
+     *
+     * @return this EDI stream writer
+     * @throws EDIStreamException
+     *             if an error occurs
+     * @throws IllegalStateException
+     *             when the writer is not in a state for writing component
+     *             element data
+     */
     EDIStreamWriter writeEmptyComponent() throws EDIStreamException;
 
+    /**
+     * Begin a component element, write text data from the given CharSequence to
+     * the output, and end the element.
+     * <p>
+     * Shorthand for calling {@link #startComponent()},
+     * {@link #writeElementData(CharSequence)}, and {@link #endComponent()}, in
+     * that order.
+     *
+     * @param text
+     *            CharSequence containing component's full text data
+     * @return this EDI stream writer
+     * @throws EDIStreamException
+     *             if an error occurs
+     * @throws IllegalStateException
+     *             when the writer is not in a state for writing component
+     *             element data
+     */
     EDIStreamWriter writeComponent(CharSequence text) throws EDIStreamException;
 
+    /**
+     * Begin a component element, write text data from the given char array to
+     * the output, and end the element. Data will be read from the offset given
+     * by start (inclusive) to the offset given by end (exclusive).
+     * <p>
+     * Shorthand for calling {@link #startComponent()},
+     * {@link #writeElementData(char[], int, int)}, and {@link #endComponent()},
+     * in that order.
+     *
+     * @param text
+     *            char array containing component's full text data
+     * @param start
+     *            the start index, inclusive
+     * @param end
+     *            the end index, exclusive
+     * @return this EDI stream writer
+     * @throws EDIStreamException
+     *             if an error occurs
+     * @throws IllegalStateException
+     *             when the writer is not in a state for writing component
+     *             element data
+     */
     EDIStreamWriter writeComponent(char[] text, int start, int end) throws EDIStreamException;
 
+    /**
+     * Write text data from the given CharSequence to the output.
+     *
+     * @param text
+     *            CharSequence containing element text data
+     * @return this EDI stream writer
+     * @throws EDIStreamException
+     *             if an error occurs
+     * @throws IllegalStateException
+     *             when the writer is not in a state for writing element data.
+     *             See {@linkplain #writeStartElement()}
+     */
     EDIStreamWriter writeElementData(CharSequence text) throws EDIStreamException;
 
+    /**
+     * Write text data from the given char array to the output. Data will be
+     * read from the offset given by start (inclusive) to the offset given by
+     * end (exclusive).
+     *
+     * @param text
+     *            char array containing element text data
+     * @param start
+     *            the start index, inclusive
+     * @param end
+     *            the end index, exclusive
+     * @return this EDI stream writer
+     * @throws EDIStreamException
+     *             if an error occurs
+     * @throws IllegalStateException
+     *             when the writer is not in a state for writing element data.
+     *             See {@linkplain #writeStartElement()}
+     */
     EDIStreamWriter writeElementData(char[] text, int start, int end) throws EDIStreamException;
 
+    /**
+     * Write binary data from the given InputStream to the output. The stream
+     * will be read fully, until the byte returned by
+     * {@linkplain InputStream#read()} is {@code -1}. Any data pending output
+     * will first be {@linkplain #flush() flushed}.
+     *
+     * @param stream
+     *            InputStream containing binary data to be consumed by the
+     *            reader and written to the underlying output
+     * @return this EDI stream writer
+     * @throws EDIStreamException
+     *             if an error occurs
+     * @throws IllegalStateException
+     *             when the writer is not in a state for writing binary element
+     *             data. See {@linkplain #writeStartElementBinary()}
+     */
     EDIStreamWriter writeBinaryData(InputStream stream) throws EDIStreamException;
 
-    EDIStreamWriter writeBinaryData(byte[] text, int start, int end) throws EDIStreamException;
+    /**
+     * Write binary data from the given byte array to the output. Data will be
+     * read from the offset given by start (inclusive) to the offset given by
+     * end (exclusive). Any data pending output will first be
+     * {@linkplain #flush() flushed}.
+     *
+     * @param binary
+     *            byte array containing binary data
+     * @param start
+     *            the start index, inclusive
+     * @param end
+     *            the end index, exclusive
+     * @return this EDI stream writer
+     * @throws EDIStreamException
+     *             if an error occurs
+     * @throws IllegalStateException
+     *             when the writer is not in a state for writing binary element
+     *             data. See {@linkplain #writeStartElementBinary()}
+     */
+    EDIStreamWriter writeBinaryData(byte[] binary, int start, int end) throws EDIStreamException;
 
+    /**
+     * Write binary data from the given buffer to the output. Any data pending
+     * output will first be {@linkplain #flush() flushed}.
+     *
+     * @param buffer
+     *            data buffer containing binary data
+     * @return this EDI stream writer
+     * @throws EDIStreamException
+     *             if an error occurs
+     * @throws IllegalStateException
+     *             when the writer is not in a state for writing binary element
+     *             data. See {@linkplain #writeStartElementBinary()}
+     */
     EDIStreamWriter writeBinaryData(ByteBuffer buffer) throws EDIStreamException;
 }
