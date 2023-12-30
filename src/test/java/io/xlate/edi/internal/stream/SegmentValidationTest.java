@@ -21,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
@@ -30,16 +31,22 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 import io.xlate.edi.internal.schema.SchemaUtils;
+import io.xlate.edi.schema.EDIReference;
 import io.xlate.edi.schema.EDISchemaException;
+import io.xlate.edi.schema.EDIType;
 import io.xlate.edi.schema.Schema;
 import io.xlate.edi.schema.SchemaFactory;
 import io.xlate.edi.stream.EDIInputFactory;
+import io.xlate.edi.stream.EDIOutputErrorReporter;
+import io.xlate.edi.stream.EDIOutputFactory;
 import io.xlate.edi.stream.EDIStreamConstants.Standards;
 import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamException;
 import io.xlate.edi.stream.EDIStreamFilter;
 import io.xlate.edi.stream.EDIStreamReader;
 import io.xlate.edi.stream.EDIStreamValidationError;
+import io.xlate.edi.stream.EDIStreamWriter;
+import io.xlate.edi.stream.Location;
 import io.xlate.edi.test.StaEDITestEvent;
 import io.xlate.edi.test.StaEDITestUtil;
 
@@ -453,7 +460,7 @@ class SegmentValidationTest {
 
         // Loop B - Occurrence 3
         assertEvent(reader, EDIStreamEvent.START_LOOP, "0000B");
-        assertEvent(reader, EDIStreamEvent.SEGMENT_ERROR, EDIStreamValidationError.LOOP_OCCURS_OVER_MAXIMUM_TIMES, "S11");
+        assertEvent(reader, EDIStreamEvent.SEGMENT_ERROR, EDIStreamValidationError.LOOP_OCCURS_OVER_MAXIMUM_TIMES, "S11", "0000B");
         assertEvent(reader, EDIStreamEvent.END_LOOP, "0000B");
 
         // Loop C - Occurrence 1
@@ -467,7 +474,7 @@ class SegmentValidationTest {
         assertEvent(reader, EDIStreamEvent.SEGMENT_ERROR, EDIStreamValidationError.LOOP_OCCURS_OVER_MAXIMUM_TIMES, "S11", "L0000");
         assertEvent(reader, EDIStreamEvent.END_LOOP, "0000D");
 
-        assertEvent(reader, EDIStreamEvent.SEGMENT_ERROR, EDIStreamValidationError.IMPLEMENTATION_LOOP_OCCURS_UNDER_MINIMUM_TIMES, "S11");
+        assertEvent(reader, EDIStreamEvent.SEGMENT_ERROR, EDIStreamValidationError.IMPLEMENTATION_LOOP_OCCURS_UNDER_MINIMUM_TIMES, "0000C");
 
         // Loop L0001 has minOccurs=1 in standard (not used in implementation, invalid configuration)
         assertEvent(reader, EDIStreamEvent.SEGMENT_ERROR, EDIStreamValidationError.MANDATORY_SEGMENT_MISSING, "S20");
@@ -543,7 +550,7 @@ class SegmentValidationTest {
     }
 
     @Test
-    void testImplementationValidSequenceAllMissing() throws EDISchemaException, EDIStreamException {
+    void testImplementationValidSequenceAllMissingReader() throws EDISchemaException, EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = new ByteArrayInputStream((""
                 + "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~"
@@ -569,19 +576,19 @@ class SegmentValidationTest {
 
         assertEquals(EDIStreamEvent.SEGMENT_ERROR, reader.next());
         assertEquals(EDIStreamValidationError.IMPLEMENTATION_LOOP_OCCURS_UNDER_MINIMUM_TIMES, reader.getErrorType());
-        assertEquals("S11", reader.getReferenceCode());
+        assertEquals("0000A", reader.getReferenceCode());
 
         assertEquals(EDIStreamEvent.SEGMENT_ERROR, reader.next());
         assertEquals(EDIStreamValidationError.IMPLEMENTATION_LOOP_OCCURS_UNDER_MINIMUM_TIMES, reader.getErrorType());
-        assertEquals("S11", reader.getReferenceCode());
+        assertEquals("0000B", reader.getReferenceCode());
 
         assertEquals(EDIStreamEvent.SEGMENT_ERROR, reader.next());
         assertEquals(EDIStreamValidationError.IMPLEMENTATION_LOOP_OCCURS_UNDER_MINIMUM_TIMES, reader.getErrorType());
-        assertEquals("S11", reader.getReferenceCode());
+        assertEquals("0000C", reader.getReferenceCode());
 
         assertEquals(EDIStreamEvent.SEGMENT_ERROR, reader.next());
         assertEquals(EDIStreamValidationError.IMPLEMENTATION_LOOP_OCCURS_UNDER_MINIMUM_TIMES, reader.getErrorType());
-        assertEquals("S11", reader.getReferenceCode());
+        assertEquals("0000D", reader.getReferenceCode());
 
         // Loop L0001 has minOccurs=1 in standard (not used in implementation, invalid configuration)
         assertEquals(EDIStreamEvent.SEGMENT_ERROR, reader.next());
@@ -589,6 +596,170 @@ class SegmentValidationTest {
         assertEquals("S20", reader.getReferenceCode());
 
         assertTrue(!reader.hasNext(), "Unexpected segment errors exist");
+    }
+
+    @Test
+    void testImplementationValidSequenceAllMissingWriter() throws EDISchemaException, EDIStreamException {
+        SchemaFactory schemaFactory = SchemaFactory.newFactory();
+        Schema ctlSchema = schemaFactory.createSchema(getClass().getResource("/x12/EDISchemaSegmentValidation.xml"));
+        Schema txnSchema = schemaFactory.createSchema(getClass().getResource("/x12/EDISchemaSegmentValidationImpl.xml"));
+
+        List<StaEDITestEvent> errorEvents = new ArrayList<>();
+
+        EDIOutputFactory factory = EDIOutputFactory.newFactory();
+        factory.setProperty(EDIOutputFactory.FORMAT_ELEMENTS, true);
+        factory.setErrorReporter(new EDIOutputErrorReporter() {
+            @Override
+            public void report(EDIStreamValidationError errorType,
+                               EDIStreamWriter writer,
+                               Location location,
+                               CharSequence data,
+                               EDIReference typeReference) {
+                EDIType type = typeReference instanceof EDIType ? EDIType.class.cast(typeReference) : typeReference.getReferencedType();
+                errorEvents.add(StaEDITestEvent.forError(errorType, data.toString(), type.getCode()));
+            }
+        });
+
+        EDIStreamWriter writer = factory.createEDIStreamWriter(new ByteArrayOutputStream());
+        writer.setControlSchema(ctlSchema);
+        writer.setTransactionSchema(txnSchema);
+
+        writer.startInterchange();
+        writer.writeStartSegment("ISA")
+            .writeElement("00")
+            .writeElement(" ")
+            .writeElement("00")
+            .writeElement(" ")
+            .writeElement("ZZ")
+            .writeElement("ReceiverID")
+            .writeElement("ZZ")
+            .writeElement("Sender")
+            .writeElement("203001")
+            .writeElement("1430")
+            .writeElement("^")
+            .writeElement("00501")
+            .writeElement("000000001")
+            .writeElement("0")
+            .writeElement("P")
+            .writeElement(":")
+            .writeEndSegment();
+        writer.writeStartSegment("S01")
+            .writeElement("X")
+            .writeEndSegment();
+        writer.writeStartSegment("S09")
+            .writeElement("X")
+            .writeEndSegment();
+        writer.writeStartSegment("IEA")
+            .writeElement("1")
+            .writeElement("000000001")
+            .writeEndSegment();
+
+        List<StaEDITestEvent> expected = Arrays.asList(
+            StaEDITestEvent.forError(EDIStreamValidationError.IMPLEMENTATION_LOOP_OCCURS_UNDER_MINIMUM_TIMES, "L0000", "0000A"),
+            StaEDITestEvent.forError(EDIStreamValidationError.IMPLEMENTATION_LOOP_OCCURS_UNDER_MINIMUM_TIMES, "L0000", "0000B"),
+            StaEDITestEvent.forError(EDIStreamValidationError.IMPLEMENTATION_LOOP_OCCURS_UNDER_MINIMUM_TIMES, "L0000", "0000C"),
+            StaEDITestEvent.forError(EDIStreamValidationError.IMPLEMENTATION_LOOP_OCCURS_UNDER_MINIMUM_TIMES, "L0000", "0000D"),
+            StaEDITestEvent.forError(EDIStreamValidationError.MANDATORY_SEGMENT_MISSING, "S20", "S20")
+        );
+
+        assertEquals(expected, errorEvents);
+    }
+
+    @Test
+    void testImplementationLoopsSelectedByWriter() throws EDISchemaException, EDIStreamException {
+        SchemaFactory schemaFactory = SchemaFactory.newFactory();
+        Schema ctlSchema = schemaFactory.createSchema(getClass().getResource("/x12/EDISchemaSegmentValidation.xml"));
+        Schema txnSchema = schemaFactory.createSchema(getClass().getResource("/x12/EDISchemaSegmentValidationImpl.xml"));
+
+        List<StaEDITestEvent> errorEvents = new ArrayList<>();
+
+        EDIOutputFactory factory = EDIOutputFactory.newFactory();
+        factory.setProperty(EDIOutputFactory.FORMAT_ELEMENTS, true);
+        factory.setErrorReporter(new EDIOutputErrorReporter() {
+            @Override
+            public void report(EDIStreamValidationError errorType,
+                               EDIStreamWriter writer,
+                               Location location,
+                               CharSequence data,
+                               EDIReference typeReference) {
+                EDIType type = typeReference instanceof EDIType ? EDIType.class.cast(typeReference) : typeReference.getReferencedType();
+                errorEvents.add(StaEDITestEvent.forError(errorType, data.toString(), type.getCode()));
+            }
+        });
+
+        EDIStreamWriter writer = factory.createEDIStreamWriter(new ByteArrayOutputStream());
+        writer.setControlSchema(ctlSchema);
+        writer.setTransactionSchema(txnSchema);
+
+        writer.startInterchange();
+        writer.writeStartSegment("ISA")
+            .writeElement("00")
+            .writeElement(" ")
+            .writeElement("00")
+            .writeElement(" ")
+            .writeElement("ZZ")
+            .writeElement("ReceiverID")
+            .writeElement("ZZ")
+            .writeElement("Sender")
+            .writeElement("203001")
+            .writeElement("1430")
+            .writeElement("^")
+            .writeElement("00501")
+            .writeElement("000000001")
+            .writeElement("0")
+            .writeElement("P")
+            .writeElement(":")
+            .writeEndSegment();
+        writer.writeStartSegment("S01")
+            .writeElement("X")
+            .writeEndSegment();
+
+        // 0000A
+        writer.writeStartSegment("S11")
+            .writeElement("A")
+            .writeEndSegment();
+        // Unused for impl loop 0000A
+        writer.writeStartSegment("S12")
+            .writeElement("X")
+            .writeEndSegment();
+        // skipping S13, required in 0000A
+
+        // 0000B
+        for (int i = 0; i < 3; i++) {
+            // loop can only appear twice, but we write 3 times
+            writer.writeStartSegment("S11")
+                .writeElement("B")
+                .writeEndSegment();
+        }
+
+        // 0000C - requires exactly two occurrence, but we write once
+        writer.writeStartSegment("S11")
+            .writeElement("C")
+            .writeEndSegment();
+
+        // S20 is unused by the impl, but required by the standard (i.e. the impl is buggy/disagrees w/standard)
+        writer.writeStartSegment("S20")
+            .writeElement("X")
+            .writeEndSegment();
+
+        writer.writeStartSegment("S09")
+            .writeElement("X")
+            .writeEndSegment();
+        writer.writeStartSegment("IEA")
+            .writeElement("1")
+            .writeElement("000000001")
+            .writeEndSegment();
+
+        List<StaEDITestEvent> expected = Arrays.asList(
+            StaEDITestEvent.forError(EDIStreamValidationError.IMPLEMENTATION_UNUSED_SEGMENT_PRESENT, "S12", "S12"),
+            StaEDITestEvent.forError(EDIStreamValidationError.IMPLEMENTATION_SEGMENT_BELOW_MINIMUM_USE, "S13", "S13"),
+            StaEDITestEvent.forError(EDIStreamValidationError.LOOP_OCCURS_OVER_MAXIMUM_TIMES, "S11", "0000B"),
+            StaEDITestEvent.forError(EDIStreamValidationError.IMPLEMENTATION_LOOP_OCCURS_UNDER_MINIMUM_TIMES, "L0000", "0000C"),
+            StaEDITestEvent.forError(EDIStreamValidationError.IMPLEMENTATION_LOOP_OCCURS_UNDER_MINIMUM_TIMES, "L0000", "0000D"),
+            StaEDITestEvent.forError(EDIStreamValidationError.IMPLEMENTATION_UNUSED_SEGMENT_PRESENT, "S20", "S20")
+        );
+
+        assertEquals(expected, errorEvents);
     }
 
     @SuppressWarnings("deprecation")

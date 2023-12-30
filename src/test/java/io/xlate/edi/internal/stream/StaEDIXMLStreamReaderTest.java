@@ -77,6 +77,7 @@ import io.xlate.edi.stream.EDIStreamFilter;
 import io.xlate.edi.stream.EDIStreamReader;
 import io.xlate.edi.stream.EDIStreamValidationError;
 import io.xlate.edi.stream.EDIStreamWriter;
+import io.xlate.edi.stream.EDIValidationException;
 import io.xlate.edi.stream.Location;
 import io.xlate.edi.test.StaEDITestUtil;
 
@@ -896,7 +897,11 @@ class StaEDIXMLStreamReaderTest {
         javax.xml.stream.Location l = ((XMLStreamException) cause).getLocation();
         assertEquals("ParseError at [row,col]:[" + l.getLineNumber() + "," +
                 l.getColumnNumber() + "]\n" +
-                "Message: " + "Segment IK5 has error UNEXPECTED_SEGMENT", cause.getMessage());
+                "Message: Validation exception reading EDI data as XML", cause.getMessage());
+
+        Throwable rootCause = ((XMLStreamException) cause).getNestedException();
+        assertTrue(rootCause instanceof EDIValidationException);
+        assertEquals("Encountered SEGMENT_ERROR [UNEXPECTED_SEGMENT] in segment IK5 at position 4", rootCause.getMessage());
     }
 
     @Test

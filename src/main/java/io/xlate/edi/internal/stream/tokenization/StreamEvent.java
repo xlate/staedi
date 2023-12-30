@@ -23,6 +23,14 @@ public class StreamEvent {
 
     StaEDIStreamLocation location;
 
+    public void update(EDIStreamEvent type, EDIStreamValidationError errorType, CharSequence data, EDIReference typeReference, StaEDIStreamLocation location) {
+        this.type = type;
+        this.errorType = errorType;
+        setData(data);
+        setTypeReference(typeReference);
+        setLocation(location);
+    }
+
     @Override
     public String toString() {
         return String.format(TOSTRING_FORMAT, type, errorType, data, typeReference, location);
