@@ -31,12 +31,12 @@ class NumericValidatorTest implements ValueSetTester {
 
     @Test
     void testValidateInvalidNegative() {
-        assertEquals(-2, NumericValidator.getInstance().validate(dialect, "20-"));
+        assertEquals(-2, new NumericValidator().validate(dialect, "20-"));
     }
 
     @Test
     void testValidateValidNegative() {
-        assertEquals(2, NumericValidator.getInstance().validate(dialect, "-20"));
+        assertEquals(2, new NumericValidator().validate(dialect, "-20"));
     }
 
     @Test
@@ -50,7 +50,7 @@ class NumericValidatorTest implements ValueSetTester {
         when(element.getMaxLength()).thenReturn(10L);
         when(element.getValueSet()).thenReturn(setOf());
 
-        ElementValidator v = NumericValidator.getInstance();
+        ElementValidator v = new NumericValidator();
         List<EDIStreamValidationError> errors = new ArrayList<>();
         v.validate(dialect, element, "1234", errors);
         assertEquals(1, errors.size());
@@ -68,7 +68,7 @@ class NumericValidatorTest implements ValueSetTester {
         when(element.getMaxLength()).thenReturn(10L);
         when(element.getValueSet()).thenReturn(setOf());
 
-        ElementValidator v = NumericValidator.getInstance();
+        ElementValidator v = new NumericValidator();
         List<EDIStreamValidationError> errors = new ArrayList<>();
         v.validate(dialect, element, "12345678901", errors);
         assertEquals(1, errors.size());
@@ -86,7 +86,7 @@ class NumericValidatorTest implements ValueSetTester {
         when(element.getMaxLength()).thenReturn(10L);
         when(element.getValueSet()).thenReturn(setOf());
 
-        ElementValidator v = NumericValidator.getInstance();
+        ElementValidator v = new NumericValidator();
         List<EDIStreamValidationError> errors = new ArrayList<>();
         v.validate(dialect, element, "1234F", errors);
         assertEquals(1, errors.size());
@@ -103,7 +103,7 @@ class NumericValidatorTest implements ValueSetTester {
         when(element.getMinLength()).thenReturn(4L);
         when(element.getMaxLength()).thenReturn(5L);
 
-        ElementValidator v = NumericValidator.getInstance();
+        ElementValidator v = new NumericValidator();
         StringBuilder output = new StringBuilder();
         v.format(dialect, element, "123456", output);
         assertHasError(v, dialect, element, output, EDIStreamValidationError.DATA_ELEMENT_TOO_LONG);
@@ -118,7 +118,7 @@ class NumericValidatorTest implements ValueSetTester {
 
         when(element.getMinLength()).thenReturn(4L);
         when(element.getMaxLength()).thenReturn(5L);
-        ElementValidator v = NumericValidator.getInstance();
+        ElementValidator v = new NumericValidator();
         StringBuilder output = new StringBuilder();
         v.format(dialect, element, "1234F", output);
         assertHasError(v, dialect, element, output, EDIStreamValidationError.INVALID_CHARACTER_DATA);
@@ -135,7 +135,7 @@ class NumericValidatorTest implements ValueSetTester {
         when(element.getMaxLength()).thenReturn(8L);
         when(element.getValueSet()).thenReturn(setOf());
 
-        ElementValidator v = NumericValidator.getInstance();
+        ElementValidator v = new NumericValidator();
         StringBuilder output = new StringBuilder();
         v.format(dialect, element, "1234", output);
         assertEquals("1234", output.toString());
@@ -152,7 +152,7 @@ class NumericValidatorTest implements ValueSetTester {
         when(element.getMaxLength()).thenReturn(8L);
         when(element.getValueSet()).thenReturn(setOf());
 
-        ElementValidator v = NumericValidator.getInstance();
+        ElementValidator v = new NumericValidator();
         StringBuilder output = new StringBuilder();
         v.format(dialect, element, "123", output);
         assertEquals("000123", output.toString());

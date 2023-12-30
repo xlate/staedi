@@ -23,15 +23,6 @@ import io.xlate.edi.stream.EDIStreamValidationError;
 
 class TimeValidator extends ElementValidator {
 
-    private static final TimeValidator singleton = new TimeValidator();
-
-    private TimeValidator() {
-    }
-
-    static TimeValidator getInstance() {
-        return singleton;
-    }
-
     @Override
     void validate(Dialect dialect,
                   EDISimpleType element,

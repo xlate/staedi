@@ -20,11 +20,6 @@ import io.xlate.edi.schema.EDISyntaxRule;
 
 class PairedSyntaxValidator implements SyntaxValidator {
 
-    static final PairedSyntaxValidator INSTANCE = new PairedSyntaxValidator();
-
-    private PairedSyntaxValidator() {
-    }
-
     @Override
     public void validate(EDISyntaxRule syntax, UsageNode structure, ValidationEventHandler handler, SyntaxStatus status) {
         if (status.elementCount == 0) {

@@ -23,15 +23,6 @@ import io.xlate.edi.stream.EDIStreamValidationError;
 
 class NumericValidator extends ElementValidator {
 
-    private static final NumericValidator singleton = new NumericValidator();
-
-    protected NumericValidator() {
-    }
-
-    static NumericValidator getInstance() {
-        return singleton;
-    }
-
     @Override
     void validate(Dialect dialect, EDISimpleType element, CharSequence value, List<EDIStreamValidationError> errors) {
         int length = validate(dialect, value);

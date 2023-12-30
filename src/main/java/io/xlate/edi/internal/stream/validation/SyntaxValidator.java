@@ -21,7 +21,9 @@ import static io.xlate.edi.stream.EDIStreamValidationError.CONDITIONAL_REQUIRED_
 import static io.xlate.edi.stream.EDIStreamValidationError.EXCLUSION_CONDITION_VIOLATED;
 import static io.xlate.edi.stream.EDIStreamValidationError.SEGMENT_EXCLUSION_CONDITION_VIOLATED;
 
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.xlate.edi.internal.stream.tokenization.ValidationEventHandler;
@@ -33,34 +35,25 @@ import io.xlate.edi.stream.EDIStreamValidationError;
 
 interface SyntaxValidator {
 
-    static SyntaxValidator getInstance(EDISyntaxRule.Type type) {
-        SyntaxValidator instance = null;
+    static class ValidatorInstances {
+        static final Map<EDISyntaxRule.Type, SyntaxValidator> instances = new EnumMap<>(EDISyntaxRule.Type.class);
 
-        switch (type) {
-        case CONDITIONAL:
-            instance = ConditionSyntaxValidator.INSTANCE;
-            break;
-        case EXCLUSION:
-            instance = ExclusionSyntaxValidator.INSTANCE;
-            break;
-        case LIST:
-            instance = ListSyntaxValidator.INSTANCE;
-            break;
-        case PAIRED:
-            instance = PairedSyntaxValidator.INSTANCE;
-            break;
-        case REQUIRED:
-            instance = RequiredSyntaxValidator.INSTANCE;
-            break;
-        case SINGLE:
-            instance = SingleSyntaxValidator.INSTANCE;
-            break;
-        case FIRSTONLY:
-            instance = FirstOnlySyntaxValidator.INSTANCE;
-            break;
+        static {
+            instances.put(EDISyntaxRule.Type.CONDITIONAL, new ConditionSyntaxValidator());
+            instances.put(EDISyntaxRule.Type.EXCLUSION, new ExclusionSyntaxValidator());
+            instances.put(EDISyntaxRule.Type.FIRSTONLY, new FirstOnlySyntaxValidator());
+            instances.put(EDISyntaxRule.Type.LIST, new ListSyntaxValidator());
+            instances.put(EDISyntaxRule.Type.PAIRED, new PairedSyntaxValidator());
+            instances.put(EDISyntaxRule.Type.REQUIRED, new RequiredSyntaxValidator());
+            instances.put(EDISyntaxRule.Type.SINGLE, new SingleSyntaxValidator());
         }
 
-        return instance;
+        private ValidatorInstances() {
+        }
+    }
+
+    static SyntaxValidator getInstance(EDISyntaxRule.Type type) {
+        return ValidatorInstances.instances.get(type);
     }
 
     static class SyntaxStatus {

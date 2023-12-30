@@ -15,7 +15,9 @@
  ******************************************************************************/
 package io.xlate.edi.internal.stream.validation;
 
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 
 import io.xlate.edi.internal.stream.tokenization.Dialect;
 import io.xlate.edi.schema.EDISimpleType;
@@ -23,33 +25,24 @@ import io.xlate.edi.stream.EDIStreamValidationError;
 
 abstract class ElementValidator {
 
-    static ElementValidator getInstance(EDISimpleType.Base type) {
-        ElementValidator instance;
+    static class ValidatorInstances {
+        static final Map<EDISimpleType.Base, ElementValidator> instances = new EnumMap<>(EDISimpleType.Base.class);
 
-        switch (type) {
-        case IDENTIFIER:
-        case STRING:
-            instance = AlphaNumericValidator.getInstance();
-            break;
-        case NUMERIC:
-            instance = NumericValidator.getInstance();
-            break;
-        case DECIMAL:
-            instance = DecimalValidator.getInstance();
-            break;
-        case DATE:
-            instance = DateValidator.getInstance();
-            break;
-        case TIME:
-            instance = TimeValidator.getInstance();
-            break;
-        case BINARY:
-        default:
-            instance = null;
-            break;
+        static {
+            instances.put(EDISimpleType.Base.IDENTIFIER, new AlphaNumericValidator());
+            instances.put(EDISimpleType.Base.STRING, new AlphaNumericValidator());
+            instances.put(EDISimpleType.Base.NUMERIC, new NumericValidator());
+            instances.put(EDISimpleType.Base.DECIMAL, new DecimalValidator());
+            instances.put(EDISimpleType.Base.DATE, new DateValidator());
+            instances.put(EDISimpleType.Base.TIME, new TimeValidator());
         }
 
-        return instance;
+        private ValidatorInstances() {
+        }
+    }
+
+    static ElementValidator getInstance(EDISimpleType.Base type) {
+        return ValidatorInstances.instances.get(type);
     }
 
     protected static boolean validateLength(Dialect dialect,

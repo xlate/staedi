@@ -20,11 +20,6 @@ import io.xlate.edi.schema.EDISyntaxRule;
 
 class SingleSyntaxValidator implements SyntaxValidator {
 
-    static final SingleSyntaxValidator INSTANCE = new SingleSyntaxValidator();
-
-    private SingleSyntaxValidator() {
-    }
-
     @Override
     public void validate(EDISyntaxRule syntax, UsageNode structure, ValidationEventHandler handler, SyntaxStatus status) {
         if (status.elementCount > 1) {

@@ -25,15 +25,6 @@ import io.xlate.edi.stream.EDIStreamValidationError;
 
 class AlphaNumericValidator extends ElementValidator {
 
-    private static final AlphaNumericValidator singleton = new AlphaNumericValidator();
-
-    private AlphaNumericValidator() {
-    }
-
-    static AlphaNumericValidator getInstance() {
-        return singleton;
-    }
-
     @Override
     void validate(Dialect dialect,
                   EDISimpleType element,
