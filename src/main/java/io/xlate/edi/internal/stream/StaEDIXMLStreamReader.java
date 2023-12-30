@@ -43,6 +43,7 @@ import io.xlate.edi.stream.EDIInputFactory;
 import io.xlate.edi.stream.EDINamespaces;
 import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamReader;
+import io.xlate.edi.stream.EDIValidationException;
 
 final class StaEDIXMLStreamReader implements XMLStreamReader {
 
@@ -251,17 +252,13 @@ final class StaEDIXMLStreamReader implements XMLStreamReader {
             break;
 
         case SEGMENT_ERROR:
-            throw new XMLStreamException(String.format("Segment %s has error %s",
-                                                       ediReader.getText(),
-                                                       ediReader.getErrorType()),
-                                         this.location);
-
         case ELEMENT_OCCURRENCE_ERROR:
         case ELEMENT_DATA_ERROR:
-            throw new XMLStreamException(String.format("Element %s has error %s",
-                                                       ediReader.getText(),
-                                                       ediReader.getErrorType()),
-                                         this.location);
+            EDIValidationException cause = new EDIValidationException(ediEvent,
+                ediReader.getErrorType(),
+                ediReader.getLocation().copy(),
+                ediReader.getText());
+            throw new XMLStreamException("Validation exception reading EDI data as XML", this.location, cause);
 
         default:
             throw new IllegalStateException("Unknown state: " + ediEvent);

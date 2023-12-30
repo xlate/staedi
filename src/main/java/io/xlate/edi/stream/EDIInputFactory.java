@@ -118,11 +118,11 @@ public abstract class EDIInputFactory extends PropertySupport {
      *             additional information for non-textual event types.
      */
     @Deprecated
-    public static final String EDI_ENABLE_LOOP_TEXT = "io.xlate.edi.stream.EDI_ENABLE_LOOP_TEXT"; //NOSONAR
+    public static final String EDI_ENABLE_LOOP_TEXT = "io.xlate.edi.stream.EDI_ENABLE_LOOP_TEXT"; // NOSONAR
 
     /**
      * When set to true, simple data elements not containing data will be
-     * represented via the JSON parsers as a <i>null</i> value.
+     * represented via the JSON parsers as a {@code null} value.
      *
      * Default value: false
      *

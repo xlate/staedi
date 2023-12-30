@@ -24,8 +24,10 @@ import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -42,6 +44,7 @@ import io.xlate.edi.internal.stream.tokenization.EDIException;
 import io.xlate.edi.internal.stream.tokenization.EDIFACTDialect;
 import io.xlate.edi.internal.stream.tokenization.ElementDataHandler;
 import io.xlate.edi.internal.stream.tokenization.State;
+import io.xlate.edi.internal.stream.tokenization.StreamEvent;
 import io.xlate.edi.internal.stream.tokenization.ValidationEventHandler;
 import io.xlate.edi.internal.stream.tokenization.X12Dialect;
 import io.xlate.edi.internal.stream.validation.UsageError;
@@ -95,6 +98,9 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     private final StringBuilder formattedElement = new StringBuilder();
     private List<EDIValidationException> errors = new ArrayList<>();
     private CharArraySequence elementHolder = new CharArraySequence();
+
+    private final StreamEvent currentEvent = new StreamEvent();
+    private final Deque<StreamEvent> currentEventQueue = new LinkedList<>(Arrays.asList(currentEvent));
 
     private char segmentTerminator;
     private char segmentTagTerminator;
@@ -214,7 +220,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     }
 
     private void ensureLevelBetween(int min, int max) {
-        ensureFalse(this.level < min || this.level > max);
+        ensureFalse(this.level < min || this.level > max); // NOSONAR - ISE should be thrown when in an illegal state
     }
 
     @Override
@@ -527,7 +533,10 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
             validateElement(this.elementBuffer::flip, this.elementBuffer);
         }
         level = LEVEL_SEGMENT;
-        validate(validator -> validator.validateSyntax(dialect, this, this, location, false));
+        validate(validator -> {
+            validator.clearImplementationCandidates(this);
+            validator.validateSyntax(dialect, this, this, location, false);
+        });
 
         if (state == State.ELEMENT_DATA_BINARY) {
             state = State.ELEMENT_END_BINARY;
@@ -979,6 +988,11 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
 
         if (!validator.validateElement(dialect, location, data, this.formattedElement)) {
             reportElementErrors(validator, elementData);
+        }
+
+        if (validator.isPendingDiscrimination()) {
+            currentEvent.update(EDIStreamEvent.ELEMENT_DATA, null, data, null, location);
+            validator.selectImplementation(currentEventQueue, this);
         }
 
         if (!errors.isEmpty()) {

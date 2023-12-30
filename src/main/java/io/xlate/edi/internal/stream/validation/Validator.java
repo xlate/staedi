@@ -632,7 +632,7 @@ public class Validator {
             } else if (node.getNodeType() == Type.SEGMENT) {
                 useErrors.add(new UsageError(segmentNode.getLink(), IMPLEMENTATION_SEGMENT_BELOW_MINIMUM_USE, node.getDepth()));
             } else {
-                useErrors.add(new UsageError(segmentNode.getLink(), IMPLEMENTATION_LOOP_OCCURS_UNDER_MINIMUM_TIMES, node.getDepth()));
+                useErrors.add(new UsageError(segmentNode.getParent().getLink(), IMPLEMENTATION_LOOP_OCCURS_UNDER_MINIMUM_TIMES, node.getDepth()));
             }
         }
     }
@@ -877,7 +877,7 @@ public class Validator {
             implSeg.incrementUsage();
 
             if (candidate.exceedsMaximumUsage(SEGMENT_VERSION)) {
-                handler.segmentError(implSeg.getId(), implSeg.getLink(), LOOP_OCCURS_OVER_MAXIMUM_TIMES);
+                handler.segmentError(implSeg.getId(), candidate.getLink(), LOOP_OCCURS_OVER_MAXIMUM_TIMES);
             }
         } else {
             candidate.incrementUsage();
@@ -1096,7 +1096,8 @@ public class Validator {
             return true;
         }
 
-        boolean valueReceived = value != null && value.length() > 0;
+        boolean valueReceived = value.length() > 0;
+
         clearElements();
         elementErrors.clear();
 

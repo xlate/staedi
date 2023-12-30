@@ -471,11 +471,7 @@ public class ProxyEventHandler implements EventHandler {
             completeLevel(startedLevel, startedLevelParentId);
 
             StreamEvent openLevel = getPooledEvent();
-            openLevel.type = EDIStreamEvent.END_LOOP;
-            openLevel.errorType = startedLevel.errorType;
-            openLevel.setData(startedLevel.data);
-            openLevel.setTypeReference(startedLevel.typeReference);
-            openLevel.setLocation(startedLevel.location);
+            openLevel.update(EDIStreamEvent.END_LOOP, startedLevel.errorType, startedLevel.data, startedLevel.typeReference, startedLevel.location);
 
             /*
              * startedLevelId will not be null due to Validator#validateSyntax.
@@ -595,12 +591,7 @@ public class ProxyEventHandler implements EventHandler {
                               StaEDIStreamLocation location) {
 
         StreamEvent target = getPooledEvent();
-
-        target.type = event;
-        target.errorType = error;
-        target.setData(data);
-        target.setTypeReference(typeReference);
-        target.setLocation(location);
+        target.update(event, error, data, typeReference, location);
 
         eventQueue.add(target);
     }
