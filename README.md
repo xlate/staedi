@@ -18,6 +18,16 @@ using a "pull" processing flow for EDI parsing and an emit flow for EDI generati
 - Read EDI data using standard Java JSON interfaces (Jakarta JSON Processing, aka JSR-353/JSR-374)
 - Support for X12 `ISX` segment (release character, element 01 only), introduced in version `007040`
 
+## Maven Coordinates
+
+```xml
+<dependency>
+  <groupId>io.xlate</groupId>
+  <artifactId>staedi</artifactId>
+  <version>CURRENT VERSION</version>
+</dependency>
+```
+
 ## Support
 Support is available to assist with incorporating StAEDI into your business's application. Available services include
 - **Development of EDI validation schemas** using your documentation (e.g. PDF)
@@ -28,47 +38,6 @@ Please email ***contact at xlate dot io*** for more information.
 
 ## Have a Question?
 If you have a question about StAEDI that may not require the opening of an issue, please head to the StAEDI Gitter channel at https://gitter.im/xlate/staedi to discuss.
-
-## Looking for something more?
-[Fresno](https://www.xlate.io/#fresno) is an integrated EDI validation and transformation engine that supports conversion from EDI to XML and back. Data can be exchanged
-using files or a REST API, easing integration with existing applications and frameworks. Advanced features include the automatic generation of acknowledgements and tracking
-acknowledgements for EDI messages sent outbound. Fresno uses the same validation file format that is used in StAEDI.
-
-More information, email subscription, and pricing can be found at [https://www.xlate.io](https://www.xlate.io/#fresno).
-
-## Using `EDIStreamReader`
-How to bootstrap the reader:
-```java
-// Create an EDIInputFactory
-EDIInputFactory factory = EDIInputFactory.newFactory();
-
-// Obtain an InputStream of the EDI document to read.
-InputStream stream = new FileInputStream(...);
-
-// Create an EDIStreamReader from the stream using the factory
-EDIStreamReader reader = factory.createEDIStreamReader(stream);
-
-// First event - EDIStreamEvent.START_INTERCHANGE
-EDIStreamEvent event = reader.next();
-
-// Second event - EDIStreamEvent.START_SEGMENT
-event = reader.next();
-
-// Object the event text (segment tag for EDIStreamEvent.START_SEGMENT)
-String segmentName = reader.getText();
-
-// Continue processing the stream...
-```
-
-## Maven Coordinates
-
-```xml
-<dependency>
-  <groupId>io.xlate</groupId>
-  <artifactId>staedi</artifactId>
-  <version>CURRENT VERSION</version>
-</dependency>
-```
 
 ## Reading EDI
 
@@ -191,6 +160,9 @@ EDIStreamReader reader = factory.createEDIStreamReader(stream);
 
 ## Sample Writing X12 EDI
 
+The below example shows how X12 data could be written. TRADACOMS and EDIFACT standards are also supported,
+using the segments specific to those standards.
+
 ```java
 EDIOutputFactory factory = EDIOutputFactory.newFactory();
 
@@ -199,6 +171,16 @@ OutputStream stream = new FileOutputStream(...);
 
 EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
 int groupCount = 0;
+
+// Set a schema for the control structures being written (interchange, group, and transaction envelope segments)
+SchemaFactory schemaFactory = SchemaFactory.newFactory();
+/*
+ * A control schema can be created with the factory by providing the standard
+ * and version array. The version is an array to support multi-field versions
+ * such as the composite element UNB01 for EDIFACT.
+ */
+Schema controlSchema = schemaFactory.getControlSchema(EDIStreamConstants.Standards.X12, new String[] { "00501" });
+writer.setControlSchema(controlSchema);
 
 writer.startInterchange();
 
@@ -224,13 +206,22 @@ writer.writeStartSegment("ISA")
 
 // Write functional group header segment
 groupCount++;
+int txCount = 0;
 writer.writeStartSegment("GS");
-writer.writeStartElement();
+writer.writeElement("FA");
 
-// Continue writing remainder of functional group
+// Continue writing remainder of group header and transactions, increment `txCount` for each transaction
+
+writer.writeStartSegment("GE")
+      /* Count of transactions here must match the actual count of ST/SE pairs */
+      .writeElement(String.valueOf(txCount))
+      /* Control number here must match the value in the group header */
+      .writeElement("1");
 
 writer.writeStartSegment("IEA")
+      /* Count of groups here must match the actual count of GS/GE pairs */
       .writeElement(String.valueOf(groupCount))
+      /* Control number here must match the value in the interchange header */
       .writeElement("000000001")
       .writeEndSegment();
 
