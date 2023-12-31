@@ -814,12 +814,10 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
             flush(); // Write `Writer` buffers to stream before writing binary
 
             while ((output = binaryStream.read()) != -1) {
-                location.incrementOffset(output);
-                stream.write(output);
-                elementLength++;
+                writeBinary(output);
             }
         } catch (IOException e) {
-            throw new EDIStreamException("Exception writing binary element data", location, e);
+            throw new EDIStreamException("Exception reading binary data source for output", location, e);
         }
 
         return this;
@@ -831,17 +829,10 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         ensureState(State.ELEMENT_DATA_BINARY);
         ensureArgs(binary.length, start, end);
         writeRequiredSeparators(end - start);
+        flush(); // Write `Writer` buffers to stream before writing binary
 
-        try {
-            flush(); // Write `Writer` buffers to stream before writing binary
-
-            for (int i = start; i < end; i++) {
-                location.incrementOffset(binary[i]);
-                stream.write(binary[i]);
-                elementLength++;
-            }
-        } catch (IOException e) {
-            throw new EDIStreamException("Exception writing binary element data", location, e);
+        for (int i = start; i < end; i++) {
+            writeBinary(binary[i]);
         }
 
         return this;
@@ -852,13 +843,25 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         ensureLevel(LEVEL_ELEMENT);
         ensureState(State.ELEMENT_DATA_BINARY);
         writeRequiredSeparators(binary.remaining());
+        flush(); // Write `Writer` buffers to stream before writing binary
 
         while (binary.hasRemaining()) {
-            write(binary.get());
-            elementLength++;
+            writeBinary(binary.get());
         }
 
         return this;
+    }
+
+    private void writeBinary(int output) throws EDIStreamException {
+        location.incrementOffset(output);
+
+        try {
+            stream.write(output);
+        } catch (IOException e) {
+            throw new EDIStreamException("Exception writing binary element data", location, e);
+        }
+
+        elementLength++;
     }
 
     @Override
