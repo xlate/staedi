@@ -40,6 +40,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
@@ -657,7 +658,7 @@ class StaEDIStreamWriterTest {
     }
 
     @Test
-    void testWriteBinaryDataInputStreamIOException() throws Exception {
+    void testWriteBinaryDataInputStreamReadIOException() throws Exception {
         EDIOutputFactory factory = EDIOutputFactory.newFactory();
         ByteArrayOutputStream stream = new ByteArrayOutputStream(4096);
         EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
@@ -674,6 +675,41 @@ class StaEDIStreamWriterTest {
         writer.writeStartElementBinary();
         EDIStreamException thrown = assertThrows(EDIStreamException.class,
                                                  () -> writer.writeBinaryData(binaryStream));
+        assertEquals("Exception reading binary data source for output in segment BIN at position 2, element 2",
+                     thrown.getMessage());
+        assertSame(ioException, thrown.getCause());
+    }
+
+    @Test
+    void testWriteBinaryDataInputStreamWriteIOException() throws Exception {
+        EDIOutputFactory factory = EDIOutputFactory.newFactory();
+        ByteArrayOutputStream stream = Mockito.spy(new ByteArrayOutputStream(4096));
+        EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
+
+        byte[] binary = { '\n', 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, '\t' };
+        InputStream binaryStream = new ByteArrayInputStream(binary);
+
+        AtomicBoolean binaryElementStarted = new AtomicBoolean(false);
+        IOException ioException = new IOException();
+        Mockito.doAnswer(args -> {
+            if (binaryElementStarted.get()) {
+                throw ioException;
+            }
+            args.callRealMethod();
+            return null;
+        }).when(stream).write(0x00); // fail on second byte of binary stream
+
+        writer.startInterchange();
+        writeHeader(writer);
+        stream.reset();
+        writer.writeStartSegment("BIN");
+        writer.writeStartElement();
+        writer.writeElementData("4");
+        writer.endElement();
+        writer.writeStartElementBinary();
+        binaryElementStarted.set(true);
+        EDIStreamException thrown = assertThrows(EDIStreamException.class,
+                                                 () -> writer.writeBinaryData(binaryStream));
         assertEquals("Exception writing binary element data in segment BIN at position 2, element 2",
                      thrown.getMessage());
         assertSame(ioException, thrown.getCause());
@@ -684,21 +720,21 @@ class StaEDIStreamWriterTest {
         EDIOutputFactory factory = EDIOutputFactory.newFactory();
         ByteArrayOutputStream stream = new ByteArrayOutputStream(4096);
         EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
-        byte[] binary = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A' };
+        byte[] binary = { '\n', 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, '\t' };
         writer.startInterchange();
         writeHeader(writer);
         writer.flush();
         stream.reset();
         writer.writeStartSegment("BIN");
         writer.writeStartElement();
-        writer.writeElementData("11");
+        writer.writeElementData("8");
         writer.endElement();
         writer.writeStartElementBinary();
         writer.writeBinaryData(binary, 0, binary.length);
         writer.endElement();
         writer.writeEndSegment();
         writer.flush();
-        assertEquals("BIN*11*0123456789A~", stream.toString());
+        assertEquals("BIN*8*\n\u0000\u0001\u0002\u0003\u0004\u0005\t~", stream.toString());
     }
 
     @Test
@@ -706,7 +742,7 @@ class StaEDIStreamWriterTest {
         EDIOutputFactory factory = EDIOutputFactory.newFactory();
         ByteArrayOutputStream stream = new ByteArrayOutputStream(4096);
         EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
-        byte[] binary = { 'B', 'U', 'S', 'T', 'M', 'Y', 'B', 'U', 'F', 'F', 'E', 'R', 'S', '\n' };
+        byte[] binary = { '\n', 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, '\t' };
         ByteBuffer buffer = ByteBuffer.wrap(binary);
         writer.startInterchange();
         writeHeader(writer);
@@ -714,14 +750,14 @@ class StaEDIStreamWriterTest {
         stream.reset();
         writer.writeStartSegment("BIN");
         writer.writeStartElement();
-        writer.writeElementData("14");
+        writer.writeElementData("8");
         writer.endElement();
         writer.writeStartElementBinary();
         writer.writeBinaryData(buffer);
         writer.endElement();
         writer.writeEndSegment();
         writer.flush();
-        assertEquals("BIN*14*BUSTMYBUFFERS\n~", stream.toString());
+        assertEquals("BIN*8*\n\u0000\u0001\u0002\u0003\u0004\u0005\t~", stream.toString());
     }
 
     @ParameterizedTest
