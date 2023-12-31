@@ -20,11 +20,6 @@ import io.xlate.edi.schema.EDISyntaxRule;
 
 class ConditionSyntaxValidator implements SyntaxValidator {
 
-    static final ConditionSyntaxValidator INSTANCE = new ConditionSyntaxValidator();
-
-    private ConditionSyntaxValidator() {
-    }
-
     @Override
     public void validate(EDISyntaxRule syntax, UsageNode structure, ValidationEventHandler handler, SyntaxStatus status) {
         if (status.anchorPresent && status.elementCount < syntax.getPositions().size()) {

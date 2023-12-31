@@ -19,15 +19,6 @@ import io.xlate.edi.internal.stream.tokenization.Dialect;
 
 class DecimalValidator extends NumericValidator {
 
-    private static final DecimalValidator singleton = new DecimalValidator();
-
-    private DecimalValidator() {
-    }
-
-    static DecimalValidator getInstance() {
-        return singleton;
-    }
-
     @Override
     int validate(Dialect dialect, CharSequence value) {
         int length = value.length();

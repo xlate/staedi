@@ -24,10 +24,12 @@ import io.xlate.edi.stream.EDIStreamValidationError;
 class DateValidatorTest implements ValueSetTester {
 
     Dialect dialect;
+    DateValidator v;
 
     @BeforeEach
     void setUp() throws EDIException {
         dialect = DialectFactory.getDialect("UNA");
+        v = new DateValidator();
         CharacterSet chars = new CharacterSet();
         "UNA=*.?^~UNB*UNOA=3*005435656=1*006415160=1*060515=1434*00000000000778~".chars()
                                                                                  .forEach(c -> dialect.appendHeader(chars, (char) c));
@@ -43,7 +45,6 @@ class DateValidatorTest implements ValueSetTester {
         when(element.getMinLength()).thenReturn(6L);
         when(element.getMaxLength()).thenReturn(8L);
         when(element.getValueSet()).thenReturn(setOf());
-        ElementValidator v = DateValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
         v.validate(dialect, element, "0901", errors);
         assertEquals(2, errors.size());
@@ -65,7 +66,6 @@ class DateValidatorTest implements ValueSetTester {
         when(element.getMinLength()).thenReturn(6L);
         when(element.getMaxLength()).thenReturn(8L);
         when(element.getValueSet()).thenReturn(setOf());
-        ElementValidator v = DateValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
         v.validate(dialect, element, param, errors);
         assertEquals(1, errors.size());
@@ -82,7 +82,6 @@ class DateValidatorTest implements ValueSetTester {
         when(element.getMinLength()).thenReturn(6L);
         when(element.getMaxLength()).thenReturn(8L);
         when(element.getValueSet()).thenReturn(setOf());
-        ElementValidator v = DateValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
         v.validate(dialect, element, "20190901", errors);
         assertEquals(0, errors.size());
@@ -98,7 +97,6 @@ class DateValidatorTest implements ValueSetTester {
         when(element.getMinLength()).thenReturn(6L);
         when(element.getMaxLength()).thenReturn(8L);
         when(element.getValueSet()).thenReturn(setOf());
-        ElementValidator v = DateValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
         v.validate(dialect, element, "191201", errors);
         assertEquals(0, errors.size());
@@ -114,7 +112,6 @@ class DateValidatorTest implements ValueSetTester {
         when(element.getMinLength()).thenReturn(6L);
         when(element.getMaxLength()).thenReturn(8L);
         when(element.getValueSet()).thenReturn(setOf());
-        ElementValidator v = DateValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
         v.validate(dialect, element, "991231", errors);
         v.validate(dialect, element, "990228", errors);
@@ -131,7 +128,6 @@ class DateValidatorTest implements ValueSetTester {
         when(element.getMinLength()).thenReturn(6L);
         when(element.getMaxLength()).thenReturn(8L);
         when(element.getValueSet()).thenReturn(setOf());
-        ElementValidator v = DateValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
         v.validate(dialect, element, "00000132", errors);
         v.validate(dialect, element, "00000431", errors);
@@ -151,7 +147,6 @@ class DateValidatorTest implements ValueSetTester {
         when(element.getMinLength()).thenReturn(6L);
         when(element.getMaxLength()).thenReturn(8L);
         when(element.getValueSet()).thenReturn(setOf());
-        ElementValidator v = DateValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
         v.validate(dialect, element, "20000229", errors);
         v.validate(dialect, element, "19960229", errors);
@@ -170,7 +165,6 @@ class DateValidatorTest implements ValueSetTester {
 
         when(element.getMinLength()).thenReturn(6L);
         when(element.getMaxLength()).thenReturn(8L);
-        ElementValidator v = DateValidator.getInstance();
         StringBuilder output = new StringBuilder();
         v.format(dialect, element, "20000", output);
         assertHasError(v, dialect, element, output, EDIStreamValidationError.DATA_ELEMENT_TOO_SHORT);
@@ -185,7 +179,6 @@ class DateValidatorTest implements ValueSetTester {
 
         when(element.getMinLength()).thenReturn(6L);
         when(element.getMaxLength()).thenReturn(8L);
-        ElementValidator v = DateValidator.getInstance();
         StringBuilder output = new StringBuilder();
         v.format(dialect, element, "200001011", output);
         assertHasError(v, dialect, element, output, EDIStreamValidationError.DATA_ELEMENT_TOO_LONG);
@@ -200,7 +193,6 @@ class DateValidatorTest implements ValueSetTester {
 
         when(element.getMinLength()).thenReturn(6L);
         when(element.getMaxLength()).thenReturn(8L);
-        ElementValidator v = DateValidator.getInstance();
         StringBuilder output = new StringBuilder();
         v.format(dialect, element, "20000100", output);
         assertHasError(v, dialect, element, output, EDIStreamValidationError.INVALID_DATE);
@@ -215,7 +207,6 @@ class DateValidatorTest implements ValueSetTester {
 
         when(element.getMinLength()).thenReturn(6L);
         when(element.getMaxLength()).thenReturn(8L);
-        ElementValidator v = DateValidator.getInstance();
         StringBuilder output = new StringBuilder();
         v.format(dialect, element, "20000101", output);
         assertEquals("20000101", output.toString());

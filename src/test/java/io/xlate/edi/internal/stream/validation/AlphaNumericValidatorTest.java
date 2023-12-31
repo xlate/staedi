@@ -21,10 +21,12 @@ import io.xlate.edi.stream.EDIStreamValidationError;
 class AlphaNumericValidatorTest implements ValueSetTester {
 
     Dialect dialect;
+    AlphaNumericValidator v;
 
     @BeforeEach
     void setUp() throws EDIException {
         dialect = DialectFactory.getDialect("UNA");
+        v = new AlphaNumericValidator();
         CharacterSet chars = new CharacterSet();
         "UNA=*.?^~UNB*UNOA=3*005435656=1*006415160=1*060515=1434*00000000000778~".chars().forEach(c -> dialect.appendHeader(chars, (char) c));
     }
@@ -39,7 +41,6 @@ class AlphaNumericValidatorTest implements ValueSetTester {
         when(element.getMinLength()).thenReturn(5L);
         when(element.getMaxLength()).thenReturn(5L);
         when(element.getValueSet()).thenReturn(setOf());
-        ElementValidator v = AlphaNumericValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
         v.validate(dialect, element, "TEST", errors);
         assertEquals(1, errors.size());
@@ -56,7 +57,6 @@ class AlphaNumericValidatorTest implements ValueSetTester {
         when(element.getMinLength()).thenReturn(5L);
         when(element.getMaxLength()).thenReturn(5L);
         when(element.getValueSet()).thenReturn(setOf());
-        ElementValidator v = AlphaNumericValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
         v.validate(dialect, element, "TESTTEST", errors);
         assertEquals(1, errors.size());
@@ -74,7 +74,6 @@ class AlphaNumericValidatorTest implements ValueSetTester {
         when(element.getMinLength()).thenReturn(4L);
         when(element.getMaxLength()).thenReturn(5L);
         when(element.getValues()).thenReturn(mapOf("VAL1", "Title1", "VAL2", "Title2"));
-        ElementValidator v = AlphaNumericValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
         v.validate(dialect, element, "TEST", errors);
         assertEquals(1, errors.size());
@@ -91,7 +90,6 @@ class AlphaNumericValidatorTest implements ValueSetTester {
         when(element.getMinLength()).thenReturn(4L);
         when(element.getMaxLength()).thenReturn(5L);
         when(element.getValueSet()).thenReturn(setOf("VAL1", "VAL\u0008"));
-        ElementValidator v = AlphaNumericValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
         v.validate(dialect, element, "VAL\u0008", errors);
         assertEquals(1, errors.size());
@@ -107,7 +105,6 @@ class AlphaNumericValidatorTest implements ValueSetTester {
 
         when(element.getMinLength()).thenReturn(4L);
         when(element.getMaxLength()).thenReturn(5L);
-        ElementValidator v = AlphaNumericValidator.getInstance();
         StringBuilder output = new StringBuilder();
         v.format(dialect, element, "TESTTEST", output);
         assertHasError(v, dialect, element, output, EDIStreamValidationError.DATA_ELEMENT_TOO_LONG);
@@ -124,7 +121,6 @@ class AlphaNumericValidatorTest implements ValueSetTester {
         when(element.getMinLength()).thenReturn(4L);
         when(element.getMaxLength()).thenReturn(8L);
         when(element.getValues()).thenReturn(mapOf("VAL1", "Title1", "VAL2", "Title2"));
-        ElementValidator v = AlphaNumericValidator.getInstance();
         StringBuilder output = new StringBuilder();
         v.format(dialect, element, "TESTTEST", output);
         assertHasError(v, dialect, element, output, EDIStreamValidationError.INVALID_CODE_VALUE);
@@ -140,7 +136,6 @@ class AlphaNumericValidatorTest implements ValueSetTester {
         when(element.getMinLength()).thenReturn(4L);
         when(element.getMaxLength()).thenReturn(8L);
         when(element.getValueSet()).thenReturn(setOf("VAL1", "VAL2"));
-        ElementValidator v = AlphaNumericValidator.getInstance();
         StringBuilder output = new StringBuilder();
         v.format(dialect, element, "VAL1", output);
         assertEquals("VAL1", output.toString());
@@ -155,7 +150,6 @@ class AlphaNumericValidatorTest implements ValueSetTester {
 
         when(element.getMinLength()).thenReturn(4L);
         when(element.getMaxLength()).thenReturn(4L);
-        ElementValidator v = AlphaNumericValidator.getInstance();
         StringBuilder output = new StringBuilder();
         v.format(dialect, element, "TES\u0008", output);
         assertHasError(v, dialect, element, output, EDIStreamValidationError.INVALID_CHARACTER_DATA);
@@ -170,7 +164,6 @@ class AlphaNumericValidatorTest implements ValueSetTester {
 
         when(element.getMinLength()).thenReturn(10L);
         when(element.getMaxLength()).thenReturn(10L);
-        ElementValidator v = AlphaNumericValidator.getInstance();
         StringBuilder output = new StringBuilder();
         v.format(dialect, element, "TEST", output);
         assertEquals("TEST      ", output.toString());

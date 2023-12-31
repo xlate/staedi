@@ -23,10 +23,12 @@ import io.xlate.edi.stream.EDIStreamValidationError;
 class TimeValidatorTest implements ValueSetTester {
 
     Dialect dialect;
+    TimeValidator v;
 
     @BeforeEach
     void setUp() throws EDIException {
         dialect = DialectFactory.getDialect("UNA");
+        v = new TimeValidator();
         CharacterSet chars = new CharacterSet();
         "UNA=*.?^~UNB*UNOA=3*005435656=1*006415160=1*060515=1434*00000000000778~".chars().forEach(c -> dialect.appendHeader(chars, (char) c));
     }
@@ -41,7 +43,6 @@ class TimeValidatorTest implements ValueSetTester {
         when(element.getMinLength()).thenReturn(4L);
         when(element.getMaxLength()).thenReturn(8L);
         when(element.getValueSet()).thenReturn(setOf());
-        ElementValidator v = TimeValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
         v.validate(dialect, element, "09", errors);
         assertEquals(2, errors.size());
@@ -59,7 +60,6 @@ class TimeValidatorTest implements ValueSetTester {
         when(element.getMinLength()).thenReturn(4L);
         when(element.getMaxLength()).thenReturn(8L);
         when(element.getValueSet()).thenReturn(setOf());
-        ElementValidator v = TimeValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
         v.validate(dialect, element, "1230599999", errors);
         assertEquals(2, errors.size());
@@ -77,7 +77,6 @@ class TimeValidatorTest implements ValueSetTester {
         when(element.getMinLength()).thenReturn(4L);
         when(element.getMaxLength()).thenReturn(8L);
         when(element.getValueSet()).thenReturn(setOf());
-        ElementValidator v = TimeValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
         v.validate(dialect, element, "123059AA", errors);
         assertEquals(1, errors.size());
@@ -95,7 +94,6 @@ class TimeValidatorTest implements ValueSetTester {
         when(element.getMinLength()).thenReturn(4L);
         when(element.getMaxLength()).thenReturn(8L);
         when(element.getValueSet()).thenReturn(setOf());
-        ElementValidator v = TimeValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
         v.validate(dialect, element, "12305", errors);
         assertEquals(1, errors.size());
@@ -112,7 +110,6 @@ class TimeValidatorTest implements ValueSetTester {
         when(element.getMinLength()).thenReturn(4L);
         when(element.getMaxLength()).thenReturn(8L);
         when(element.getValueSet()).thenReturn(setOf());
-        ElementValidator v = TimeValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
         v.validate(dialect, element, "12305900", errors);
         assertEquals(0, errors.size());
@@ -128,7 +125,6 @@ class TimeValidatorTest implements ValueSetTester {
         when(element.getMinLength()).thenReturn(4L);
         when(element.getMaxLength()).thenReturn(8L);
         when(element.getValueSet()).thenReturn(setOf());
-        ElementValidator v = TimeValidator.getInstance();
         List<EDIStreamValidationError> errors = new ArrayList<>();
         v.validate(dialect, element, "1230591", errors);
         assertEquals(0, errors.size());
@@ -158,7 +154,6 @@ class TimeValidatorTest implements ValueSetTester {
         when(element.getMinLength()).thenReturn(4L);
         when(element.getMaxLength()).thenReturn(8L);
         when(element.getValueSet()).thenReturn(setOf());
-        ElementValidator v = TimeValidator.getInstance();
         StringBuilder output = new StringBuilder();
         v.format(dialect, element, "1230599999", output);
         assertHasError(v, dialect, element, output, EDIStreamValidationError.DATA_ELEMENT_TOO_LONG);
@@ -174,7 +169,6 @@ class TimeValidatorTest implements ValueSetTester {
         when(element.getMinLength()).thenReturn(4L);
         when(element.getMaxLength()).thenReturn(8L);
         when(element.getValueSet()).thenReturn(setOf());
-        ElementValidator v = TimeValidator.getInstance();
         StringBuilder output = new StringBuilder();
         v.format(dialect, element, "123059AA", output);
         assertHasError(v, dialect, element, output, EDIStreamValidationError.INVALID_TIME);
@@ -190,7 +184,6 @@ class TimeValidatorTest implements ValueSetTester {
         when(element.getMinLength()).thenReturn(4L);
         when(element.getMaxLength()).thenReturn(8L);
         when(element.getValueSet()).thenReturn(setOf());
-        ElementValidator v = TimeValidator.getInstance();
         StringBuilder output = new StringBuilder();
         v.format(dialect, element, "123059", output);
         assertEquals("123059", output.toString());
@@ -206,7 +199,6 @@ class TimeValidatorTest implements ValueSetTester {
         when(element.getMinLength()).thenReturn(6L);
         when(element.getMaxLength()).thenReturn(8L);
         when(element.getValueSet()).thenReturn(setOf());
-        ElementValidator v = TimeValidator.getInstance();
         StringBuilder output = new StringBuilder();
         v.format(dialect, element, "1230", output);
         assertEquals("123000", output.toString());

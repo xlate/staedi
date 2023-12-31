@@ -24,15 +24,6 @@ import io.xlate.edi.stream.EDIStreamValidationError;
 
 class DateValidator extends ElementValidator {
 
-    private static final DateValidator singleton = new DateValidator();
-
-    private DateValidator() {
-    }
-
-    static DateValidator getInstance() {
-        return singleton;
-    }
-
     @Override
     void validate(Dialect dialect,
                   EDISimpleType element,
