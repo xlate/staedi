@@ -43,7 +43,7 @@ jobs:
           java-version: ${{matrix.java}}
 
       - name: Setup Maven Cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.m2/repository
           key: m2-repository-${{ hashFiles('**/pom.xml') }}
@@ -81,7 +81,7 @@ jobs:
           java-version: 17
 
       - name: Setup Maven Cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.m2/repository
           key: m2-repository-${{ hashFiles('**/pom.xml') }}
