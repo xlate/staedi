@@ -49,6 +49,7 @@ import io.xlate.edi.internal.stream.tokenization.ValidationEventHandler;
 import io.xlate.edi.internal.stream.tokenization.X12Dialect;
 import io.xlate.edi.internal.stream.validation.UsageError;
 import io.xlate.edi.internal.stream.validation.Validator;
+import io.xlate.edi.internal.stream.validation.ValidatorConfig;
 import io.xlate.edi.schema.EDIReference;
 import io.xlate.edi.schema.EDIType;
 import io.xlate.edi.schema.Schema;
@@ -62,7 +63,7 @@ import io.xlate.edi.stream.EDIStreamWriter;
 import io.xlate.edi.stream.EDIValidationException;
 import io.xlate.edi.stream.Location;
 
-public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, ValidationEventHandler {
+public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, ValidationEventHandler, ValidatorConfig {
 
     static final Logger LOGGER = Logger.getLogger(StaEDIStreamWriter.class.getName());
 
@@ -132,6 +133,21 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         this.prettyPrint = booleanValue(properties.get(EDIOutputFactory.PRETTY_PRINT));
         this.formatElements = booleanValue(properties.get(EDIOutputFactory.FORMAT_ELEMENTS));
         this.location = new StaEDIStreamLocation();
+    }
+
+    @Override
+    public boolean formatElements() {
+        return formatElements;
+    }
+
+    @Override
+    public boolean trimDiscriminatorValues() {
+        return false;
+    }
+
+    @Override
+    public boolean validateControlCodeValues() {
+        return true;
     }
 
     boolean booleanValue(Object value) {
@@ -256,14 +272,14 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     public void setControlSchema(Schema controlSchema) {
         ensureLevel(LEVEL_INITIAL);
         this.controlSchema = controlSchema;
-        controlValidator = Validator.forSchema(controlSchema, null, true, formatElements);
+        controlValidator = Validator.forSchema(controlSchema, null, this);
     }
 
     @Override
     public void setTransactionSchema(Schema transactionSchema) {
         if (!Objects.equals(this.transactionSchema, transactionSchema)) {
             this.transactionSchema = transactionSchema;
-            transactionValidator = Validator.forSchema(transactionSchema, controlSchema, true, formatElements);
+            transactionValidator = Validator.forSchema(transactionSchema, controlSchema, this);
         }
     }
 

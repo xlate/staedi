@@ -29,6 +29,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import io.xlate.edi.internal.schema.SchemaUtils;
 import io.xlate.edi.schema.EDIReference;
@@ -820,6 +822,63 @@ class SegmentValidationTest {
         }
 
         assertEquals(expected, events);
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+        "'41' ,      , '1000A'",
+        "'41 ', true , '1000A'",
+        "'41 ', false, 'L0001'",
+        "'41 ',      , 'L0001'",
+        "' 41',      , 'L0001'",
+        "' 41', true , '1000A'",
+        "' 41', false, 'L0001'",
+    })
+    void testTrimDiscriminatorValue(String nm101, Boolean trimDiscriminator, String expectedLoopId) throws EDIStreamException, EDISchemaException {
+        EDIInputFactory factory = EDIInputFactory.newFactory();
+        ByteArrayInputStream stream = new ByteArrayInputStream((""
+                + "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *200711*0100*^*00501*000000001*0*T*:~"
+                + "GS*HC*99999999999*888888888888*20111219*1340*1*X*005010X222~"
+                + "ST*837*0001*005010X222~"
+                + "BHT*0019*00*565743*20110523*154959*CH~"
+                + "NM1*" + nm101 + "*2*SAMPLE INC*****46*496103~"
+                // Skip below in test
+                + "PER*IC*EDI DEPT*EM*FEEDBACK@example.com*TE*3305551212~"
+                + "NM1*40*2*PPO BLUE*****46*54771~"
+                + "HL*1**20*1~"
+                + "HL*2*1*22*0~"
+                + "SE*8*0001~"
+                + "GE*1*1~"
+                + "IEA*1*000000001~").getBytes());
+
+        factory.setProperty(EDIInputFactory.EDI_TRIM_DISCRIMINATOR_VALUES, trimDiscriminator);
+        EDIStreamReader reader = factory.createEDIStreamReader(stream);
+        List<EDIStreamValidationError> errors = new ArrayList<>();
+        String loopId = null;
+
+        while (loopId == null && reader.hasNext()) {
+            switch (reader.next()) {
+            case START_TRANSACTION:
+                reader.setTransactionSchema(SchemaFactory.newFactory()
+                                                         .createSchema(getClass().getResource("/x12/005010X222/837_loop1000_only.xml")));
+                break;
+            case START_LOOP:
+                loopId = reader.getReferenceCode();
+                break;
+            case SEGMENT_ERROR:
+            case ELEMENT_OCCURRENCE_ERROR:
+            case ELEMENT_DATA_ERROR:
+                errors.add(reader.getErrorType());
+                System.out.println("Unexpected error: " + reader.getErrorType() + "; " + reader.getText() + "; " + reader.getLocation());
+                break;
+            default:
+                break;
+            }
+        }
+
+        assertEquals(0, errors.size(), () -> errors.toString());
+
+        assertEquals(expectedLoopId, loopId);
     }
 
     @SuppressWarnings("deprecation")

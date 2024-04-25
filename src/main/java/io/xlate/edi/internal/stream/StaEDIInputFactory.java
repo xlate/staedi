@@ -42,6 +42,7 @@ public class StaEDIInputFactory extends EDIInputFactory {
         supportedProperties.add(EDI_IGNORE_EXTRANEOUS_CHARACTERS);
         supportedProperties.add(EDI_NEST_HIERARCHICAL_LOOPS);
         supportedProperties.add(EDI_ENABLE_LOOP_TEXT);
+        supportedProperties.add(EDI_TRIM_DISCRIMINATOR_VALUES);
 
         supportedProperties.add(XML_DECLARE_TRANSACTION_XMLNS);
         supportedProperties.add(XML_WRAP_TRANSACTION_CONTENTS);

@@ -34,6 +34,7 @@ import io.xlate.edi.internal.schema.SchemaUtils;
 import io.xlate.edi.internal.stream.tokenization.Dialect;
 import io.xlate.edi.internal.stream.tokenization.Lexer;
 import io.xlate.edi.internal.stream.tokenization.ProxyEventHandler;
+import io.xlate.edi.internal.stream.validation.ValidatorConfig;
 import io.xlate.edi.schema.EDIReference;
 import io.xlate.edi.schema.EDISchemaException;
 import io.xlate.edi.schema.Schema;
@@ -45,7 +46,7 @@ import io.xlate.edi.stream.EDIStreamReader;
 import io.xlate.edi.stream.EDIStreamValidationError;
 import io.xlate.edi.stream.Location;
 
-public class StaEDIStreamReader implements EDIStreamReader, Configurable {
+public class StaEDIStreamReader implements EDIStreamReader, Configurable, ValidatorConfig {
 
     private static final Logger LOGGER = Logger.getLogger(StaEDIStreamReader.class.getName());
     private static final CharBuffer GROUP_TEXT = CharBuffer.wrap(ProxyEventHandler.LOOP_CODE_GROUP);
@@ -72,7 +73,7 @@ public class StaEDIStreamReader implements EDIStreamReader, Configurable {
         this.controlSchema = schema;
         this.properties = new HashMap<>(properties);
         this.reporter = reporter;
-        this.proxy = new ProxyEventHandler(location, this.controlSchema, nestHierarchicalLoops());
+        this.proxy = new ProxyEventHandler(location, controlSchema, nestHierarchicalLoops(), this);
         this.lexer = new Lexer(stream, charset, proxy, location, ignoreExtraneousCharacters());
     }
 
@@ -345,7 +346,7 @@ public class StaEDIStreamReader implements EDIStreamReader, Configurable {
         }
 
         this.controlSchema = schema;
-        proxy.setControlSchema(schema, validateControlCodeValues());
+        proxy.setControlSchema(schema);
     }
 
     @Override
@@ -504,7 +505,8 @@ public class StaEDIStreamReader implements EDIStreamReader, Configurable {
 
     /**************************************************************************/
 
-    boolean validateControlCodeValues() {
+    @Override
+    public boolean validateControlCodeValues() {
         return getProperty(EDIInputFactory.EDI_VALIDATE_CONTROL_CODE_VALUES, Boolean::parseBoolean, true);
     }
 
@@ -529,4 +531,13 @@ public class StaEDIStreamReader implements EDIStreamReader, Configurable {
         return getProperty(EDIInputFactory.EDI_ENABLE_LOOP_TEXT, Boolean::parseBoolean, true);
     }
 
+    @Override
+    public boolean trimDiscriminatorValues() {
+        return getProperty(EDIInputFactory.EDI_TRIM_DISCRIMINATOR_VALUES, Boolean::parseBoolean, false);
+    }
+
+    @Override
+    public boolean formatElements() {
+        return false;
+    }
 }

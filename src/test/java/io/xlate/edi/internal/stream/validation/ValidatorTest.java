@@ -14,11 +14,29 @@ import io.xlate.edi.stream.EDIStreamConstants.Standards;
 
 class ValidatorTest {
 
+    static final ValidatorConfig CONFIG = new ValidatorConfig() {
+
+        @Override
+        public boolean validateControlCodeValues() {
+            return true;
+        }
+
+        @Override
+        public boolean formatElements() {
+            return false;
+        }
+
+        @Override
+        public boolean trimDiscriminatorValues() {
+            return false;
+        }
+    };
+
     @Test
     void testValidatorRootAttributes() throws EDISchemaException {
         SchemaFactory schemaFactory = SchemaFactory.newFactory();
         Schema schema = schemaFactory.getControlSchema(Standards.X12, new String[] { "00801" });
-        Validator validator = new Validator(schema, null, true);
+        Validator validator = new Validator(schema, null, CONFIG);
         EDIReference interchangeReference = validator.root.getLink();
 
         assertSame(schema.getStandard(), interchangeReference.getReferencedType());
@@ -34,7 +52,7 @@ class ValidatorTest {
     void testValidatorRootNoParent() throws EDISchemaException {
         SchemaFactory schemaFactory = SchemaFactory.newFactory();
         Schema schema = schemaFactory.getControlSchema(Standards.X12, new String[] { "00801" });
-        Validator validator = new Validator(schema, null, true);
+        Validator validator = new Validator(schema, null, CONFIG);
         UsageNode root = validator.root;
 
         assertNull(root.getParent());

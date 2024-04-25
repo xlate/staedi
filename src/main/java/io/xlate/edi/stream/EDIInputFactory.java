@@ -121,6 +121,18 @@ public abstract class EDIInputFactory extends PropertySupport {
     public static final String EDI_ENABLE_LOOP_TEXT = "io.xlate.edi.stream.EDI_ENABLE_LOOP_TEXT"; // NOSONAR
 
     /**
+     * When set to true, discriminator values from the EDI input will be trimmed
+     * (leading and trailing whitespace removed) prior to testing whether the value
+     * matches the enumerated values for a loop or segment defined in an implementation
+     * schema.
+     *
+     * Default value: false
+     *
+     * @since 1.25
+     */
+    public static final String EDI_TRIM_DISCRIMINATOR_VALUES = "io.xlate.edi.stream.EDI_TRIM_DISCRIMINATOR_VALUES";
+
+    /**
      * When set to true, simple data elements not containing data will be
      * represented via the JSON parsers as a {@code null} value.
      *

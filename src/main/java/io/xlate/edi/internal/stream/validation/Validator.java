@@ -79,6 +79,7 @@ public class Validator {
     private Schema schema;
     private final boolean validateCodeValues;
     private final boolean formatElements;
+    private final boolean trimDiscriminatorValues;
     private boolean initial = true;
 
     final UsageNode root;
@@ -165,11 +166,11 @@ public class Validator {
 
     }
 
-    public static Validator forSchema(Schema schema, Schema containerSchema, boolean validateCodeValues, boolean formatElements) {
+    public static Validator forSchema(Schema schema, Schema containerSchema, ValidatorConfig config) {
         final Validator instance;
 
         if (schema != null) {
-            instance = new Validator(schema, containerSchema, validateCodeValues, formatElements);
+            instance = new Validator(schema, containerSchema, config);
         } else {
             instance = null;
         }
@@ -177,14 +178,11 @@ public class Validator {
         return instance;
     }
 
-    public Validator(Schema schema, Schema containerSchema, boolean validateCodeValues) {
-        this(schema, containerSchema, validateCodeValues, false);
-    }
-
-    public Validator(Schema schema, Schema containerSchema, boolean validateCodeValues, boolean formatElements) {
+    public Validator(Schema schema, Schema containerSchema, ValidatorConfig config) {
         this.schema = schema;
-        this.validateCodeValues = validateCodeValues;
-        this.formatElements = formatElements;
+        this.validateCodeValues = config.validateControlCodeValues();
+        this.formatElements = config.formatElements();
+        this.trimDiscriminatorValues = config.trimDiscriminatorValues();
         this.containerSchema = containerSchema;
 
         LOGGER.finer(() -> "Creating usage tree");
@@ -916,7 +914,7 @@ public class Validator {
         revalidationQueue.clear();
     }
 
-    static boolean isMatch(PolymorphicImplementation implType, StreamEvent currentEvent) {
+    boolean isMatch(PolymorphicImplementation implType, StreamEvent currentEvent) {
         Discriminator discr = implType.getDiscriminator();
 
         // If no discriminator, matches by default
@@ -924,8 +922,17 @@ public class Validator {
             return true;
         }
 
-        return discr.matchesLocation(currentEvent.getLocation())
-                && discr.getValueSet().contains(currentEvent.getData().toString());
+        if (discr.matchesLocation(currentEvent.getLocation())) {
+            String eventValue = currentEvent.getData().toString();
+
+            if (trimDiscriminatorValues) {
+                eventValue = eventValue.trim();
+            }
+
+            return discr.getValueSet().contains(eventValue);
+        }
+
+        return false;
     }
 
     /**
