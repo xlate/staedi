@@ -28,6 +28,7 @@ import java.util.function.Function;
 import io.xlate.edi.internal.stream.StaEDIStreamLocation;
 import io.xlate.edi.internal.stream.validation.UsageError;
 import io.xlate.edi.internal.stream.validation.Validator;
+import io.xlate.edi.internal.stream.validation.ValidatorConfig;
 import io.xlate.edi.schema.EDIElementPosition;
 import io.xlate.edi.schema.EDILoopType;
 import io.xlate.edi.schema.EDIReference;
@@ -43,6 +44,7 @@ public class ProxyEventHandler implements EventHandler {
 
     private final StaEDIStreamLocation location;
     private final boolean nestHierarchicalLoops;
+    private final ValidatorConfig config;
 
     private Schema controlSchema;
     private Validator controlValidator;
@@ -86,20 +88,21 @@ public class ProxyEventHandler implements EventHandler {
 
     private Dialect dialect;
 
-    public ProxyEventHandler(StaEDIStreamLocation location, Schema controlSchema, boolean nestHierarchicalLoops) {
+    public ProxyEventHandler(StaEDIStreamLocation location, Schema controlSchema, boolean nestHierarchicalLoops, ValidatorConfig config) {
         this.location = location;
+        this.config = config;
         this.nestHierarchicalLoops = nestHierarchicalLoops;
 
-        setControlSchema(controlSchema, true);
+        setControlSchema(controlSchema);
     }
 
-    public void setControlSchema(Schema controlSchema, boolean validateCodeValues) {
+    public void setControlSchema(Schema controlSchema) {
         if (controlValidator != null) {
             throw new IllegalStateException("control validator already created");
         }
 
         this.controlSchema = controlSchema;
-        controlValidator = Validator.forSchema(controlSchema, null, validateCodeValues, false);
+        controlValidator = Validator.forSchema(controlSchema, null, config);
     }
 
     public boolean isTransactionSchemaAllowed() {
@@ -113,7 +116,7 @@ public class ProxyEventHandler implements EventHandler {
     public void setTransactionSchema(Schema transactionSchema) {
         if (!Objects.equals(this.transactionSchema, transactionSchema)) {
             this.transactionSchema = transactionSchema;
-            transactionValidator = Validator.forSchema(transactionSchema, controlSchema, true, false);
+            transactionValidator = Validator.forSchema(transactionSchema, controlSchema, config);
         }
     }
 
