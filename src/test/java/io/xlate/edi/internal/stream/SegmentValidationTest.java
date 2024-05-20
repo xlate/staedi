@@ -73,7 +73,7 @@ class SegmentValidationTest {
     void testValidSequenceXml() throws EDISchemaException, EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = new ByteArrayInputStream((""
-                + "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~"
+                + "ISA*00*    ..    *00*    ..    *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~"
                 + "S01*X~"
                 + "S11*X~"
                 + "S12*X~"
