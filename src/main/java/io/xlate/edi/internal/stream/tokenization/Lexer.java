@@ -420,7 +420,7 @@ public class Lexer {
         case RELEASE_CHARACTER:
             break;
         default:
-            if (!dialect.isDecimalMark(input) && !characters.isIgnored(input)) {
+            if (!characters.isIgnored(input)) {
                 buffer.put(input);
             }
             break;
