@@ -65,7 +65,7 @@
     <version.hamcrest>2.2</version.hamcrest>
     <version.xmlunit>2.10.0</version.xmlunit>
     <version.mockito-core>5.12.0</version.mockito-core>
-    <version.jsonassert>1.5.1</version.jsonassert>
+    <version.jsonassert>1.5.2</version.jsonassert>
     <version.parsson>1.1.6</version.parsson>
     <version.jaxb-runtime>4.0.5</version.jaxb-runtime>
   </properties>
