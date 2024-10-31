@@ -45,6 +45,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Set;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -80,6 +81,7 @@ import io.xlate.edi.stream.Location;
 @SuppressWarnings({ "resource", "unused" })
 class StaEDIStreamReaderTest implements ConstantsTest {
 
+    private static final Logger LOG = Logger.getLogger(StaEDIStreamReaderTest.class.getName());
     private Set<EDIStreamEvent> possible = new HashSet<>();
 
     public StaEDIStreamReaderTest() {
@@ -1907,6 +1909,7 @@ class StaEDIStreamReaderTest implements ConstantsTest {
                 case SEGMENT_ERROR:
                 case ELEMENT_OCCURRENCE_ERROR:
                 case ELEMENT_DATA_ERROR:
+                    LOG.warning(String.format("Unexpected error: %s, %s at %s", reader.getEventType(), reader.getErrorType(), reader.getLocation()));
                     unexpected.add(reader.getErrorType());
                     break;
                 default:
@@ -1919,7 +1922,57 @@ class StaEDIStreamReaderTest implements ConstantsTest {
             reader.close();
         }
 
-        assertEquals(0, unexpected.size());
+        assertEquals(0, unexpected.size(), () -> unexpected.toString());
+    }
+
+    /**
+     * Original issue: https://github.com/xlate/staedi/issues/508
+     */
+    @Test
+    void testMissingComponentTriggersError() throws Exception {
+        EDIInputFactory factory = EDIInputFactory.newFactory();
+        Schema transSchema = SchemaFactory.newFactory().createSchema(getClass().getResourceAsStream("/EDIFACT/issue122/BAPLIE-d95b.xml"));
+        EDIStreamReader reader = factory.createEDIStreamReader(new ByteArrayInputStream((""
+                + "UNB+UNOA:2+SENDER+RECIPIENT+090304:1230+UNIQUEID1234+++++SHIPPINGLINE'\n"
+                + "UNH+SENDER123+BAPLIE:D:95B:UN:SMDG20'\n"
+                + "BGM++M1+9'\n"
+                + "DTM+137:0903031447:201'\n"
+                + "TDT+20+VOYAGENO123+++CARRIERID:172:20+++DLHV:103:ZZZ'\n"
+                + "LOC+161+::92'\n" // LOC02-1 required and missing
+                + "DTM+132'\n"
+                + "UNT+7+SENDER123'\n"
+                + "UNZ+1+UNIQUEID1234'").getBytes()));
+        List<Location> errorLocations = new ArrayList<>();
+        List<EDIStreamValidationError> errors = new ArrayList<>();
+
+        try {
+            while (reader.hasNext()) {
+                switch (reader.next()) {
+                case START_TRANSACTION:
+                    reader.setTransactionSchema(transSchema);
+                    break;
+                case SEGMENT_ERROR:
+                case ELEMENT_OCCURRENCE_ERROR:
+                case ELEMENT_DATA_ERROR:
+                    errors.add(reader.getErrorType());
+                    errorLocations.add(reader.getLocation().copy());
+                    break;
+                default:
+                    break;
+                }
+            }
+        } finally {
+            reader.close();
+        }
+
+        assertEquals(1, errors.size(), () -> errors + "; " + errorLocations.toString());
+        assertEquals(EDIStreamValidationError.REQUIRED_DATA_ELEMENT_MISSING, errors.get(0));
+
+        assertEquals(1, errorLocations.size());
+        assertEquals("LOC", errorLocations.get(0).getSegmentTag());
+        assertEquals(6, errorLocations.get(0).getSegmentPosition());
+        assertEquals(2, errorLocations.get(0).getElementPosition());
+        assertEquals(1, errorLocations.get(0).getComponentPosition());
     }
 
     @Test

@@ -400,7 +400,7 @@ public class ProxyEventHandler implements EventHandler {
                 location.incrementComponentPosition();
             }
 
-            valid = validator.validateElement(dialect, location, text, null);
+            valid = validator.validateElement(dialect, location, text, derivedComposite, null);
             typeReference = validator.getElementReference();
             enqueueElementOccurrenceErrors(text, validator, valid);
         } else {
