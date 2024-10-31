@@ -2237,7 +2237,7 @@
   </compositeType>
   <compositeType name="CEC517">
     <sequence>
-      <element type="DE3225"/>
+      <element type="DE3225" minOccurs="1"/>
       <element type="DE1131"/>
       <element type="DE3055"/>
       <element type="DE3224"/>
@@ -2343,7 +2343,7 @@
   <segmentType name="LOC">
     <sequence>
       <element type="DE3227" minOccurs="1"/>
-      <composite type="CEC517"/>
+      <composite type="CEC517" minOccurs="1"/>
       <composite type="CEC519"/>
       <composite type="CEC553"/>
       <element type="DE5479"/>

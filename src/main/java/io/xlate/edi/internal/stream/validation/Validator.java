@@ -1098,7 +1098,7 @@ public class Validator {
         return false;
     }
 
-    public boolean validateElement(Dialect dialect, StaEDIStreamLocation position, CharSequence value, StringBuilder formattedValue) {
+    public boolean validateElement(Dialect dialect, StaEDIStreamLocation position, CharSequence value, boolean derivedComposite, StringBuilder formattedValue) {
         if (!segmentExpected) {
             return true;
         }
@@ -1143,7 +1143,7 @@ public class Validator {
         }
 
         if (componentIndex > -1) {
-            validateComponentElement(dialect, componentIndex, valueReceived);
+            validateComponentElement(dialect, componentIndex, valueReceived, derivedComposite);
         } else {
             // Validated in validCompositeOccurrences for received composites
             validateImplUnusedElementBlank(this.element, this.implElement, valueReceived);
@@ -1162,7 +1162,7 @@ public class Validator {
         return elementErrors.isEmpty();
     }
 
-    void validateComponentElement(Dialect dialect, int componentIndex, boolean valueReceived) {
+    void validateComponentElement(Dialect dialect, int componentIndex, boolean valueReceived, boolean derivedComposite) {
         if (!element.isNodeType(EDIType.Type.COMPOSITE)) {
             /*
              * This element has components but is not defined as a composite
@@ -1177,7 +1177,7 @@ public class Validator {
             String version = dialect.getTransactionVersionString();
 
             if (componentIndex < element.getChildren(version).size()) {
-                if (valueReceived || componentIndex != 0 /* Derived component */) {
+                if (valueReceived || componentIndex != 0 /* Derived component */ || !derivedComposite) {
                     this.element = this.element.getChild(version, componentIndex);
 
                     if (isImplElementSelected()) {

@@ -897,7 +897,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         dialect.elementData(elementHolder, location);
 
         validator().ifPresent(validator -> {
-            if (!validator.validateElement(dialect, location, elementHolder, null)) {
+            if (!validator.validateElement(dialect, location, elementHolder, derivedComposite(validator), null)) {
                 reportElementErrors(validator, elementHolder);
             }
         });
@@ -960,6 +960,14 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         }
     }
 
+    private boolean derivedComposite(Validator validator) {
+        if (location.getComponentPosition() > -1) {
+            return false;
+        }
+
+        return validator.isComposite(dialect, location);
+    }
+
     private void validate(Consumer<Validator> command) {
         validator().ifPresent(validator -> {
             errors.clear();
@@ -1005,7 +1013,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         errors.clear();
         setupCommand.run();
 
-        if (!validator.validateElement(dialect, location, data, this.formattedElement)) {
+        if (!validator.validateElement(dialect, location, data, derivedComposite(validator), this.formattedElement)) {
             reportElementErrors(validator, elementData);
         }
 
