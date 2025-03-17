@@ -64,7 +64,7 @@
     <version.junit-jupiter>5.12.0</version.junit-jupiter>
     <version.hamcrest>3.0</version.hamcrest>
     <version.xmlunit>2.10.0</version.xmlunit>
-    <version.mockito-core>5.16.0</version.mockito-core>
+    <version.mockito-core>5.16.1</version.mockito-core>
     <version.jsonassert>1.5.3</version.jsonassert>
     <version.parsson>1.1.7</version.parsson>
     <version.jaxb-runtime>4.0.5</version.jaxb-runtime>
