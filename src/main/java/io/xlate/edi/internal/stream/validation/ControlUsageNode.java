@@ -60,9 +60,25 @@ class ControlUsageNode extends UsageNode {
         if (matchesLocation(type.getReferences().size() - 1, type.getTrailerCountPosition(), location)
                 // Don't bother comparing the actual value if it's not formatted correctly
                 && !errors.contains(EDIStreamValidationError.INVALID_CHARACTER_DATA)
-                && !String.valueOf(count).contentEquals(value)) {
+                && !countEqualsActual(value)) {
             errors.add(EDIStreamValidationError.CONTROL_COUNT_DOES_NOT_MATCH_ACTUAL_COUNT);
         }
+    }
+
+    /**
+     * Check whether the actual number counted matches the count given by the
+     * input. Leading zeros are stripped from the input string.
+     */
+    boolean countEqualsActual(CharSequence value) {
+        int i = 0;
+        int len = value.length();
+        int max = len - 1;
+
+        while (i < max && value.charAt(i) == '0') {
+            i++;
+        }
+
+        return Integer.toString(count).contentEquals(value.subSequence(i, len));
     }
 
     int incrementCount(EDIControlType.Type countType) {
