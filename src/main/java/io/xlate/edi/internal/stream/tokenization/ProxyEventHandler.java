@@ -129,6 +129,20 @@ public class ProxyEventHandler implements EventHandler {
         return current(StreamEvent::getType, null);
     }
 
+    public boolean additionalEventsRequired() {
+        if (eventQueue.peekFirst().getType() == EDIStreamEvent.START_TRANSACTION) {
+            /*
+             * When the START_TRANSACTION event is next up in the queue, this will
+             * signal to the reader to continue feeding the lexer until the end of the
+             * transaction header segment so that all metadata (type and version) are
+             * available _starting with_ the START_TRANSACTION.
+             */
+            return eventQueue.peekLast().getType() != EDIStreamEvent.END_SEGMENT;
+        }
+
+        return false;
+    }
+
     public CharBuffer getCharacters() {
         return current(StreamEvent::getData, null);
     }
@@ -143,7 +157,17 @@ public class ProxyEventHandler implements EventHandler {
             return false;
         }
 
-        eventPool.add(eventQueue.removeFirst());
+        StreamEvent lastEvent = eventQueue.removeFirst();
+
+        if (lastEvent.getType() == EDIStreamEvent.END_TRANSACTION) {
+            /*
+             * Retain the transaction metadata in the dialect until after
+             * the reader is past END_TRANSACTION.
+             */
+            dialect.transactionEnd();
+        }
+
+        eventPool.add(lastEvent);
         return !eventQueue.isEmpty();
     }
 
@@ -240,7 +264,6 @@ public class ProxyEventHandler implements EventHandler {
 
         if (LOOP_CODE_TRANSACTION.equals(loopCode)) {
             transaction = false;
-            dialect.transactionEnd();
             enqueueEvent(EDIStreamEvent.END_TRANSACTION, EDIStreamValidationError.NONE, null, typeReference, location);
         } else if (LOOP_CODE_GROUP.equals(loopCode)) {
             dialect.groupEnd();

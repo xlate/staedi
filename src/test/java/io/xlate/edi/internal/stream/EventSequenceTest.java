@@ -17,6 +17,7 @@ package io.xlate.edi.internal.stream;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayInputStream;
@@ -635,5 +636,40 @@ class EventSequenceTest {
         assertEquals(2, e1refs.size());
         assertEquals("E1", e1refs.get(0).getReferencedType().getId());
         assertEquals("E1", e1refs.get(1).getReferencedType().getId());
+    }
+
+
+    @Test
+    void testTransactionMetadataAvailable() throws EDIStreamException, IllegalStateException {
+        EDIInputFactory factory = EDIInputFactory.newFactory();
+        InputStream stream = new ByteArrayInputStream((""
+                + "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~"
+                + "GS*FA*ReceiverDept*SenderDept*20050812*195335*000005*X*005010X230~"
+                + "ST*997*0001*005010X230~"
+                + "AK1*HC*000001~"
+                + "AK9*R*1*1*0~"
+                + "SE*8*0001~"
+                + "GE*1*000005~"
+                + "IEA*1*508121953~").getBytes());
+
+        @SuppressWarnings("resource")
+        EDIStreamReader reader = factory.createEDIStreamReader(stream);
+        while (reader.next() != EDIStreamEvent.START_TRANSACTION) {
+            assertThrows(IllegalStateException.class, reader::getTransactionType);
+        }
+
+        assertEquals(EDIStreamEvent.START_TRANSACTION, reader.getEventType());
+
+        do {
+            assertEquals("997", reader.getTransactionType());
+            assertArrayEquals(new String[] { "X", "005010X230" }, reader.getTransactionVersion());
+        } while (reader.next() != EDIStreamEvent.END_TRANSACTION);
+
+        assertEquals(EDIStreamEvent.END_TRANSACTION, reader.getEventType());
+        assertEquals("997", reader.getTransactionType());
+        assertArrayEquals(new String[] { "X", "005010X230" }, reader.getTransactionVersion());
+
+        reader.next();
+        assertThrows(IllegalStateException.class, reader::getTransactionType);
     }
 }
