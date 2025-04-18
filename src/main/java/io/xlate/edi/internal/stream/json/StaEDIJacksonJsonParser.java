@@ -13,9 +13,11 @@ import java.util.Properties;
 import com.fasterxml.jackson.core.Base64Variant;
 import com.fasterxml.jackson.core.JsonLocation;
 import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonStreamContext;
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.core.ObjectCodec;
+import com.fasterxml.jackson.core.StreamReadConstraints;
 import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.core.base.ParserMinimalBase;
 import com.fasterxml.jackson.core.io.ContentReference;
@@ -44,6 +46,7 @@ public class StaEDIJacksonJsonParser extends ParserMinimalBase {
     private StaEDIJsonStreamContext pendingContext = null;
 
     StaEDIJacksonJsonParser(EDIStreamReader ediReader, Map<String, Object> properties) {
+        super(JsonParser.Feature.collectDefaults(), StreamReadConstraints.defaults());
         parser = new JacksonJsonParser(ediReader, properties);
         context.addLast(new StaEDIJsonStreamContext(JsonStreamContext.TYPE_ROOT, null));
     }
