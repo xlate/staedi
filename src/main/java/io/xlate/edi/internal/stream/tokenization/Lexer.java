@@ -57,6 +57,7 @@ public class Lexer {
     private final Deque<Integer> lengthQueue = new ArrayDeque<>(20);
 
     private final InputStream stream;
+    private final EventHandler handler;
     private CharsetDecoder decoder;
     private char[] readChar = new char[1];
     private CharBuffer readCharBuf = CharBuffer.wrap(readChar);
@@ -71,15 +72,6 @@ public class Lexer {
     private long binaryRemain = -1;
     private InputStream binaryStream = null;
 
-    private Notifier isn;
-    private Notifier ien;
-    private Notifier ssn;
-    private Notifier sen;
-    private Notifier csn;
-    private Notifier cen;
-    private Notifier en;
-    private Notifier bn;
-
     public Lexer(InputStream stream, Charset charset, EventHandler handler, StaEDIStreamLocation location, boolean extraneousIgnored) {
         if (stream.markSupported()) {
             this.stream = stream;
@@ -87,38 +79,11 @@ public class Lexer {
             this.stream = new BufferedInputStream(stream);
         }
 
+        this.handler = handler;
         this.decoder = charset.newDecoder();
 
         this.location = location;
         this.characters = new CharacterSet(extraneousIgnored);
-
-        isn = (notifyState, start, length) -> {
-            handler.interchangeBegin(dialect);
-            return true;
-        };
-
-        ien = (notifyState, start, length) -> {
-            handler.interchangeEnd();
-            dialect = null;
-            characters.reset();
-            return true;
-        };
-
-        ssn = (notifyState, start, length) -> {
-            String segmentTag = new String(buffer.array(), start, length);
-            return handler.segmentBegin(segmentTag);
-        };
-
-        sen = (notifyState, start, length) -> handler.segmentEnd();
-        csn = (notifyState, start, length) -> handler.compositeBegin(false, false);
-        cen = (notifyState, start, length) -> handler.compositeEnd(false);
-        bn = (notifyState, start, length) -> handler.binaryData(binaryStream);
-
-        en = (notifyState, start, length) -> {
-            elementHolder.set(buffer.array(), start, length);
-            return handler.elementData(elementHolder, true);
-        };
-
     }
 
     public Dialect getDialect() {
@@ -150,7 +115,7 @@ public class Lexer {
             }
         };
 
-        enqueue(bn, 0);
+        enqueue(this::binaryElement, 0);
         state = State.ELEMENT_DATA_BINARY;
     }
 
@@ -518,30 +483,30 @@ public class Lexer {
 
     private void openInterchange() {
         modes.push(Mode.INTERCHANGE);
-        enqueue(isn, 0);
+        enqueue(this::interchangeStart, 0);
     }
 
     private void closeInterchange() throws EDIException {
         closeSegment();
         popMode(Mode.INTERCHANGE);
-        enqueue(ien, 0);
+        enqueue(this::interchangeEnd, 0);
     }
 
     private void openSegment() {
         modes.push(Mode.SEGMENT);
-        enqueue(ssn, buffer.position());
+        enqueue(this::segmentStart, buffer.position());
     }
 
     private void closeSegment() throws EDIException {
         handleElement();
         popMode(Mode.SEGMENT);
-        enqueue(sen, 0);
+        enqueue(this::segmentEnd, 0);
     }
 
     private void emptySegment() throws EDIException {
         openSegment();
         popMode(Mode.SEGMENT);
-        enqueue(sen, 0);
+        enqueue(this::segmentEnd, 0);
     }
 
     private void handleElement() throws EDIException {
@@ -558,7 +523,7 @@ public class Lexer {
 
     private void openComposite() {
         modes.push(Mode.COMPOSITE);
-        enqueue(csn, 0);
+        enqueue(this::compositeStart, 0);
     }
 
     private void handleComponent() {
@@ -570,7 +535,7 @@ public class Lexer {
     }
 
     private void addElementEvent() {
-        enqueue(en, buffer.position());
+        enqueue(this::element, buffer.position());
     }
 
     private boolean inComposite() {
@@ -579,7 +544,7 @@ public class Lexer {
 
     private void closeComposite() throws EDIException {
         popMode(Mode.COMPOSITE);
-        enqueue(cen, 0);
+        enqueue(this::compositeEnd, 0);
     }
 
     void popMode(Mode expected) throws EDIException {
@@ -596,5 +561,43 @@ public class Lexer {
     /* test */
     State previousState() {
         return previous;
+    }
+
+    private boolean interchangeStart(State state, int start, int length) {
+        handler.interchangeBegin(dialect);
+        return true;
+    }
+
+    private boolean interchangeEnd(State state, int start, int length) {
+        handler.interchangeEnd();
+        dialect = null;
+        characters.reset();
+        return true;
+    }
+
+    private boolean segmentStart(State state, int start, int length) {
+        String segmentTag = new String(buffer.array(), start, length);
+        return handler.segmentBegin(segmentTag);
+    }
+
+    private boolean segmentEnd(State state, int start, int length) {
+        return handler.segmentEnd();
+    }
+
+    private boolean compositeStart(State state, int start, int length) {
+        return handler.compositeBegin(false, false);
+    }
+
+    private boolean compositeEnd(State state, int start, int length) {
+        return handler.compositeEnd(false);
+    }
+
+    private boolean binaryElement(State state, int start, int length) {
+        return handler.binaryData(binaryStream);
+    }
+
+    private boolean element(State state, int start, int length) {
+        elementHolder.set(buffer.array(), start, length);
+        return handler.elementData(elementHolder, true);
     }
 }
