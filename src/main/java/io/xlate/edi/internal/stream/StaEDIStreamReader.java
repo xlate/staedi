@@ -210,12 +210,14 @@ public class StaEDIStreamReader implements EDIStreamReader, Configurable, Valida
 
         if (!proxy.nextEvent()) {
             proxy.resetEvents();
-            executeTask(lexer::parse, "Error parsing input");
+            do {
+                executeTask(lexer::parse, "Error parsing input");
+            } while (proxy.additionalEventsRequired());
         }
 
         final EDIStreamEvent event = proxy.getEvent();
 
-        LOGGER.finer(() -> "EDI event: " + event);
+        LOGGER.finer(() -> "EDI event: " + event + (event.isError() ? "; error type: " + proxy.getErrorType(): ""));
 
         if (event == EDIStreamEvent.END_INTERCHANGE) {
             executeTask(() -> complete = !proxy.hasNext() && !lexer.hasRemaining(), "Error reading input");
