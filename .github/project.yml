@@ -1,4 +1,4 @@
 name: "StAEDI : Streaming API for EDI for Java"
 release:
-  current-version: 1.25.3
-  next-version: 1.25.4-SNAPSHOT
+  current-version: 1.26.0
+  next-version: 1.26.1-SNAPSHOT
