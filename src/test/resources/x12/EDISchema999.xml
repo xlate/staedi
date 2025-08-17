@@ -5,14 +5,14 @@
       <segment type="AK1" minOccurs="1"/>
       <loop code="L0001" maxOccurs="99999">
         <sequence>
-          <segment type="AK2"/>
+          <segment type="AK2" minOccurs="1"/>
           <loop code="L0002" maxOccurs="99999">
             <sequence>
-              <segment type="IK3"/>
+              <segment type="IK3" minOccurs="1"/>
               <segment type="CTX" maxOccurs="10"/>
               <loop code="L0003" maxOccurs="99999">
                 <sequence>
-                  <segment type="IK4"/>
+                  <segment type="IK4" minOccurs="1"/>
                   <segment type="CTX" maxOccurs="10"/>
                 </sequence>
               </loop>
