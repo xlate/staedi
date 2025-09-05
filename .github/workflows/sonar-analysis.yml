@@ -27,7 +27,7 @@ jobs:
 
       ## Retrieve the `target` directory from the build job
       - name: Fetch Build Result
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             var artifacts = await github.rest.actions.listWorkflowRunArtifacts({
