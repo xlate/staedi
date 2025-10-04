@@ -362,6 +362,15 @@
       </properties>
     </profile>
     <profile>
+      <id>preJdk17</id>
+      <activation>
+        <jdk>(,17)</jdk>
+      </activation>
+      <properties>
+        <version.junit-jupiter>5.13.4</version.junit-jupiter>
+      </properties>
+    </profile>
+    <profile>
       <id>multirelease</id>
       <activation>
         <jdk>[9,)</jdk>
