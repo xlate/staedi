@@ -19,7 +19,7 @@ jobs:
       ## Checkout the source of the event that triggered this workflow, 
       ## PR commit (pull_request event) or commit (push event).
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: ${{ github.event.workflow_run.head_repository.full_name }}
           ref: ${{ github.event.workflow_run.head_sha }}
