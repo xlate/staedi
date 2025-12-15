@@ -61,7 +61,7 @@ jobs:
       ## Attach the target directory for use in Sonar analysis
       - name: Attach Build Output
         if: ${{ matrix.java == '17' && matrix.os == 'ubuntu-latest' }}
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: target
           path: target/
