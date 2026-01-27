@@ -208,8 +208,11 @@ public class StaEDIStreamReader implements EDIStreamReader, Configurable, Valida
             }
         }
 
-        if (!proxy.nextEvent()) {
-            proxy.resetEvents();
+        boolean noNextEvent = !proxy.nextEvent();
+        if (noNextEvent || proxy.additionalEventsRequired()) {
+            if (noNextEvent) {
+                proxy.resetEvents();
+            }
             do {
                 executeTask(lexer::parse, "Error parsing input");
             } while (proxy.additionalEventsRequired());
