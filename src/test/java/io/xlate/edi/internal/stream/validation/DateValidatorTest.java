@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import io.xlate.edi.internal.stream.StaEDIStreamLocation;
 import io.xlate.edi.internal.stream.tokenization.CharacterSet;
 import io.xlate.edi.internal.stream.tokenization.Dialect;
 import io.xlate.edi.internal.stream.tokenization.DialectFactory;
@@ -28,11 +29,14 @@ class DateValidatorTest implements ValueSetTester {
 
     @BeforeEach
     void setUp() throws EDIException {
-        dialect = DialectFactory.getDialect("UNA");
+        StaEDIStreamLocation location = new StaEDIStreamLocation();
+        dialect = DialectFactory.getDialect("UNA", location);
         v = new DateValidator();
         CharacterSet chars = new CharacterSet();
-        "UNA=*.?^~UNB*UNOA=3*005435656=1*006415160=1*060515=1434*00000000000778~".chars()
-                                                                                 .forEach(c -> dialect.appendHeader(chars, (char) c));
+        "UNA=*.?^~UNB*UNOA=3*005435656=1*006415160=1*060515=1434*00000000000778~".chars().forEach(c -> {
+            location.incrementOffset(c);
+            dialect.appendHeader(chars, (char) c);
+        });
     }
 
     @Test
@@ -199,7 +203,7 @@ class DateValidatorTest implements ValueSetTester {
     }
 
     @Test
-    void testFormatValidDate() throws EDIException {
+    void testFormatValidDate() {
         EDISimpleType element = mock(EDISimpleType.class);
         when(element.getMinLength(anyString())).thenCallRealMethod();
         when(element.getMaxLength(anyString())).thenCallRealMethod();

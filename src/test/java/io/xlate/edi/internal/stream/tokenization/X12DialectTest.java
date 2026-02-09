@@ -26,26 +26,26 @@ class X12DialectTest {
 
     @Test
     void testX12Dialect() throws EDIException {
-        Dialect x12 = DialectFactory.getDialect("ISA".toCharArray(), 0, 3);
+        Dialect x12 = DialectFactory.getDialect("ISA".toCharArray(), 0, 3, null);
         assertTrue(x12 instanceof X12Dialect, "Incorrect type");
     }
 
     @Test
     void testGetEnvelopeTag() throws EDIException {
-        Dialect x12 = DialectFactory.getDialect("ISA".toCharArray(), 0, 3);
+        Dialect x12 = DialectFactory.getDialect("ISA".toCharArray(), 0, 3, null);
         assertEquals("ISA", x12.getHeaderTag(), "Incorrect header tag");
     }
 
     @Test
     void testInitializeTrue() throws EDIException {
-        X12Dialect x12 = (X12Dialect) DialectFactory.getDialect("ISA".toCharArray(), 0, 3);
+        X12Dialect x12 = (X12Dialect) DialectFactory.getDialect("ISA".toCharArray(), 0, 3, null);
         x12.header = "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~".toCharArray();
         assertTrue(x12.initialize(new CharacterSet()));
     }
 
     @Test
     void testInitializeRejected() throws EDIException {
-        X12Dialect x12 = (X12Dialect) DialectFactory.getDialect("ISA".toCharArray(), 0, 3);
+        X12Dialect x12 = (X12Dialect) DialectFactory.getDialect("ISA".toCharArray(), 0, 3, null);
         x12.header = "ISA*00*    *     *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~".toCharArray();
         assertFalse(x12.initialize(new CharacterSet()));
         assertTrue(x12.isRejected());
@@ -54,7 +54,7 @@ class X12DialectTest {
 
     @Test
     void testGetVersion() throws EDIException {
-        X12Dialect x12 = (X12Dialect) DialectFactory.getDialect("ISA".toCharArray(), 0, 3);
+        X12Dialect x12 = (X12Dialect) DialectFactory.getDialect("ISA".toCharArray(), 0, 3, null);
         x12.header = "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~".toCharArray();
         x12.initialize(new CharacterSet());
         assertArrayEquals(new String[] { "00501" }, x12.getVersion(), "Invalid version");

@@ -33,9 +33,11 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.Reader;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -52,8 +54,6 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
-import org.hamcrest.MatcherAssert;
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -2200,5 +2200,49 @@ class StaEDIStreamReaderTest implements ConstantsTest {
 
         assertEquals(3, interchangeStart);
         assertEquals(3, interchangeEnd);
+    }
+
+    @Test
+    void testUNASegmentLocation() throws EDIStreamException, IOException {
+
+        EDIInputFactory factory = EDIInputFactory.newFactory();
+        String edifact = ""
+                + "UNA:+.? '\n"
+                + "UNB+UNOA:1+SENDER+RECEIVER+240101:1200+1'\n"
+                + "UNZ+0+1'\n"
+                + "UNA:+.? '\n"
+                + "UNB+UNOA:1+SENDER+RECEIVER+240101:1200+2'\n"
+                + "UNZ+0+2'\n"
+                ;
+        List<Location> locations = new ArrayList<>();
+
+        try (InputStream stream = new ByteArrayInputStream(edifact.getBytes(StandardCharsets.UTF_8));
+             EDIStreamReader reader = factory.createEDIStreamReader(stream)) {
+
+            while (reader.hasNext()) {
+                if (reader.next() == EDIStreamEvent.START_SEGMENT) {
+                    locations.add(reader.getLocation().copy());
+                }
+            }
+        }
+
+        assertEquals(6, locations.size());
+
+        for (int i = 0 ; i < 2; i++) {
+            Location una = locations.get(i * 3 + 0);
+            assertEquals("UNA", una.getSegmentTag());
+            assertEquals(i * 3 + 1, una.getLineNumber());
+            assertEquals(i * 3 + 1, una.getSegmentPosition());
+
+            Location unb = locations.get(i * 3 + 1);
+            assertEquals("UNB", unb.getSegmentTag());
+            assertEquals(i * 3 + 2, unb.getLineNumber());
+            assertEquals(i * 3 + 2, unb.getSegmentPosition());
+
+            Location unz = locations.get(i * 3 + 2);
+            assertEquals("UNZ", unz.getSegmentTag());
+            assertEquals(i * 3 + 3, unz.getLineNumber());
+            assertEquals(i * 3 + 3, unz.getSegmentPosition());
+        }
     }
 }

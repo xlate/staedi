@@ -440,7 +440,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         location.incrementSegmentPosition(name);
 
         if (state == State.INITIAL) {
-            dialect = DialectFactory.getDialect(name);
+            dialect = DialectFactory.getDialect(name, location);
             setupDelimiters();
 
             if (dialect instanceof EDIFACTDialect) {
@@ -449,7 +449,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
                      * Writing the EDIFACT header when delimiters were given via properties requires that
                      * a UNA is written first.
                      */
-                    dialect = DialectFactory.getDialect(EDIFACTDialect.UNA);
+                    dialect = DialectFactory.getDialect(EDIFACTDialect.UNA, location);
                     writeServiceAdviceString();
                     segmentValidation(name);
                     // Now write the UNB

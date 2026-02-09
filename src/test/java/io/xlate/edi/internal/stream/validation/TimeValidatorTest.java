@@ -13,6 +13,7 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import io.xlate.edi.internal.stream.StaEDIStreamLocation;
 import io.xlate.edi.internal.stream.tokenization.CharacterSet;
 import io.xlate.edi.internal.stream.tokenization.Dialect;
 import io.xlate.edi.internal.stream.tokenization.DialectFactory;
@@ -27,10 +28,14 @@ class TimeValidatorTest implements ValueSetTester {
 
     @BeforeEach
     void setUp() throws EDIException {
-        dialect = DialectFactory.getDialect("UNA");
+        StaEDIStreamLocation location = new StaEDIStreamLocation();
+        dialect = DialectFactory.getDialect("UNA", location);
         v = new TimeValidator();
         CharacterSet chars = new CharacterSet();
-        "UNA=*.?^~UNB*UNOA=3*005435656=1*006415160=1*060515=1434*00000000000778~".chars().forEach(c -> dialect.appendHeader(chars, (char) c));
+        "UNA=*.?^~UNB*UNOA=3*005435656=1*006415160=1*060515=1434*00000000000778~".chars().forEach(c -> {
+            location.incrementOffset(c);
+            dialect.appendHeader(chars, (char) c);
+        });
     }
 
     @Test
@@ -175,7 +180,7 @@ class TimeValidatorTest implements ValueSetTester {
     }
 
     @Test
-    void testFormatValidTime() throws EDIException {
+    void testFormatValidTime() {
         EDISimpleType element = mock(EDISimpleType.class);
         when(element.getMinLength(anyString())).thenCallRealMethod();
         when(element.getMaxLength(anyString())).thenCallRealMethod();
@@ -190,7 +195,7 @@ class TimeValidatorTest implements ValueSetTester {
     }
 
     @Test
-    void testFormatValidTimePadded() throws EDIException {
+    void testFormatValidTimePadded() {
         EDISimpleType element = mock(EDISimpleType.class);
         when(element.getMinLength(anyString())).thenCallRealMethod();
         when(element.getMaxLength(anyString())).thenCallRealMethod();

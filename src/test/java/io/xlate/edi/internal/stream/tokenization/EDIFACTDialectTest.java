@@ -18,48 +18,57 @@ package io.xlate.edi.internal.stream.tokenization;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
+
+import io.xlate.edi.internal.stream.StaEDIStreamLocation;
 
 class EDIFACTDialectTest {
 
     @Test
     void testEDIFACTADialect() throws EDIException {
-        Dialect edifact = DialectFactory.getDialect("UNA".toCharArray(), 0, 3);
+        Dialect edifact = DialectFactory.getDialect("UNA".toCharArray(), 0, 3, null);
         assertTrue(edifact instanceof EDIFACTDialect, "Incorrect type");
     }
 
     @Test
     void testEDIFACTBDialect() throws EDIException {
-        Dialect edifact = DialectFactory.getDialect("UNB".toCharArray(), 0, 3);
+        Dialect edifact = DialectFactory.getDialect("UNB".toCharArray(), 0, 3, null);
         assertTrue(edifact instanceof EDIFACTDialect, "Incorrect type");
     }
 
     @Test
     void testGetEnvelopeTagA() throws EDIException {
-        Dialect edifact = DialectFactory.getDialect("UNA".toCharArray(), 0, 3);
+        Dialect edifact = DialectFactory.getDialect("UNA".toCharArray(), 0, 3, null);
         assertEquals("UNA", edifact.getHeaderTag(), "Incorrect header tag");
     }
 
     @Test
     void testGetEnvelopeTagB() throws EDIException {
-        Dialect edifact = DialectFactory.getDialect("UNB".toCharArray(), 0, 3);
+        Dialect edifact = DialectFactory.getDialect("UNB".toCharArray(), 0, 3, null);
         assertEquals("UNB", edifact.getHeaderTag(), "Incorrect header tag");
     }
 
     @Test
     void testGetVersionA() throws EDIException {
-        EDIFACTDialect edifact = (EDIFACTDialect) DialectFactory.getDialect("UNA".toCharArray(), 0, 3);
+        StaEDIStreamLocation location = new StaEDIStreamLocation();
+        EDIFACTDialect edifact = (EDIFACTDialect) DialectFactory.getDialect("UNA".toCharArray(), 0, 3, location);
         CharacterSet characters = new CharacterSet();
-        "UNA:+. *'UNB+UNOA:1+111111111:1+222222222:1+200726:1455+1'".chars().forEach(c -> edifact.appendHeader(characters, (char) c));
+        "UNA:+. *'UNB+UNOA:1+111111111:1+222222222:1+200726:1455+1'".chars().forEach(c -> {
+            location.incrementOffset(c);
+            edifact.appendHeader(characters, (char) c);
+        });
+        assertNotNull(edifact.getServiceAdviceLocation());
         edifact.initialize(characters);
         assertArrayEquals(new String[] { "UNOA", "1" }, edifact.getVersion(), "Invalid version");
     }
 
     @Test
     void testGetVersionB() throws EDIException {
-        EDIFACTDialect edifact = (EDIFACTDialect) DialectFactory.getDialect("UNB".toCharArray(), 0, 3);
+        EDIFACTDialect edifact = (EDIFACTDialect) DialectFactory.getDialect("UNB".toCharArray(), 0, 3, null);
         edifact.header = new StringBuilder("UNB+UNOA:1+005435656:1+006415160:1+060515:1434+00000000000778'");
         CharacterSet characters = new CharacterSet();
         edifact.initialize(characters);
@@ -68,10 +77,15 @@ class EDIFACTDialectTest {
 
     @Test
     void testBlankReleaseCharPreVersion4() throws EDIException {
-        EDIFACTDialect edifact = (EDIFACTDialect) DialectFactory.getDialect("UNA".toCharArray(), 0, 3);
+        StaEDIStreamLocation location = new StaEDIStreamLocation();
+        EDIFACTDialect edifact = (EDIFACTDialect) DialectFactory.getDialect("UNA".toCharArray(), 0, 3, location);
         CharacterSet characters = new CharacterSet();
-        "UNA:+. *'UNB+UNOA:1+111111111:1+222222222:1+200726:1455+1'".chars().forEach(c -> edifact.appendHeader(characters, (char) c));
+        "UNA:+. *'UNB+UNOA:1+111111111:1+222222222:1+200726:1455+1'".chars().forEach(c -> {
+            location.incrementOffset(c);
+            edifact.appendHeader(characters, (char) c);
+        });
 
+        assertNotNull(edifact.getServiceAdviceLocation());
         assertTrue(edifact.initialize(characters));
         assertEquals('\'', edifact.getSegmentTerminator());
         assertEquals('+', edifact.getDataElementSeparator());
@@ -83,10 +97,15 @@ class EDIFACTDialectTest {
 
     @Test
     void testBlankReleaseCharVersion4() throws EDIException {
-        EDIFACTDialect edifact = (EDIFACTDialect) DialectFactory.getDialect("UNA".toCharArray(), 0, 3);
+        StaEDIStreamLocation location = new StaEDIStreamLocation();
+        EDIFACTDialect edifact = (EDIFACTDialect) DialectFactory.getDialect("UNA".toCharArray(), 0, 3, location);
         CharacterSet characters = new CharacterSet();
-        "UNA:+. *'UNB+UNOA:4+111111111:1+222222222:1+200726:1455+1'".chars().forEach(c -> edifact.appendHeader(characters, (char) c));
+        "UNA:+. *'UNB+UNOA:4+111111111:1+222222222:1+200726:1455+1'".chars().forEach(c -> {
+            location.incrementOffset(c);
+            edifact.appendHeader(characters, (char) c);
+        });
 
+        assertNotNull(edifact.getServiceAdviceLocation());
         assertTrue(edifact.initialize(characters));
         assertEquals('\'', edifact.getSegmentTerminator());
         assertEquals('+', edifact.getDataElementSeparator());
@@ -98,10 +117,15 @@ class EDIFACTDialectTest {
 
     @Test
     void testDecimalMarkIgnoredVersion4() throws EDIException {
-        EDIFACTDialect edifact = (EDIFACTDialect) DialectFactory.getDialect("UNA".toCharArray(), 0, 3);
+        StaEDIStreamLocation location = new StaEDIStreamLocation();
+        EDIFACTDialect edifact = (EDIFACTDialect) DialectFactory.getDialect("UNA".toCharArray(), 0, 3, location);
         CharacterSet characters = new CharacterSet();
-        "UNA:+_ *'UNB+UNOA:4+111111111:1+222222222:1+200726:1455+1'".chars().forEach(c -> edifact.appendHeader(characters, (char) c));
+        "UNA:+_ *'UNB+UNOA:4+111111111:1+222222222:1+200726:1455+1'".chars().forEach(c -> {
+            location.incrementOffset(c);
+            edifact.appendHeader(characters, (char) c);
+        });
 
+        assertNotNull(edifact.getServiceAdviceLocation());
         assertTrue(edifact.initialize(characters));
         assertTrue(edifact.isDecimalMark('.'));
         assertTrue(edifact.isDecimalMark(','));
@@ -110,10 +134,15 @@ class EDIFACTDialectTest {
 
     @Test
     void testBlankSegmentTermPreVersion4() throws EDIException {
-        EDIFACTDialect edifact = (EDIFACTDialect) DialectFactory.getDialect("UNA".toCharArray(), 0, 3);
+        StaEDIStreamLocation location = new StaEDIStreamLocation();
+        EDIFACTDialect edifact = (EDIFACTDialect) DialectFactory.getDialect("UNA".toCharArray(), 0, 3, location);
         CharacterSet characters = new CharacterSet();
-        "UNA:+.\\* UNB+UNOA:3+111111111:1+222222222:1+200726:1455+1 ".chars().forEach(c -> edifact.appendHeader(characters, (char) c));
+        "UNA:+.\\* UNB+UNOA:3+111111111:1+222222222:1+200726:1455+1 ".chars().forEach(c -> {
+            location.incrementOffset(c);
+            edifact.appendHeader(characters, (char) c);
+        });
 
+        assertNotNull(edifact.getServiceAdviceLocation());
         assertTrue(edifact.initialize(characters));
         assertEquals(' ', edifact.getSegmentTerminator());
         assertEquals('+', edifact.getDataElementSeparator());
@@ -125,10 +154,15 @@ class EDIFACTDialectTest {
 
     @Test
     void testDecimalMarkUsedPreVersion4() throws EDIException {
-        EDIFACTDialect edifact = (EDIFACTDialect) DialectFactory.getDialect("UNA".toCharArray(), 0, 3);
+        StaEDIStreamLocation location = new StaEDIStreamLocation();
+        EDIFACTDialect edifact = (EDIFACTDialect) DialectFactory.getDialect("UNA".toCharArray(), 0, 3, location);
         CharacterSet characters = new CharacterSet();
-        "UNA:+,\\* UNB+UNOA:3+111111111:1+222222222:1+200726:1455+1 ".chars().forEach(c -> edifact.appendHeader(characters, (char) c));
+        "UNA:+,\\* UNB+UNOA:3+111111111:1+222222222:1+200726:1455+1 ".chars().forEach(c -> {
+            location.incrementOffset(c);
+            edifact.appendHeader(characters, (char) c);
+        });
 
+        assertNotNull(edifact.getServiceAdviceLocation());
         assertTrue(edifact.initialize(characters));
         assertFalse(edifact.isDecimalMark('.'));
         assertTrue(edifact.isDecimalMark(','));
@@ -136,34 +170,52 @@ class EDIFACTDialectTest {
 
     @Test
     void testBlankVersionUNA() throws EDIException {
-        EDIFACTDialect edifact = (EDIFACTDialect) DialectFactory.getDialect("UNA".toCharArray(), 0, 3);
+        StaEDIStreamLocation location = new StaEDIStreamLocation();
+        EDIFACTDialect edifact = (EDIFACTDialect) DialectFactory.getDialect("UNA".toCharArray(), 0, 3, location);
         CharacterSet characters = new CharacterSet();
-        "UNA:+.?*'UNB+".chars().forEach(c -> assertTrue(edifact.appendHeader(characters, (char) c)));
+        "UNA:+.?*'UNB+".chars().forEach(c -> {
+            location.incrementOffset(c);
+            assertTrue(edifact.appendHeader(characters, (char) c));
+        });
         assertFalse(edifact.appendHeader(characters, '+'));
     }
 
     @Test
     void testBlankVersionUNB() throws EDIException {
-        EDIFACTDialect edifact = (EDIFACTDialect) DialectFactory.getDialect("UNB".toCharArray(), 0, 3);
+        StaEDIStreamLocation location = new StaEDIStreamLocation();
+        EDIFACTDialect edifact = (EDIFACTDialect) DialectFactory.getDialect("UNB".toCharArray(), 0, 3, location);
         CharacterSet characters = new CharacterSet();
-        "UNB++111111111:1+222222222:1+200726:1455+1".chars().forEach(c -> assertTrue(edifact.appendHeader(characters, (char) c)));
+        "UNB++111111111:1+222222222:1+200726:1455+1".chars().forEach(c -> {
+            location.incrementOffset(c);
+            assertTrue(edifact.appendHeader(characters, (char) c));
+        });
+        assertNull(edifact.getServiceAdviceLocation());
         assertFalse(edifact.appendHeader(characters, '\''));
     }
 
     @Test
     void testInvalidState_HeaderUBN() throws EDIException {
-        EDIFACTDialect edifact = (EDIFACTDialect) DialectFactory.getDialect("UNA".toCharArray(), 0, 3);
+        StaEDIStreamLocation location = new StaEDIStreamLocation();
+        EDIFACTDialect edifact = (EDIFACTDialect) DialectFactory.getDialect("UNA".toCharArray(), 0, 3, location);
         CharacterSet characters = new CharacterSet();
-        "UNA:+.?*'".chars().forEach(c -> edifact.appendHeader(characters, (char) c));
+        "UNA:+.?*'".chars().forEach(c -> {
+            location.incrementOffset(c);
+            edifact.appendHeader(characters, (char) c);
+        });
+        assertNotNull(edifact.getServiceAdviceLocation());
         assertTrue(edifact.appendHeader(characters, 'U'));
         assertFalse(edifact.appendHeader(characters, 'B'));
     }
 
     @Test
     void testInvalidState_HeaderUNC() throws EDIException {
-        EDIFACTDialect edifact = (EDIFACTDialect) DialectFactory.getDialect("UNA".toCharArray(), 0, 3);
+        StaEDIStreamLocation location = new StaEDIStreamLocation();
+        EDIFACTDialect edifact = (EDIFACTDialect) DialectFactory.getDialect("UNA".toCharArray(), 0, 3, location);
         CharacterSet characters = new CharacterSet();
-        "UNA:+.?*'".chars().forEach(c -> edifact.appendHeader(characters, (char) c));
+        "UNA:+.?*'".chars().forEach(c -> {
+            location.incrementOffset(c);
+            edifact.appendHeader(characters, (char) c);
+        });
         assertTrue(edifact.appendHeader(characters, 'U'));
         assertTrue(edifact.appendHeader(characters, 'N'));
         assertTrue(edifact.appendHeader(characters, 'C'));
