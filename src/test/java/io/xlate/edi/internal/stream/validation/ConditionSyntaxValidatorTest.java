@@ -24,6 +24,7 @@ class ConditionSyntaxValidatorTest extends SyntaxValidatorTestBase {
 
     ConditionSyntaxValidator validator;
 
+    @Override
     @BeforeEach
     void setUp() {
         validator = (ConditionSyntaxValidator) SyntaxValidator.getInstance(Type.CONDITIONAL);

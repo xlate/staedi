@@ -105,6 +105,7 @@ class LexerTest {
 
         @Override
         public void segmentError(CharSequence token, EDIReference typeReference, EDIStreamValidationError error) {
+            // No-op
         }
 
         @Override
@@ -115,6 +116,7 @@ class LexerTest {
                                  int elem,
                                  int component,
                                  int repetition) {
+            // No-op
         }
     }
 
@@ -131,10 +133,12 @@ class LexerTest {
 
         @Override
         public void loopBegin(EDIReference typeReference) {
+            // No-op
         }
 
         @Override
         public void loopEnd(EDIReference typeReference) {
+            // No-op
         }
 
         @Override
@@ -172,6 +176,7 @@ class LexerTest {
 
         @Override
         public void segmentError(CharSequence token, EDIReference typeReference, EDIStreamValidationError error) {
+            // No-op
         }
 
         @Override
@@ -182,6 +187,7 @@ class LexerTest {
                                  int elem,
                                  int component,
                                  int repetition) {
+            // No-op
         }
     };
 

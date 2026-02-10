@@ -442,8 +442,6 @@ class EventSequenceTest {
         assertEquals(EDIStreamEvent.START_SEGMENT, reader.nextTag());
         assertEquals("SE", reader.getText());
 
-        //assertEquals(EDIStreamEvent.END_TRANSACTION, reader.nextTag());
-
         assertEquals(EDIStreamEvent.START_SEGMENT, reader.nextTag());
         assertEquals("GE", reader.getText());
         assertEquals(EDIStreamEvent.ELEMENT_DATA, reader.next()); // GE01
@@ -493,8 +491,6 @@ class EventSequenceTest {
         assertEquals(EDIStreamEvent.ELEMENT_OCCURRENCE_ERROR, reader.next());
         assertEquals(EDIStreamValidationError.TOO_MANY_DATA_ELEMENTS, reader.getErrorType());
         assertEquals("", reader.getText()); // data association with error
-
-        //assertEquals(EDIStreamEvent.END_GROUP, reader.nextTag());
 
         assertEquals(EDIStreamEvent.START_SEGMENT, reader.nextTag());
         assertEquals("IEA", reader.getText());

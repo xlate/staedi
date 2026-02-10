@@ -25,6 +25,7 @@ class RequiredSyntaxValidatorTest extends SyntaxValidatorTestBase {
 
     RequiredSyntaxValidator validator;
 
+    @Override
     @BeforeEach
     void setUp() {
         validator = (RequiredSyntaxValidator) SyntaxValidator.getInstance(Type.REQUIRED);

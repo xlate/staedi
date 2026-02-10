@@ -13,14 +13,14 @@ import io.xlate.edi.stream.EDIInputFactory;
 import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamReader;
 
-public class StaEDIReaderTestBase {
+public abstract class StaEDIReaderTestBase {
 
     protected Map<String, Object> ediReaderConfig;
     protected EDIInputFactory ediInputFactory;
     protected EDIStreamReader ediReader;
 
     @BeforeEach
-    void setupFactory() throws Exception {
+    void setupFactory() {
         ediReaderConfig = new HashMap<>();
         ediInputFactory = EDIInputFactory.newFactory();
     }
@@ -32,7 +32,7 @@ public class StaEDIReaderTestBase {
         if (schemaResource != null) {
             SchemaFactory schemaFactory = SchemaFactory.newFactory();
             Schema transactionSchema = schemaFactory.createSchema(getClass().getResource(schemaResource));
-            ediReader = ediInputFactory.createFilteredReader(ediReader, (reader) -> {
+            ediReader = ediInputFactory.createFilteredReader(ediReader, reader -> {
                 if (reader.getEventType() == EDIStreamEvent.START_TRANSACTION) {
                     reader.setTransactionSchema(transactionSchema);
                 }

@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Date;
@@ -44,7 +46,7 @@ import io.xlate.edi.stream.EDINamespaces;
 
 class TransactionBindTest {
 
-    final String XSD = "http://www.w3.org/2001/XMLSchema";
+    static final String XSD = "http://www.w3.org/2001/XMLSchema";
     Map<String, Element> complexTypes;
     Map<String, Element> simpleTypes;
 
@@ -61,9 +63,6 @@ class TransactionBindTest {
                 return result;
             }
         });
-        //assertEquals(1, results.size());
-
-        //QName rootElementName = getRootElementName(TestTx.class);
 
         for (DOMResult result : results.values()) {
             StringWriter writer = new StringWriter();
@@ -79,16 +78,9 @@ class TransactionBindTest {
             }
         }
 
-        //Document doc = (Document) results.get(rootElementName.getNamespaceURI()).getNode();
-
-        /*Element rootElement = elementStream(doc.getElementsByTagNameNS(XSD, "element"))
-                                .filter(e -> rootElementName.getLocalPart().equals(e.getAttribute("name")))
-                                .findFirst()
-                                .orElse(null);*/
-
         complexTypes = results.values()
             .stream()
-            .map(result -> result.getNode())
+            .map(DOMResult::getNode)
             .map(Document.class::cast)
             .map(document -> document.getElementsByTagNameNS(XSD, "complexType"))
             .flatMap(this::elementStream)
@@ -96,14 +88,11 @@ class TransactionBindTest {
 
         simpleTypes = results.values()
                 .stream()
-                .map(result -> result.getNode())
+                .map(DOMResult::getNode)
                 .map(Document.class::cast)
                 .map(document -> document.getElementsByTagNameNS(XSD, "simpleType"))
                 .flatMap(this::elementStream)
                 .collect(Collectors.toMap(e -> e.getAttribute("name"), e -> e));
-
-        //Element rootType = complexTypes.get(rootElement.getAttribute("type"));
-        //print("", elementStream(rootType.getElementsByTagNameNS(XSD, "element")), new ArrayDeque<>(Arrays.asList(TestTx.class)));
     }
 
     QName getRootElementName(Class<?> type) {
@@ -145,14 +134,14 @@ class TransactionBindTest {
      * @return  The decapitalized version of the string.
      */
     static String decapitalize(String name) {
-        if (name == null || name.length() == 0) {
+        if (name == null || name.isEmpty()) {
             return name;
         }
         if (name.length() > 1 && Character.isUpperCase(name.charAt(1)) &&
                         Character.isUpperCase(name.charAt(0))){
             return name;
         }
-        char chars[] = name.toCharArray();
+        char[] chars = name.toCharArray();
         chars[0] = Character.toLowerCase(chars[0]);
         return new String(chars);
     }
@@ -175,11 +164,11 @@ class TransactionBindTest {
 
             if (isExtension) {
                 clazz = classForValue(stack.peekFirst());
-                System.out.printf("%s%s: %s\n", pad, node.getAttribute("base"), clazz);
+                System.out.printf("%s%s: %s%n", pad, node.getAttribute("base"), clazz);
             } else {
                 String name = node.getAttribute("name");
                 clazz = classForElement(stack.peekFirst(), name);
-                System.out.printf("%s%s: %s (%s)\n", pad, name, isStructure ? "***" : typeName, clazz);
+                System.out.printf("%s%s: %s (%s)%n", pad, name, isStructure ? "***" : typeName, clazz);
             }
 
             if (isStructure || isSimpleType) {
@@ -218,7 +207,7 @@ class TransactionBindTest {
         return Arrays.stream(bean.getDeclaredFields())
                 .filter(f -> f.isAnnotationPresent(anno))
                 .filter(filter)
-                .map(f -> f.getType())
+                .map(Field::getType)
                 .findFirst()
                 .orElse(null);
     }
@@ -228,7 +217,7 @@ class TransactionBindTest {
                 .filter(m -> !m.getReturnType().equals(Void.class))
                 .filter(m -> m.isAnnotationPresent(anno))
                 .filter(filter)
-                .map(m -> m.getReturnType())
+                .map(Method::getReturnType)
                 .findFirst()
                 .orElse(null);
     }

@@ -31,9 +31,6 @@ class WriteEdifactExampleTest {
         factory.setProperty(EDIStreamConstants.Delimiters.RELEASE, '?');
         factory.setProperty(EDIStreamConstants.Delimiters.REPETITION, ' ');
 
-        // Write each segment on a new line (optional)
-        // factory.setProperty(EDIOutputFactory.PRETTY_PRINT, true);
-
         // (3) Create an EDIStreamWriter. Any OutputStream may be used - here we are writing to a file
         OutputStream stream = new FileOutputStream("target/edifact.out");
         EDIStreamWriter writer = factory.createEDIStreamWriter(stream);

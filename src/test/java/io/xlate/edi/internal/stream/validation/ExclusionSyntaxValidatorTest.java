@@ -24,6 +24,7 @@ class ExclusionSyntaxValidatorTest extends SyntaxValidatorTestBase {
 
     ExclusionSyntaxValidator validator;
 
+    @Override
     @BeforeEach
     void setUp() {
         validator = (ExclusionSyntaxValidator) SyntaxValidator.getInstance(Type.EXCLUSION);

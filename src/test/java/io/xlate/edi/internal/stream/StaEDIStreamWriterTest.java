@@ -72,7 +72,7 @@ import io.xlate.edi.test.StaEDITestUtil;
 @SuppressWarnings("resource")
 class StaEDIStreamWriterTest {
 
-    private final String TEST_HEADER_X12 = "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~";
+    private static final String TEST_HEADER_X12 = "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~";
 
     private void writeHeader(EDIStreamWriter writer) throws EDIStreamException {
         // TEST_HEADER_X12
@@ -129,11 +129,11 @@ class StaEDIStreamWriterTest {
     }
 
     @Test
-    void testGetDelimitersIllegal() throws EDIStreamException {
+    void testGetDelimitersIllegal() {
         EDIOutputFactory factory = EDIOutputFactory.newFactory();
         OutputStream stream = new ByteArrayOutputStream(4096);
         EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
-        assertThrows(IllegalStateException.class, () -> writer.getDelimiters());
+        assertThrows(IllegalStateException.class, writer::getDelimiters);
     }
 
     @Test
@@ -156,7 +156,7 @@ class StaEDIStreamWriterTest {
         EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
         writer.startInterchange();
         writer.writeStartSegment(interchangeStartSegmentTag);
-        assertThrows(IllegalStateException.class, () -> writer.startInterchange());
+        assertThrows(IllegalStateException.class, writer::startInterchange);
     }
 
     @Test
@@ -177,7 +177,7 @@ class StaEDIStreamWriterTest {
         EDIOutputFactory factory = EDIOutputFactory.newFactory();
         OutputStream stream = new ByteArrayOutputStream(4096);
         EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
-        assertThrows(IllegalStateException.class, () -> writer.endInterchange());
+        assertThrows(IllegalStateException.class, writer::endInterchange);
     }
 
     @Test
@@ -232,7 +232,7 @@ class StaEDIStreamWriterTest {
         writer.startInterchange();
         writer.writeStartSegment("ISA");
         writer.writeStartElement().writeElementData("E1").endElement();
-        assertThrows(EDIStreamException.class, () -> writer.writeEndSegment());
+        assertThrows(EDIStreamException.class, writer::writeEndSegment);
         writer.flush();
         unconfirmedBufferEquals("ISA*E1~", writer);
     }
@@ -243,7 +243,7 @@ class StaEDIStreamWriterTest {
         OutputStream stream = new ByteArrayOutputStream(4096);
         EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
         writer.startInterchange();
-        assertThrows(IllegalStateException.class, () -> writer.writeEndSegment());
+        assertThrows(IllegalStateException.class, writer::writeEndSegment);
     }
 
     @Test
@@ -252,7 +252,7 @@ class StaEDIStreamWriterTest {
         OutputStream stream = new ByteArrayOutputStream(4096);
         EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
         writer.startInterchange();
-        assertThrows(IllegalStateException.class, () -> writer.startComponent());
+        assertThrows(IllegalStateException.class, writer::startComponent);
     }
 
     @Test
@@ -283,7 +283,7 @@ class StaEDIStreamWriterTest {
         writer.writeStartSegment("ISA");
         writer.writeStartElement();
         writer.startComponent();
-        assertThrows(IllegalStateException.class, () -> writer.writeStartElement());
+        assertThrows(IllegalStateException.class, writer::writeStartElement);
     }
 
     @Test
@@ -358,7 +358,7 @@ class StaEDIStreamWriterTest {
         writer.startInterchange();
         writer.writeStartSegment("ISA");
         writer.writeStartElement();
-        assertThrows(IllegalStateException.class, () -> writer.writeStartElementBinary());
+        assertThrows(IllegalStateException.class, writer::writeStartElementBinary);
     }
 
     @Test
@@ -384,7 +384,7 @@ class StaEDIStreamWriterTest {
         stream.reset();
         writer.writeStartSegment("BIN");
         writer.writeStartElementBinary();
-        assertThrows(IllegalStateException.class, () -> writer.startComponent());
+        assertThrows(IllegalStateException.class, writer::startComponent);
     }
 
     @Test
@@ -398,7 +398,7 @@ class StaEDIStreamWriterTest {
               .startComponent()
               .endComponent()
               .startComponent();
-        assertThrows(EDIStreamException.class, () -> writer.writeEndSegment());
+        assertThrows(EDIStreamException.class, writer::writeEndSegment);
         writer.flush();
         unconfirmedBufferEquals("ISA*:~", writer);
     }
@@ -418,7 +418,7 @@ class StaEDIStreamWriterTest {
               .endComponent()
               .endElement()
               .writeEmptyElement();
-        assertThrows(EDIStreamException.class, () -> writer.writeEndSegment());
+        assertThrows(EDIStreamException.class, writer::writeEndSegment);
         writer.flush();
 
         unconfirmedBufferEquals("ISA~", writer);
@@ -433,7 +433,7 @@ class StaEDIStreamWriterTest {
         writer.writeStartSegment("ISA");
         writer.writeStartElement();
         writer.startComponent();
-        assertThrows(IllegalStateException.class, () -> writer.startComponent()); // Double
+        assertThrows(IllegalStateException.class, writer::startComponent); // Double
     }
 
     @Test
@@ -466,7 +466,7 @@ class StaEDIStreamWriterTest {
         writer.writeEmptyElement();
         writer.writeEmptyElement();
         writer.writeEmptyElement();
-        assertThrows(EDIStreamException.class, () -> writer.writeEndSegment());
+        assertThrows(EDIStreamException.class, writer::writeEndSegment);
         writer.flush();
         unconfirmedBufferEquals("ISA****~", writer);
     }
@@ -483,7 +483,7 @@ class StaEDIStreamWriterTest {
         writer.writeEmptyComponent();
         writer.writeEmptyComponent();
         writer.writeEmptyComponent();
-        assertThrows(EDIStreamException.class, () -> writer.writeEndSegment());
+        assertThrows(EDIStreamException.class, writer::writeEndSegment);
         writer.flush();
         unconfirmedBufferEquals("ISA*:::~", writer);
     }
@@ -502,7 +502,7 @@ class StaEDIStreamWriterTest {
         writer.writeEmptyComponent();
         writer.writeEmptyComponent();
         writer.endElement();
-        assertThrows(EDIStreamException.class, () -> writer.writeEndSegment());
+        assertThrows(EDIStreamException.class, writer::writeEndSegment);
         writer.flush();
         unconfirmedBufferEquals("ISA~", writer);
     }
@@ -561,7 +561,7 @@ class StaEDIStreamWriterTest {
         writer.endElement();
         writer.writeEmptyElement();
 
-        assertThrows(EDIStreamException.class, () -> writer.writeEndSegment());
+        assertThrows(EDIStreamException.class, writer::writeEndSegment);
         writer.flush();
 
         unconfirmedBufferEquals("ISA**:LAST*:::LAST*:SECOND::LAST***LAST~", writer);
@@ -576,7 +576,7 @@ class StaEDIStreamWriterTest {
         writer.writeStartSegment("ISA");
         writer.writeStartElement();
         writer.writeElementData("TEST-ELEMENT");
-        assertThrows(EDIStreamException.class, () -> writer.writeEndSegment());
+        assertThrows(EDIStreamException.class, writer::writeEndSegment);
         writer.flush();
         unconfirmedBufferEquals("ISA*TEST-ELEMENT~", writer);
     }
@@ -602,7 +602,7 @@ class StaEDIStreamWriterTest {
         writer.writeStartSegment("ISA");
         writer.writeStartElement();
         writer.writeElementData(new char[] { 'C', 'H', 'A', 'R', 'S' }, 0, 5);
-        assertThrows(EDIStreamException.class, () -> writer.writeEndSegment());
+        assertThrows(EDIStreamException.class, writer::writeEndSegment);
         writer.flush();
         unconfirmedBufferEquals("ISA*CHARS~", writer);
     }
@@ -828,24 +828,30 @@ class StaEDIStreamWriterTest {
                     writer.startInterchange();
                     break;
                 case END_INTERCHANGE:
+                    assertNotNull(writer);
                     writer.endInterchange();
                     break;
                 case START_SEGMENT:
+                    assertNotNull(writer);
                     tag = reader.getText();
                     writer.writeStartSegment(tag);
                     break;
                 case END_SEGMENT:
+                    assertNotNull(writer);
                     writer.writeEndSegment();
                     break;
                 case START_COMPOSITE:
+                    assertNotNull(writer);
                     writer.writeStartElement();
                     composite = true;
                     break;
                 case END_COMPOSITE:
+                    assertNotNull(writer);
                     writer.endElement();
                     composite = false;
                     break;
                 case ELEMENT_DATA:
+                    assertNotNull(writer);
                     String text = reader.getText();
 
                     if ("BIN".equals(tag)) {
@@ -869,6 +875,7 @@ class StaEDIStreamWriterTest {
                     }
                     break;
                 case ELEMENT_DATA_BINARY:
+                    assertNotNull(writer);
                     writer.writeStartElementBinary();
                     writer.writeBinaryData(reader.getBinaryData());
                     writer.endElement();
@@ -944,24 +951,30 @@ class StaEDIStreamWriterTest {
                     writer.startInterchange();
                     break;
                 case END_INTERCHANGE:
+                    assertNotNull(writer);
                     writer.endInterchange();
                     break;
                 case START_SEGMENT:
+                    assertNotNull(writer);
                     tag = reader.getText();
                     writer.writeStartSegment(tag);
                     break;
                 case END_SEGMENT:
+                    assertNotNull(writer);
                     writer.writeEndSegment();
                     break;
                 case START_COMPOSITE:
+                    assertNotNull(writer);
                     writer.writeStartElement();
                     composite = true;
                     break;
                 case END_COMPOSITE:
+                    assertNotNull(writer);
                     writer.endElement();
                     composite = false;
                     break;
                 case ELEMENT_DATA:
+                    assertNotNull(writer);
                     String text = reader.getText();
 
                     if ("UNA".equals(tag)) {
@@ -983,6 +996,7 @@ class StaEDIStreamWriterTest {
                     }
                     break;
                 case ELEMENT_DATA_BINARY:
+                    assertNotNull(writer);
                     writer.writeStartElementBinary();
                     writer.writeBinaryData(reader.getBinaryData());
                     writer.endElement();
@@ -1056,24 +1070,30 @@ class StaEDIStreamWriterTest {
                     writer.startInterchange();
                     break;
                 case END_INTERCHANGE:
+                    assertNotNull(writer);
                     writer.endInterchange();
                     break;
                 case START_SEGMENT:
+                    assertNotNull(writer);
                     tag = reader.getText();
                     writer.writeStartSegment(tag);
                     break;
                 case END_SEGMENT:
+                    assertNotNull(writer);
                     writer.writeEndSegment();
                     break;
                 case START_COMPOSITE:
+                    assertNotNull(writer);
                     writer.writeStartElement();
                     composite = true;
                     break;
                 case END_COMPOSITE:
+                    assertNotNull(writer);
                     writer.endElement();
                     composite = false;
                     break;
                 case ELEMENT_DATA:
+                    assertNotNull(writer);
                     String text = reader.getText();
 
                     if ("UNA".equals(tag)) {
@@ -1095,6 +1115,7 @@ class StaEDIStreamWriterTest {
                     }
                     break;
                 case ELEMENT_DATA_BINARY:
+                    assertNotNull(writer);
                     writer.writeStartElementBinary();
                     writer.writeBinaryData(reader.getBinaryData());
                     writer.endElement();
@@ -1326,14 +1347,12 @@ class StaEDIStreamWriterTest {
 
         assertEquals(EDIStreamEvent.ELEMENT_DATA_ERROR, e.getEvent());
         assertEquals(EDIStreamValidationError.DATA_ELEMENT_TOO_LONG, e.getError());
-        //assertEquals("AAA", e.getData().toString());
         assertEquals(2, e.getLocation().getSegmentPosition());
         assertEquals(1, e.getLocation().getElementPosition());
 
         assertNotNull(e = e.getNextException());
         assertEquals(EDIStreamEvent.ELEMENT_DATA_ERROR, e.getEvent());
         assertEquals(EDIStreamValidationError.INVALID_CODE_VALUE, e.getError());
-        //assertEquals("AAA", e.getData().toString());
         assertEquals(2, e.getLocation().getSegmentPosition());
         assertEquals(1, e.getLocation().getElementPosition());
     }
@@ -1431,6 +1450,8 @@ class StaEDIStreamWriterTest {
                             case 2:
                                 writer.writeComponent(text.toCharArray(), 0, text.length());
                                 break;
+                            default:
+                                break;
                             }
                         }
                     } else {
@@ -1453,6 +1474,8 @@ class StaEDIStreamWriterTest {
                                     break;
                                 case 2:
                                     writer.writeElement(text.toCharArray(), 0, text.length());
+                                    break;
+                                default:
                                     break;
                                 }
                             }
@@ -1554,6 +1577,7 @@ class StaEDIStreamWriterTest {
                     writer.startInterchange();
                     break;
                 case END_INTERCHANGE:
+                    assertNotNull(writer);
                     writer.endInterchange();
                     break;
                 case START_TRANSACTION:
@@ -1562,10 +1586,12 @@ class StaEDIStreamWriterTest {
                     // Continue the loop to avoid segment position comparison for this event type
                     continue;
                 case START_SEGMENT:
+                    assertNotNull(writer);
                     tag = reader.getText();
                     writer.writeStartSegment(tag);
                     break;
                 case END_SEGMENT:
+                    assertNotNull(writer);
                     if (startTxSegment) {
                         Schema transaction;
                         if (!schemas.containsKey(elements.get(0))) {
@@ -1583,6 +1609,7 @@ class StaEDIStreamWriterTest {
                     writer.writeEndSegment();
                     break;
                 case START_COMPOSITE:
+                    assertNotNull(writer);
                     if (reader.getLocation().getElementOccurrence() > 1) {
                         writer.writeRepeatElement();
                     } else {
@@ -1591,10 +1618,12 @@ class StaEDIStreamWriterTest {
                     composite = true;
                     break;
                 case END_COMPOSITE:
+                    assertNotNull(writer);
                     writer.endElement();
                     composite = false;
                     break;
                 case ELEMENT_DATA:
+                    assertNotNull(writer);
                     String text = reader.getText();
 
                     if (startTxSegment) {
@@ -1616,6 +1645,8 @@ class StaEDIStreamWriterTest {
                                 break;
                             case 2:
                                 writer.writeComponent(text.toCharArray(), 0, text.length());
+                                break;
+                            default:
                                 break;
                             }
                         }
@@ -1640,12 +1671,15 @@ class StaEDIStreamWriterTest {
                                 case 2:
                                     writer.writeElement(text.toCharArray(), 0, text.length());
                                     break;
+                                default:
+                                    throw new IllegalStateException();
                                 }
                             }
                         }
                     }
                     break;
                 case ELEMENT_DATA_BINARY:
+                    assertNotNull(writer);
                     writer.writeStartElementBinary();
                     writer.writeBinaryData(reader.getBinaryData());
                     writer.endElement();
@@ -1666,6 +1700,7 @@ class StaEDIStreamWriterTest {
                     break;
                 }
 
+                assertNotNull(writer);
                 assertEquals(reader.getLocation().getSegmentPosition(),
                              writer.getLocation().getSegmentPosition(),
                              () -> "Segment position mismatch");
@@ -1691,7 +1726,7 @@ class StaEDIStreamWriterTest {
         EDIOutputFactory factory = EDIOutputFactory.newFactory();
         OutputStream stream = new ByteArrayOutputStream(1);
         EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
-        IllegalStateException thrown = assertThrows(IllegalStateException.class, () -> writer.getStandard());
+        IllegalStateException thrown = assertThrows(IllegalStateException.class, writer::getStandard);
         assertEquals("standard not accessible", thrown.getMessage());
     }
 
@@ -2098,49 +2133,49 @@ class StaEDIStreamWriterTest {
 
     @Test
     void testOutputCompositeMissingSyntax() throws Exception {
-        final String[] VERSION = { "UNOA", "4", "", "", "02" };
-        final String[] NOW = DateTimeFormatter.ofPattern("yyyyMMdd,HHmm").format(LocalDateTime.now()).split(",");
+        final String[] version = { "UNOA", "4", "", "", "02" };
+        final String[] now = DateTimeFormatter.ofPattern("yyyyMMdd,HHmm").format(LocalDateTime.now()).split(",");
         EDIOutputFactory factory = EDIOutputFactory.newFactory();
         factory.setProperty(EDIOutputFactory.FORMAT_ELEMENTS, true);
 
         ByteArrayOutputStream stream = new ByteArrayOutputStream(4096);
         EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
 
-        Schema control = SchemaFactory.newFactory().getControlSchema("EDIFACT", VERSION);
+        Schema control = SchemaFactory.newFactory().getControlSchema("EDIFACT", version);
         writer.setControlSchema(control);
 
         Schema message = SchemaFactory.newFactory().createSchema(getClass().getResource("/EDIFACT/CONTRL-v4r02.xml"));
         writer.setTransactionSchema(message);
 
         writer.startInterchange();
-        write(writer, "UNB", VERSION, "SENDER", "RECEIVER", NOW, "1");
+        write(writer, "UNB", version, "SENDER", "RECEIVER", now, "1");
         write(writer, "UNH", "1", new String[] { "CONTRL", "4", "2", "UN" });
         write(writer, "UCI", "1", "SENDER", "RECEIVER", "7");
 
         writer.writeStartSegment("UCM").writeElement("1").writeEmptyElement().writeElement("7");
-        EDIValidationException thrown = assertThrows(EDIValidationException.class, () -> writer.writeEndSegment());
+        EDIValidationException thrown = assertThrows(EDIValidationException.class, writer::writeEndSegment);
         EDIStreamValidationError error = thrown.getError();
         assertEquals(EDIStreamValidationError.CONDITIONAL_REQUIRED_DATA_ELEMENT_MISSING, error);
     }
 
     @Test
     void testOutputCompositeTooManyRepetitions() throws Exception {
-        final String[] VERSION = { "UNOA", "4", "", "", "02" };
-        final String[] NOW = DateTimeFormatter.ofPattern("yyyyMMdd,HHmm").format(LocalDateTime.now()).split(",");
+        final String[] version = { "UNOA", "4", "", "", "02" };
+        final String[] now = DateTimeFormatter.ofPattern("yyyyMMdd,HHmm").format(LocalDateTime.now()).split(",");
         EDIOutputFactory factory = EDIOutputFactory.newFactory();
         factory.setProperty(EDIOutputFactory.FORMAT_ELEMENTS, true);
 
         ByteArrayOutputStream stream = new ByteArrayOutputStream(4096);
         EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
 
-        Schema control = SchemaFactory.newFactory().getControlSchema("EDIFACT", VERSION);
+        Schema control = SchemaFactory.newFactory().getControlSchema("EDIFACT", version);
         writer.setControlSchema(control);
 
         Schema message = SchemaFactory.newFactory().createSchema(getClass().getResource("/EDIFACT/CONTRL-v4r02.xml"));
         writer.setTransactionSchema(message);
 
         writer.startInterchange();
-        write(writer, "UNB", VERSION, "SENDER", "RECEIVER", NOW, "1");
+        write(writer, "UNB", version, "SENDER", "RECEIVER", now, "1");
         write(writer, "UNH", "1", new String[] { "CONTRL", "4", "2", "UN" });
         write(writer, "UCI", "1", "SENDER", "RECEIVER", "7");
 
@@ -2159,7 +2194,7 @@ class StaEDIStreamWriterTest {
     }
 
     @Test
-    void testEscapeCharEscaped() throws IOException, EDIStreamException {
+    void testEscapeCharEscaped() throws EDIStreamException {
         final EDIOutputFactory factory = EDIOutputFactory.newFactory();
         ByteArrayOutputStream stream = new ByteArrayOutputStream(4096);
 
@@ -2187,7 +2222,7 @@ class StaEDIStreamWriterTest {
     }
 
     @Test
-    void testIncompleteUNB() throws IOException, EDIStreamException, EDISchemaException {
+    void testIncompleteUNB() throws EDIStreamException {
         final EDIOutputFactory factory = EDIOutputFactory.newFactory();
         ByteArrayOutputStream stream = new ByteArrayOutputStream(4096);
 
@@ -2210,7 +2245,7 @@ class StaEDIStreamWriterTest {
     }
 
     @Test
-    void testIncompleteUNBValidated() throws IOException, EDIStreamException, EDISchemaException {
+    void testIncompleteUNBValidated() throws EDIStreamException, EDISchemaException {
         final EDIOutputFactory factory = EDIOutputFactory.newFactory();
         ByteArrayOutputStream stream = new ByteArrayOutputStream(4096);
         EDIValidationException thrown = null;
@@ -2228,7 +2263,7 @@ class StaEDIStreamWriterTest {
                     .writeComponent("3")
                 .endElement();
 
-            thrown = assertThrows(EDIValidationException.class, () -> writer.writeEndSegment());
+            thrown = assertThrows(EDIValidationException.class, writer::writeEndSegment);
         }
 
         for (int position : Arrays.asList(2, 3, 4, 5)) {
@@ -2243,7 +2278,7 @@ class StaEDIStreamWriterTest {
 
     @ParameterizedTest
     @ValueSource(strings = { "UNX", "XYB" })
-    void testUnexpectedHeaderEDIFACT(String segmentTag) throws IOException, EDIStreamException, EDISchemaException {
+    void testUnexpectedHeaderEDIFACT(String segmentTag) throws EDIStreamException {
         final EDIOutputFactory factory = EDIOutputFactory.newFactory();
         ByteArrayOutputStream stream = new ByteArrayOutputStream(4096);
         EDIStreamException thrown = null;

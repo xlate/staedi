@@ -25,9 +25,7 @@ class ClasspathURLStreamHandlerTest {
     void testResourceUrlResolvesNull() throws MalformedURLException {
         URL target = new URL(null, "classpath:does/not/exist.txt", cut);
         @SuppressWarnings("unused")
-        FileNotFoundException ex = assertThrows(FileNotFoundException.class, () -> {
-            target.openConnection();
-        });
+        FileNotFoundException ex = assertThrows(FileNotFoundException.class, target::openConnection);
     }
 
     @Test

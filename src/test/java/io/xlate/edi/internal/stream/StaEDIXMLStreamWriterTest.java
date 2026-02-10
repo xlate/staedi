@@ -156,18 +156,6 @@ class StaEDIXMLStreamWriterTest {
 
     @Test
     void testWriteEmptyElementString() throws XMLStreamException {
-        it.writeStartDocument();
-        it.writeStartElement("l", "INTERCHANGE", EDINamespaces.LOOPS);
-        it.writeStartElement("s", "ISA", EDINamespaces.SEGMENTS);
-        it.writeEmptyElement(EDINamespaces.ELEMENTS, "ISA01"); // Test
-        it.writeStartElement("e", "ISA02", EDINamespaces.ELEMENTS);
-        it.writeCharacters("          ");
-        it.flush();
-        unconfirmedBufferEquals("ISA**          ", ediWriter);
-    }
-
-    @Test
-    void testWriteEmptyElement() throws XMLStreamException {
         it.setPrefix("e", EDINamespaces.ELEMENTS);
         it.writeStartDocument();
         it.writeStartElement("l", "INTERCHANGE", EDINamespaces.LOOPS);

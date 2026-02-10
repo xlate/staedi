@@ -246,12 +246,12 @@ class StaEDIFilteredStreamReaderTest implements ConstantsTest {
         assertEquals(unfiltered.getTextStart(), filtered.getTextStart());
         assertEquals(unfiltered.getTextLength(), filtered.getTextLength());
 
-        char[] uf_target = new char[100];
-        Arrays.fill(uf_target, '\0');
-        char[] f_target = new char[100];
-        Arrays.fill(f_target, '\0');
-        unfiltered.getTextCharacters(unfiltered.getTextStart(), uf_target, 0, unfiltered.getTextLength());
-        filtered.getTextCharacters(filtered.getTextStart(), f_target, 0, filtered.getTextLength());
-        assertArrayEquals(uf_target, f_target);
+        char[] ufTarget = new char[100];
+        Arrays.fill(ufTarget, '\0');
+        char[] fTarget = new char[100];
+        Arrays.fill(fTarget, '\0');
+        unfiltered.getTextCharacters(unfiltered.getTextStart(), ufTarget, 0, unfiltered.getTextLength());
+        filtered.getTextCharacters(filtered.getTextStart(), fTarget, 0, filtered.getTextLength());
+        assertArrayEquals(ufTarget, fTarget);
     }
 }

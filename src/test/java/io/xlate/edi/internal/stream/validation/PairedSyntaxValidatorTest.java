@@ -25,6 +25,7 @@ class PairedSyntaxValidatorTest extends SyntaxValidatorTestBase {
 
     PairedSyntaxValidator validator;
 
+    @Override
     @BeforeEach
     void setUp() {
         validator = (PairedSyntaxValidator) SyntaxValidator.getInstance(Type.PAIRED);

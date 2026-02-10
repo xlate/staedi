@@ -64,7 +64,7 @@ class SegmentImplTest {
             }
         }
 
-        assertEquals(0, errors.size(), () -> errors.toString());
+        assertEquals(0, errors.size(), errors::toString);
         assertEquals(2, nm1references.size());
         // Values set in 837_loop1000_only.xml
         assertEquals("Submitter Name", nm1references.get(0).getTitle());

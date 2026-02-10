@@ -188,10 +188,7 @@ public class StaEDIStreamReader implements EDIStreamReader, Configurable, Valida
         });
     }
 
-    private EDIStreamEvent nextEvent() throws EDIStreamException {
-        ensureOpen();
-        ensureIncomplete();
-
+    private void maybeSetControlSchema() {
         if (EDIStreamEvent.START_INTERCHANGE == proxy.getEvent() && useInternalControlSchema()) {
             try {
                 LOGGER.finer(() -> "Setting control schema: " + getStandard() + ", " + getVersion());
@@ -207,25 +204,15 @@ public class StaEDIStreamReader implements EDIStreamReader, Configurable, Valida
                            e);
             }
         }
+    }
 
-        boolean noNextEvent = !proxy.nextEvent();
-        if (noNextEvent || proxy.additionalEventsRequired()) {
-            if (noNextEvent) {
-                proxy.resetEvents();
-            }
-            do {
-                executeTask(lexer::parse, "Error parsing input");
-            } while (proxy.additionalEventsRequired());
-        }
-
-        final EDIStreamEvent event = proxy.getEvent();
-
-        LOGGER.finer(() -> "EDI event: " + event + (event.isError() ? "; error type: " + proxy.getErrorType(): ""));
-
+    private void maybeMarkComplete(EDIStreamEvent event) throws EDIStreamException {
         if (event == EDIStreamEvent.END_INTERCHANGE) {
             executeTask(() -> complete = !proxy.hasNext() && !lexer.hasRemaining(), "Error reading input");
         }
+    }
 
+    private void maybeSetBinaryDataLength(EDIStreamEvent event) throws EDIStreamException {
         if (event == EDIStreamEvent.ELEMENT_DATA && proxy.isBinaryElementLength()) {
             try {
                 this.setBinaryDataLength(Long.parseLong(getText()));
@@ -234,6 +221,30 @@ public class StaEDIStreamReader implements EDIStreamReader, Configurable, Valida
                 throw new EDIStreamException("Failed to parse binary element length", location, e);
             }
         }
+    }
+
+    private EDIStreamEvent nextEvent() throws EDIStreamException {
+        ensureOpen();
+        ensureIncomplete();
+        maybeSetControlSchema();
+
+        boolean noNextEvent = !proxy.nextEvent();
+
+        if (noNextEvent || proxy.additionalEventsRequired()) {
+            if (noNextEvent) {
+                proxy.resetEvents();
+            }
+
+            do {
+                executeTask(lexer::parse, "Error parsing input");
+            } while (proxy.additionalEventsRequired());
+        }
+
+        final EDIStreamEvent event = proxy.getEvent();
+        LOGGER.finer(() -> "EDI event: " + event + (event.isError() ? "; error type: " + proxy.getErrorType(): ""));
+
+        maybeMarkComplete(event);
+        maybeSetBinaryDataLength(event);
 
         return event;
     }

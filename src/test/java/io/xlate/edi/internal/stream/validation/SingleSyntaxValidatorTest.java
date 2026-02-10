@@ -24,6 +24,7 @@ class SingleSyntaxValidatorTest extends SyntaxValidatorTestBase {
 
     SingleSyntaxValidator validator;
 
+    @Override
     @BeforeEach
     void setUp() {
         validator = (SingleSyntaxValidator) SyntaxValidator.getInstance(Type.SINGLE);

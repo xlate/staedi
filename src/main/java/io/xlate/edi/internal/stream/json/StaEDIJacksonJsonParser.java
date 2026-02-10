@@ -68,7 +68,7 @@ public class StaEDIJacksonJsonParser extends ParserMinimalBase {
     }
 
     /* test */ JsonLocation getLocation() {
-        return getTokenLocation();
+        return currentLocation();
     }
 
     @Override
@@ -175,13 +175,25 @@ public class StaEDIJacksonJsonParser extends ParserMinimalBase {
     }
 
     @Override
-    public JsonLocation getCurrentLocation() {
-        return getTokenLocation();
+    public JsonLocation currentLocation() {
+        return new JacksonJsonLocation(parser.getStreamOffset(), parser.getLineNumber(), parser.getColumnNumber());
     }
 
     @Override
-    public JsonLocation getTokenLocation() {
-        return new JacksonJsonLocation(parser.getStreamOffset(), parser.getLineNumber(), parser.getColumnNumber());
+    @Deprecated // since Jackson 2.17 -- still need to implement
+    public JsonLocation getCurrentLocation() { // NOSONAR
+        return currentLocation();
+    }
+
+    @Override
+    public JsonLocation currentTokenLocation() {
+        return currentLocation();
+    }
+
+    @Override
+    @Deprecated // since Jackson 2.17 -- still need to implement
+    public JsonLocation getTokenLocation() { // NOSONAR
+        return currentLocation();
     }
 
     @Override
@@ -200,7 +212,8 @@ public class StaEDIJacksonJsonParser extends ParserMinimalBase {
     }
 
     @Override
-    public String getCurrentName() throws IOException {
+    @Deprecated // since Jackson 2.17 -- still need to implement
+    public String getCurrentName() throws IOException { // NOSONAR
         return context.getLast().getCurrentName();
     }
 

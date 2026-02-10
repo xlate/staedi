@@ -597,7 +597,7 @@ class StaEDISchemaFactoryTest {
     }
 
     @Test
-    void testExceptionAtDocumentEnd() throws EDISchemaException {
+    void testExceptionAtDocumentEnd() {
         SchemaFactory factory = SchemaFactory.newFactory();
         InputStream stream = new ByteArrayInputStream((""
                 + "<schema xmlns='" + StaEDISchemaFactory.XMLNS_V4 + "'>"
@@ -656,7 +656,7 @@ class StaEDISchemaFactoryTest {
     }
 
     @Test
-    void testInvalidElementTypeBase() throws EDISchemaException {
+    void testInvalidElementTypeBase() {
         SchemaFactory factory = SchemaFactory.newFactory();
         InputStream stream = new ByteArrayInputStream((""
                 + "<schema xmlns='" + StaEDISchemaFactory.XMLNS_V4 + "'>"
@@ -697,7 +697,7 @@ class StaEDISchemaFactoryTest {
     }
 
     @Test
-    void testImplementationSegmentWithoutStandardTypeThrowsException() throws EDISchemaException {
+    void testImplementationSegmentWithoutStandardTypeThrowsException() {
         SchemaFactory factory = SchemaFactory.newFactory();
         InputStream stream = new ByteArrayInputStream((""
                 + "<schema xmlns='" + StaEDISchemaFactory.XMLNS_V4 + "'>"
@@ -716,7 +716,7 @@ class StaEDISchemaFactoryTest {
     }
 
     @Test
-    void testOutOfOrderImplementationSegmentsThrowsException() throws EDISchemaException {
+    void testOutOfOrderImplementationSegmentsThrowsException() {
         SchemaFactory factory = SchemaFactory.newFactory();
         InputStream stream = new ByteArrayInputStream((""
                 + "<schema xmlns='" + StaEDISchemaFactory.XMLNS_V4 + "'>"
@@ -743,7 +743,7 @@ class StaEDISchemaFactoryTest {
         "composite, '3000000000', 'Invalid position'",
         "element,   '50',         'Position 50 does not correspond to an entry in type AK1'"
     })
-    void testInvalidElementPositionThrowsException(String type, String position, String message) throws EDISchemaException {
+    void testInvalidElementPositionThrowsException(String type, String position, String message) {
         SchemaFactory factory = SchemaFactory.newFactory();
         InputStream stream = new ByteArrayInputStream((""
                 + "<schema xmlns='" + StaEDISchemaFactory.XMLNS_V4 + "'>"

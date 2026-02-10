@@ -32,7 +32,7 @@ import io.xlate.edi.stream.EDIStreamReader;
 
 class StaEDIStreamReaderExtraneousCharsTest {
 
-    Logger LOGGER = Logger.getGlobal();
+    static final Logger LOGGER = Logger.getGlobal();
 
     @SuppressWarnings("unchecked")
     List<Object>[] readFully(EDIInputFactory factory, String resource) throws IOException {

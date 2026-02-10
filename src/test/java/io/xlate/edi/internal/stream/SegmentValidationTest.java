@@ -876,7 +876,7 @@ class SegmentValidationTest {
             }
         }
 
-        assertEquals(0, errors.size(), () -> errors.toString());
+        assertEquals(0, errors.size(), errors::toString);
 
         assertEquals(expectedLoopId, loopId);
     }

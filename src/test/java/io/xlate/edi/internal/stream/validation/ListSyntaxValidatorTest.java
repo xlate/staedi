@@ -26,6 +26,7 @@ class ListSyntaxValidatorTest extends SyntaxValidatorTestBase {
 
     ListSyntaxValidator validator;
 
+    @Override
     @BeforeEach
     void setUp() {
         validator = (ListSyntaxValidator) SyntaxValidator.getInstance(Type.LIST);
