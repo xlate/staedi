@@ -15,6 +15,7 @@
  ******************************************************************************/
 package io.xlate.edi.internal.stream.tokenization;
 
+import io.xlate.edi.internal.stream.StaEDIStreamLocation;
 import io.xlate.edi.stream.EDIStreamConstants.Standards;
 import io.xlate.edi.stream.Location;
 
@@ -34,18 +35,20 @@ public class EDIFACTDialect extends Dialect {
     private static final int EDIFACT_UNA_LENGTH = 9;
 
     private final String headerTag;
+    private final StaEDIStreamLocation location;
     private String[] version;
     StringBuilder header;
     private int index = -1;
     private int unbStart = -1;
     private boolean variableDecimalMark;
+    private StaEDIStreamLocation serviceAdviceLocation = null;
 
     private static final int TX_AGENCY = 0;
     private static final int TX_VERSION = 1;
     private static final int TX_RELEASE = 2;
     private static final int TX_ASSIGNED_CODE = 3;
 
-    EDIFACTDialect(String headerTag) {
+    EDIFACTDialect(String headerTag, StaEDIStreamLocation location) {
         super(State.DialectCode.EDIFACT, new String[4]);
         componentDelimiter = DFLT_COMPONENT_ELEMENT_SEPARATOR;
         elementDelimiter = DFLT_DATA_ELEMENT_SEPARATOR;
@@ -54,6 +57,7 @@ public class EDIFACTDialect extends Dialect {
         elementRepeater = DFLT_REPETITION_SEPARATOR;
         segmentDelimiter = DFLT_SEGMENT_TERMINATOR;
         this.headerTag = headerTag;
+        this.location = location;
 
         clearTransactionVersion();
     }
@@ -149,6 +153,11 @@ public class EDIFACTDialect extends Dialect {
     }
 
     @Override
+    public StaEDIStreamLocation getServiceAdviceLocation() {
+        return this.serviceAdviceLocation;
+    }
+
+    @Override
     public State getTagSearchState() {
         if (isServiceAdviceSegment(this.headerTag)) {
             return State.HEADER_EDIFACT_UNB_SEARCH;
@@ -232,6 +241,8 @@ public class EDIFACTDialect extends Dialect {
         case 8:
             segmentDelimiter = value;
             setCharacterClass(characters, CharacterClass.SEGMENT_DELIMITER, value, true);
+            serviceAdviceLocation = location.copy();
+            serviceAdviceLocation.incrementSegmentPosition(UNA);
             break;
         default:
             break;

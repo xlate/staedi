@@ -15,6 +15,8 @@
  ******************************************************************************/
 package io.xlate.edi.internal.stream.tokenization;
 
+import io.xlate.edi.internal.stream.StaEDIStreamLocation;
+
 public interface DialectFactory {
 
     enum DialectTag {
@@ -39,12 +41,12 @@ public interface DialectFactory {
         }
     }
 
-    public static Dialect getDialect(char[] buffer, int start, int length) throws EDIException {
+    public static Dialect getDialect(char[] buffer, int start, int length, StaEDIStreamLocation location) throws EDIException {
         String tag = new String(buffer, start, length);
-        return getDialect(tag);
+        return getDialect(tag, location);
     }
 
-    public static Dialect getDialect(String tag) throws EDIException {
+    public static Dialect getDialect(String tag, StaEDIStreamLocation location) throws EDIException {
         DialectTag type = DialectTag.fromValue(tag);
 
         if (type != null) {
@@ -58,7 +60,7 @@ public interface DialectFactory {
                 dialect = new TradacomsDialect();
                 break;
             default:
-                dialect = new EDIFACTDialect(tag);
+                dialect = new EDIFACTDialect(tag, location);
                 break;
             }
 

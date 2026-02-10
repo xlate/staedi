@@ -362,7 +362,7 @@ public class Lexer {
         buffer.put((char) input);
         final char[] header = buffer.array();
         final int length = buffer.position();
-        dialect = DialectFactory.getDialect(header, 0, length);
+        dialect = DialectFactory.getDialect(header, 0, length, location);
         for (int i = 0; i < length; i++) {
             dialect.appendHeader(characters, header[i]);
         }

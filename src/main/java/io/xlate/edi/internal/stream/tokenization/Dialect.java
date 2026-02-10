@@ -15,6 +15,7 @@
  ******************************************************************************/
 package io.xlate.edi.internal.stream.tokenization;
 
+import io.xlate.edi.internal.stream.StaEDIStreamLocation;
 import io.xlate.edi.stream.Location;
 
 public abstract class Dialect {
@@ -107,6 +108,14 @@ public abstract class Dialect {
      */
     public boolean isServiceAdviceSegment(CharSequence segmentTag) {
         return false; // Service segment not used by default
+    }
+
+    /**
+     * Returns the location of the interchange's service segment, only
+     * applicable to EDIFACT data.
+     */
+    public StaEDIStreamLocation getServiceAdviceLocation() {
+        throw new UnsupportedOperationException();
     }
 
     public abstract String getStandard();

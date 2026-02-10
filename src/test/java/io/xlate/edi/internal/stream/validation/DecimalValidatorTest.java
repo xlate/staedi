@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import io.xlate.edi.internal.stream.StaEDIStreamLocation;
 import io.xlate.edi.internal.stream.tokenization.CharacterSet;
 import io.xlate.edi.internal.stream.tokenization.Dialect;
 import io.xlate.edi.internal.stream.tokenization.DialectFactory;
@@ -17,11 +18,15 @@ class DecimalValidatorTest {
 
     @BeforeEach
     void setUp() throws EDIException {
-        dialectEdifact = DialectFactory.getDialect("UNA");
+        StaEDIStreamLocation location = new StaEDIStreamLocation();
+        dialectEdifact = DialectFactory.getDialect("UNA", location);
         CharacterSet charsEdifact = new CharacterSet();
-        "UNA=*,?^~UNB*UNOA=3*005435656=1*006415160=1*060515=1434*00000000000778~".chars().forEach(c -> dialectEdifact.appendHeader(charsEdifact, (char) c));
+        "UNA=*,?^~UNB*UNOA=3*005435656=1*006415160=1*060515=1434*00000000000778~".chars().forEach(c -> {
+            location.incrementOffset(c);
+            dialectEdifact.appendHeader(charsEdifact, (char) c);
+        });
 
-        dialectX12 = DialectFactory.getDialect("ISA");
+        dialectX12 = DialectFactory.getDialect("ISA", null);
         CharacterSet charsX12 = new CharacterSet();
         "ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~".chars().forEach(c -> dialectX12.appendHeader(charsX12, (char) c));
 

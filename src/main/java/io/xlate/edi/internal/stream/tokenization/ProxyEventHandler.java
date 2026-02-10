@@ -289,8 +289,11 @@ public class ProxyEventHandler implements EventHandler {
         boolean eventsReady = true;
         EDIReference typeReference = null;
         clearLevelCheck();
+        StaEDIStreamLocation segmentLocation = location;
 
-        if (validator != null && !dialect.isServiceAdviceSegment(segmentTag)) {
+        if (dialect.isServiceAdviceSegment(segmentTag)) {
+            segmentLocation = dialect.getServiceAdviceLocation();
+        } else if (validator != null) {
             validator.validateSegment(this, segmentTag);
             typeReference = validator.getSegmentReference();
             eventsReady = !validator.isPendingDiscrimination();
@@ -314,7 +317,7 @@ public class ProxyEventHandler implements EventHandler {
             controlValidator.countSegment(segmentTag);
         }
 
-        enqueueEvent(EDIStreamEvent.START_SEGMENT, EDIStreamValidationError.NONE, segmentTag, typeReference, location);
+        enqueueEvent(EDIStreamEvent.START_SEGMENT, EDIStreamValidationError.NONE, segmentTag, typeReference, segmentLocation);
         currentSegmentBegin = eventQueue.getLast();
         return !levelCheckPending && eventsReady;
     }
