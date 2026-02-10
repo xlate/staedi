@@ -16,6 +16,7 @@
 package io.xlate.edi.internal.stream;
 
 import io.xlate.edi.stream.EDIInputFactory;
+import io.xlate.edi.stream.EDIStreamEvent;
 import io.xlate.edi.stream.EDIStreamReader;
 import org.junit.jupiter.api.Test;
 
@@ -33,10 +34,8 @@ class StaEDIStreamReaderTransactionInformationTest {
 
         try (EDIStreamReader reader = factory.createEDIStreamReader(getClass().getResourceAsStream(resource))) {
             while (reader.hasNext()) {
-                switch (reader.next()) {
-                case START_TRANSACTION:
+                if (reader.next() == EDIStreamEvent.START_TRANSACTION) {
                     expected.add(reader.getTransactionType());
-                    break;
                 }
             }
         } catch (Exception e) {

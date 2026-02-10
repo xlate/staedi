@@ -29,13 +29,13 @@ import io.xlate.edi.test.StaEDITestUtil;
 
 class ElementImplTest {
 
-    final int DFLT_MIN_OCCURS = 1;
-    final int DFLT_MAX_OCCURS = 9;
-    final String DFLT_ID = "E0001";
-    final int DFLT_POSITION = 1;
-    final Map<String, String> DFLT_VALUES = Collections.emptyMap();
-    final String DFLT_TITLE = "Test Element";
-    final String DFLT_DESCR = "Just for testing";
+    static final int DFLT_MIN_OCCURS = 1;
+    static final int DFLT_MAX_OCCURS = 9;
+    static final String DFLT_ID = "E0001";
+    static final int DFLT_POSITION = 1;
+    static final Map<String, String> DFLT_VALUES = Collections.emptyMap();
+    static final String DFLT_TITLE = "Test Element";
+    static final String DFLT_DESCR = "Just for testing";
 
     @Test
     void testHashCode() {
@@ -126,6 +126,7 @@ class ElementImplTest {
             }
 
             @Override
+            @Deprecated /*(forRemoval = true, since = "1.8")*/
             public int getNumber() {
                 return 3;
             }
@@ -244,7 +245,7 @@ class ElementImplTest {
             }
         }
 
-        assertEquals(0, errors.size(), () -> errors.toString());
+        assertEquals(0, errors.size(), errors::toString);
 
         // Values set in 837_loop1000_only.xml
         assertEquals(2, nm103references.size());
@@ -298,7 +299,7 @@ class ElementImplTest {
             }
         }
 
-        assertEquals(0, errors.size(), () -> errors.toString());
+        assertEquals(0, errors.size(), errors::toString);
 
         // Values set in 837_loop1000_only.xml
         assertEquals(2, nm101references.size());
@@ -352,7 +353,7 @@ class ElementImplTest {
             }
         }
 
-        assertEquals(0, errors.size(), () -> errors.toString());
+        assertEquals(0, errors.size(), errors::toString);
 
         // Values set in 837_loop1000_only.xml, except for offset `1`
         assertEquals(4, hlReferences.size());

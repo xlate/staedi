@@ -68,12 +68,13 @@ jobs:
         if: github.event.workflow_run.event == 'pull_request'
         env:
           BASE_BRANCH: ${{ fromJson(steps.build_context.outputs.content).base_ref }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
         run: |
           git remote add upstream ${{ github.event.repository.clone_url }}
           git fetch upstream --prune --tags --force
-          git checkout -B $BASE_BRANCH upstream/$BASE_BRANCH
+          git checkout -B ${BASE_BRANCH} upstream/${BASE_BRANCH}
 
-          git checkout ${{ github.event.workflow_run.head_sha }}
+          git checkout ${HEAD_SHA}
 
           git clean -ffdx --exclude=target/ && git reset --hard HEAD
 
@@ -102,12 +103,16 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          EVENT_NUMBER: ${{ fromJson(steps.build_context.outputs.content).event.number }}
+          HEAD_REF: ${{ fromJson(steps.build_context.outputs.content).head_ref }}
+          BASE_REF: ${{ fromJson(steps.build_context.outputs.content).base_ref }}
         run: |
           mvn -B org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
-            -Dsonar.scm.revision=${{ github.event.workflow_run.head_sha }} \
-            -Dsonar.pullrequest.key=${{ fromJson(steps.build_context.outputs.content).event.number }} \
-            -Dsonar.pullrequest.branch=${{ fromJson(steps.build_context.outputs.content).head_ref }} \
-            -Dsonar.pullrequest.base=${{ fromJson(steps.build_context.outputs.content).base_ref }}
+            -Dsonar.scm.revision=${HEAD_SHA} \
+            -Dsonar.pullrequest.key=${EVENT_NUMBER} \
+            -Dsonar.pullrequest.branch=${HEAD_REF} \
+            -Dsonar.pullrequest.base=${BASE_REF}
 
       ## (Push Only) Run Sonar analysis against the results of the build job
       - name: SonarCloud Analysis (Push Only)
@@ -115,7 +120,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
         run: |
           mvn -B org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
-            -Dsonar.scm.revision=${{ github.event.workflow_run.head_sha }} \
-            -Dsonar.branch.name=${{ github.event.workflow_run.head_branch }}
+            -Dsonar.scm.revision=${HEAD_SHA} \
+            -Dsonar.branch.name=${HEAD_BRANCH}

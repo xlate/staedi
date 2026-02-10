@@ -17,7 +17,7 @@ class DiscriminatorImplTest {
     DiscriminatorImpl target;
 
     @BeforeEach
-    void setUp() throws Exception {
+    void setUp() {
         target = new DiscriminatorImpl(position(1, 2), Collections.singleton("50"));
     }
 

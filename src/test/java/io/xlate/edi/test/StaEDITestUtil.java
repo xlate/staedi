@@ -87,16 +87,14 @@ public class StaEDITestUtil {
         assertEquals(referenceCode, reader.getReferenceCode());
     }
 
-    public static void assertLocation(EDIStreamReader reader, int segPos, int elePos, int eleOcc, int cmpPos)
-            throws EDIStreamException {
+    public static void assertLocation(EDIStreamReader reader, int segPos, int elePos, int eleOcc, int cmpPos) {
         assertEquals(segPos, reader.getLocation().getSegmentPosition());
         assertEquals(elePos, reader.getLocation().getElementPosition());
         assertEquals(eleOcc, reader.getLocation().getElementOccurrence());
         assertEquals(cmpPos, reader.getLocation().getComponentPosition());
     }
 
-    public static void assertTextLocation(EDIStreamReader reader, String text, int segPos, int elePos, int eleOcc, int cmpPos)
-            throws EDIStreamException {
+    public static void assertTextLocation(EDIStreamReader reader, String text, int segPos, int elePos, int eleOcc, int cmpPos) {
         assertEquals(text, reader.getText());
         assertEquals(segPos, reader.getLocation().getSegmentPosition());
         assertEquals(elePos, reader.getLocation().getElementPosition());
@@ -211,7 +209,6 @@ public class StaEDITestUtil {
                     if (transactionBeginSegment) {
                         SchemaFactory schemaFactory = SchemaFactory.newFactory();
                         URL schemaUrl = StaEDITestUtil.class.getResource(schemaPath);
-                        //schemaFactory.setProperty(SchemaFactory.SCHEMA_LOCATION_URL_CONTEXT, schemaUrl);
                         Schema schema = schemaFactory.createSchema(schemaUrl);
                         reader.setTransactionSchema(schema);
                     }

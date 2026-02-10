@@ -96,7 +96,7 @@ class StaEDIInputFactoryTest {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         EDIStreamReader reader = null;
         // EDIStreamFilter is a functional interface
-        reader = factory.createFilteredReader(reader, (r) -> false);
+        reader = factory.createFilteredReader(reader, r -> false);
         assertNotNull(reader, "Reader was null");
     }
 
@@ -135,6 +135,6 @@ class StaEDIInputFactoryTest {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         factory.setErrorReporter(reporter);
         assertSame(reporter, factory.getErrorReporter());
-        assertThrows(ClassCastException.class, () -> factory.getEDIReporter());
+        assertThrows(ClassCastException.class, factory::getEDIReporter);
     }
 }

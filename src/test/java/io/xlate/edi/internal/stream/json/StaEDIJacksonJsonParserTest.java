@@ -36,7 +36,7 @@ import io.xlate.edi.test.StaEDIReaderTestBase;
 
 class StaEDIJacksonJsonParserTest extends StaEDIReaderTestBase implements JsonParserInvoker {
 
-    static byte[] TINY_X12 = ("ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~"
+    static final byte[] TINY_X12 = ("ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~"
             + "IEA*1*508121953~").getBytes();
 
     @Test
@@ -183,7 +183,7 @@ class StaEDIJacksonJsonParserTest extends StaEDIReaderTestBase implements JsonPa
             if ("/data/1/data/1/data/2/data".equals(pointer)) {
                 // Segment FLT
                 assertNull(jsonParser.getNumberType());
-                assertThrows(JsonParseException.class, () -> jsonParser.getNumberValue());
+                assertThrows(JsonParseException.class, jsonParser::getNumberValue);
             }
 
             if ("/data/1/data/1/data/2/data/0".equals(pointer)) {

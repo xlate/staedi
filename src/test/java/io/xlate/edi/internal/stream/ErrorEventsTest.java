@@ -280,7 +280,7 @@ class ErrorEventsTest {
     }
 
     @Test
-    void testEDIFACT_SegmentExclusionSyntax() throws EDIStreamException, EDISchemaException {
+    void testEDIFACT_SegmentExclusionSyntax() throws EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = new ByteArrayInputStream((""
                 + "UNB+UNOA:4:::02+005435656:1+006415160:1+20060515:1434+00000000000001'"
@@ -291,7 +291,7 @@ class ErrorEventsTest {
                 + "UNZ+0001+00000000000001'").getBytes());
 
         EDIStreamReader reader = factory.createEDIStreamReader(stream);
-        reader = factory.createFilteredReader(reader, (rdr) -> {
+        reader = factory.createFilteredReader(reader, rdr -> {
             switch (rdr.getEventType()) {
             case SEGMENT_ERROR:
             case ELEMENT_DATA_ERROR:
@@ -338,7 +338,7 @@ class ErrorEventsTest {
         Schema schema = schemaFactory.createSchema(schemaLocation);
 
         EDIStreamReader reader = factory.createEDIStreamReader(stream, schema);
-        reader = factory.createFilteredReader(reader, (r) -> {
+        reader = factory.createFilteredReader(reader, r -> {
             switch (r.getEventType()) {
             case SEGMENT_ERROR:
             case ELEMENT_DATA_ERROR:
@@ -374,7 +374,7 @@ class ErrorEventsTest {
         Schema schema = schemaFactory.createSchema(schemaLocation);
 
         EDIStreamReader reader = factory.createEDIStreamReader(stream, schema);
-        reader = factory.createFilteredReader(reader, (r) -> {
+        reader = factory.createFilteredReader(reader, r -> {
             switch (r.getEventType()) {
             case SEGMENT_ERROR:
             case ELEMENT_DATA_ERROR:
@@ -407,7 +407,7 @@ class ErrorEventsTest {
                 + "IEA*1*508121953~").getBytes());
 
         EDIStreamReader reader = factory.createEDIStreamReader(stream);
-        reader = factory.createFilteredReader(reader, (r) -> {
+        reader = factory.createFilteredReader(reader, r -> {
             switch (r.getEventType()) {
             case SEGMENT_ERROR:
             case ELEMENT_DATA_ERROR:
@@ -443,7 +443,7 @@ class ErrorEventsTest {
                 + "IEA*1*508121953~").getBytes());
 
         EDIStreamReader reader = factory.createEDIStreamReader(stream);
-        reader = factory.createFilteredReader(reader, (r) -> {
+        reader = factory.createFilteredReader(reader, r -> {
             switch (r.getEventType()) {
             case SEGMENT_ERROR:
             case ELEMENT_DATA_ERROR:
@@ -486,7 +486,7 @@ class ErrorEventsTest {
                 + "IEA*1*508121953~").getBytes());
 
         EDIStreamReader reader = factory.createEDIStreamReader(stream);
-        reader = factory.createFilteredReader(reader, (r) -> {
+        reader = factory.createFilteredReader(reader, r -> {
             switch (r.getEventType()) {
             case SEGMENT_ERROR:
             case ELEMENT_DATA_ERROR:
@@ -523,7 +523,7 @@ class ErrorEventsTest {
                 + "IEA*1*508121953~").getBytes());
 
         EDIStreamReader reader = factory.createEDIStreamReader(stream);
-        reader = factory.createFilteredReader(reader, (r) -> {
+        reader = factory.createFilteredReader(reader, r -> {
             switch (r.getEventType()) {
             case SEGMENT_ERROR:
             case ELEMENT_DATA_ERROR:
@@ -563,7 +563,7 @@ class ErrorEventsTest {
                 + "IEA*1*508121953~").getBytes());
 
         EDIStreamReader reader = factory.createEDIStreamReader(stream);
-        reader = factory.createFilteredReader(reader, (r) -> {
+        reader = factory.createFilteredReader(reader, r -> {
             switch (r.getEventType()) {
             case SEGMENT_ERROR:
             case ELEMENT_DATA_ERROR:
@@ -603,7 +603,7 @@ class ErrorEventsTest {
                 + "IEA*1*508121953~").getBytes());
 
         EDIStreamReader reader = factory.createEDIStreamReader(stream);
-        reader = factory.createFilteredReader(reader, (r) -> {
+        reader = factory.createFilteredReader(reader, r -> {
             switch (r.getEventType()) {
             case SEGMENT_ERROR:
             case ELEMENT_DATA_ERROR:
@@ -667,7 +667,7 @@ class ErrorEventsTest {
                 + "IEA*3*508121953~").getBytes());
 
         EDIStreamReader unfiltered = factory.createEDIStreamReader(stream);
-        EDIStreamReader reader = factory.createFilteredReader(unfiltered, (r) -> {
+        EDIStreamReader reader = factory.createFilteredReader(unfiltered, r -> {
             switch (r.getEventType()) {
             case SEGMENT_ERROR:
             case ELEMENT_DATA_ERROR:

@@ -120,52 +120,52 @@ class AcknowledgementBindTest {
     @XmlType(namespace = EDINamespaces.SEGMENTS, propOrder = {})
     static class ISA {
         @XmlElement(namespace = EDINamespaces.ELEMENTS)
-        String ISA01;
+        String ISA01; // NOSONAR
         @XmlElement(namespace = EDINamespaces.ELEMENTS)
-        String ISA02;
+        String ISA02; // NOSONAR
         @XmlElement(namespace = EDINamespaces.ELEMENTS)
-        String ISA03;
+        String ISA03; // NOSONAR
         @XmlElement(namespace = EDINamespaces.ELEMENTS)
-        String ISA04;
+        String ISA04; // NOSONAR
         @XmlElement(namespace = EDINamespaces.ELEMENTS)
-        String ISA05;
+        String ISA05; // NOSONAR
         @XmlElement(namespace = EDINamespaces.ELEMENTS)
-        String ISA06;
+        String ISA06; // NOSONAR
         @XmlElement(namespace = EDINamespaces.ELEMENTS)
-        String ISA07;
+        String ISA07; // NOSONAR
         @XmlElement(namespace = EDINamespaces.ELEMENTS)
-        String ISA08;
+        String ISA08; // NOSONAR
         @XmlElement(namespace = EDINamespaces.ELEMENTS)
-        String ISA09;
+        String ISA09; // NOSONAR
         @XmlElement(namespace = EDINamespaces.ELEMENTS)
-        String ISA10;
+        String ISA10; // NOSONAR
         @XmlElement(namespace = EDINamespaces.ELEMENTS)
-        String ISA11;
+        String ISA11; // NOSONAR
         @XmlElement(namespace = EDINamespaces.ELEMENTS)
-        String ISA12;
+        String ISA12; // NOSONAR
         @XmlElement(namespace = EDINamespaces.ELEMENTS)
-        String ISA13;
+        String ISA13; // NOSONAR
         @XmlElement(namespace = EDINamespaces.ELEMENTS)
-        String ISA14;
+        String ISA14; // NOSONAR
         @XmlElement(namespace = EDINamespaces.ELEMENTS)
-        String ISA15;
+        String ISA15; // NOSONAR
         @XmlElement(namespace = EDINamespaces.ELEMENTS)
-        String ISA16;
+        String ISA16; // NOSONAR
     }
 
     @XmlType(namespace = EDINamespaces.SEGMENTS, propOrder = {})
     static class ISX {
         @XmlElement(namespace = EDINamespaces.ELEMENTS)
-        String ISX01;
+        String ISX01; // NOSONAR
         @XmlElement(namespace = EDINamespaces.ELEMENTS)
-        String ISX02;
+        String ISX02; // NOSONAR
     }
 
     @XmlType(namespace = EDINamespaces.SEGMENTS, propOrder = {})
     static class IEA {
         @XmlElement(namespace = EDINamespaces.ELEMENTS)
-        String IEA01;
+        String IEA01; // NOSONAR
         @XmlElement(namespace = EDINamespaces.ELEMENTS)
-        String IEA02;
+        String IEA02; // NOSONAR
     }
 }

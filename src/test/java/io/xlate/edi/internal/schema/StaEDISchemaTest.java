@@ -119,7 +119,7 @@ class StaEDISchemaTest {
     }
 
     @Test
-    void testEmptyTypesMapThrowsException() throws Exception {
+    void testEmptyTypesMapThrowsException() {
         StaEDISchema schema = new StaEDISchema(StaEDISchema.INTERCHANGE_ID, StaEDISchema.TRANSACTION_ID);
         Map<String, EDIType> types = Collections.emptyMap();
         EDISchemaException thrown = assertThrows(EDISchemaException.class, () -> schema.setTypes(types));
