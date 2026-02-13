@@ -52,7 +52,7 @@ final class StaEDIXMLStreamReader implements XMLStreamReader {
     private static final QName INTERCHANGE = new QName(EDINamespaces.LOOPS, "INTERCHANGE", prefixOf(EDINamespaces.LOOPS));
     private static final QName TRANSACTION = new QName(EDINamespaces.LOOPS, ProxyEventHandler.LOOP_CODE_TRANSACTION, prefixOf(EDINamespaces.LOOPS));
 
-    private final EDIStreamReader ediReader;
+    /* test visible */ final EDIStreamReader ediReader;
     private final Map<String, Object> properties;
     private final boolean transactionDeclaresXmlns;
     private final boolean wrapTransactionContents;

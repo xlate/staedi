@@ -29,6 +29,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -682,26 +683,28 @@ class StaEDIStreamWriterTest {
 
     @Test
     void testWriteBinaryDataInputStreamWriteIOException() throws Exception {
-        EDIOutputFactory factory = EDIOutputFactory.newFactory();
-        ByteArrayOutputStream stream = Mockito.spy(new ByteArrayOutputStream(4096));
-        EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
-
         byte[] binary = { '\n', 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, '\t' };
         InputStream binaryStream = new ByteArrayInputStream(binary);
 
+        EDIOutputFactory factory = EDIOutputFactory.newFactory();
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream(4096);
         AtomicBoolean binaryElementStarted = new AtomicBoolean(false);
         IOException ioException = new IOException();
-        Mockito.doAnswer(args -> {
-            if (binaryElementStarted.get()) {
-                throw ioException;
+        OutputStream stream = new FilterOutputStream(bytes) {
+            @Override
+            public void write(int b) throws IOException {
+                if (binaryElementStarted.get() && b == 0x00) {
+                    // fail on second byte of binary stream
+                    throw ioException;
+                }
+                super.write(b);
             }
-            args.callRealMethod();
-            return null;
-        }).when(stream).write(0x00); // fail on second byte of binary stream
+        };
 
+        EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
         writer.startInterchange();
         writeHeader(writer);
-        stream.reset();
+        bytes.reset();
         writer.writeStartSegment("BIN");
         writer.writeStartElement();
         writer.writeElementData("4");
