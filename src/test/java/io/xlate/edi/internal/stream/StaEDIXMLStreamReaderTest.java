@@ -96,20 +96,18 @@ class StaEDIXMLStreamReaderTest {
     static final byte[] TINY_X12 = ("ISA*00*          *00*          *ZZ*ReceiverID     *ZZ*Sender         *050812*1953*^*00501*508121953*0*P*:~"
             + "IEA*1*508121953~").getBytes();
 
-    private EDIStreamReader ediReader;
-
     XMLStreamReader getXmlReader(String resource) throws XMLStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         InputStream stream = getClass().getResourceAsStream(resource);
-        ediReader = factory.createEDIStreamReader(stream);
+        EDIStreamReader ediReader = factory.createEDIStreamReader(stream);
         return new StaEDIXMLStreamReader(ediReader);
     }
 
-    XMLStreamReader getXmlReader(byte[] bytes) throws XMLStreamException, EDIStreamException {
+    StaEDIXMLStreamReader getXmlReader(byte[] bytes) throws XMLStreamException, EDIStreamException {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         factory.setProperty(EDIInputFactory.EDI_VALIDATE_CONTROL_STRUCTURE, "false");
         InputStream stream = new ByteArrayInputStream(bytes);
-        ediReader = factory.createEDIStreamReader(stream);
+        EDIStreamReader ediReader = factory.createEDIStreamReader(stream);
         assertEquals(EDIStreamEvent.START_INTERCHANGE, ediReader.next());
         return new StaEDIXMLStreamReader(ediReader);
     }
@@ -395,7 +393,7 @@ class StaEDIXMLStreamReaderTest {
         EDIInputFactory ediFactory = EDIInputFactory.newFactory();
         ediFactory.setProperty(EDIInputFactory.XML_DECLARE_TRANSACTION_XMLNS, Boolean.TRUE);
         InputStream stream = getClass().getResourceAsStream("/x12/extraDelimiter997.edi");
-        ediReader = ediFactory.createEDIStreamReader(stream);
+        EDIStreamReader ediReader = ediFactory.createEDIStreamReader(stream);
         XMLStreamReader xmlReader = ediFactory.createXMLStreamReader(ediReader);
 
         xmlReader.next(); // Per StAXSource JavaDoc, put in START_DOCUMENT state
@@ -757,15 +755,15 @@ class StaEDIXMLStreamReaderTest {
 
     @Test
     void testLocationParity() throws Exception {
-        XMLStreamReader xmlReader = getXmlReader(DUMMY_X12);
+        StaEDIXMLStreamReader xmlReader = getXmlReader(DUMMY_X12);
         boolean hasEvents = false;
 
         while (xmlReader.hasNext()) {
             hasEvents = true;
             xmlReader.next();
-            assertEquals(ediReader.getLocation().getLineNumber(), xmlReader.getLocation().getLineNumber());
-            assertEquals(ediReader.getLocation().getColumnNumber(), xmlReader.getLocation().getColumnNumber());
-            assertEquals(ediReader.getLocation().getCharacterOffset(), xmlReader.getLocation().getCharacterOffset());
+            assertEquals(xmlReader.ediReader.getLocation().getLineNumber(), xmlReader.getLocation().getLineNumber());
+            assertEquals(xmlReader.ediReader.getLocation().getColumnNumber(), xmlReader.getLocation().getColumnNumber());
+            assertEquals(xmlReader.ediReader.getLocation().getCharacterOffset(), xmlReader.getLocation().getCharacterOffset());
         }
 
         assertTrue(hasEvents);
@@ -888,7 +886,7 @@ class StaEDIXMLStreamReaderTest {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         factory.setProperty(EDIInputFactory.EDI_VALIDATE_CONTROL_STRUCTURE, "false");
         InputStream stream = new ByteArrayInputStream("{}".getBytes());
-        ediReader = factory.createEDIStreamReader(stream);
+        EDIStreamReader ediReader = factory.createEDIStreamReader(stream);
         XMLStreamReader xmlReader = factory.createXMLStreamReader(ediReader);
         StreamFilter xmlFilter = reader -> reader.getEventType() == XMLStreamConstants.START_ELEMENT &&
                 reader.getLocalName().equals("TRANSACTION");
@@ -913,7 +911,7 @@ class StaEDIXMLStreamReaderTest {
         EDIInputFactory ediFactory = EDIInputFactory.newFactory();
         ediFactory.setProperty(EDIInputFactory.XML_WRAP_TRANSACTION_CONTENTS, Boolean.TRUE);
         InputStream stream = getClass().getResourceAsStream("/x12/invoice810_po850_dual.edi");
-        ediReader = ediFactory.createEDIStreamReader(stream);
+        EDIStreamReader ediReader = ediFactory.createEDIStreamReader(stream);
         XMLStreamReader xmlReader = ediFactory.createXMLStreamReader(ediReader);
 
         xmlReader.next(); // Per StAXSource JavaDoc, put in START_DOCUMENT state
@@ -940,7 +938,7 @@ class StaEDIXMLStreamReaderTest {
         SchemaFactory schemaFactory = SchemaFactory.newFactory();
 
         InputStream stream = getClass().getResourceAsStream("/x12/simple999.edi");
-        ediReader = ediFactory.createEDIStreamReader(stream);
+        EDIStreamReader ediReader = ediFactory.createEDIStreamReader(stream);
         Schema schema = schemaFactory.createSchema(getClass().getResource("/x12/IG-999-standard-included.xml"));
 
         ediReader = ediFactory.createFilteredReader(ediReader, reader -> {

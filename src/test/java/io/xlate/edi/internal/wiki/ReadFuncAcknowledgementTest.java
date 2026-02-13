@@ -56,7 +56,13 @@ class ReadFuncAcknowledgementTest {
 
                 switch (event) {
                 case START_INTERCHANGE:
-                    // Called at the beginning of the EDI stream once the X12 dialect is confirmed
+                case START_LOOP:
+                    /*
+                     * Called either:
+                     * - at the beginning of the EDI stream once the X12 dialect is confirmed
+                     * - before the start of the segment that begins a loop. The loop's `code`
+                     *   from the schema can be obtained by a call to `reader.getReferenceCode()`
+                     */
                     builder = Json.createObjectBuilder();
                     buildStack.offer(builder);
                     break;
@@ -96,13 +102,6 @@ class ReadFuncAcknowledgementTest {
                     builder = buildStack.peekLast();
                     break;
 
-                case START_LOOP:
-                    // Called before the start of the segment that begins a loop.
-                    // The loop's `code` from the schema can be obtained by a call
-                    // to `reader.getReferenceCode()`
-                    builder = Json.createObjectBuilder();
-                    buildStack.offer(builder);
-                    break;
                 case END_LOOP:
                     // Called following the end of the segment that ends a loop.
                     // The loop's `code` from the schema can be obtained by a call

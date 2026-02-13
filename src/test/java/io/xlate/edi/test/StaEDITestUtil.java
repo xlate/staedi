@@ -267,7 +267,7 @@ public class StaEDITestUtil {
     static String repeat(char value, int times) {
         StringBuilder buffer = new StringBuilder(times);
         for (int i = 0; i < times; i++) {
-            buffer.append("    ");
+            buffer.append(value);
         }
         return buffer.toString();
     }
