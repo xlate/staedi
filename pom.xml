@@ -55,7 +55,7 @@
 
     <version.junit-jupiter>6.1.0</version.junit-jupiter>
     <version.hamcrest>3.0</version.hamcrest>
-    <version.xmlunit>2.11.0</version.xmlunit>
+    <version.xmlunit>2.12.0</version.xmlunit>
     <version.mockito-core>5.23.0</version.mockito-core>
     <version.jsonassert>1.5.3</version.jsonassert>
     <version.parsson>1.1.9</version.parsson>

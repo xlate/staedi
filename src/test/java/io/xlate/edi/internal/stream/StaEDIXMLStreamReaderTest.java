@@ -45,6 +45,7 @@ import java.util.function.Consumer;
 import java.util.logging.Logger;
 
 import javax.xml.namespace.NamespaceContext;
+import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.stream.StreamFilter;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamConstants;
@@ -66,6 +67,7 @@ import org.xmlunit.builder.DiffBuilder;
 import org.xmlunit.builder.Input;
 import org.xmlunit.diff.DefaultComparisonFormatter;
 import org.xmlunit.diff.Diff;
+import org.xmlunit.util.DocumentBuilderFactoryConfigurer;
 
 import io.xlate.edi.schema.Schema;
 import io.xlate.edi.schema.SchemaFactory;
@@ -346,6 +348,8 @@ class StaEDIXMLStreamReaderTest {
         transformer.transform(new StAXSource(xmlReader), new StreamResult(result));
         String resultString = result.toString();
         Diff d = DiffBuilder.compare(Input.fromFile("src/test/resources/x12/extraDelimiter997.xml"))
+                            .withDocumentBuilderFactory(DocumentBuilderFactoryConfigurer.DefaultWithDTDParsing
+                                .configure(DocumentBuilderFactory.newInstance()))
                             .withTest(resultString).build();
         assertTrue(!d.hasDifferences(), () -> "XML unexpectedly different:\n" + d.toString(new DefaultComparisonFormatter()));
     }
@@ -405,6 +409,8 @@ class StaEDIXMLStreamReaderTest {
         transformer.transform(new StAXSource(xmlReader), new StreamResult(result));
         String resultString = result.toString();
         Diff d = DiffBuilder.compare(Input.fromFile("src/test/resources/x12/extraDelimiter997-transaction-xmlns.xml"))
+                            .withDocumentBuilderFactory(DocumentBuilderFactoryConfigurer.DefaultWithDTDParsing
+                                .configure(DocumentBuilderFactory.newInstance()))
                             .withTest(resultString).build();
         assertTrue(!d.hasDifferences(), () -> "XML unexpectedly different:\n" + d.toString(new DefaultComparisonFormatter()));
     }
@@ -840,7 +846,10 @@ class StaEDIXMLStreamReaderTest {
         assertEquals(EDIStreamValidationError.SEGMENT_EXCEEDS_MAXIMUM_USE, error.getValue().iterator().next());
 
         Diff d = DiffBuilder.compare(Input.fromFile("src/test/resources/x12/invalid999_transformed.xml"))
-                            .withTest(resultString).build();
+                            .withDocumentBuilderFactory(DocumentBuilderFactoryConfigurer.DefaultWithDTDParsing
+                                .configure(DocumentBuilderFactory.newInstance()))
+                            .withTest(resultString)
+                            .build();
         assertTrue(!d.hasDifferences(), () -> "XML unexpectedly different:\n" + d.toString(new DefaultComparisonFormatter()));
     }
 
