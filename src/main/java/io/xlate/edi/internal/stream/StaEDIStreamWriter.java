@@ -95,7 +95,7 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     private Validator transactionValidator;
     private CharArraySequence dataHolder = new CharArraySequence();
     private boolean atomicElementWrite = false;
-    private CharBuffer elementBuffer = CharBuffer.allocate(500);
+    private CharBuffer elementBuffer = CharBuffer.allocate(1000);
     private final StringBuilder formattedElement = new StringBuilder();
     private List<EDIValidationException> errors = new ArrayList<>();
     private CharArraySequence elementHolder = new CharArraySequence();
