@@ -45,6 +45,11 @@ class UsageNode {
     private final List<UsageNode> children = new ArrayList<>();
     private int usageCount;
 
+    // Cache for getChildren(String), which is otherwise recomputed several times per element read
+    private String versionedChildrenVersion;
+    private int versionedChildCount = -1;
+    private List<UsageNode> versionedChildren;
+
     UsageNode(UsageNode parent, int depth, EDIReference link, int siblingIndex) {
         Objects.requireNonNull(link, "link");
         this.parent = parent;
@@ -127,7 +132,25 @@ class UsageNode {
     }
 
     List<UsageNode> getChildren(String version) {
-        return children.stream().filter(c -> c == null || c.link.getMaxOccurs(version) > 0).collect(Collectors.toList());
+        // The filtered list is a pure function of `children` and `version`. `children` is fixed once
+        // Validator.buildTree has finished, and every caller only reads the result (size(), get(i),
+        // iteration), so the list can be computed once and shared. The child count is part of the
+        // cache key so a call made while the tree is still being built cannot poison the cache.
+        if (versionedChildren != null
+                && versionedChildCount == children.size()
+                && Objects.equals(versionedChildrenVersion, version)) {
+            return versionedChildren;
+        }
+
+        List<UsageNode> filtered = children.stream()
+                .filter(c -> c == null || c.link.getMaxOccurs(version) > 0)
+                .collect(Collectors.toList());
+
+        versionedChildrenVersion = version;
+        versionedChildCount = children.size();
+        versionedChildren = filtered;
+
+        return filtered;
     }
 
     UsageNode getChild(String version, int index) {
