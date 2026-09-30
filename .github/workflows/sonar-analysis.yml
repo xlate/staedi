@@ -5,6 +5,9 @@ on:
     workflows: [ Build ]
     types: [ completed ]
 
+permissions:
+  contents: read
+
 jobs:
   analyze:
     if: ${{ github.repository == 'xlate/staedi' && github.event.workflow_run.conclusion == 'success' }}
@@ -24,6 +27,9 @@ jobs:
           repository: ${{ github.event.workflow_run.head_repository.full_name }}
           ref: ${{ github.event.workflow_run.head_sha }}
           fetch-depth: 0
+          # !! IMPORTANT !!
+          # External PRs must first be approved by a maintainer before workflows are run.
+          allow-unsafe-pr-checkout: true
 
       ## Retrieve the `target` directory from the build job
       - name: Fetch Build Result
