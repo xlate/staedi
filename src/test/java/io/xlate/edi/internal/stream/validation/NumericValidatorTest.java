@@ -162,4 +162,26 @@ class NumericValidatorTest implements ValueSetTester {
         v.format(dialect, element, "123", output);
         assertEquals("000123", output.toString());
     }
+
+    @Test
+    void testFormatNegativeNumberPadded() {
+        EDISimpleType element = mock(EDISimpleType.class);
+        when(element.getMinLength(anyString())).thenCallRealMethod();
+        when(element.getMaxLength(anyString())).thenCallRealMethod();
+        when(element.getValueSet(anyString())).thenCallRealMethod();
+
+        when(element.getMinLength()).thenReturn(6L);
+        when(element.getMaxLength()).thenReturn(8L);
+        when(element.getValueSet()).thenReturn(setOf());
+
+        ElementValidator v = new NumericValidator();
+        StringBuilder output = new StringBuilder();
+        v.format(dialect, element, "-123", output);
+        assertEquals("-000123", output.toString());
+
+        output.setLength(0);
+        v = new DecimalValidator();
+        v.format(dialect, element, "-1.5", output);
+        assertEquals("-00001.5", output.toString());
+    }
 }

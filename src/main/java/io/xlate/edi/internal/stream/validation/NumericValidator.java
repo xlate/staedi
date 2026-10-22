@@ -36,12 +36,18 @@ class NumericValidator extends ElementValidator {
     @Override
     void format(Dialect dialect, EDISimpleType element, CharSequence value, StringBuilder result) {
         int length = validate(dialect, value);
+        int start = 0;
+
+        if (length >= 0 && value.length() > 0 && value.charAt(0) == '-') {
+            result.append('-');
+            start = 1;
+        }
 
         for (long i = length, min = element.getMinLength(); i < min; i++) {
             result.append('0');
         }
 
-        result.append(value);
+        result.append(value, start, value.length());
     }
 
     /**
