@@ -699,7 +699,8 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     public EDIStreamWriter writeElement(char[] text, int start, int end) throws EDIStreamException {
         atomicElementWrite = true;
         writeStartElement();
-        CharSequence value = validateElement(() -> dataHolder.set(text, start, start + end), dataHolder);
+        dataHolder.set(text, start, end - start);
+        CharSequence value = validateElement(() -> {}, dataHolder);
         writeElementData(value);
         endElement();
         atomicElementWrite = false;
@@ -732,7 +733,8 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     public EDIStreamWriter writeComponent(char[] text, int start, int end) throws EDIStreamException {
         atomicElementWrite = true;
         startComponent();
-        CharSequence value = validateElement(() -> dataHolder.set(text, start, start + end), dataHolder);
+        dataHolder.set(text, start, end - start);
+        CharSequence value = validateElement(() -> {}, dataHolder);
         writeElementData(value);
         endComponent();
         atomicElementWrite = false;

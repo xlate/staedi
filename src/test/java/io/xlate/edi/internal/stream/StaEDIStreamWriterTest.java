@@ -635,6 +635,55 @@ class StaEDIStreamWriterTest {
         assertThrows(IllegalArgumentException.class, () -> writer.writeElementData(new char[] { 'C', 'H', '~', 'R', 'S' }, 0, 5));
     }
 
+    @ParameterizedTest
+    @CsvSource({
+        "false, false",
+        "true, false",
+        "true, true"
+    })
+    void testWriteElementCharArrayRange(boolean validated, boolean formatted) throws EDISchemaException, EDIStreamException {
+        EDIOutputFactory factory = EDIOutputFactory.newFactory();
+        factory.setProperty(EDIOutputFactory.FORMAT_ELEMENTS, formatted);
+        ByteArrayOutputStream stream = new ByteArrayOutputStream(4096);
+        EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
+        if (validated) {
+            writer.setControlSchema(SchemaUtils.getControlSchema("X12", new String[] { "00501" }));
+        }
+        char[] buffer = "XXPO123YY".toCharArray();
+
+        writer.startInterchange();
+        writeHeader(writer);
+        writer.writeStartSegment("GS");
+        writer.writeElement("PO");
+        writer.writeElement(buffer, 2, 7);
+        writer.writeElement(buffer, 4, 7);
+        writer.writeElement("20260101").writeElement("1200").writeElement("1").writeElement("X").writeElement("005010");
+        writer.writeEndSegment();
+        writer.flush();
+
+        assertEquals(TEST_HEADER_X12 + "GS*PO*PO123*123*20260101*1200*1*X*005010~", stream.toString());
+    }
+
+    @Test
+    void testWriteComponentCharArrayRange() throws EDIStreamException {
+        ByteArrayOutputStream stream = new ByteArrayOutputStream(4096);
+        EDIStreamWriter writer = EDIOutputFactory.newFactory().createEDIStreamWriter(stream);
+        char[] buffer = "XXPO123YY".toCharArray();
+
+        writer.startInterchange();
+        writeHeader(writer);
+        writer.writeStartSegment("REF");
+        writer.writeElement("PO");
+        writer.writeStartElement();
+        writer.writeComponent(buffer, 2, 4);
+        writer.writeComponent(buffer, 4, 7);
+        writer.endElement();
+        writer.writeEndSegment();
+        writer.flush();
+
+        assertEquals(TEST_HEADER_X12 + "REF*PO*PO:123~", stream.toString());
+    }
+
     @Test
     void testWriteBinaryDataInputStream() throws EDIStreamException {
         EDIOutputFactory factory = EDIOutputFactory.newFactory();
