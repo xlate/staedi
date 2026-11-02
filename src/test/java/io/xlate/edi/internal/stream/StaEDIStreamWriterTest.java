@@ -456,6 +456,53 @@ class StaEDIStreamWriterTest {
         assertEquals("SEG*R1^R2~", stream.toString());
     }
 
+    @ParameterizedTest
+    @ValueSource(booleans = { false, true })
+    void testWriteRepeatElementEmptyOccurrence(boolean truncateEmptyElements) throws EDIStreamException {
+        EDIOutputFactory factory = EDIOutputFactory.newFactory();
+        factory.setProperty(EDIOutputFactory.TRUNCATE_EMPTY_ELEMENTS, truncateEmptyElements);
+        ByteArrayOutputStream stream = new ByteArrayOutputStream(4096);
+        EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
+        writer.startInterchange();
+        writeHeader(writer);
+        writer.flush();
+        stream.reset();
+
+        // Last repetition empty
+        writer.writeStartSegment("SEG");
+        writer.writeStartElement()
+              .writeElementData("R1")
+              .writeRepeatElement()
+              .endElement();
+        writer.writeElement("E2");
+        writer.writeEndSegment();
+
+        // First repetition empty, following an empty element
+        writer.writeStartSegment("SEG");
+        writer.writeElement("E1");
+        writer.writeEmptyElement();
+        writer.writeStartElement()
+              .writeRepeatElement()
+              .writeElementData("R2")
+              .endElement();
+        writer.writeElement("E4");
+        writer.writeEndSegment();
+
+        // First repetition empty, next repetition started after endElement
+        writer.writeStartSegment("SEG");
+        writer.writeElement("E1");
+        writer.writeEmptyElement();
+        writer.writeEmptyElement();
+        writer.writeRepeatElement()
+              .writeElementData("R2")
+              .endElement();
+        writer.writeElement("E4");
+        writer.writeEndSegment();
+        writer.flush();
+
+        assertEquals("SEG*R1^*E2~SEG*E1**^R2*E4~SEG*E1**^R2*E4~", stream.toString());
+    }
+
     @Test
     void testWriteEmptyElement() throws IllegalStateException, EDIStreamException {
         EDIOutputFactory factory = EDIOutputFactory.newFactory();

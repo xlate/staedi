@@ -606,9 +606,12 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
     @Override
     public EDIStreamWriter writeRepeatElement() throws EDIStreamException {
         ensureLevelAtLeast(LEVEL_SEGMENT);
+
+        if (emptyElementTruncation) {
+            writeRepeatRequiredSeparators();
+        }
+
         write(this.repetitionSeparator);
-        // The repetition separator was used instead of the data element separator
-        unterminatedElement = false;
         level = LEVEL_ELEMENT;
         location.incrementElementOccurrence();
         elementLength = 0;
@@ -766,6 +769,20 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
             emptyComponents = 0;
             unterminatedComponent = false;
         }
+    }
+
+    void writeRepeatRequiredSeparators() throws EDIStreamException {
+        if (level > LEVEL_SEGMENT) {
+            // Separators held back for empty elements before this one (none if this element has data)
+            writeRequiredSeparator(emptyElements, unterminatedElement, this.dataElementSeparator);
+        } else if (emptyElements > 0) {
+            // The previous repetition was empty and `endElement` counted it as an empty element
+            writeRequiredSeparator(emptyElements - 1, unterminatedElement, this.dataElementSeparator);
+        }
+
+        // The repetition separator was used instead of the data element separator
+        emptyElements = 0;
+        unterminatedElement = false;
     }
 
     void writeRequiredSeparator(int emptyCount, boolean unterminated, char separator) throws EDIStreamException {
