@@ -589,8 +589,12 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         emptyComponents = 0;
         unterminatedComponent = false;
 
-        if (!emptyElementTruncation && unterminatedElement) {
-            write(this.dataElementSeparator);
+        if (!emptyElementTruncation) {
+            if (unterminatedElement) {
+                write(this.dataElementSeparator);
+            }
+            // The next element needs a separator, even if this one is empty (TRADACOMS has none after the tag)
+            unterminatedElement = true;
         }
 
         return this;
