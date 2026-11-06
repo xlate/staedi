@@ -555,6 +555,38 @@ class StaEDIStreamWriterTest {
         unconfirmedBufferEquals("ISA~", writer);
     }
 
+    @ParameterizedTest
+    @ValueSource(booleans = { false, true })
+    void testWriteTradacomsEmptyLeadingElements(boolean truncate) throws EDIStreamException {
+        EDIOutputFactory factory = EDIOutputFactory.newFactory();
+        factory.setProperty(EDIOutputFactory.TRUNCATE_EMPTY_ELEMENTS, truncate);
+        ByteArrayOutputStream stream = new ByteArrayOutputStream(4096);
+        EDIStreamWriter writer = factory.createEDIStreamWriter(stream);
+        writer.startInterchange();
+        writer.writeStartSegment("STX");
+        writer.writeStartElement().writeComponent("ANA").writeComponent("1").endElement();
+        writer.writeElement("5000000000000");
+        writer.writeElement("5010000000000");
+        writer.writeElement("070315");
+        writer.writeElement("000007");
+        writer.writeEndSegment();
+        writer.flush();
+        stream.reset();
+
+        writer.writeStartSegment("MHD");
+        writer.writeEmptyElement();
+        writer.writeElement("B");
+        writer.writeEndSegment();
+        writer.writeStartSegment("MHD");
+        writer.writeEmptyElement();
+        writer.writeEmptyElement();
+        writer.writeElement("C");
+        writer.writeEndSegment();
+        writer.flush();
+
+        assertEquals("MHD=+B'MHD=++C'", stream.toString());
+    }
+
     @Test
     void testWriteTruncatedElements() throws IllegalStateException, EDIStreamException {
         EDIOutputFactory factory = EDIOutputFactory.newFactory();
