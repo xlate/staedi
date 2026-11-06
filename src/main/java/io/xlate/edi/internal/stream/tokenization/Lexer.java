@@ -42,6 +42,8 @@ public class Lexer {
         COMPOSITE
     }
 
+    private static final int BYTE_ORDER_MARK = '\uFEFF';
+
     private final Deque<Mode> modes = new ArrayDeque<>();
     private State state = State.INITIAL;
     private int previousInput = 0;
@@ -163,6 +165,11 @@ public class Lexer {
     }
 
     boolean processInputCharacter(int input) throws EDIException {
+        if (input == BYTE_ORDER_MARK && state == State.INITIAL && location.getCharacterOffset() == 0) {
+            // Skip a byte order mark at the start of the input
+            return false;
+        }
+
         boolean eventsReady = false;
         location.incrementOffset(input);
 
