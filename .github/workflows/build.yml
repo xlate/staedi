@@ -18,6 +18,9 @@ on:
       - 'README*'
       - '*.png'
 
+permissions:
+  contents: read
+
 jobs:
   build:
     strategy:
