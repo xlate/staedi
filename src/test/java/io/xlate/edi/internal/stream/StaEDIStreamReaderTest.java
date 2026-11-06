@@ -30,6 +30,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -58,6 +59,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
@@ -2245,5 +2247,42 @@ class StaEDIStreamReaderTest implements ConstantsTest {
             assertEquals(i * 3 + 3, unz.getLineNumber());
             assertEquals(i * 3 + 3, unz.getSegmentPosition());
         }
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = { "/x12/simple997.edi", "/EDIFACT/invoic_d97b.edi", "/TRADACOMS/order.edi" })
+    void testByteOrderMarkSkipped(String resource) throws Exception {
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        try (InputStream stream = getClass().getResourceAsStream(resource)) {
+            byte[] buffer = new byte[4096];
+            int length;
+            while ((length = stream.read(buffer)) > -1) {
+                bytes.write(buffer, 0, length);
+            }
+        }
+        byte[] bom = { (byte) 0xEF, (byte) 0xBB, (byte) 0xBF };
+        ByteArrayOutputStream bomBytes = new ByteArrayOutputStream();
+        bomBytes.write(bom);
+        bomBytes.write(bytes.toByteArray());
+
+        assertEquals(readEvents(bytes.toByteArray()), readEvents(bomBytes.toByteArray()));
+    }
+
+    List<String> readEvents(byte[] input) throws Exception {
+        EDIInputFactory factory = EDIInputFactory.newFactory();
+        List<String> events = new ArrayList<>();
+
+        try (EDIStreamReader reader = factory.createEDIStreamReader(new ByteArrayInputStream(input))) {
+            while (reader.hasNext()) {
+                EDIStreamEvent event = reader.next();
+                if (event == EDIStreamEvent.START_SEGMENT || event == EDIStreamEvent.ELEMENT_DATA) {
+                    events.add(event + " " + reader.getText());
+                } else {
+                    events.add(event.toString());
+                }
+            }
+        }
+
+        return events;
     }
 }
