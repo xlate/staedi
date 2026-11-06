@@ -2268,6 +2268,28 @@ class StaEDIStreamReaderTest implements ConstantsTest {
         assertEquals(readEvents(bytes.toByteArray()), readEvents(bomBytes.toByteArray()));
     }
 
+    @Test
+    void testByteOrderMarkNotAtStartIsNotSkipped() throws Exception {
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        try (InputStream stream = getClass().getResourceAsStream("/x12/simple997.edi")) {
+            byte[] buffer = new byte[4096];
+            int length;
+            while ((length = stream.read(buffer)) > -1) {
+                bytes.write(buffer, 0, length);
+            }
+        }
+        String edi = new String(bytes.toByteArray(), StandardCharsets.UTF_8);
+
+        // Inside element data, U+FEFF is data
+        List<String> events = readEvents(edi.replace("GS*FA*", "GS*FA*\uFEFF").getBytes(StandardCharsets.UTF_8));
+        assertTrue(events.contains("ELEMENT_DATA \uFEFFReceiverDept"), events::toString);
+
+        // After leading whitespace, U+FEFF is not the first character of the input
+        byte[] input = ("\n\uFEFF" + edi).getBytes(StandardCharsets.UTF_8);
+        Exception thrown = assertThrows(Exception.class, () -> readEvents(input));
+        assertTrue(thrown.getMessage().contains("EDIE003"), thrown::getMessage);
+    }
+
     List<String> readEvents(byte[] input) throws Exception {
         EDIInputFactory factory = EDIInputFactory.newFactory();
         List<String> events = new ArrayList<>();
