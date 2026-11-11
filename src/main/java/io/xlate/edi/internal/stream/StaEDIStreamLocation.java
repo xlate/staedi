@@ -15,6 +15,7 @@
  ******************************************************************************/
 package io.xlate.edi.internal.stream;
 
+import io.xlate.edi.schema.EDIType;
 import io.xlate.edi.stream.Location;
 
 public class StaEDIStreamLocation extends LocationView implements Location {
@@ -24,12 +25,29 @@ public class StaEDIStreamLocation extends LocationView implements Location {
     private boolean repeating = false;
     private int repeatCount = -1;
 
+    /*
+     * Control counts and header references of the open control structures,
+     * indexed by the ordinal of EDIType.Type.INTERCHANGE (0), GROUP (1) and
+     * TRANSACTION (2). The counts are copied by value. The references array is
+     * never changed after it is set, so locations share it.
+     */
+    public static final int CONTROL_SCOPES = 3;
+    static final String[] NO_REFERENCES = new String[CONTROL_SCOPES];
+
+    private int interchangeCount = -1;
+    private int groupCount = -1;
+    private int transactionCount = -1;
+    private String[] controlReferences = NO_REFERENCES;
+
     public StaEDIStreamLocation() {
         super();
     }
 
     public StaEDIStreamLocation(Location source) {
         super(source);
+        if (source instanceof StaEDIStreamLocation) {
+            copyControls((StaEDIStreamLocation) source);
+        }
     }
 
     @Override
@@ -57,6 +75,98 @@ public class StaEDIStreamLocation extends LocationView implements Location {
         componentPosition = source.getComponentPosition();
         elementOccurrence = source.getElementOccurrence();
         afterSegment = source.afterSegment;
+        copyControls(source);
+    }
+
+    private void copyControls(StaEDIStreamLocation source) {
+        interchangeCount = source.interchangeCount;
+        groupCount = source.groupCount;
+        transactionCount = source.transactionCount;
+        controlReferences = source.controlReferences;
+    }
+
+    static int controlIndex(EDIType.Type scope) {
+        if (scope != null) {
+            switch (scope) {
+            case INTERCHANGE:
+            case GROUP:
+            case TRANSACTION:
+                return scope.ordinal();
+            default:
+                break;
+            }
+        }
+        throw new IllegalArgumentException("Control scope must be INTERCHANGE, GROUP, or TRANSACTION: " + scope);
+    }
+
+    /**
+     * Index of the innermost open control structure, or -1 when none is open.
+     */
+    private int innermostControl() {
+        for (int i = CONTROL_SCOPES - 1; i >= 0; i--) {
+            if (controlCount(i) > -1 || controlReferences[i] != null) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private int controlCount(int index) {
+        switch (index) {
+        case 0:
+            return interchangeCount;
+        case 1:
+            return groupCount;
+        default:
+            return transactionCount;
+        }
+    }
+
+    /**
+     * Set the control values. The references array must not be changed after
+     * this call.
+     */
+    public void setControls(int[] counts, String[] references) {
+        interchangeCount = counts[0];
+        groupCount = counts[1];
+        transactionCount = counts[2];
+        controlReferences = references;
+    }
+
+    public void setControlCount(int index, int count) {
+        switch (index) {
+        case 0:
+            interchangeCount = count;
+            break;
+        case 1:
+            groupCount = count;
+            break;
+        default:
+            transactionCount = count;
+            break;
+        }
+    }
+
+    @Override
+    public int getControlCount(EDIType.Type scope) {
+        return controlCount(controlIndex(scope));
+    }
+
+    @Override
+    public int getControlCount() {
+        int i = innermostControl();
+        return i < 0 ? -1 : controlCount(i);
+    }
+
+    @Override
+    public String getControlReference(EDIType.Type scope) {
+        return controlReferences[controlIndex(scope)];
+    }
+
+    @Override
+    public String getControlReference() {
+        int i = innermostControl();
+        return i < 0 ? null : controlReferences[i];
     }
 
     public void setElementPosition(int elementPosition) {

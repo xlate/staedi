@@ -273,6 +273,10 @@ public class StaEDIStreamWriter implements EDIStreamWriter, ElementDataHandler, 
         ensureLevel(LEVEL_INITIAL);
         this.controlSchema = controlSchema;
         controlValidator = Validator.forSchema(controlSchema, null, this);
+
+        if (controlValidator != null) {
+            controlValidator.setControlLocation(location);
+        }
     }
 
     @Override

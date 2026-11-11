@@ -36,6 +36,7 @@ import static io.xlate.edi.stream.EDIStreamValidationError.UNEXPECTED_SEGMENT;
 import java.nio.CharBuffer;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.Iterator;
@@ -99,6 +100,16 @@ public class Validator {
     private List<UsageNode> implSegmentCandidates = new ArrayList<>();
 
     private final Deque<UsageNode> loopStack = new ArrayDeque<>();
+
+    /*
+     * The location that receives the counts and header references of the open
+     * control structures. The values are written when they change, so an event
+     * that copies the location carries the values as they were at that event.
+     */
+    private StaEDIStreamLocation controlLocation;
+    private final int[] controlCounts = { -1, -1, -1 };
+    private final String[] referenceScratch = new String[StaEDIStreamLocation.CONTROL_SCOPES];
+    private String[] controlReferences = referenceScratch.clone();
 
     private final List<UsageError> useErrors = new ArrayList<>();
     private final List<UsageError> elementErrors = new ArrayList<>(5);
@@ -205,6 +216,7 @@ public class Validator {
         }
 
         root.reset();
+        publishControls();
         correctSegment = segment = root.getFirstChild();
 
         if (implRoot != null) {
@@ -415,6 +427,7 @@ public class Validator {
         while (this.depth < workingDepth) {
             handleMissingMandatory(handler, workingDepth);
             UsageNode loop = loopStack.pop();
+            publishControls();
             handler.loopEnd(loop.getLink());
             workingDepth--;
 
@@ -483,6 +496,62 @@ public class Validator {
         }
     }
 
+    /**
+     * Write the counts and header references of the control structures that are
+     * open (interchange, group, transaction) to the location now and each time
+     * they change.
+     */
+    public void setControlLocation(StaEDIStreamLocation location) {
+        controlLocation = location;
+        publishControls();
+    }
+
+    void publishControls() {
+        if (controlLocation != null) {
+            collectControls();
+            controlLocation.setControls(controlCounts, controlReferences);
+        }
+    }
+
+    void collectControls() {
+        Arrays.fill(controlCounts, -1);
+        Arrays.fill(referenceScratch, null);
+
+        collectControl(root);
+
+        for (Iterator<UsageNode> iter = loopStack.descendingIterator(); iter.hasNext();) {
+            collectControl(iter.next());
+        }
+
+        // Locations share the references array, so replace it rather than change it
+        if (!Arrays.equals(controlReferences, referenceScratch)) {
+            controlReferences = referenceScratch.clone();
+        }
+    }
+
+    void collectControl(UsageNode node) {
+        if (node instanceof ControlUsageNode) {
+            ControlUsageNode control = (ControlUsageNode) node;
+            int index = controlIndex(control);
+
+            if (index > -1) {
+                controlCounts[index] = control.getCount();
+                referenceScratch[index] = control.getReferenceValue();
+            }
+        }
+    }
+
+    static int controlIndex(ControlUsageNode control) {
+        switch (control.getControlScope()) {
+        case INTERCHANGE:
+        case GROUP:
+        case TRANSACTION:
+            return control.getControlScope().ordinal();
+        default:
+            return -1;
+        }
+    }
+
     void countSegment(UsageNode node, CharSequence tag) {
         int count;
 
@@ -503,7 +572,18 @@ public class Validator {
 
     int count(UsageNode node, EDIControlType.Type type) {
         if (node instanceof ControlUsageNode) {
-            return ((ControlUsageNode) node).incrementCount(type);
+            ControlUsageNode control = (ControlUsageNode) node;
+            int count = control.incrementCount(type);
+
+            if (count > 0) {
+                int index = controlIndex(control);
+                if (index > -1 && controlLocation != null) {
+                    controlCounts[index] = count;
+                    controlLocation.setControlCount(index, count);
+                }
+            }
+
+            return count;
         }
         return 0;
     }
@@ -671,14 +751,21 @@ public class Validator {
             }
         }
 
+        if (current instanceof ControlUsageNode) {
+            // Clear the previous occurrence's values before the loop start is reported
+            ((ControlUsageNode) current).clearValues();
+        }
+
         if (currentImpl != null && implSegmentSelected) {
             loopStack.push(currentImpl);
+            publishControls();
             handler.loopBegin(currentImpl.getLink());
         } else {
             if (current instanceof ControlUsageNode) {
                 countControl();
             }
             loopStack.push(current);
+            publishControls();
             handler.loopBegin(current.getLink());
         }
 
@@ -835,6 +922,7 @@ public class Validator {
                     // Replace the standard loop with the implementation on the stack
                     loopStack.pop();
                     loopStack.push(implNode.getParent());
+                    publishControls();
                 } else {
                     //update segment and element references that were already reported
                     updateEventReferences(eventQueue, null, implSeg.getLink());
@@ -1275,6 +1363,7 @@ public class Validator {
         if (loop instanceof ControlUsageNode) {
             ((ControlUsageNode) loop).validateReference(position, value, errors);
             ((ControlUsageNode) loop).validateCount(position, value, errors);
+            publishControls();
         }
     }
 
