@@ -15,6 +15,8 @@
  ******************************************************************************/
 package io.xlate.edi.stream;
 
+import io.xlate.edi.schema.EDIType;
+
 /**
  * Provides information on the location of an event.
  *
@@ -90,6 +92,88 @@ public interface Location {
      * @return the current component element position
      */
     int getComponentPosition();
+
+    /**
+     * Return the number of items the reader or writer has counted so far in the
+     * given control structure. The item is the one the structure's trailer
+     * counts: segments for a transaction, transactions for a group, and groups
+     * or transactions for an interchange, as the control schema defines.
+     * Returns -1 if the structure is not open at the current event or the count
+     * is not available.
+     *
+     * <p>
+     * When a {@link EDIStreamValidationError#CONTROL_COUNT_DOES_NOT_MATCH_ACTUAL_COUNT
+     * CONTROL_COUNT_DOES_NOT_MATCH_ACTUAL_COUNT} error is reported for a
+     * trailer, this is the actual count, and the error's text is the count
+     * given in the trailer.
+     *
+     * @param scope
+     *            the control structure: {@link EDIType.Type#INTERCHANGE
+     *            INTERCHANGE}, {@link EDIType.Type#GROUP GROUP}, or
+     *            {@link EDIType.Type#TRANSACTION TRANSACTION}
+     * @return the current count for the structure, or -1 if none is available
+     * @throws IllegalArgumentException
+     *             if scope is null or is not one of the three values above
+     *             (implementations that do not track control counts may
+     *             return -1 instead)
+     * @since 1.27
+     */
+    default int getControlCount(EDIType.Type scope) {
+        return -1;
+    }
+
+    /**
+     * Return the number of items counted so far in the innermost control
+     * structure (transaction, group, or interchange) that is open at the
+     * current event. Returns -1 if none is available.
+     *
+     * @return the current count for the innermost control structure
+     * @see #getControlCount(EDIType.Type)
+     * @since 1.27
+     */
+    default int getControlCount() {
+        return -1;
+    }
+
+    /**
+     * Return the control reference (control number) read from the header of
+     * the given control structure, for example ISA13, GS06, or ST02 in X12.
+     * Returns null if the structure is not open at the current event or the
+     * header element has not been read yet.
+     *
+     * <p>
+     * When a {@link EDIStreamValidationError#CONTROL_REFERENCE_MISMATCH
+     * CONTROL_REFERENCE_MISMATCH} error is reported for a trailer, this is the
+     * header's value, and the error's text is the value given in the trailer.
+     *
+     * @param scope
+     *            the control structure: {@link EDIType.Type#INTERCHANGE
+     *            INTERCHANGE}, {@link EDIType.Type#GROUP GROUP}, or
+     *            {@link EDIType.Type#TRANSACTION TRANSACTION}
+     * @return the header control reference for the structure, or null if none
+     *         is available
+     * @throws IllegalArgumentException
+     *             if scope is null or is not one of the three values above
+     *             (implementations that do not track control references may
+     *             return null instead)
+     * @since 1.27
+     */
+    default String getControlReference(EDIType.Type scope) {
+        return null;
+    }
+
+    /**
+     * Return the header control reference of the innermost control structure
+     * (transaction, group, or interchange) that is open at the current event.
+     * Returns null if none is available.
+     *
+     * @return the header control reference for the innermost control structure
+     * @see #getControlReference(EDIType.Type)
+     * @since 1.27
+     */
+    default String getControlReference() {
+        return null;
+    }
 
     /**
      * Create a new copy of this instance

@@ -6,6 +6,7 @@ import java.util.logging.Logger;
 import io.xlate.edi.schema.EDIControlType;
 import io.xlate.edi.schema.EDIElementPosition;
 import io.xlate.edi.schema.EDIReference;
+import io.xlate.edi.schema.EDIType;
 import io.xlate.edi.stream.EDIStreamValidationError;
 import io.xlate.edi.stream.Location;
 
@@ -32,6 +33,10 @@ class ControlUsageNode extends UsageNode {
     @Override
     void incrementUsage() {
         super.incrementUsage();
+        clearValues();
+    }
+
+    void clearValues() {
         this.referenceValue = null;
         this.count = 0;
     }
@@ -79,6 +84,18 @@ class ControlUsageNode extends UsageNode {
         }
 
         return Integer.toString(count).contentEquals(value.subSequence(i, len));
+    }
+
+    EDIType.Type getControlScope() {
+        return type.getType();
+    }
+
+    int getCount() {
+        return count;
+    }
+
+    String getReferenceValue() {
+        return referenceValue;
     }
 
     int incrementCount(EDIControlType.Type countType) {

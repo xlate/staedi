@@ -103,6 +103,10 @@ public class ProxyEventHandler implements EventHandler {
 
         this.controlSchema = controlSchema;
         controlValidator = Validator.forSchema(controlSchema, null, config);
+
+        if (controlValidator != null) {
+            controlValidator.setControlLocation(location);
+        }
     }
 
     public boolean isTransactionSchemaAllowed() {
