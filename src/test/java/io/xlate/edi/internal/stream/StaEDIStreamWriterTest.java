@@ -714,6 +714,26 @@ class StaEDIStreamWriterTest {
         assertThrows(IllegalArgumentException.class, () -> writer.writeElementData(new char[] { 'C', 'H', '~', 'R', 'S' }, 0, 5));
     }
 
+    @Test
+    void testWriteLargeFreeTextElement() throws EDIStreamException {
+        ByteArrayOutputStream stream = new ByteArrayOutputStream(8192);
+        EDIStreamWriter writer = EDIOutputFactory.newFactory().createEDIStreamWriter(stream);
+
+        // MTX-01 (free text) may contain up to 4096 characters
+        char[] buffer = new char[4096];
+        Arrays.fill(buffer, 'A');
+        String freeText = new String(buffer);
+
+        writer.startInterchange();
+        writeHeader(writer);
+        writer.writeStartSegment("MTX");
+        writer.writeElement(freeText);
+        writer.writeEndSegment();
+        writer.flush();
+
+        assertEquals(TEST_HEADER_X12 + "MTX*" + freeText + "~", stream.toString());
+    }
+
     @ParameterizedTest
     @CsvSource({
         "false, false",
